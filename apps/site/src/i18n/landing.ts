@@ -117,16 +117,16 @@ export function getLandingCopy(locale: Locale): {
  * Public YouTube video id of the promo in each locale.
  */
 export const PROMO_VIDEO_IDS: Record<Locale, string> = {
-  en: 'GA7bAMIAvI0',
-  es: 'La7EjhTzxoU',
-  de: 'SIfAAZpUMLg',
-  fr: '_iBXTZA2aAg',
-  it: 'cP3M2rjeK-U',
-  ja: 'NdaSMcf-BbM',
-  ko: 'jBg4AfJ5Nqw',
-  pt_BR: 'UKOl-2k2o7E',
-  ru: 'eCbFkhZzQro',
-  zh_CN: 'EkrTNApjyW8',
+  en: 'DUZmI5zxA8o',
+  es: 'yDw0nHvvNWc',
+  de: '0HHmaQIHk1Y',
+  fr: '7RATLTBQuxo',
+  it: 'rT8lAtZbXxI',
+  ja: 'Gm9_A9hfUBE',
+  ko: 'XroHiVqJdrI',
+  pt_BR: 'SvuxWtZCAZc',
+  ru: '0EtKg9aj-Hs',
+  zh_CN: '3XTpmuxkYx8',
 }
 
 /**
