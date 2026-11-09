@@ -89,7 +89,40 @@ const probe = async (file: string): Promise<ProbeResult> => {
   return JSON.parse(stdout) as ProbeResult
 }
 
-const verify = async (file: string): Promise<string[]> => {
+const SILENCE_FLOOR_DB = -50
+
+const parseAllowSilent = (argv: string[]): boolean =>
+  argv.includes('--allow-silent')
+
+const measureMaxVolumeDb = async (file: string): Promise<number | null> => {
+  const process = Bun.spawn(
+    [
+      'ffmpeg',
+      '-hide_banner',
+      '-i',
+      file,
+      '-af',
+      'volumedetect',
+      '-vn',
+      '-f',
+      'null',
+      '-',
+    ],
+    { stdout: 'pipe', stderr: 'pipe' },
+  )
+  const [stderr, exitCode] = await Promise.all([
+    new Response(process.stderr).text(),
+    process.exited,
+  ])
+  if (exitCode !== 0) throw new Error(`ffmpeg failed on ${file}: ${stderr}`)
+  const match = /max_volume: (-?[\d.]+) dB/.exec(stderr)
+  return match?.[1] === undefined ? null : Number(match[1])
+}
+
+const verify = async (
+  file: string,
+  allowSilent: boolean,
+): Promise<string[]> => {
   const { streams, format } = await probe(file)
   const problems: string[] = []
   const video = streams.find((stream) => stream.codec_type === 'video')
@@ -111,8 +144,15 @@ const verify = async (file: string): Promise<string[]> => {
     problems.push('no video stream')
   }
   const hasAudio = streams.some((stream) => stream.codec_type === 'audio')
-  if (!hasAudio && existsSync(MUSIC_TRACK)) {
-    problems.push('missing audio stream although public/music/track.wav exists')
+  if (!hasAudio) {
+    if (!allowSilent) problems.push('missing audio stream')
+  } else if (!allowSilent) {
+    const maxVolumeDb = await measureMaxVolumeDb(file)
+    if (maxVolumeDb === null || maxVolumeDb < SILENCE_FLOOR_DB) {
+      problems.push(
+        `audio is silent (max volume ${maxVolumeDb ?? 'unknown'} dB, floor ${SILENCE_FLOOR_DB} dB)`,
+      )
+    }
   }
   return problems
 }
@@ -120,6 +160,12 @@ const verify = async (file: string): Promise<string[]> => {
 const main = async () => {
   const locales = parseLocales(process.argv.slice(2))
   const concurrency = parseConcurrency(process.argv.slice(2))
+  const allowSilent = parseAllowSilent(process.argv.slice(2))
+  if (!allowSilent && !existsSync(MUSIC_TRACK)) {
+    throw new Error(
+      `Missing ${MUSIC_TRACK}: a render would be silent. Restore the Epidemic assets (apps/video/README.md#epidemic-assets) or pass --allow-silent.`,
+    )
+  }
   mkdirSync(OUT_DIR, { recursive: true })
   const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ?? null
 
@@ -149,7 +195,7 @@ const main = async () => {
       browserExecutable,
       concurrency,
     })
-    const problems = await verify(outputLocation)
+    const problems = await verify(outputLocation, allowSilent)
     if (problems.length > 0) {
       failures.push(`${locale}: ${problems.join('; ')}`)
     } else {

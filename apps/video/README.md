@@ -101,8 +101,11 @@ circle kept clear for the play button) into
 `Promo` mixes a music bed and a low-volume SFX layer (`src/audio/`). All audio
 is Epidemic Sound (Pro plan, content published while subscribed stays cleared)
 and **local only**: the repo is public, so `public/music/` and
-`public/sfx/epidemic/` are gitignored. A clean clone renders silent and warns
-once per missing layer (`music` prop falls back to `null`, `sfx` to `false`).
+`public/sfx/epidemic/` are gitignored. A clean clone previews silent in Studio
+and warns once per missing layer (`music` prop falls back to `null`, `sfx` to
+`false`), but `bun run render` refuses to run without `public/music/track.wav`
+and fails any output whose max volume is below -50 dB. Pass `--allow-silent` to
+render a silent draft on purpose.
 
 - **Music:** `public/music/track.wav` through `@remotion/media` `Audio`, 1 s
   fade in, 2 s fade out, gain 0.42 so the master (about -9.5 LUFS) sits calmly
