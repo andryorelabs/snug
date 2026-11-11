@@ -262,7 +262,7 @@ Firefox/AMO; none of the three needs a different design at these sizes),
 `copy.md`, both under the 300 KB budget), `readme/cover-1280x640.png` (README
 banner, using `copy.md`'s README tagline). **Not generated**: CWS screenshots
 (1280×800) — those need the real running popup UI after the rebrand ships, not a
-brand-kit render; left for the `/forge` application pass. Current locations:
+brand-kit render; left for the `/emet` application pass. Current locations:
 `docs/brand/logo/png/mark-{16,32,48,128}.png`,
 `docs/store/assets/small-tile-440x280.png`,
 `docs/store/assets/marquee-1400x560.png` and `docs/assets/readme-banner.png`
@@ -287,7 +287,7 @@ brand-kit render; left for the `/forge` application pass. Current locations:
 
 ## Closed decisions (carried from AO-1011/AO-1016 scoping)
 
-- Two-stage process: this interactive brand definition first, a second `/forge`
+- Two-stage process: this interactive brand definition first, a second `/emet`
   run applies the resulting `apply-spec.md` and ships v2.0.0.
 - English-first copy; Spanish adapted for meaning and tone, not a literal mirror
   (this repo's existing i18n convention).

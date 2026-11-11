@@ -180,7 +180,7 @@ on the banner.
 | Title            | URL                                                                         |
 | ---------------- | --------------------------------------------------------------------------- |
 | Chrome Web Store | `https://chromewebstore.google.com/detail/gdhpeilfkeeajillmcncaelnppiakjhn` |
-| Snug on GitHub   | `https://github.com/AndryOre/snug`                                          |
+| Snug on GitHub   | `https://github.com/andryorelabs/snug`                                      |
 | Andry on X       | `https://x.com/andryore`                                                    |
 
 ## Contact

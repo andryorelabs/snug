@@ -36,9 +36,6 @@ const ALLOWED_PATHS: ReadonlySet<string> = new Set([
   'CHANGELOG.md',
   'scripts/stale-names.test.ts',
   'emet.config.json',
-  'docs/brand/brief.md',
-  'scripts/lint-docs.ts',
-  'scripts/locks.ts',
 ])
 const ALLOWED_PREFIXES: readonly string[] = ['docs/adr/', '.claude/skills/']
 

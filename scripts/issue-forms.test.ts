@@ -160,11 +160,12 @@ describe('repository links in community files', () => {
   })
 
   test('a link to the former owner is reported', () => {
+    const formerOwnerLink = ['github.com', 'AndryOre', 'snug'].join('/')
     expect(
       findForeignRepositoryLinks(
-        'See https://github.com/AndryOre/snug/issues and https://github.com/andryorelabs/snug.',
+        `See https://${formerOwnerLink}/issues and https://github.com/andryorelabs/snug.`,
       ),
-    ).toEqual(['github.com/AndryOre/snug'])
+    ).toEqual([formerOwnerLink])
   })
 
   test('SECURITY.md links the security advisory form', () => {

@@ -4,20 +4,7 @@ import { describe, expect, test } from 'vitest'
 
 const REPO_ROOT = new URL('../', import.meta.url).pathname
 
-/**
- * Pathspecs the slug rule is enforced on. The coordinator widens this list to
- * the whole repo (`['.']`) at integration.
- */
-const OWNER_SLUG_SURFACES = [
-  'apps/extension',
-  'apps/site',
-  'apps/video',
-  'packages/ui',
-  'PRIVACY_POLICY.md',
-  '.agents',
-  'docs/launch',
-  'docs/store',
-]
+const OWNER_SLUG_SURFACES = ['.']
 
 const STALE_SLUG = /github\.com\/andryore\/snug/i
 
@@ -42,7 +29,7 @@ function isText(content: Buffer): boolean {
 }
 
 describe('owner slug', () => {
-  test('no tracked file in the covered surfaces links the old owner', () => {
+  test('no tracked file links the old owner', () => {
     const offenders = trackedFiles().filter((file) => {
       const content = readFileSync(`${REPO_ROOT}${file}`)
       return isText(content) && STALE_SLUG.test(content.toString('utf8'))

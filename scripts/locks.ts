@@ -23,7 +23,7 @@ import path from 'node:path'
 const HOLDERLESS_GRACE_MS = 2000
 
 /**
- * Directory-based mutual-exclusion lock, shared by every `/forge` script
+ * Directory-based mutual-exclusion lock, shared by every `/emet` script
  * that needs one — extracted out of `e2e-queue.ts`, which had the only
  * production-proven implementation (its own top-of-file comment carries the
  * full "why a directory, not `flock`" rationale, stale-lock reclaim design,
@@ -51,7 +51,7 @@ export interface LockHolder {
 
 /**
  * Resolves `<git-common-dir>/<lockName>`. `--git-common-dir`, not
- * `process.cwd()`, is deliberate: every `/forge` worktree shares one
+ * `process.cwd()`, is deliberate: every `/emet` worktree shares one
  * `.git`, and a lock only serializes access if every worktree agrees on its
  * path — one scoped to a single worktree's own `.git` would let two
  * worktrees each "hold" an independent lock while stepping on the same
@@ -64,7 +64,7 @@ export async function resolveLockDirectory(lockName: string): Promise<string> {
   const gitCommonDirectory = output.trim()
   if (!gitCommonDirectory) {
     throw new Error(
-      `forge-locks: could not resolve --git-common-dir for lock "${lockName}" — are we inside a git repo?`,
+      `emet-locks: could not resolve --git-common-dir for lock "${lockName}" — are we inside a git repo?`,
     )
   }
   return path.join(gitCommonDirectory, lockName)
