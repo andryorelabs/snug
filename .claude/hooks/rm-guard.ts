@@ -127,13 +127,20 @@ function findRmIndex(tokens: readonly string[]): number {
   )
 }
 
+const SHELL_SCRIPT_FLAG = /^-[A-Za-z]*c[A-Za-z]*$/
+
 /**
- * The script of the first `sh -c`-style invocation in the segment, or
- * undefined when there is none.
+ * The script of the first `sh -c`-style or `eval` invocation in the segment,
+ * or undefined when there is none. The script flag may sit in an option
+ * cluster such as `-lc` or `-ec`.
  * @param tokens - The words of a segment.
  * @returns The script text, if any.
  */
 function shellScript(tokens: readonly string[]): string | undefined {
+  const evalIndex = tokens.findIndex((token) => plainWord(token) === 'eval')
+  if (evalIndex !== -1) {
+    return tokens.slice(evalIndex + 1).join(' ')
+  }
   const shellIndex = tokens.findIndex((token) =>
     SHELL_COMMANDS.has(plainWord(token)),
   )
@@ -141,7 +148,8 @@ function shellScript(tokens: readonly string[]): string | undefined {
     return undefined
   }
   const rest = tokens.slice(shellIndex + 1)
-  const scriptIndex = rest.indexOf('-c') + 1
+  const scriptIndex =
+    rest.findIndex((token) => SHELL_SCRIPT_FLAG.test(token)) + 1
   return scriptIndex > 0 ? rest[scriptIndex] : undefined
 }
 

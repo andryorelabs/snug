@@ -27,15 +27,11 @@ const TEXT_EXTENSIONS = new Set([
 /**
  * Paths where the old names are allowed. ADRs and the changelog record the
  * past, this file names them on purpose, and `.claude/skills/` is vendored
- * third-party text. `emet.config.json`, `docs/brand/brief.md`,
- * `scripts/lint-docs.ts` and `scripts/locks.ts` still carry stale comments
- * that other tickets of the standard v1 adoption own; remove each entry when
- * its file is cleaned.
+ * third-party text.
  */
 const ALLOWED_PATHS: ReadonlySet<string> = new Set([
   'CHANGELOG.md',
   'scripts/stale-names.test.ts',
-  'emet.config.json',
 ])
 const ALLOWED_PREFIXES: readonly string[] = ['docs/adr/', '.claude/skills/']
 

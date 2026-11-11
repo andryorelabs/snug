@@ -81,6 +81,10 @@ describe('isAllowedRemoval', () => {
       'nice rm -rf src',
       'find . -exec rm -rf {} +',
       'ls | xargs rm -rf',
+      'bash -c "rm -rf src"',
+      'bash -lc "rm -rf src"',
+      'sh -ec "rm -rf src"',
+      'eval "rm -rf src"',
     ]
     for (const command of hidden) {
       expect(isAllowedRemoval(command, repository)).toBe(false)
