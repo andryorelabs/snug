@@ -1,17 +1,37 @@
-import { readFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { Readable } from 'node:stream'
 import { fileURLToPath } from 'node:url'
-import { describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 import {
   buildLycheeCacheRelativePath,
   buildLycheeDownloadUrl,
   buildLycheeLockRelativePath,
+  ensureLycheeBinary,
   EXPECTED_LYCHEE_ACTION_VERSION,
   LYCHEE_ARGS,
   LYCHEE_VERSION,
   resolveLycheeArch,
 } from './lint-docs'
+
+const cacheRoot = vi.hoisted(() => ({ directory: '' }))
+
+vi.mock('./locks', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  resolveLockDirectory: (name: string) =>
+    Promise.resolve(`${cacheRoot.directory}/${name}`),
+}))
 
 const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
 const WORKFLOW_PATH = path.join(REPO_ROOT, '.github/workflows/lint-docs.yml')
@@ -136,5 +156,131 @@ describe('buildLycheeCacheRelativePath', () => {
 describe('buildLycheeLockRelativePath', () => {
   test('is a flat name distinct from the binary cache path, one level under --git-common-dir', () => {
     expect(buildLycheeLockRelativePath('v0.24.2')).toBe('lychee-v0.24.2.lock')
+  })
+})
+
+/**
+ * Vitest workers do not expose the `Bun` global, so the two members the
+ * download path uses are backed by Node primitives with the same contract.
+ */
+function installBunShim(): void {
+  vi.stubGlobal('Bun', {
+    write: async (destination: string, response: Response) => {
+      writeFileSync(destination, Buffer.from(await response.arrayBuffer()))
+    },
+    spawn: (options: { cmd: string[] }) => {
+      const [command, ...commandArguments] = options.cmd
+      const child = spawn(command ?? '', commandArguments, {
+        stdio: ['ignore', 'ignore', 'pipe'],
+      })
+      return {
+        exited: new Promise<number>((resolve) => {
+          child.on('close', (code) => resolve(code ?? 1))
+        }),
+        stderr: Readable.toWeb(child.stderr),
+      }
+    },
+  })
+}
+
+/**
+ * Builds a real `.tar.gz` holding the given relative files.
+ * @param workingDirectory Scratch directory to build the archive in.
+ * @param files Map of archive-relative path to file content.
+ * @returns The archive bytes.
+ */
+function buildTarball(
+  workingDirectory: string,
+  files: Record<string, string>,
+): Buffer {
+  const source = path.join(workingDirectory, 'source')
+  for (const [relativePath, content] of Object.entries(files)) {
+    mkdirSync(path.dirname(path.join(source, relativePath)), {
+      recursive: true,
+    })
+    writeFileSync(path.join(source, relativePath), content)
+  }
+  const archivePath = path.join(workingDirectory, 'fixture.tar.gz')
+  const result = spawnSync('tar', ['-czf', archivePath, '-C', source, '.'])
+  if (result.status !== 0) throw new Error('lint-docs.test: tar failed')
+  return readFileSync(archivePath)
+}
+
+const binaryPath = () =>
+  path.join(cacheRoot.directory, buildLycheeCacheRelativePath('v9.9.9'))
+const lockPath = () =>
+  path.join(cacheRoot.directory, buildLycheeLockRelativePath('v9.9.9'))
+
+describe('ensureLycheeBinary', () => {
+  let scratch: string
+  let fetchMock: ReturnType<typeof vi.fn>
+
+  beforeEach(() => {
+    scratch = mkdtempSync(path.join(tmpdir(), 'lint-docs-ensure-'))
+    cacheRoot.directory = path.join(scratch, 'git')
+    mkdirSync(cacheRoot.directory)
+    installBunShim()
+    fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+    rmSync(scratch, { recursive: true, force: true })
+  })
+
+  test('returns a cached binary without touching the network', async () => {
+    mkdirSync(path.dirname(binaryPath()), { recursive: true })
+    writeFileSync(binaryPath(), 'cached')
+
+    await expect(ensureLycheeBinary('v9.9.9')).resolves.toBe(binaryPath())
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  test('downloads, extracts a nested binary, makes it executable and releases the lock', async () => {
+    const tarball = buildTarball(scratch, {
+      'lychee-x86_64-unknown-linux-gnu/lychee': '#!/bin/sh\n',
+    })
+    fetchMock.mockResolvedValue(new Response(new Uint8Array(tarball)))
+
+    await expect(ensureLycheeBinary('v9.9.9')).resolves.toBe(binaryPath())
+    expect(readFileSync(binaryPath(), 'utf8')).toBe('#!/bin/sh\n')
+    expect(statSync(binaryPath()).mode & 0o111).not.toBe(0)
+    expect(existsSync(lockPath())).toBe(false)
+  })
+
+  test('reports the URL and a manual-install hint when the request fails', async () => {
+    fetchMock.mockRejectedValue(new Error('offline'))
+
+    await expect(ensureLycheeBinary('v9.9.9')).rejects.toThrow(
+      /failed to download lychee from .*lychee-v9\.9\.9.*offline.*manually/s,
+    )
+    expect(existsSync(lockPath())).toBe(false)
+  })
+
+  test('reports the HTTP status when the release asset is missing', async () => {
+    fetchMock.mockResolvedValue(new Response('nope', { status: 404 }))
+
+    await expect(ensureLycheeBinary('v9.9.9')).rejects.toThrow(/HTTP 404/)
+    expect(existsSync(binaryPath())).toBe(false)
+  })
+
+  test('fails when the download is not a tar archive', async () => {
+    fetchMock.mockResolvedValue(new Response('not an archive'))
+
+    await expect(ensureLycheeBinary('v9.9.9')).rejects.toThrow(
+      /failed to extract the lychee archive/,
+    )
+  })
+
+  test('fails when the archive holds no lychee binary', async () => {
+    const tarball = buildTarball(scratch, { 'readme.txt': 'hello' })
+    fetchMock.mockResolvedValue(new Response(new Uint8Array(tarball)))
+
+    await expect(ensureLycheeBinary('v9.9.9')).rejects.toThrow(
+      /could not find a "lychee" binary/,
+    )
+    expect(existsSync(lockPath())).toBe(false)
   })
 })
