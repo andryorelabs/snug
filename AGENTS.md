@@ -56,6 +56,8 @@ Each rule is a recorded decision; read its ADR before changing it.
   [ADR 0017](docs/adr/0017-landing-umami-cloud-cookieless-analytics.md)), under
   a CSP sent as a header with build-time hashes
   ([ADR 0037](docs/adr/0037-site-csp-header-with-build-time-hashes.md)).
+- Pull requests target `develop`; a promotion to `main` is a merge commit
+  ([ADR 0040](docs/adr/0040-develop-branch-promoted-by-merge-commit.md)).
 - Store releases are gated on a verified tag
   ([ADR 0026](docs/adr/0026-store-release-is-gated-on-a-verified-tag.md)).
 - CI runs on GitHub-hosted runners, with an optional routed runner for light
@@ -80,7 +82,7 @@ replaced decision gets a new ADR.
 
 Branch names and commit/PR titles follow fixed patterns, gitmoji included by
 convention (not lint-enforced). The branch model is
-[ADR 0039](docs/adr/0039-branch-model.md). Detail:
+[ADR 0040](docs/adr/0040-develop-branch-promoted-by-merge-commit.md). Detail:
 [`docs/development.md#branch-naming`](docs/development.md#branch-naming),
 [`docs/development.md#commit-format`](docs/development.md#commit-format).
 

@@ -197,8 +197,8 @@ How the code that ships, and the tooling that builds it, are kept trustworthy.
 - **SHA-pinned Actions.** Every GitHub Action is pinned to a full commit SHA
   with a version comment, workflows are linted by actionlint, and the workflow
   invariants tests fail on an unpinned `uses:` line.
-- **Static analysis and scoring.** CodeQL scans the code on every pull request
-  and weekly ([ADR 0004](adr/0004-enable-codeql-sast.md)), and OpenSSF Scorecard
+- **Static analysis and scoring.** CodeQL scans the code on every pull request,
+  on every push to `main` and `develop`, and weekly ([ADR 0004](adr/0004-enable-codeql-sast.md)), and OpenSSF Scorecard
   runs weekly and on every push to `main`.
 - **Gated, attested releases.** A store release is gated on a verified tag
   ([ADR 0026](adr/0026-store-release-is-gated-on-a-verified-tag.md)), and the

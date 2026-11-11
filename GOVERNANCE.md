@@ -15,11 +15,11 @@ what gets merged.
 1. **Issue first.** Most changes start as a GitHub issue (bug report, feature
    request, or proposal) so the "why" is on the record before any code is
    written.
-2. **Pull request.** Implementation happens in a pull request against `main`.
+2. **Pull request.** Implementation happens in a pull request against `develop`.
    Every PR must pass CI (formatting, linting, type-checking, unused-code
    detection, and tests — see [`CONTRIBUTING.md`](CONTRIBUTING.md)) before it
    can be merged. Pull requests are merged via **squash merge only**, keeping a
-   linear history on `main`.
+   linear history on `develop`. `main` receives only promotions of `develop`.
 3. **ADR for hard-to-reverse choices.** Decisions that are expensive to reverse
    — architecture, security posture, or anything that changes how contributors
    work — are recorded as an Architecture Decision Record under
