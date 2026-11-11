@@ -13,6 +13,7 @@ export default defineConfig({
       'oxlint-plugins/**/*.test.ts',
       'docs/adr/**/*.test.ts',
       'docs/brand/**/*.test.ts',
+      '.claude/hooks/**/*.test.ts',
     ],
     coverage: {
       provider: 'v8',

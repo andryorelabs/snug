@@ -14,6 +14,7 @@
     "oxlint-plugins",
     "docs/adr",
     "docs/brand/tools",
+    ".claude/hooks",
     "oxlint.config.ts",
     "commitlint.config.ts",
     "vitest.config.ts"
