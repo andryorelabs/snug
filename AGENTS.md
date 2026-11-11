@@ -1,6 +1,8 @@
 # AGENTS.md
 
-Instructions for coding agents working in this repository.
+Instructions for coding agents working in this repository. Terms follow
+[`GLOSSARY.md`](GLOSSARY.md); stack rules for the landing page are in
+[`apps/site/AGENTS.md`](apps/site/AGENTS.md).
 
 ## Layout
 
@@ -34,6 +36,38 @@ tool directly, and never mix in another package manager (this repo uses
 - `bun run build` — **do not run unless explicitly asked.** It's slow and not
   needed to verify most changes.
 
+## Rules
+
+Each rule is a recorded decision; read its ADR before changing it.
+
+- One package manager, one monorepo: bun workspaces with Turborepo
+  ([ADR 0010](docs/adr/0010-bun-workspaces-monorepo.md)).
+- Format, lint and typecheck run on the Oxc toolchain; ESLint stays for `.astro`
+  only
+  ([ADR 0028](docs/adr/0028-oxc-toolchain-replaces-prettier-and-most-of-eslint.md)).
+- Code comments are TSDoc blocks on non-obvious exports only
+  ([ADR 0002](docs/adr/0002-tsdoc-only-code-comments.md)).
+- E2E runs against the built extension, never the dev server
+  ([ADR 0003](docs/adr/0003-e2e-against-built-extension.md)).
+- Downloads and Notification access stay optional permissions
+  ([ADR 0030](docs/adr/0030-optional-downloads-and-notification-access.md)).
+- The site loads no third-party script except cookieless Umami
+  ([ADR 0011](docs/adr/0011-landing-static-site-no-third-party-scripts.md),
+  [ADR 0017](docs/adr/0017-landing-umami-cloud-cookieless-analytics.md)), under
+  a CSP sent as a header with build-time hashes
+  ([ADR 0037](docs/adr/0037-site-csp-header-with-build-time-hashes.md)).
+- Store releases are gated on a verified tag
+  ([ADR 0026](docs/adr/0026-store-release-is-gated-on-a-verified-tag.md)).
+- CI runs on GitHub-hosted runners, with an optional routed runner for light
+  jobs
+  ([ADR 0031](docs/adr/0031-github-hosted-ci-with-sharded-e2e-and-optional-blacksmith-runner.md)).
+- The repository conforms to the andryorelabs standard v1, with its N-A list
+  recorded in [ADR 0035](docs/adr/0035-adopt-andryorelabs-standard-v1.md).
+- Snug keeps its own palette, type and voice; only the maker credit is shared
+  ([ADR 0036](docs/adr/0036-brand-kit-and-maker-credit.md)).
+- AI crawlers follow the robots policy
+  ([ADR 0038](docs/adr/0038-ai-crawler-robots-policy.md)).
+
 ## Architecture decision records
 
 A new ADR must add its row to [`docs/adr/README.md`](docs/adr/README.md);
@@ -45,7 +79,8 @@ replaced decision gets a new ADR.
 ## Branch and commit conventions
 
 Branch names and commit/PR titles follow fixed patterns, gitmoji included by
-convention (not lint-enforced). Detail:
+convention (not lint-enforced). The branch model is
+[ADR 0039](docs/adr/0039-branch-model.md). Detail:
 [`docs/development.md#branch-naming`](docs/development.md#branch-naming),
 [`docs/development.md#commit-format`](docs/development.md#commit-format).
 
@@ -84,9 +119,14 @@ file-wide or project-wide:
   [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - `bun run lint:docs` runs lychee (downloaded on first use); broken links and
   anchors fail it: [`docs/troubleshooting.md`](docs/troubleshooting.md).
+- `scripts/docs-index.test.ts` fails when a document under `docs/` is not linked
+  from [`docs/README.md`](docs/README.md), and `scripts/stale-names.test.ts`
+  fails when a retired project name appears outside ADRs and the changelog.
 - Actions are SHA-pinned and workflows are linted; edit them with care:
   [`docs/development.md#ci`](docs/development.md#ci).
-- Repository settings are applied by hand, not by code:
+- Repository settings are code: the rulesets live in `.github/rulesets`, are
+  applied with `gh api`, and `bun run repo-settings:check` diffs them against
+  the live repository:
   [`docs/development.md#repository-settings`](docs/development.md#repository-settings).
 - Releases are tag-driven and gated on a verified tag; never publish to a store
   by hand: [`docs/how-to/cut-a-release.md`](docs/how-to/cut-a-release.md).

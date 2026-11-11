@@ -10,31 +10,48 @@ and this project adheres to
 
 ## [2.3.1] - 2026-11-03
 
+### Changed
+
 - Clearer messages now appear when Snug needs Downloads access, instead of a raw
   error code.
-- The failure notification switch now shows as off when Notification access is
-  missing, with an Allow button to turn it back on.
 - The Goodbye page now understands more spellings of language codes.
 
+### Fixed
+
+- The failure notification switch now shows as off when Notification access is
+  missing, with an Allow button to turn it back on.
+
 ## [2.3.0] - 2026-11-03
+
+### Added
+
+- Added a Goodbye page that opens when Snug is removed, asking why with one
+  click and helping according to your answer.
+
+### Changed
 
 - Downloads and Notification access are now optional, so updates no longer show
   new permission warnings. Snug asks only when you turn on Auto-export to
   Downloads or failure notifications.
-- Added a Goodbye page that opens when Snug is removed, asking why with one
-  click and helping according to your answer.
 - The What’s new page now opens with a line saying what Snug is.
 
 ## [2.2.0] - 2026-10-10
+
+### Added
 
 - Auto-export can now save to a Custom folder you choose, anywhere on your
   computer.
 - Snug now warns you early when Folder access is needed, and the Auto-export
   page has an Allow access button to grant it again.
+
+### Changed
+
 - Retention keeps only the newest runs, counted across Downloads and the Custom
   folder.
 
 ## [2.1.0] - 2026-10-08
+
+### Changed
 
 - Import got a big upgrade: pick or drop several files at once, preview them as
   a tree and choose exactly what to bring in. The toolbar popup accepts dropped
@@ -42,31 +59,41 @@ and this project adheres to
 
 ## [2.0.3] - 2026-10-06
 
+### Added
+
 - The popup now shows a one-time, dismissible Review prompt after your first
   successful export.
+
+### Changed
+
 - The privacy policy now describes the prompt's local-only state.
 - Refined the popup's look: clearer card borders, a more visible keyboard focus
   ring in light mode and smoother button and menu transitions.
 
 ## [2.0.2] - 2026-10-06
 
+### Added
+
 - The App sidebar now links to the Snug website and the privacy policy.
-- The extension's homepage in the manifest now points to the website.
 - Added a What's new entry announcing the website.
 
+### Changed
+
+- The extension's homepage in the manifest now points to the website.
+
 ## [2.0.1] - 2026-10-04
+
+### Changed
 
 - Rewrote the store descriptions in all 10 languages to read as plain sentences.
   No functional changes since 2.0.0, which was never published.
 
 ## [2.0.0] - 2026-10-02
 
-- The extension is now called **Snug**, with a new name and icon. Same
-  local-only promise: nothing about your data or settings changes.
+### Added
+
 - Added a new App with a sidebar for export, import, auto-export, settings and
   what's new.
-- Redesigned the popup to be more compact.
-- Applied the new Snug color palette across the extension.
 - Added 8 new languages, for 10 locales in total: English, Spanish, German,
   French, Italian, Brazilian Portuguese, Russian, Japanese, Korean and
   Simplified Chinese.
@@ -78,42 +105,66 @@ and this project adheres to
   latest backups, and a notification if a backup fails.
 - Added export to Markdown, OPML and XBEL, and import from a Chrome profile
   Bookmarks file, XBEL and Safari bookmarks, with progress and Cancel.
+
+### Changed
+
+- The extension is now called **Snug**, with a new name and icon. Same
+  local-only promise: nothing about your data or settings changes.
+- Redesigned the popup to be more compact.
+- Applied the new Snug color palette across the extension.
 - Made the bookmark tree fast on huge libraries and fully usable with the
   keyboard and screen readers.
 
 ## [1.7.0] - 2026-10-01
 
+### Added
+
 - Added a status card and an Export now button to Auto-export settings, plus a
   popup status line showing whether auto-export is on, off, or failed.
+
+### Changed
+
 - Hardened bookmark imports to reject disallowed URL schemes (e.g.
   `javascript:`) in CSV, HTML, and JSON files.
 
 ## [1.6.0] - 2026-04-29
+
+### Added
 
 - Added Auto Export — automatically save your bookmarks at custom intervals
   (every 12 hours, daily, every 3 or 7 days) to your preferred download folder.
 
 ## [1.5.0] - 2025-04-29
 
+### Added
+
 - Added Advanced Import — restore bookmarks to their original locations
   (Bookmarks Bar and Other Bookmarks), with merge or replace options.
 
 ## [1.4.0] - 2025-04-29
+
+### Added
 
 - Added customizable filename templates for exports — use date/time placeholders
   like %yyyy, %mm, %dd to create unique, timestamped filenames automatically.
 
 ## [1.3.0] - 2025-02-16
 
+### Added
+
 - Added dark mode support that automatically matches your system theme
   preferences.
 
 ## [1.2.0] - 2025-02-14
 
+### Added
+
 - Now automatically adapts to your browser's language! Available in English and
   Spanish.
 
 ## [1.1.0] - 2025-02-13
+
+### Changed
 
 - Imported bookmarks now go to their own folder to avoid mixing with your
   existing bookmarks.
@@ -121,20 +172,42 @@ and this project adheres to
 
 ## [1.0.0] - 2024-08-05
 
+### Added
+
 - Added new Advanced Export feature for more control over your bookmarks.
 - Introduced welcome and update pages to keep you informed about new features.
+
+### Changed
+
 - Improved overall performance for a smoother experience.
 
 ## [0.1.1] - 2024-08-04
 
-- Fixed a critical bug that affected users with non-English browser languages.
+### Changed
+
 - Improved reliability for both import and export functions.
+
+### Fixed
+
+- Fixed a critical bug that affected users with non-English browser languages.
 - Fixed an issue where the extension icon was not showing in the browser
   toolbar.
 - Fixed an issue where the extension was not working in some browsers.
 
 ## [0.1.0] - 2024-08-03
 
+### Added
+
 - Initial release of Bookmark Import/Export extension.
 - Simple import feature for HTML and JSON files.
 - Basic functionality for exporting bookmarks to HTML and JSON formats.
+
+[Unreleased]: https://github.com/andryorelabs/snug/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/andryorelabs/snug/compare/v2.3.0...v2.3.1
+[2.3.0]: https://github.com/andryorelabs/snug/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/andryorelabs/snug/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/andryorelabs/snug/compare/v2.0.3...v2.1.0
+[2.0.3]: https://github.com/andryorelabs/snug/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/andryorelabs/snug/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/andryorelabs/snug/compare/v1.7.0...v2.0.1
+[1.7.0]: https://github.com/andryorelabs/snug/releases/tag/v1.7.0

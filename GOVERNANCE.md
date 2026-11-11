@@ -36,8 +36,8 @@ responsible for the project's security posture (see
 
 ### Contributor
 
-Anyone who opens an issue, submits a pull request, or participates in discussion
-is a contributor. Contributors are expected to follow
+Anyone who opens an issue, submits a pull request, or comments on one is a
+contributor. Contributors are expected to follow
 [`CONTRIBUTING.md`](CONTRIBUTING.md)'s conventions and the
 [Code of Conduct](CODE_OF_CONDUCT.md). Contributing does not require any formal
 application or approval step.
@@ -48,8 +48,7 @@ There is no fixed process today, since the project has had a single maintainer
 since its creation. In practice, a contributor who consistently sends
 high-quality pull requests, participates in review, and demonstrates good
 judgment about the project's scope and direction would be a candidate for
-maintainer access. Reach out via a GitHub issue or discussion to express
-interest.
+maintainer access. Reach out via a GitHub issue to express interest.
 
 ## Continuity
 
@@ -58,6 +57,12 @@ extended period, the project may pause — issues and pull requests may go
 unreviewed until the maintainer returns or a successor is found. This is an open
 invitation: if you are interested in becoming a backup maintainer, please open
 an issue to start that conversation.
+
+## Forking
+
+Snug is released under the MIT license in [`LICENSE`](LICENSE). If the project
+pauses, stops being maintained or goes in a direction you disagree with, fork it
+and continue: that is a supported outcome, not a conflict.
 
 ## Code of Conduct
 
