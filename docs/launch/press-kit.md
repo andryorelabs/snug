@@ -53,7 +53,7 @@ has no cloud, so your bookmarks never leave the browser.
 - Chrome Web Store:
   <https://chromewebstore.google.com/detail/gdhpeilfkeeajillmcncaelnppiakjhn>
 - Landing page: <https://snug.andryore.dev/>
-- Source: <https://github.com/AndryOre/snug>
+- Source: <https://github.com/andryorelabs/snug>
 - Privacy policy: [`PRIVACY_POLICY.md`](../../PRIVACY_POLICY.md)
 - License: [`LICENSE`](../../LICENSE)
 
@@ -76,4 +76,4 @@ in [`../store/README.md`](../store/README.md).
 
 ## Contact
 
-Open an issue or a discussion on GitHub: <https://github.com/AndryOre/snug>.
+Open an issue or a discussion on GitHub: <https://github.com/andryorelabs/snug>.

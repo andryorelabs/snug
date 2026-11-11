@@ -1,6 +1,6 @@
 ---
 title: 새로운 기능
-sourceHash: 62946505ba156116
+sourceHash: 1d5179f4a7f68463
 description:
   'Chrome 확장 프로그램 Snug의 릴리스 노트. 자동 내보내기 새 옵션부터 수정과
   개선까지 버전별 변경 사항을 정리했어요.'

@@ -166,7 +166,7 @@ https://snug.andryore.dev/
 Support URL:
 
 ```text
-https://github.com/AndryOre/snug/issues
+https://github.com/andryorelabs/snug/issues
 ```
 
 Privacy policy URL (the live site's privacy page):

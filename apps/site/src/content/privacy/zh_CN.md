@@ -91,7 +91,7 @@ Snug 会请求以下浏览器权限，每项权限仅用于所述用途：
 如果你对本隐私政策有任何疑问，请通过以下方式联系我们：
 
 - 电子邮件：hello@andryore.dev
-- 在我们的 GitHub 仓库中提交 issue： https://github.com/AndryOre/snug/issues
+- 在我们的 GitHub 仓库中提交 issue： https://github.com/andryorelabs/snug/issues
 
 ## 同意
 

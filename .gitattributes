@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+apps/site/src/content/how-to-samples/chrome-bookmarks.csv -text
+
+bun.lock linguist-generated
+skills-lock.json linguist-generated
+*.snap linguist-generated

@@ -147,7 +147,7 @@ imports, and undoes a replace from a Safety snapshot.
 
 **Feature bullets**
 
-- MIT licensed, source at github.com/AndryOre/snug
+- MIT licensed, source at github.com/andryorelabs/snug
 - Chrome MV3 with WXT, React 19 and Tailwind CSS v4
 - No server and no network calls; verifiable in the code
 - CodeQL, OpenSSF Scorecard and Best Practices, pinned CI

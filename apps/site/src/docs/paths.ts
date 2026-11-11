@@ -23,7 +23,7 @@ export const TRANSLATIONS_DIRECTORY = path.join(
 /**
  * Public GitHub repository that non-published files link to.
  */
-const GITHUB_REPOSITORY_URL = 'https://github.com/AndryOre/snug'
+const GITHUB_REPOSITORY_URL = 'https://github.com/andryorelabs/snug'
 
 const GITHUB_BRANCH = 'main'
 

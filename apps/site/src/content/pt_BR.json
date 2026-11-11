@@ -74,6 +74,7 @@
     "alternatives": "Alternativas",
     "howTo": "Guias práticos",
     "note": "O Snug é de código aberto sob a licença MIT.",
+    "credit": "Criado por {name}",
     "navLabel": "Rodapé"
   },
   "header": {

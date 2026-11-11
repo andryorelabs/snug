@@ -40,7 +40,7 @@ describe('buildLocalizedPage', () => {
     })
     expect(page.body).toContain('Cuerpo.')
     expect(page.editUrl).toBe(
-      'https://github.com/AndryOre/snug/edit/main/apps/site/src/content/translations/es/docs/guide/settings.md',
+      'https://github.com/andryorelabs/snug/edit/main/apps/site/src/content/translations/es/docs/guide/settings.md',
     )
   })
 

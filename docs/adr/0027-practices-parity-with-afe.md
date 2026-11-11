@@ -15,6 +15,12 @@ and added the `llms.txt` generator and `@shadcn/lint` rows.
 Revised: 2026-11-01, the `jsx-no-literals`, import-sort and typescript-eslint
 rows now describe the Oxc toolchain (ADR 0028).
 
+Revised: 2026-11-11, the docs and agent-workflow practices are now defined by
+the aokit page
+[`docs-and-emet.md`](https://github.com/andryorelabs/aokit/blob/main/docs/standards/docs-and-emet.md)
+(formerly `docs-and-forge.md`); see
+[0035](0035-adopt-andryorelabs-standard-v1.md).
+
 ## Context
 
 Snug and Animated Fluent Emojis (AFE) are maintained by the same person and

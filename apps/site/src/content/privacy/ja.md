@@ -94,7 +94,7 @@ Snug は次のブラウザー権限を要求します。いずれも、記載し
 本プライバシーポリシーについてご質問がある場合は、次の方法でご連絡ください。
 
 - メール：hello@andryore.dev
-- GitHub リポジトリで issue を作成： https://github.com/AndryOre/snug/issues
+- GitHub リポジトリで issue を作成： https://github.com/andryorelabs/snug/issues
 
 ## 同意
 

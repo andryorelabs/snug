@@ -195,7 +195,8 @@ Shared assets, once:
 - [x] No data usage categories are checked.
 - [x] All three certifications are ticked.
 - [x] Privacy policy URL is
-      `https://github.com/AndryOre/snug/blob/main/PRIVACY_POLICY.md` and opens.
+      `https://github.com/andryorelabs/snug/blob/main/PRIVACY_POLICY.md` and
+      opens.
 
 ### Distribution
 

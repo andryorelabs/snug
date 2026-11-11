@@ -1,6 +1,6 @@
 ---
 title: 新機能
-sourceHash: 62946505ba156116
+sourceHash: 1d5179f4a7f68463
 description:
   'Chrome 拡張機能 Snug
   のリリースノート。自動書き出しの新しい選択肢から修正や改善まで、各バージョンの変更点をまとめています。'

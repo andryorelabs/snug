@@ -146,10 +146,11 @@ the Snug rename.
 
 **Trust links:**
 
-- Source: https://github.com/AndryOre/snug
-- OpenSSF Scorecard: https://scorecard.dev/viewer/?uri=github.com/AndryOre/snug
+- Source: https://github.com/andryorelabs/snug
+- OpenSSF Scorecard:
+  https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug
 - OpenSSF Best Practices: https://www.bestpractices.dev/projects/15093
-- CI: https://github.com/AndryOre/snug/actions/workflows/ci.yml
+- CI: https://github.com/andryorelabs/snug/actions/workflows/ci.yml
 - Privacy Policy: `PRIVACY_POLICY.md`
 
 **Anti-persona:** Anyone who wants cloud sync across devices, a bookmark manager

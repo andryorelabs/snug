@@ -11,6 +11,11 @@ Revised: 2026-10-21, the `main` ruleset requires three status checks, the zip
 size budget is now enforced by `scripts/check-zip-size.ts`, and the
 `andryore-dev` mention is dropped.
 
+Revised: 2026-11-11, Dependabot alerts and security updates are turned on to
+follow the andryorelabs standard v1
+([ADR 0035](0035-adopt-andryorelabs-standard-v1.md)); Renovate stays the only
+version updater.
+
 Revised: 2026-10-21, Status relation wording now uses the linked phrase form,
 recorded on both sides.
 
@@ -70,11 +75,11 @@ rejected for this repository.
 - **A merge queue** — unavailable on personal-account repositories, and
   unnecessary for a solo maintainer with `allow_update_branch` and auto-merge.
 - **Code-owner review** — no benefit with a single owner.
-- **Dependabot alerts and security updates** — turned off entirely by choice,
-  since Renovate (with `osvVulnerabilityAlerts`) is the single source of
-  dependency-update and vulnerability handling. This leaves Renovate's
-  GitHub-alert-sourced `vulnerabilityAlerts` block with nothing to read;
-  `osvVulnerabilityAlerts` is the effective source.
+- **Dependabot version updates** — Renovate is the only version updater.
+  Dependabot alerts and security updates were off until 2026-11-11 and are now
+  on, as the andryorelabs standard v1 requires
+  ([ADR 0035](0035-adopt-andryorelabs-standard-v1.md)). The alerts feed
+  Renovate's `vulnerabilityAlerts` block, next to `osvVulnerabilityAlerts`.
 - **Bundle-size gate** — no content scripts, installs once; nobody notices zip
   size. Originally reported in the CI job summary only; the zip size is now
   enforced against a fixed budget by `scripts/check-zip-size.ts` in the `build`

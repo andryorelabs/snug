@@ -170,7 +170,7 @@ contacter :
 
 - Par e-mail : hello@andryore.dev
 - En ouvrant une issue sur notre dépôt GitHub :
-  https://github.com/AndryOre/snug/issues
+  https://github.com/andryorelabs/snug/issues
 
 ## Consentement
 

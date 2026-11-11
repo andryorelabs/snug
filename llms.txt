@@ -1,0 +1,35 @@
+# Snug
+
+> Export, import, and back up your bookmarks, entirely on your device.
+
+Snug is a Chrome extension that moves bookmarks between browsers in six formats, imports them with a preview and undo, finds duplicates and runs scheduled exports. It makes no network calls and has no account, cloud or telemetry. This repository holds the extension, its landing page and Guide, and the promo video.
+
+## Guide
+
+- [Usage](docs/usage.md): opening the app and where each page is documented
+- [Exporting](docs/guide/exporting.md): the six formats, selections and filename templates
+- [Importing](docs/guide/importing.md): previews, import modes, the Safety snapshot and Undo
+- [Duplicates](docs/guide/duplicates.md): finding and deleting repeated bookmarks
+- [Auto-export](docs/guide/auto-export.md): schedules, destinations and Retention
+- [Settings](docs/guide/settings.md): theme, display preferences, the default import mode and Safety snapshots
+- [FAQ](docs/guide/faq.md): frequently asked questions
+
+## Reference
+
+- [Development](docs/development.md): setup, workspaces, scripts, hooks and CI
+- [Configuration](docs/configuration.md): every environment variable and what happens when it is missing
+- [Architecture](docs/architecture.md): code map of the extension, the site and the shared packages
+- [Security](docs/security.md): threat model, supply chain, CSP requirements and known limitations
+- [Glossary](GLOSSARY.md): the terms the code, docs and UI use
+- [Architecture decisions](docs/adr/README.md): the ADR index
+- [Troubleshooting](docs/troubleshooting.md): failures by symptom
+
+## Project
+
+- [README](README.md): what Snug is, install and links
+- [Changelog](CHANGELOG.md): release notes, newest first
+- [Roadmap](ROADMAP.md): direction for the next 12 months and what is out of scope
+- [Contributing](CONTRIBUTING.md): pull request conventions and review process
+- [Governance](GOVERNANCE.md): decisions, roles and continuity
+- [Privacy policy](PRIVACY_POLICY.md): what Snug collects, which is nothing
+- [AGENTS.md](AGENTS.md): instructions for coding agents

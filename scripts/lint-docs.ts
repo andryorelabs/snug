@@ -13,7 +13,7 @@
  * The binary is cached at `<git-common-dir>/lychee/<version>/lychee`,
  * resolved via {@link resolveLockDirectory} from `./locks` (the same
  * `git rev-parse --git-common-dir` anchor point that module's locks use) so
- * every `/forge` worktree of this repo shares one download instead of each
+ * every `/emet` worktree of this repo shares one download instead of each
  * one re-fetching the release archive. A cache hit never touches the network.
  *
  * `scripts/lint-docs.test.ts` parses the workflow's own `args:` block and
@@ -53,7 +53,7 @@ export const LYCHEE_VERSION = 'v0.24.2'
 export const EXPECTED_LYCHEE_ACTION_VERSION = 'v2.9.0'
 
 /**
- * Bounded wait for a sibling `/forge` worktree already downloading lychee.
+ * Bounded wait for a sibling `/emet` worktree already downloading lychee.
  */
 const LYCHEE_LOCK_TIMEOUT_MS = 60_000
 const LYCHEE_LOCK_POLL_INTERVAL_MS = 500
@@ -230,7 +230,7 @@ async function downloadLycheeBinary(
  * downloading and extracting it first if this is the first run against this
  * `--git-common-dir`. The download itself is guarded by a directory lock
  * (same primitive `scripts/locks.ts`'s callers use) keyed on `version`, so
- * two `/forge` worktrees racing a cold cache don't `copyFileSync` into the
+ * two `/emet` worktrees racing a cold cache don't `copyFileSync` into the
  * same destination concurrently — the second one to reach the lock
  * re-checks `existsSync` first and finds the first one already finished,
  * rather than downloading a second time.

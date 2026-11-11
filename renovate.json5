@@ -30,8 +30,8 @@
 
   labels: ['dependencies'],
 
-  // Vulnerability source is osvVulnerabilityAlerts only — Dependabot alerts are
-  // deliberately disabled (docs/adr/0001-public-repo-security-posture.md)
+  // Vulnerability sources: OSV and Dependabot alerts. Renovate stays the only
+  // version updater (docs/adr/0001-public-repo-security-posture.md)
   osvVulnerabilityAlerts: true,
   vulnerabilityAlerts: {
     enabled: true,

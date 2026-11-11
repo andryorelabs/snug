@@ -19,8 +19,9 @@ export interface WorkflowStep {
   readonly with?: Record<string, unknown>
 }
 
-interface WorkflowJob {
+export interface WorkflowJob {
   readonly if?: string
+  readonly strategy?: { readonly matrix?: Record<string, unknown> }
   readonly 'continue-on-error'?: boolean
   readonly needs?: unknown
   readonly 'timeout-minutes'?: unknown
@@ -31,6 +32,7 @@ interface WorkflowJob {
 
 export interface Workflow {
   readonly on?: unknown
+  readonly concurrency?: unknown
   readonly permissions?: unknown
   readonly jobs?: Record<string, WorkflowJob>
 }

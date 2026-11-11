@@ -6,6 +6,15 @@ conventions this repository expects from a pull request.
 By participating in this project, you agree to abide by the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## Where to start
+
+Look for issues labeled `good first issue` or `help wanted` in the
+[issue tracker](https://github.com/andryorelabs/snug/issues). For anything
+bigger than a small fix, open an issue first so the "why" is agreed before you
+write code. Read [`ROADMAP.md`](ROADMAP.md) to see what is in scope: Snug is
+local-only by design, so features that need a backend, an account or telemetry
+will not be accepted.
+
 ## Setup
 
 See [`docs/development.md`](docs/development.md) for the full local development
@@ -46,6 +55,16 @@ the same PR. See
 `fakeBrowser`-based tests work. `lib/**` is held to the coverage thresholds
 documented in [`docs/development.md`](docs/development.md).
 
+## Review process
+
+The maintainer reviews every pull request. Expect a first response within a
+week; Snug has a single maintainer, so a busy week can take longer. Review
+comments are requests to change the code, not judgments of you. Resolve each
+conversation, push follow-up commits, and the maintainer squash-merges once
+`CI passed` is green and every thread is resolved. A pull request that sits
+without a reply for two weeks can be pinged in its own thread. See
+[`GOVERNANCE.md`](GOVERNANCE.md) for who decides what.
+
 ## Sign-off (DCO)
 
 Every commit must be signed off under the
@@ -55,6 +74,13 @@ project's license. Add the sign-off with `git commit -s`, which appends a
 `Signed-off-by: Your Name <your.email@example.com>` trailer to the commit
 message. There is no CI check enforcing this — it's a contributor obligation,
 not an automated gate.
+
+## Questions
+
+Ask a question in an
+[issue](https://github.com/andryorelabs/snug/issues/new/choose) using the form
+that fits it. Support options are in [`.github/SUPPORT.md`](.github/SUPPORT.md).
+Do not use an issue for a security report; see the next section.
 
 ## Reporting security issues
 

@@ -138,3 +138,13 @@ and this project adheres to
 - Initial release of Bookmark Import/Export extension.
 - Simple import feature for HTML and JSON files.
 - Basic functionality for exporting bookmarks to HTML and JSON formats.
+
+[Unreleased]: https://github.com/andryorelabs/snug/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/andryorelabs/snug/compare/v2.3.0...v2.3.1
+[2.3.0]: https://github.com/andryorelabs/snug/compare/v2.2.0...v2.3.0
+[2.2.0]: https://github.com/andryorelabs/snug/compare/v2.1.0...v2.2.0
+[2.1.0]: https://github.com/andryorelabs/snug/compare/v2.0.3...v2.1.0
+[2.0.3]: https://github.com/andryorelabs/snug/compare/v2.0.2...v2.0.3
+[2.0.2]: https://github.com/andryorelabs/snug/compare/v2.0.1...v2.0.2
+[2.0.1]: https://github.com/andryorelabs/snug/compare/v1.7.0...v2.0.1
+[1.7.0]: https://github.com/andryorelabs/snug/releases/tag/v1.7.0

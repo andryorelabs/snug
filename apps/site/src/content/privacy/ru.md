@@ -157,7 +157,7 @@ Snug запрашивает следующие разрешения браузе
 
 - По электронной почте: hello@andryore.dev
 - Создав обращение (issue) в нашем репозитории на GitHub:
-  https://github.com/AndryOre/snug/issues
+  https://github.com/andryorelabs/snug/issues
 
 ## Согласие
 

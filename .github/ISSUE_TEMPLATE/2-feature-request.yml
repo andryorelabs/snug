@@ -9,8 +9,8 @@ body:
       label: Pre-flight checklist
       options:
         - label:
-            I have searched the existing issues and discussions and confirmed
-            this hasn't been proposed.
+            I have searched the existing issues and confirmed this hasn't been
+            proposed.
           required: true
 
   - type: markdown
@@ -18,7 +18,7 @@ body:
       value: |
         Thanks for suggesting a new feature! Please describe it clearly so it can be properly evaluated.
 
-        > Before submitting, please search [existing issues](https://github.com/AndryOre/snug/issues) and [discussions](https://github.com/AndryOre/snug/discussions) to avoid duplicates.
+        > Before submitting, please search [existing issues](https://github.com/andryorelabs/snug/issues) to avoid duplicates.
 
   - type: textarea
     id: problem

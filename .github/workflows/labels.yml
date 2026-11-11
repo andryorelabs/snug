@@ -10,6 +10,11 @@ on:
     paths:
       - .github/labels.yml
       - .github/workflows/labels.yml
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -33,5 +38,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           yaml-file: .github/labels.yml
-          # dry-run on PRs so you can preview changes before they go live
-          dry-run: ${{ github.event_name == 'pull_request' }}
+          # dry-run off main (PRs, dispatches from a branch) so changes can be
+          # previewed before they go live
+          dry-run: ${{ github.ref != 'refs/heads/main' }}

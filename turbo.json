@@ -20,6 +20,10 @@
       ],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["check"],
+      "outputs": []
+    },
     "test": {
       "dependsOn": ["transit"],
       "inputs": [
@@ -93,29 +97,11 @@
       "outputs": []
     },
     "//#test:root": {
-      "inputs": [
-        "scripts/**",
-        "eslint-rules/**",
-        "docs/adr/**",
-        ".github/workflows/**",
-        "vitest.config.ts",
-        "renovate.json5",
-        "lint-staged.config.mjs",
-        "package.json"
-      ],
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": []
     },
     "//#test:coverage:root": {
-      "inputs": [
-        "scripts/**",
-        "eslint-rules/**",
-        "docs/adr/**",
-        ".github/workflows/**",
-        "vitest.config.ts",
-        "renovate.json5",
-        "lint-staged.config.mjs",
-        "package.json"
-      ],
+      "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["coverage/**"]
     }
   }

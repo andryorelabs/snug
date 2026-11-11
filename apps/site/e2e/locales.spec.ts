@@ -26,6 +26,18 @@ for (const { path, lang } of ROUTES) {
   })
 }
 
+for (const { path } of ROUTES) {
+  test(`${path} credits the maker with one link to the owner site`, async ({
+    page,
+  }) => {
+    await page.goto(path)
+    const creditLink = page.locator('[data-footer-credit] a')
+    await expect(creditLink).toHaveCount(1)
+    await expect(creditLink).toHaveAttribute('href', 'https://andryore.dev')
+    await expect(creditLink).toHaveText('AndryOre')
+  })
+}
+
 test('ja renders its own folder names in both journey trees', async ({
   page,
 }) => {

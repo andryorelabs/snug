@@ -27,6 +27,7 @@ apps/video/public/music/
 # emet coordination artifacts
 .emet
 .claude/worktrees
+.claude/settings.local.json
 
 # Editor directories and files
 .vscode/*
@@ -49,4 +50,6 @@ apps/site/.astro/
 
 # env files (deploy secrets live in GitHub repository secrets, ADR 0022)
 .env
+.env.keys
 .env.*
+!.env.example

@@ -39,8 +39,8 @@ Refs: AO-<!-- Linear ticket number, delete this line if not applicable -->
 - [ ] Docs updated (`README.md`, `docs/usage.md` or `docs/guide/`) if
       user-visible behavior changed
 - [ ] Passes `bun run check` and `bun run test`
-- [ ] PR title follows
-      [Conventional Commits](https://www.conventionalcommits.org/)
-      (`type(scope): description`)
+- [ ] PR title follows the format `type: <gitmoji> lowercase subject`, for
+      example `fix: 🐛 keep folder order on import`
+      ([commit format](../docs/development.md#commit-format))
 - [ ] Commits are signed off (DCO, `git commit -s`)
 - [ ] No secrets or sensitive data included

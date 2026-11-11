@@ -166,7 +166,7 @@ Wenn du Fragen zu dieser Datenschutzerklärung hast, kannst du uns kontaktieren:
 
 - Per E-Mail: hello@andryore.dev
 - Indem du in unserem GitHub-Repository ein Issue eröffnest:
-  https://github.com/AndryOre/snug/issues
+  https://github.com/andryorelabs/snug/issues
 
 ## Einwilligung
 

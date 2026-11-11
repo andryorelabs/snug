@@ -74,6 +74,7 @@
     "alternatives": "代替の拡張機能",
     "howTo": "使い方ガイド",
     "note": "Snug は MIT ライセンスのオープンソースです。",
+    "credit": "{name} が開発",
     "navLabel": "フッター"
   },
   "header": {
