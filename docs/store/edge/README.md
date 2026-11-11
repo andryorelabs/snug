@@ -422,7 +422,7 @@ Snug makes no network requests and loads no remote code. All data stays on the d
 
 ## Pre-submit checklist
 
-1. **Confirm `main` is green.** `bun run check` and `bun run test` pass.
+1. **Confirm `develop` and `main` are green.** `bun run check` and `bun run test` pass.
 2. **Edge build.** Build the Edge zip (`wxt zip -b edge`, added by AO-1535) and
    confirm its manifest `name` is `Snug: Bookmark Export, Import & Backup` and
    its `description` and in-app strings name no other browser. Today the Chrome
