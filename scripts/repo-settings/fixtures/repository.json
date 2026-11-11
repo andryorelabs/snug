@@ -1,0 +1,73 @@
+{
+  "id": 825761305,
+  "node_id": "R_kgDOMTgeGQ",
+  "name": "snug",
+  "full_name": "andryorelabs/snug",
+  "private": false,
+  "description": "Export, import and back up your bookmarks in common formats, from Chrome or Safari, on a schedule. Everything stays local.",
+  "fork": false,
+  "url": "https://api.github.com/repos/andryorelabs/snug",
+  "created_at": "2024-07-08T12:51:59Z",
+  "homepage": "https://snug.andryore.dev/",
+  "language": "TypeScript",
+  "has_issues": true,
+  "has_projects": false,
+  "has_downloads": false,
+  "has_wiki": false,
+  "has_pages": false,
+  "has_discussions": false,
+  "archived": false,
+  "disabled": false,
+  "license": {
+    "key": "mit",
+    "name": "MIT License",
+    "spdx_id": "MIT",
+    "url": "https://api.github.com/licenses/mit",
+    "node_id": "MDc6TGljZW5zZTEz"
+  },
+  "allow_forking": true,
+  "is_template": false,
+  "web_commit_signoff_required": false,
+  "has_pull_requests": true,
+  "pull_request_creation_policy": "all",
+  "topics": [
+    "backup",
+    "bookmarks",
+    "browser-extension",
+    "chrome-extension",
+    "react",
+    "typescript",
+    "wxt"
+  ],
+  "visibility": "public",
+  "default_branch": "main",
+  "allow_squash_merge": true,
+  "allow_merge_commit": false,
+  "allow_rebase_merge": false,
+  "allow_auto_merge": true,
+  "delete_branch_on_merge": true,
+  "allow_update_branch": true,
+  "use_squash_pr_title_as_default": true,
+  "squash_merge_commit_message": "COMMIT_MESSAGES",
+  "squash_merge_commit_title": "PR_TITLE",
+  "merge_commit_message": "PR_TITLE",
+  "merge_commit_title": "MERGE_MESSAGE",
+  "custom_properties": {},
+  "security_and_analysis": {
+    "secret_scanning": {
+      "status": "disabled"
+    },
+    "secret_scanning_push_protection": {
+      "status": "disabled"
+    },
+    "dependabot_security_updates": {
+      "status": "disabled"
+    },
+    "secret_scanning_non_provider_patterns": {
+      "status": "disabled"
+    },
+    "secret_scanning_validity_checks": {
+      "status": "disabled"
+    }
+  }
+}
