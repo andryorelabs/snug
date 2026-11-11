@@ -20,7 +20,7 @@ describe('markExternalLinks', () => {
 
   it('marks GitHub blob links', () => {
     const result = markExternalLinks(
-      '<a href="https://github.com/AndryOre/snug/blob/main/LICENSE">License</a>',
+      '<a href="https://github.com/andryorelabs/snug/blob/main/LICENSE">License</a>',
     )
     expect(result).toContain('target="_blank"')
   })

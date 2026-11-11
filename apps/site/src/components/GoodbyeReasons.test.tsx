@@ -151,7 +151,7 @@ describe('GoodbyeReasons', () => {
       anchor.getAttribute('href'),
     )
     expect(hrefs).toEqual([
-      expect.stringContaining('github.com/AndryOre/snug/issues/new'),
+      expect.stringContaining('github.com/andryorelabs/snug/issues/new'),
       'mailto:hello@andryore.dev',
     ])
   })

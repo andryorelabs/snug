@@ -140,7 +140,7 @@ Snug는 다음 브라우저 권한을 요청하며, 각 권한은 설명된 목�
 이 개인정보 처리방침에 관해 궁금한 점이 있으시면 다음 방법으로 문의해 주세요.
 
 - 이메일: hello@andryore.dev
-- GitHub 저장소에 이슈 등록: https://github.com/AndryOre/snug/issues
+- GitHub 저장소에 이슈 등록: https://github.com/andryorelabs/snug/issues
 
 ## 동의
 

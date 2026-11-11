@@ -2,8 +2,18 @@
   "name": "@snug/video",
   "version": "1.0.0",
   "description": "Snug Chrome Web Store promo video (Remotion)",
-  "license": "UNLICENSED",
   "private": true,
+  "license": "MIT",
+  "author": "Andry Orellana <hello@andryore.dev>",
+  "homepage": "https://snug.andryore.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andryorelabs/snug.git",
+    "directory": "apps/video"
+  },
+  "bugs": {
+    "url": "https://github.com/andryorelabs/snug/issues"
+  },
   "type": "module",
   "dependencies": {
     "@remotion/bundler": "4.0.539",

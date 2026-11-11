@@ -166,7 +166,7 @@ Se hai domande sulla presente Informativa sulla privacy, contattaci:
 
 - Via e-mail: hello@andryore.dev
 - Aprendo una issue nel nostro repository GitHub:
-  https://github.com/AndryOre/snug/issues
+  https://github.com/andryorelabs/snug/issues
 
 ## Consenso
 

@@ -3,11 +3,13 @@ import { Separator } from '@workspace/ui/components/separator'
 
 import { DOCS_UI } from '../i18n/docs-ui'
 import {
+  CREDIT_URL,
   FOOTER_LINK_HREFS,
   getClosingCopy,
   getLandingCopy,
   installHref,
   resolveHref,
+  splitCredit,
 } from '../i18n/landing'
 import {
   languageTag,
@@ -75,6 +77,7 @@ const OUTBOUND_LINK_KEYS = new Set([
   'listing',
 ])
 const noteParts = footer.note.split('Snug')
+const credit = splitCredit(footer.credit)
 ---
 
 <footer data-section="footer" class="border-t border-border">
@@ -126,6 +129,18 @@ const noteParts = footer.note.split('Snug')
           {part}
         </>
       ))}
+    </p>
+    <p class="text-sm text-muted-foreground" data-footer-credit>
+      {credit.before}
+      <a
+        href={CREDIT_URL}
+        rel="noopener"
+        translate="no"
+        class="rounded-sm underline-offset-4 focus-ring-solid hover:underline"
+      >
+        AndryOre
+      </a>
+      {credit.after}
     </p>
   </div>
 </footer>

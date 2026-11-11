@@ -63,7 +63,7 @@ describe('buildCatalogEntry', () => {
       'See [Importing](/guide/importing/#import-batch).\n',
     )
     expect(entry.editUrl).toBe(
-      'https://github.com/AndryOre/snug/edit/main/docs/guide/settings.md',
+      'https://github.com/andryorelabs/snug/edit/main/docs/guide/settings.md',
     )
   })
 

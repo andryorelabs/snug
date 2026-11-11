@@ -2,6 +2,17 @@
   "name": "@snug/extension",
   "description": "Export, import, and schedule automatic exports of your bookmarks — six formats, duplicate cleanup, and undo, all on your device, no account, no cloud.",
   "private": true,
+  "license": "MIT",
+  "author": "Andry Orellana <hello@andryore.dev>",
+  "homepage": "https://snug.andryore.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andryorelabs/snug.git",
+    "directory": "apps/extension"
+  },
+  "bugs": {
+    "url": "https://github.com/andryorelabs/snug/issues"
+  },
   "version": "2.3.1",
   "type": "module",
   "scripts": {

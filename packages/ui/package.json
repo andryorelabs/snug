@@ -2,6 +2,18 @@
   "name": "@workspace/ui",
   "version": "0.0.0",
   "private": true,
+  "description": "Shared shadcn/ui components and theme for Snug",
+  "license": "MIT",
+  "author": "Andry Orellana <hello@andryore.dev>",
+  "homepage": "https://snug.andryore.dev/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andryorelabs/snug.git",
+    "directory": "packages/ui"
+  },
+  "bugs": {
+    "url": "https://github.com/andryorelabs/snug/issues"
+  },
   "type": "module",
   "exports": {
     "./globals.css": "./src/styles/globals.css",

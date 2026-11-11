@@ -30,14 +30,14 @@ describe('rewriteLink', () => {
 
   it('sends non-published repository files to GitHub', () => {
     expect(rewriteLink('../architecture.md#storage', fromGuidePage)).toBe(
-      'https://github.com/AndryOre/snug/blob/main/docs/architecture.md#storage',
+      'https://github.com/andryorelabs/snug/blob/main/docs/architecture.md#storage',
     )
     expect(rewriteLink('../../CHANGELOG.md', fromGuidePage)).toBe('/changelog/')
     expect(rewriteLink('security.md', fromOverview)).toBe(
-      'https://github.com/AndryOre/snug/blob/main/docs/security.md',
+      'https://github.com/andryorelabs/snug/blob/main/docs/security.md',
     )
     expect(rewriteLink('adr/', fromOverview)).toBe(
-      'https://github.com/AndryOre/snug/tree/main/docs/adr',
+      'https://github.com/andryorelabs/snug/tree/main/docs/adr',
     )
   })
 
@@ -100,7 +100,7 @@ describe('rewriteMarkdownLinks', () => {
     ].join('\n')
     expect(rewriteMarkdownLinks(markdown, fromGuidePage)).toBe(
       [
-        'See [one](/guide/settings/) and [two](https://github.com/AndryOre/snug/blob/main/docs/architecture.md "Title").',
+        'See [one](/guide/settings/) and [two](https://github.com/andryorelabs/snug/blob/main/docs/architecture.md "Title").',
         '',
         '`[code](settings.md)`',
         '',

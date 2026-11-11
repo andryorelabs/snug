@@ -4,6 +4,7 @@ import { STORE_FACTS } from '../seo/store-facts'
 import { getBentoCopy } from './bento'
 import {
   countUpParts,
+  CREDIT_URL,
   FOOTER_LINK_HREFS,
   fullHeadline,
   getClosingCopy,
@@ -12,6 +13,7 @@ import {
   PROMO_VIDEO_IDS,
   resolveHref,
   SHOT_KEYS,
+  splitCredit,
   TRUST_LINK_HREFS,
   youtubeEmbedUrl,
   youtubeWatchUrl,
@@ -111,6 +113,32 @@ describe('landing copy', () => {
       expect(notFound.body.length).toBeGreaterThan(0)
       expect(notFound.backLink.length).toBeGreaterThan(0)
     }
+  })
+
+  it('credits AndryOre around one name placeholder in every locale', () => {
+    expect(CREDIT_URL).toBe('https://andryore.dev')
+    for (const locale of LOCALES) {
+      const { footer } = getClosingCopy(locale)
+      const parts = splitCredit(footer.credit)
+      expect(footer.credit.split('{name}')).toHaveLength(2)
+      expect(parts.before + parts.after).not.toContain('AndryOre')
+      expect(parts.before.length + parts.after.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('splits the credit around the name placeholder', () => {
+    expect(splitCredit('Built by {name}')).toEqual({
+      before: 'Built by ',
+      after: '',
+    })
+    expect(splitCredit('{name} が開発')).toEqual({
+      before: '',
+      after: ' が開発',
+    })
+  })
+
+  it('uses the owner site as the JSON-LD author URL', () => {
+    expect(STORE_FACTS.author.url).toBe(CREDIT_URL)
   })
 
   it('resolves the privacy links per locale with a trailing slash', () => {

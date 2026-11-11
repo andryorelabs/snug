@@ -10,7 +10,7 @@ describe('buildSecurityTxt', () => {
   it('lists the advisory URL and the mailto contact', () => {
     const contacts = lines.filter((line) => line.startsWith('Contact: '))
     expect(contacts).toEqual([
-      'Contact: https://github.com/AndryOre/snug/security/advisories/new',
+      'Contact: https://github.com/andryorelabs/snug/security/advisories/new',
       'Contact: mailto:hello@andryore.dev',
     ])
   })
@@ -26,7 +26,7 @@ describe('buildSecurityTxt', () => {
 
   it('links the policy and the canonical URL', () => {
     expect(lines).toContain(
-      'Policy: https://github.com/AndryOre/snug/blob/main/.github/SECURITY.md',
+      'Policy: https://github.com/andryorelabs/snug/blob/main/.github/SECURITY.md',
     )
     expect(lines).toContain(
       'Canonical: https://snug.andryore.dev/.well-known/security.txt',
