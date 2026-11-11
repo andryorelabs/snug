@@ -1,11 +1,12 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   evaluateZipSize,
   findChromeZip,
+  runZipSizeCheck,
   ZIP_SIZE_BUDGET_BYTES,
 } from './check-zip-size'
 
@@ -44,5 +45,44 @@ describe('findChromeZip', () => {
   it('returns undefined when missing', () => {
     expect(findChromeZip(directory)).toBeUndefined()
     expect(findChromeZip(path.join(directory, 'nope'))).toBeUndefined()
+  })
+})
+
+describe('runZipSizeCheck', () => {
+  let directory: string
+  beforeEach(() => {
+    directory = mkdtempSync(path.join(tmpdir(), 'zip-size-run-'))
+    vi.spyOn(console, 'log').mockImplementation(vi.fn())
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    rmSync(directory, { recursive: true, force: true })
+  })
+
+  it('exits 0 and says so when no zip was built', () => {
+    expect(runZipSizeCheck([directory], {})).toBe(0)
+    expect(console.log).toHaveBeenCalledWith(
+      'No extension zip built (extension not affected by this change).',
+    )
+  })
+
+  it('exits 0 and appends the verdict to the step summary when within budget', () => {
+    writeFileSync(path.join(directory, 'snug-1-chrome.zip'), 'tiny')
+    const summaryPath = path.join(directory, 'summary.md')
+
+    expect(
+      runZipSizeCheck([directory], { GITHUB_STEP_SUMMARY: summaryPath }),
+    ).toBe(0)
+    expect(readFileSync(summaryPath, 'utf8')).toContain('(within)')
+  })
+
+  it('exits 1 when the zip is over budget', () => {
+    writeFileSync(
+      path.join(directory, 'snug-1-chrome.zip'),
+      Buffer.alloc(ZIP_SIZE_BUDGET_BYTES + 1),
+    )
+
+    expect(runZipSizeCheck([directory], {})).toBe(1)
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('OVER'))
   })
 })
