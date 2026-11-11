@@ -29,7 +29,7 @@ export function documentationSitemapEntries(): SitemapEntry[] {
     const lastmod = lastCommitDate([`../../${source.sourcePath}`])
     return LOCALES.map((locale) => ({
       loc: `${SITE_ORIGIN}${publishedRoute(source, locale)}`,
-      lastmod,
+      ...(lastmod !== undefined && { lastmod }),
       alternates,
     }))
   })

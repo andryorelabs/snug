@@ -115,16 +115,12 @@ async function flattenToRows(
         folder: parentPath,
       }
 
-      if (options.includeDateAdded) {
-        row.dateAdded = node.dateAdded
-          ? millisecondsToSeconds(node.dateAdded)
-          : undefined
+      if (options.includeDateAdded && node.dateAdded) {
+        row.dateAdded = millisecondsToSeconds(node.dateAdded)
       }
 
-      if (options.includeDateLastUsed) {
-        row.dateLastUsed = node.dateLastUsed
-          ? millisecondsToSeconds(node.dateLastUsed)
-          : undefined
+      if (options.includeDateLastUsed && node.dateLastUsed) {
+        row.dateLastUsed = millisecondsToSeconds(node.dateLastUsed)
       }
 
       if (options.includeIconData) {

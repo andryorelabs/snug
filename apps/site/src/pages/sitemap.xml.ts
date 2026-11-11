@@ -15,10 +15,14 @@ import { documentationSitemapEntries } from '../seo/documentation-pages'
 import { howToSitemapEntries } from '../seo/how-to-pages'
 import { lastCommitDate } from '../seo/last-modified'
 
+function lastmodField(lastmod: string | undefined): { lastmod?: string } {
+  return lastmod === undefined ? {} : { lastmod }
+}
+
 export function GET() {
   const homeEntries = LOCALES.map((locale) => ({
     loc: `${SITE_ORIGIN}${localePath(locale)}`,
-    lastmod: lastCommitDate([`src/content/${locale}.json`]),
+    ...lastmodField(lastCommitDate([`src/content/${locale}.json`])),
     alternates: hreflangAlternates(),
   }))
   const privacyAlternates = hreflangAlternates(
@@ -33,7 +37,7 @@ export function GET() {
   ])
   const privacyEntries = PRIVACY_PAGE_LOCALES.map((locale) => ({
     loc: `${SITE_ORIGIN}${privacyPath(locale)}`,
-    lastmod: privacyLastmod,
+    ...lastmodField(privacyLastmod),
     alternates: privacyAlternates,
   }))
   const entries = [

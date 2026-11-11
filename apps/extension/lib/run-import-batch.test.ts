@@ -155,7 +155,7 @@ describe('runImportBatch', () => {
     const [root] = await browser.bookmarks.getTree()
     const bar = root?.children?.[0]
     await browser.bookmarks.create({
-      parentId: bar?.id,
+      ...(bar?.id !== undefined && { parentId: bar.id }),
       title: 'Old',
       url: 'https://old.example/',
     })

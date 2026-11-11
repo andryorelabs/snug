@@ -51,7 +51,7 @@ function convertNode(node: ChromeNode): ParsedBookmark {
   const url = typeof node.url === 'string' ? node.url : undefined
   return {
     title,
-    url: isAllowedBookmarkUrl(url) ? url : undefined,
+    ...(isAllowedBookmarkUrl(url) && { url }),
     dateAdded,
   }
 }

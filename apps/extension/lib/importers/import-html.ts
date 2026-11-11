@@ -257,7 +257,7 @@ function parseBookmarkElement(a: HTMLAnchorElement): ParsedBookmark {
 
   return {
     title: a.textContent?.trim() ?? '',
-    url,
+    ...(url !== undefined && { url }),
     dateAdded: dateAddedAttribute
       ? secondsToMilliseconds(parseInt(dateAddedAttribute))
       : Date.now(),

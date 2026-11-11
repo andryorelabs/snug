@@ -8,6 +8,8 @@ import {
 } from '@/lib/theme-cache'
 import { useStorageItem } from '@/lib/use-storage-item'
 
+function noop() {}
+
 interface ThemeProviderProperties {
   children: React.ReactNode
 }
@@ -48,6 +50,7 @@ export function ThemeProvider({ children }: ThemeProviderProperties) {
       return () => mql.removeEventListener('change', handleChange)
     }
     applyResolvedTheme(theme)
+    return noop
   }, [theme])
 
   return children

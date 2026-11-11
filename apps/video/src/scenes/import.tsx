@@ -551,7 +551,7 @@ export const ImportScene = ({ locale }: SceneProps) => {
                     <TreeRow
                       kind={row.kind}
                       label={row.label}
-                      depth={row.depth}
+                      {...(row.depth !== undefined && { depth: row.depth })}
                       expanded={row.kind === 'folder'}
                       checkProgress={
                         row.duplicate === true

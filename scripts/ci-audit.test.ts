@@ -50,7 +50,7 @@ describe('summarizeJob', () => {
   })
 
   it('counts a job with only setup steps as all setup', () => {
-    const onlySetup = { ...job, steps: job.steps?.slice(0, 3) }
+    const onlySetup = { ...job, steps: job.steps?.slice(0, 3) ?? [] }
     expect(summarizeJob(onlySetup)).toMatchObject({
       setupSeconds: 120,
       runSeconds: 0,

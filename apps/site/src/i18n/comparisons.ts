@@ -243,7 +243,7 @@ export function getComparisonMeta(
     description: interpolateComparison(
       description,
       comparisonCopyLocale(locale),
-      { date },
+      date === undefined ? {} : { date },
     ),
   }
 }

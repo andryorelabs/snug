@@ -120,7 +120,9 @@ export async function captureSafetySnapshot(): Promise<SafetySnapshot> {
         .map((node) => ({
           ...toParsedBookmark(node),
           id: node.id,
-          folderType: node.folderType,
+          ...(node.folderType !== undefined && {
+            folderType: node.folderType,
+          }),
           syncing: node.syncing,
         })),
     }
@@ -252,7 +254,7 @@ export async function hasRewrittenRootsFully(
     'restore-replace',
     {
       trusted: true,
-      onClearingExisting,
+      ...(onClearingExisting !== undefined && { onClearingExisting }),
     },
   )
   return result.skippedInvalidUrl === 0

@@ -41,7 +41,7 @@ export function howToSitemapEntries(): SitemapEntry[] {
   )
   const indexEntries = HOW_TO_INDEX_LOCALES.map((locale) => ({
     loc: `${SITE_ORIGIN}${howToIndexPath(locale)}`,
-    lastmod,
+    ...(lastmod !== undefined && { lastmod }),
     alternates: indexAlternates,
   }))
   const pageEntries = HOW_TO_SLUGS.flatMap((slug) => {
@@ -52,7 +52,7 @@ export function howToSitemapEntries(): SitemapEntry[] {
     )
     return locales.map((locale) => ({
       loc: `${SITE_ORIGIN}${howToPath(locale, slug)}`,
-      lastmod,
+      ...(lastmod !== undefined && { lastmod }),
       alternates,
     }))
   })

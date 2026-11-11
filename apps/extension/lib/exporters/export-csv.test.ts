@@ -128,4 +128,30 @@ describe('exportToCSV', () => {
     expect(csv).toContain('"dateAdded"')
     expect(rows[0]?.dateAdded).toBe('1700000000')
   })
+
+  it('leaves the date cells empty for a bookmark without a date', async () => {
+    seedFakeBookmarksTree(
+      [
+        {
+          id: '11',
+          parentId: '1',
+          title: 'Undated',
+          url: 'https://example.com/undated',
+          syncing: false,
+        },
+      ],
+      [],
+    )
+
+    const csv = await exportToCSV({
+      selectedBookmarks: null,
+      ...baseOptions,
+      includeDateAdded: true,
+      includeDateLastUsed: true,
+    })
+    const [row] = parseRows(csv)
+
+    expect(row?.dateAdded).toBe('')
+    expect(row?.dateLastUsed).toBe('')
+  })
 })

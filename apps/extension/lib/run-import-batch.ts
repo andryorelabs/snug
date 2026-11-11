@@ -179,7 +179,9 @@ async function importBatchUnlocked(
           result,
           writer,
           isTrusted,
-          folderTitle: file.folderTitle,
+          ...(file.folderTitle !== undefined && {
+            folderTitle: file.folderTitle,
+          }),
         })
       }
     })

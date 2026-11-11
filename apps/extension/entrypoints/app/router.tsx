@@ -51,9 +51,8 @@ const routeTree = rootRoute.addChildren([
     getParentRoute: () => rootRoute,
     path: APP_ROUTES.export,
     component: ExportRoute,
-    validateSearch: (search: Record<string, unknown>): { q?: string } => ({
-      q: typeof search.q === 'string' && search.q !== '' ? search.q : undefined,
-    }),
+    validateSearch: (search: Record<string, unknown>): { q?: string } =>
+      typeof search.q === 'string' && search.q !== '' ? { q: search.q } : {},
   }),
   createRoute({
     getParentRoute: () => rootRoute,
@@ -76,9 +75,12 @@ const routeTree = rootRoute.addChildren([
     component: SettingsRoute,
     validateSearch: (
       search: Record<string, unknown>,
-    ): { section?: SettingsSection } => ({
-      section: SETTINGS_SECTIONS.find((section) => section === search.section),
-    }),
+    ): { section?: SettingsSection } => {
+      const section = SETTINGS_SECTIONS.find(
+        (candidate) => candidate === search.section,
+      )
+      return section === undefined ? {} : { section }
+    },
   }),
   createRoute({
     getParentRoute: () => rootRoute,

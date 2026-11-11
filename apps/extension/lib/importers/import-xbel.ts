@@ -47,7 +47,7 @@ function parseEntries(parent: Element): ParsedBookmark[] {
       const href = element.getAttribute('href') ?? undefined
       entries.push({
         title,
-        url: isAllowedBookmarkUrl(href) ? href : undefined,
+        ...(isAllowedBookmarkUrl(href) && { url: href }),
         dateAdded: parseDate(element),
       })
     }
