@@ -1,4 +1,14 @@
-import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 import { parse } from 'yaml'
 
@@ -810,7 +820,7 @@ describe('ci.yml', () => {
 
 describe.each([
   ['ci.yml', 'e2e'],
-  ['site-quality.yml', 'site-quality'],
+  ['site-quality.yml', 'e2e'],
 ])('%s:%s caches Playwright browsers', (fileName, jobName) => {
   const steps = readWorkflow(fileName).jobs?.[jobName]?.steps ?? []
   const version = steps.find((step) => step.id === 'playwright-version')
@@ -845,6 +855,294 @@ describe.each([
         run: 'bunx playwright install-deps chromium',
       },
     ])
+  })
+})
+
+describe('site-quality.yml', () => {
+  const FAN_OUT_JOBS = ['smoke', 'e2e', 'visual', 'lighthouse'] as const
+  const AGGREGATE_JOB = 'site-quality-passed'
+  const SITE_IMAGE_ARTIFACT = 'site-image'
+  const SITE_IMAGE_PATH = '${{ runner.temp }}/site-image.tar'
+  const PREBUILT_SHIM_PATH =
+    'export PATH="${GITHUB_WORKSPACE}/.github/scripts/prebuilt-site-image:${PATH}"'
+
+  const workflow = readWorkflow('site-quality.yml')
+  const { jobs } = parse(readWorkflowText('site-quality.yml')) as {
+    jobs?: Record<string, ShardedJob & SiteBuildJob>
+  }
+
+  function stepsOf(jobName: string): readonly WorkflowStep[] {
+    return jobs?.[jobName]?.steps ?? []
+  }
+
+  function runLines(jobName: string): string[] {
+    return stepsOf(jobName).flatMap((step) => (step.run ?? '').split('\n'))
+  }
+
+  test('runs as build, four parallel checks and one aggregate job', () => {
+    expect(Object.keys(jobs ?? {})).toEqual([
+      'build',
+      ...FAN_OUT_JOBS,
+      AGGREGATE_JOB,
+    ])
+  })
+
+  test('build saves the site image and shares it as an artifact', () => {
+    const steps = stepsOf('build')
+    const buildStep = steps.find((step) => step.run?.includes('docker build'))
+    const upload = steps.find((step) =>
+      step.uses?.startsWith('actions/upload-artifact@'),
+    )
+    expect(needsList(jobs?.build?.needs)).toEqual([])
+    expect(buildStep?.run).toContain('-t snug-site:ci .')
+    expect(buildStep?.run).toContain(
+      'docker save --output "${RUNNER_TEMP}/site-image.tar" snug-site:ci',
+    )
+    expect(upload?.with).toMatchObject({
+      name: SITE_IMAGE_ARTIFACT,
+      path: SITE_IMAGE_PATH,
+      'if-no-files-found': 'error',
+    })
+  })
+
+  test('the image is built in the build job and nowhere else', () => {
+    const builders = Object.keys(jobs ?? {}).filter((jobName) =>
+      runLines(jobName).some((line) =>
+        /\bdocker build\b|\b(?:astro|bun run) build\b/.test(line),
+      ),
+    )
+    expect(builders).toEqual(['build'])
+  })
+
+  test.each(FAN_OUT_JOBS)(
+    '%s needs build and loads the shared image before using it',
+    (jobName) => {
+      const steps = stepsOf(jobName)
+      const download = steps.find((step) =>
+        step.uses?.startsWith('actions/download-artifact@'),
+      )
+      const load = steps.find((step) => step.run?.includes('docker load'))
+      const firstUse = steps.find(
+        (step) =>
+          step !== load &&
+          /docker run|smoke\.sh|test:visual/.test(step.run ?? ''),
+      )
+      expect(needsList(jobs?.[jobName]?.needs)).toEqual(['build'])
+      expect(download?.with).toMatchObject({
+        name: SITE_IMAGE_ARTIFACT,
+        path: '${{ runner.temp }}',
+      })
+      expect(load?.run).toBe(
+        'docker load --input "${RUNNER_TEMP}/site-image.tar"',
+      )
+      expect(steps.indexOf(download ?? {})).toBeLessThan(
+        steps.indexOf(load ?? {}),
+      )
+      expect(firstUse).toBeDefined()
+      expect(steps.indexOf(load ?? {})).toBeLessThan(
+        steps.indexOf(firstUse ?? {}),
+      )
+    },
+  )
+
+  test.each([
+    ['smoke', 'bash apps/site/docker/smoke.sh'],
+    ['visual', 'bun run test:visual'],
+  ])(
+    '%s reuses the shared image where its script would rebuild it',
+    (jobName, command) => {
+      const step = stepsOf(jobName).find((candidate) =>
+        candidate.run?.includes(command),
+      )
+      const lines = (step?.run ?? '').split('\n')
+      expect(lines).toContain(PREBUILT_SHIM_PATH)
+      expect(lines.indexOf(PREBUILT_SHIM_PATH)).toBeLessThan(
+        lines.indexOf(command),
+      )
+      expect(step?.env?.PREBUILT_SITE_IMAGE).toBe('snug-site:ci')
+    },
+  )
+
+  test.each(['build', 'smoke', 'visual'])(
+    '%s fetches the full history last-modified.sh needs',
+    (jobName) => {
+      const checkout = stepsOf(jobName).find((step) =>
+        step.uses?.startsWith('actions/checkout@'),
+      )
+      expect(checkout?.with).toMatchObject({
+        'fetch-depth': 0,
+        filter: 'blob:none',
+      })
+    },
+  )
+
+  test('smoke audits the dist copied out of the shared image', () => {
+    const lines = runLines('smoke')
+    const copy = lines.findIndex((line) =>
+      line.includes(':/usr/share/nginx/html" apps/site/dist'),
+    )
+    const audit = lines.findIndex((line) =>
+      line.includes('bun run test src/seo/distribution-audit.test.ts'),
+    )
+    expect(copy).toBeGreaterThan(-1)
+    expect(audit).toBeGreaterThan(copy)
+    const auditStep = stepsOf('smoke').find((step) =>
+      step.run?.includes('distribution-audit.test.ts'),
+    )
+    expect(auditStep?.env?.REQUIRE_DIST).toBe('1')
+  })
+
+  test('e2e runs as 2 shards that split inside files', () => {
+    const e2e = jobs?.e2e
+    const run = stepsOf('e2e').find((step) =>
+      step.run?.includes('bun run test:container'),
+    )
+    expect(e2e?.strategy?.['fail-fast']).toBe(false)
+    expect(e2e?.strategy?.matrix?.shard).toEqual([1, 2])
+    expect(e2e?.name).toBe('E2E (container ${{ matrix.shard }}/2)')
+    expect(run?.env?.SHARD).toBe('${{ matrix.shard }}')
+    expect(run?.run).toBe(
+      'bun run test:container --fully-parallel --shard="${SHARD}/2"',
+    )
+  })
+
+  test('failure artifacts never collide across jobs or shards', () => {
+    const names = Object.keys(jobs ?? {}).flatMap((jobName) =>
+      stepsOf(jobName)
+        .filter(
+          (step) =>
+            step.uses?.startsWith('actions/upload-artifact@') &&
+            step.if === 'failure()',
+        )
+        .map((step) => String(step.with?.name)),
+    )
+    expect(names).toEqual([
+      'site-container-report-${{ matrix.shard }}',
+      'site-visual-report',
+    ])
+  })
+
+  test('every job runs on a literal ubuntu-latest', () => {
+    const runners = Object.values(jobs ?? {}).map((job) => job['runs-on'])
+    expect(runners).toEqual(runners.map(() => 'ubuntu-latest'))
+    expect(
+      ROUTED_JOBS.filter((key) => key.startsWith('site-quality.yml:')),
+    ).toEqual([])
+  })
+
+  describe('the aggregate job', () => {
+    const aggregate = workflow.jobs?.[AGGREGATE_JOB]
+
+    test('is named "Site quality passed"', () => {
+      expect(jobs?.[AGGREGATE_JOB]?.name).toBe('Site quality passed')
+    })
+
+    test('waits on every other job and always runs', () => {
+      expect(needsList(aggregate?.needs)).toEqual(['build', ...FAN_OUT_JOBS])
+      expect(aggregate?.if).toBe('always()')
+    })
+
+    test('fails when any job fails or is cancelled', () => {
+      const checkStep = aggregate?.steps?.[0]
+      const failed = String(checkStep?.env?.FAILED)
+      expect(failed).toContain("contains(needs.*.result, 'failure')")
+      expect(failed).toMatch(/contains\(needs\.\*\.result,\s*'cancelled'\)/)
+      expect(checkStep?.run).toMatch(
+        /if \[\[ "\$\{FAILED\}" == "true" \]\]; then\n(?:.*\n)*\s*exit 1\n/,
+      )
+    })
+  })
+
+  describe('the prebuilt-site-image docker shim', () => {
+    const shimDirectory = path.join(
+      path.dirname(fileURLToPath(import.meta.url)),
+      '../.github/scripts/prebuilt-site-image',
+    )
+
+    function runShim(
+      shimArguments: readonly string[],
+      environment: Record<string, string> = {},
+    ): { status: number | null; calls: string[]; stderr: string } {
+      const fakeBin = mkdtempSync(path.join(tmpdir(), 'fake-docker-'))
+      const log = path.join(fakeBin, 'calls.log')
+      const fakeDocker = path.join(fakeBin, 'docker')
+      writeFileSync(fakeDocker, '#!/usr/bin/env bash\necho "$*" >> "$CALLS"\n')
+      chmodSync(fakeDocker, 0o755)
+      writeFileSync(log, '')
+      try {
+        const result = spawnSync(
+          'bash',
+          [path.join(shimDirectory, 'docker'), ...shimArguments],
+          {
+            encoding: 'utf8',
+            env: {
+              PATH: [shimDirectory, fakeBin, process.env['PATH'] ?? ''].join(
+                ':',
+              ),
+              CALLS: log,
+              ...environment,
+            },
+          },
+        )
+        return {
+          status: result.status,
+          calls: readFileSync(log, 'utf8').split('\n').filter(Boolean),
+          stderr: result.stderr,
+        }
+      } finally {
+        rmSync(fakeBin, { recursive: true, force: true })
+      }
+    }
+
+    test('turns a build into a tag of the prebuilt image', () => {
+      const { status, calls } = runShim(
+        [
+          'build',
+          '-f',
+          'apps/site/Dockerfile',
+          '--build-arg',
+          'LAST_MODIFIED_DATES={}',
+          '-t',
+          'snug-site-smoke',
+          '.',
+        ],
+        { PREBUILT_SITE_IMAGE: 'snug-site:ci' },
+      )
+      expect(status).toBe(0)
+      expect(calls).toEqual(['tag snug-site:ci snug-site-smoke'])
+    })
+
+    test('passes every other command to the real docker untouched', () => {
+      const { status, calls } = runShim(
+        ['run', '-d', '--name', 'site', 'snug-site-smoke'],
+        { PREBUILT_SITE_IMAGE: 'snug-site:ci' },
+      )
+      expect(status).toBe(0)
+      expect(calls).toEqual(['run -d --name site snug-site-smoke'])
+    })
+
+    test.each([
+      [
+        'no prebuilt image is named',
+        ['build', '-t', 'snug-site-smoke', '.'],
+        {},
+        'PREBUILT_SITE_IMAGE is not set',
+      ],
+      [
+        'the build names no tag',
+        ['build', '.'],
+        { PREBUILT_SITE_IMAGE: 'snug-site:ci' },
+        'has no -t <tag>',
+      ],
+    ])(
+      'refuses a build when %s',
+      (_case, shimArguments, environment, message) => {
+        const { status, calls, stderr } = runShim(shimArguments, environment)
+        expect(status).toBe(1)
+        expect(calls).toEqual([])
+        expect(stderr).toContain(message)
+      },
+    )
   })
 })
 

@@ -51,6 +51,41 @@ describe('parseChangelog', () => {
     expect(entries.every((entry) => entry.body.length > 0)).toBe(true)
   })
 
+  it('accepts the prerelease headings the release script writes', () => {
+    const entries = parseChangelog(
+      [
+        '## [2.4.0-beta.2] - 2026-11-12',
+        '',
+        '- c',
+        '',
+        '## [2.4.0] - 2026-11-13',
+        '',
+        '- d',
+        '',
+        '## [2.4.0-beta.10] - 2026-11-12',
+        '',
+        '- e',
+        '',
+        '## [2.4.0-beta.1] - 2026-11-11',
+        '',
+        '- b',
+        '',
+        '## [2.3.1] - 2026-11-01',
+        '',
+        '- a',
+        '',
+      ].join('\n'),
+    )
+
+    expect(entries.map((entry) => entry.version)).toEqual([
+      '2.4.0',
+      '2.4.0-beta.10',
+      '2.4.0-beta.2',
+      '2.4.0-beta.1',
+      '2.3.1',
+    ])
+  })
+
   it('orders entries newest first even when the source is ascending', () => {
     const entries = parseChangelog(
       '## [0.9.0] - 2024-01-01\n\n- a\n\n## [0.10.0] - 2024-02-01\n\n- b\n',

@@ -4,19 +4,64 @@ export interface ReleaseNote {
   body: string
 }
 
-const RELEASE_HEADING = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/
+const RELEASE_HEADING =
+  /^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)\] - (\d{4}-\d{2}-\d{2})$/
+const NUMERIC_IDENTIFIER = /^\d+$/
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i
 const SECOND_LEVEL_HEADING = /^## /
 const LINK_REFERENCE_DEFINITION = /^\[[^\]]+\]:\s+\S+$/
 
-function compareVersionsDescending(left: string, right: string): number {
-  const leftParts = left.split('.').map(Number)
-  const rightParts = right.split('.').map(Number)
-  for (let index = 0; index < 3; index += 1) {
-    const difference = (rightParts[index] ?? 0) - (leftParts[index] ?? 0)
+function splitVersion(version: string): {
+  core: number[]
+  prerelease: string[]
+} {
+  const separator = version.indexOf('-')
+  const core = separator === -1 ? version : version.slice(0, separator)
+  const prerelease = separator === -1 ? '' : version.slice(separator + 1)
+  return {
+    core: core.split('.').map(Number),
+    prerelease: prerelease === '' ? [] : prerelease.split('.'),
+  }
+}
+
+function compareIdentifiersAscending(left: string, right: string): number {
+  const isLeftNumeric = NUMERIC_IDENTIFIER.test(left)
+  const isRightNumeric = NUMERIC_IDENTIFIER.test(right)
+  if (isLeftNumeric && isRightNumeric) return Number(left) - Number(right)
+  if (isLeftNumeric) return -1
+  if (isRightNumeric) return 1
+  if (left === right) return 0
+  return left < right ? -1 : 1
+}
+
+function comparePrereleasesAscending(left: string[], right: string[]): number {
+  if (left.length === 0 || right.length === 0) {
+    return right.length - left.length
+  }
+  for (const [index, leftIdentifier] of left.entries()) {
+    const rightIdentifier = right[index]
+    if (rightIdentifier === undefined) break
+    const difference = compareIdentifiersAscending(
+      leftIdentifier,
+      rightIdentifier,
+    )
     if (difference !== 0) return difference
   }
-  return 0
+  return left.length - right.length
+}
+
+function compareVersionsDescending(left: string, right: string): number {
+  const leftVersion = splitVersion(left)
+  const rightVersion = splitVersion(right)
+  for (let index = 0; index < 3; index += 1) {
+    const difference =
+      (rightVersion.core[index] ?? 0) - (leftVersion.core[index] ?? 0)
+    if (difference !== 0) return difference
+  }
+  return comparePrereleasesAscending(
+    rightVersion.prerelease,
+    leftVersion.prerelease,
+  )
 }
 
 function assertRealDate(isoDate: string, lineNumber: number, line: string) {
@@ -72,7 +117,7 @@ export function parseChangelog(markdown: string): ReleaseNote[] {
     const match = RELEASE_HEADING.exec(line)
     if (!match) {
       throw new Error(
-        `CHANGELOG.md line ${index + 1}: malformed release heading "${line}"; expected "## [x.y.z] - YYYY-MM-DD"`,
+        `CHANGELOG.md line ${index + 1}: malformed release heading "${line}"; expected "## [x.y.z] - YYYY-MM-DD", with an optional prerelease suffix on the version`,
       )
     }
     const [, version = '', isoDate = ''] = match
