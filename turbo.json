@@ -20,6 +20,10 @@
       ],
       "outputs": []
     },
+    "typecheck": {
+      "dependsOn": ["check"],
+      "outputs": []
+    },
     "test": {
       "dependsOn": ["transit"],
       "inputs": [
@@ -98,6 +102,11 @@
         "eslint-rules/**",
         "docs/adr/**",
         ".github/workflows/**",
+        "oxlint-plugins/**",
+        "oxlint.config.ts",
+        "lint-policy.mjs",
+        "lint-policy.d.mts",
+        "eslint.config.mjs",
         "vitest.config.ts",
         "renovate.json5",
         "lint-staged.config.mjs",
@@ -111,6 +120,11 @@
         "eslint-rules/**",
         "docs/adr/**",
         ".github/workflows/**",
+        "oxlint-plugins/**",
+        "oxlint.config.ts",
+        "lint-policy.mjs",
+        "lint-policy.d.mts",
+        "eslint.config.mjs",
         "vitest.config.ts",
         "renovate.json5",
         "lint-staged.config.mjs",
