@@ -51,9 +51,19 @@ export function findChromeZip(outputDirectory: string): string | undefined {
   return zipName === undefined ? undefined : path.join(outputDirectory, zipName)
 }
 
-function main(): number {
-  const outputDirectory = process.argv[2] ?? 'apps/extension/.output'
-  const summaryPath = process.env['GITHUB_STEP_SUMMARY']
+/**
+ * Runs the zip size gate: reports the verdict on the console and, when set,
+ * appends it to the GitHub step summary.
+ * @param argv - Arguments after the script name; the first is the WXT output directory.
+ * @param environment - Environment variables; `GITHUB_STEP_SUMMARY` names the summary file.
+ * @returns The process exit code, `1` when the zip is over budget.
+ */
+export function runZipSizeCheck(
+  argv: readonly string[],
+  environment: Readonly<Record<string, string | undefined>>,
+): number {
+  const outputDirectory = argv[0] ?? 'apps/extension/.output'
+  const summaryPath = environment['GITHUB_STEP_SUMMARY']
   const report = (line: string) => {
     console.log(line)
     if (summaryPath) appendFileSync(summaryPath, `${line}\n`)
@@ -72,4 +82,6 @@ function main(): number {
   return verdict.isWithinBudget ? 0 : 1
 }
 
-if (import.meta.main) process.exitCode = main()
+if (import.meta.main) {
+  process.exitCode = runZipSizeCheck(process.argv.slice(2), process.env)
+}

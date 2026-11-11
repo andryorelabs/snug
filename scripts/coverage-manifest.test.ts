@@ -18,34 +18,10 @@ const ISLAND_REASON =
   'React island with browser-only behavior, exercised in a real browser by the site e2e specs; its pure logic lives in colocated modules with their own tests.'
 const ENDPOINT_REASON =
   'Thin Astro endpoint that feeds a tested builder, verified through the site build output.'
-const SITE_MODULE_REASON =
-  'Site module exercised through the tests of its consumers and the site build output; a colocated test retires this exemption on the ramp toward 95/95/90/95.'
-const EXTENSION_LIB_REASON =
-  'Extension module exercised through the tests of its consumers in apps/extension/lib; a colocated test retires this exemption on the ramp toward 95/95/90/95.'
 const TEST_SUPPORT_REASON =
   'Test-support helper shared by the extension tests, with no behavior of its own.'
 
 const EXEMPTIONS: Readonly<Record<string, string>> = {
-  'apps/extension/lib/bookmark-tree-nodes.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/csv-escaping.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/custom-folder-writer.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-all-bookmarks.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-control.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-formats.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/exporters/export-tree.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/folder-run-identity.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/format-snapshot-date.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-control.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-duplicates.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-mode-items.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-chrome.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-safari.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-xbel.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/mobile-root.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/parse-import.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/parse-json-once.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/render-export.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/root-folders.ts': EXTENSION_LIB_REASON,
   'apps/extension/lib/testing/dom-harness.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/testing/fake-bookmarks.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/testing/fake-directory-handle.ts': TEST_SUPPORT_REASON,
@@ -56,8 +32,6 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
   'apps/extension/lib/testing/setup-locks.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/types.ts':
     'Type-only module with the shared extension types, no runtime behavior to test.',
-  'apps/extension/lib/use-operation-progress.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/use-slash-to-focus.ts': EXTENSION_LIB_REASON,
   'apps/site/src/components/AlternativesPage.astro': ASTRO_REASON,
   'apps/site/src/components/Bento.astro': ASTRO_REASON,
   'apps/site/src/components/ComparisonBreadcrumb.astro': ASTRO_REASON,
@@ -90,8 +64,8 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
   'apps/site/src/components/TextLink.astro': ASTRO_REASON,
   'apps/site/src/components/TrustProof.astro': ASTRO_REASON,
   'apps/site/src/components/VideoFacade.tsx': ISLAND_REASON,
-  'apps/site/src/content/how-to-pages.ts': SITE_MODULE_REASON,
-  'apps/site/src/content.config.ts': SITE_MODULE_REASON,
+  'apps/site/src/content.config.ts':
+    'Declarative Astro content collection config bound to the astro:content virtual module, which the Vitest setup cannot resolve; its loaders are tested in docs/loader.test.ts and docs/chrome-translations.test.ts.',
   'apps/site/src/docs/components/DocumentationEditLink.astro': ASTRO_REASON,
   'apps/site/src/docs/components/DocumentationFooter.astro': ASTRO_REASON,
   'apps/site/src/docs/components/DocumentationHeader.astro': ASTRO_REASON,
@@ -109,16 +83,6 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
   'apps/site/src/docs/components/DocumentationThemeSelect.astro': ASTRO_REASON,
   'apps/site/src/docs/components/DocumentationTranslationNotice.astro':
     ASTRO_REASON,
-  'apps/site/src/docs/i18n-status.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/loader.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/markdown.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/paths.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/published.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/route-middleware.ts': SITE_MODULE_REASON,
-  'apps/site/src/docs/sidebar.ts': SITE_MODULE_REASON,
-  'apps/site/src/i18n/docs-ui.ts': SITE_MODULE_REASON,
-  'apps/site/src/i18n/faq-keys.ts': SITE_MODULE_REASON,
-  'apps/site/src/i18n/faq.ts': SITE_MODULE_REASON,
   'apps/site/src/layouts/Layout.astro': ASTRO_REASON,
   'apps/site/src/pages/.well-known/security.txt.ts': ENDPOINT_REASON,
   'apps/site/src/pages/404.astro': ASTRO_REASON,
@@ -142,18 +106,8 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
   'apps/site/src/pages/privacy.astro': ASTRO_REASON,
   'apps/site/src/pages/robots.txt.ts': ENDPOINT_REASON,
   'apps/site/src/pages/sitemap.xml.ts': ENDPOINT_REASON,
-  'apps/site/src/scripts/interaction-directive.ts': SITE_MODULE_REASON,
-  'apps/site/src/scripts/interaction-integration.ts': SITE_MODULE_REASON,
-  'apps/site/src/scripts/render-security-headers.ts': SITE_MODULE_REASON,
-  'apps/site/src/scripts/theme-color.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/comparison-pages.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/crawlers.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/documentation-pages.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/how-to-pages.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/page-descriptor.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/store-facts.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/structured-data.ts': SITE_MODULE_REASON,
-  'apps/site/src/seo/umami.ts': SITE_MODULE_REASON,
+  'apps/site/src/seo/page-descriptor.ts':
+    'Type-only module with the page descriptor interface, no runtime behavior to test.',
   'scripts/lint-parity-run.ts':
     'CLI runner of the lint parity gate: it only orchestrates external processes (baseline ESLint install, Oxlint, git clones, corpus installs) and is exercised end to end by `bun run lint:parity`; its decision logic lives in the tested scripts/lint-parity.ts.',
   'scripts/workflow-files.ts':

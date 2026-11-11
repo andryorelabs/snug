@@ -7,6 +7,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     isolate: true,
+    testTimeout: 30_000,
     include: [
       'scripts/**/*.test.ts',
       'eslint-rules/**/*.test.ts',
@@ -29,7 +30,7 @@ export default defineConfig({
         'scripts/lint-parity-run.ts',
       ],
       reporter: ['text', 'lcov'],
-      thresholds: { lines: 65, statements: 65, branches: 63, functions: 83 },
+      thresholds: { lines: 91, statements: 91, branches: 83, functions: 90 },
     },
   },
 })

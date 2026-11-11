@@ -125,6 +125,7 @@
         "@types/bun": "catalog:",
         "@types/react": "catalog:",
         "@types/web": "0.0.359",
+        "@vitest/coverage-v8": "^5.0.4",
         "typescript": "catalog:",
         "vitest": "catalog:",
       },
