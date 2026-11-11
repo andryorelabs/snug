@@ -7,12 +7,18 @@ import {
   readWorkflow,
   readWorkflowText,
   type Workflow,
+  type WorkflowJob,
   type WorkflowStep,
 } from './workflow-files'
 
 const FULL_SHA_PATTERN = /^[\da-f]{40}$/
 const VERSION_COMMENT_PATTERN = /#\s*v\d+\.\d+\.\d+\s*$/
 const USES_LINE_PATTERN = /^\s*(?:-\s+)?uses:\s*(\S+)(.*)$/
+
+const MAIN_REF_GUARD = "github.ref == 'refs/heads/main'"
+const CODEQL_INIT = 'github/codeql-action/init@'
+const CODEQL_ANALYZE = 'github/codeql-action/analyze@'
+const CODEQL_LANGUAGES: readonly string[] = ['javascript-typescript', 'actions']
 
 interface ShardedJob {
   readonly name?: string
@@ -143,6 +149,23 @@ function triggerNames(workflow: Workflow): string[] {
     : []
 }
 
+function hasConcurrencyGroup(workflow: Workflow): boolean {
+  const concurrency = workflow.concurrency
+  const group =
+    typeof concurrency === 'string'
+      ? concurrency
+      : (concurrency as { group?: unknown } | null | undefined)?.group
+  return typeof group === 'string' && group.trim() !== ''
+}
+
+function missingTriggers(
+  workflow: Workflow,
+  required: readonly string[],
+): string[] {
+  const present = triggerNames(workflow)
+  return required.filter((trigger) => !present.includes(trigger))
+}
+
 function needsList(needs: unknown): string[] {
   if (typeof needs === 'string') return [needs]
   return Array.isArray(needs) ? needs.map(String) : []
@@ -153,6 +176,91 @@ function usesReferences(source: string): { target: string; rest: string }[] {
     const match = USES_LINE_PATTERN.exec(line)
     return match ? { target: match[1] ?? '', rest: match[2] ?? '' } : []
   })
+}
+
+function uploadArtifactPins(source: string): string[] {
+  return usesReferences(source)
+    .filter(({ target }) => target.startsWith('actions/upload-artifact@'))
+    .map(({ target, rest }) => `${target} ${rest.trim()}`)
+}
+
+/**
+ * Finds every `actions/upload-artifact` use that drifts from the shared pin.
+ * @param source The raw workflow text.
+ * @param expectedPin The `target # vX.Y.Z` pin every use must equal.
+ * @returns One message per drifting use; empty when all match.
+ */
+function findUploadArtifactDrift(
+  source: string,
+  expectedPin: string,
+): string[] {
+  return uploadArtifactPins(source)
+    .filter((pin) => pin !== expectedPin)
+    .map((pin) => `${pin} differs from ${expectedPin}`)
+}
+
+function isGuardedToMain(condition: string | undefined): boolean {
+  const expression = (condition ?? '').replaceAll(/^\s*\$\{\{|\}\}\s*$/g, '')
+  return (
+    !expression.includes('||') &&
+    expression
+      .split('&&')
+      .map((term) => term.trim())
+      .includes(MAIN_REF_GUARD)
+  )
+}
+
+/**
+ * Finds the jobs a non-main ref could run, whatever trigger started the run.
+ * @param workflow The parsed workflow document.
+ * @returns The names of the jobs whose `if` does not require the main ref.
+ */
+function findJobsNotGuardedToMain(workflow: Workflow): string[] {
+  return Object.entries(workflow.jobs ?? {})
+    .filter(([, job]) => !isGuardedToMain(job.if))
+    .map(([jobName]) => jobName)
+}
+
+function matrixLanguages(job: WorkflowJob): string[] {
+  const languages = job.strategy?.matrix?.language
+  return Array.isArray(languages) ? languages.map(String) : []
+}
+
+/**
+ * Checks that CodeQL scans every required language, each under its own
+ * category so one language's results never replace another's.
+ * @param workflow The parsed CodeQL workflow document.
+ * @returns One message per violation; empty when the workflow is clean.
+ */
+function findCodeqlViolations(workflow: Workflow): string[] {
+  const analysisJobs = Object.values(workflow.jobs ?? {}).filter((job) =>
+    (job.steps ?? []).some((step) => step.uses?.startsWith(CODEQL_INIT)),
+  )
+  if (analysisJobs.length === 0) return ['no job initializes CodeQL']
+
+  const violations: string[] = []
+  const scanned = new Set(analysisJobs.flatMap((job) => matrixLanguages(job)))
+  for (const language of CODEQL_LANGUAGES) {
+    if (!scanned.has(language)) {
+      violations.push(`the language matrix does not scan ${language}`)
+    }
+  }
+  const analysisSteps = analysisJobs.flatMap((job) => job.steps ?? [])
+  for (const step of analysisSteps) {
+    if (
+      step.uses?.startsWith(CODEQL_INIT) &&
+      step.with?.languages !== '${{ matrix.language }}'
+    ) {
+      violations.push('init does not take its language from the matrix')
+    }
+    if (
+      step.uses?.startsWith(CODEQL_ANALYZE) &&
+      step.with?.category !== '/language:${{ matrix.language }}'
+    ) {
+      violations.push('analyze has no per-language category')
+    }
+  }
+  return violations
 }
 
 function isCacheStep(step: WorkflowStep): boolean {
@@ -191,6 +299,13 @@ function findViolations(workflow: Workflow, source: string): string[] {
 
   if (triggerNames(workflow).includes('pull_request_target')) {
     violations.push('uses the pull_request_target trigger')
+  }
+
+  if (
+    triggerNames(workflow).includes('pull_request') &&
+    !hasConcurrencyGroup(workflow)
+  ) {
+    violations.push('pull_request workflow has no concurrency group')
   }
 
   const topLevel = JSON.stringify(workflow.permissions)
@@ -276,7 +391,10 @@ describe.each(allFiles)('%s', (fileName) => {
 describe('the hygiene rules reject a broken workflow', () => {
   const broken = `
 on:
+  pull_request:
   pull_request_target:
+concurrency:
+  cancel-in-progress: true
 permissions: write-all
 jobs:
   build:
@@ -298,6 +416,7 @@ jobs:
 
   test.each([
     'uses the pull_request_target trigger',
+    'pull_request workflow has no concurrency group',
     'top-level permissions are not contents: read or empty',
     'job "build" has no timeout-minutes',
     'job "build" does not declare permissions',
@@ -733,6 +852,88 @@ describe('codeql.yml', () => {
   test('exists as a workflow (ADR 0004)', () => {
     expect(allFiles).toContain('codeql.yml')
   })
+
+  test('scans javascript-typescript and actions under separate categories', () => {
+    expect(findCodeqlViolations(readWorkflow('codeql.yml'))).toEqual([])
+  })
+
+  test('the rule rejects a single-language scan without a category', () => {
+    const broken = `
+jobs:
+  analyze:
+    steps:
+      - uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          languages: javascript-typescript
+      - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+`
+    expect(findCodeqlViolations(parse(broken) as Workflow)).toEqual([
+      'the language matrix does not scan javascript-typescript',
+      'the language matrix does not scan actions',
+      'init does not take its language from the matrix',
+      'analyze has no per-language category',
+    ])
+  })
+
+  test('the rule rejects a workflow that never initializes CodeQL', () => {
+    expect(findCodeqlViolations(parse('jobs: {}') as Workflow)).toEqual([
+      'no job initializes CodeQL',
+    ])
+  })
+})
+
+describe('deploy-site.yml', () => {
+  test('every job runs from the main ref only, on every trigger path', () => {
+    const workflow = readWorkflow('deploy-site.yml')
+    expect(Object.keys(workflow.jobs ?? {}).length).toBeGreaterThan(0)
+    expect(findJobsNotGuardedToMain(workflow)).toEqual([])
+  })
+
+  test('the rule rejects a job a non-main ref can reach', () => {
+    const broken = `
+jobs:
+  unguarded:
+    steps: []
+  dispatch-escape:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    steps: []
+  other-ref:
+    if: github.ref == 'refs/heads/develop'
+    steps: []
+  guarded:
+    if: \${{ github.ref == 'refs/heads/main' && github.actor != 'renovate[bot]' }}
+    steps: []
+`
+    expect(findJobsNotGuardedToMain(parse(broken) as Workflow)).toEqual([
+      'unguarded',
+      'dispatch-escape',
+      'other-ref',
+    ])
+  })
+})
+
+describe('labels.yml', () => {
+  const workflow = readWorkflow('labels.yml')
+
+  test('can be dispatched by hand', () => {
+    expect(missingTriggers(workflow, ['workflow_dispatch'])).toEqual([])
+  })
+
+  test('the rule rejects a workflow without workflow_dispatch', () => {
+    const broken = parse('on:\n  push:\n  pull_request:\n') as Workflow
+    expect(missingTriggers(broken, ['workflow_dispatch'])).toEqual([
+      'workflow_dispatch',
+    ])
+  })
+
+  test('only a run on the main ref writes labels', () => {
+    const labeler = collectSteps(workflow).find((step) =>
+      step.uses?.startsWith('crazy-max/ghaction-github-labeler@'),
+    )
+    expect(labeler?.with?.['dry-run']).toBe(
+      "${{ github.ref != 'refs/heads/main' }}",
+    )
+  })
 })
 
 describe('release.yml (ADR 0026)', () => {
@@ -816,14 +1017,26 @@ describe('browserstack.yml nightly failure reporting', () => {
 })
 
 describe('upload-artifact pins', () => {
-  test('ci, release and browserstack share one version', () => {
-    const pins = new Set(
-      ['ci.yml', 'release.yml', 'browserstack.yml'].flatMap((fileName) =>
-        usesReferences(readWorkflowText(fileName))
-          .filter(({ target }) => target.startsWith('actions/upload-artifact@'))
-          .map(({ target, rest }) => `${target}${rest}`),
-      ),
-    )
-    expect(pins.size).toBe(1)
+  const ciPins = [...new Set(uploadArtifactPins(readWorkflowText('ci.yml')))]
+  const expectedPin = ciPins[0] ?? ''
+
+  test('ci.yml uses a single pin', () => {
+    expect(ciPins).toHaveLength(1)
+  })
+
+  test.each(allFiles)('%s matches the ci.yml pin', (fileName) => {
+    expect(
+      findUploadArtifactDrift(readWorkflowText(fileName), expectedPin),
+    ).toEqual([])
+  })
+
+  test('the rule rejects a use pinned to another version', () => {
+    const broken = `
+      - uses: ${expectedPin}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+`
+    expect(findUploadArtifactDrift(broken, expectedPin)).toEqual([
+      `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2 differs from ${expectedPin}`,
+    ])
   })
 })
