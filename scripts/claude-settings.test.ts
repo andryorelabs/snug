@@ -21,6 +21,9 @@ describe(".claude/settings.json", () => {
     "Bash(git push origin main:*)",
     "Bash(git push origin HEAD:main:*)",
     "Bash(git push origin HEAD:refs/heads/main:*)",
+    "Bash(git push origin develop:*)",
+    "Bash(git push origin HEAD:develop:*)",
+    "Bash(git push origin HEAD:refs/heads/develop:*)",
   ])("denies the trunk push %s", (rule) => {
     expect(denied).toContain(rule);
   });
