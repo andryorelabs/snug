@@ -42,5 +42,12 @@
   },
   "commands": {
     "selfCheck": ["bun run check", "bun run test"]
+  },
+  "models": {
+    "reviewer": {
+      "medium": { "model": "fable", "effort": "medium" },
+      "high": { "model": "fable", "effort": "medium" }
+    },
+    "escalation": { "sonnet": "fable" }
   }
 }
