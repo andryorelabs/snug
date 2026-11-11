@@ -17,7 +17,7 @@ function pushLine(remoteReference: string, localSha = SHA): string {
 
 function dependencies(overrides: Partial<PrePushDependencies> = {}): PrePushDependencies {
   return {
-    hasOriginMain: () => true,
+    hasRemoteRef: () => true,
     runAffectedCheck: () => 0,
     log: vi.fn(),
     ...overrides,
@@ -39,6 +39,7 @@ describe("validateBranch", () => {
 
   it.each([
     "main",
+    "develop",
     "feature/x",
     "feat/Upper",
     "feat/",
@@ -63,6 +64,12 @@ describe("decidePush", () => {
   it("refuses a push to main", () => {
     const decision = decidePush(parsePushLines(pushLine("refs/heads/main")));
     expect(decision.kind).toBe("reject");
+  });
+
+  it("refuses a push to develop", () => {
+    const decision = decidePush(parsePushLines(pushLine("refs/heads/develop")));
+    expect(decision.kind).toBe("reject");
+    expect(decision.kind === "reject" ? decision.message : "").toContain("develop");
   });
 
   it("refuses an invalid branch name", () => {
@@ -96,7 +103,7 @@ describe("decidePush", () => {
 });
 
 describe("runPrePush", () => {
-  it("exits 1 and logs when pushing to main", () => {
+  it("exits 1 and logs when pushing to a protected branch", () => {
     const log = vi.fn();
     expect(runPrePush(pushLine("refs/heads/main"), dependencies({ log }))).toBe(1);
     expect(log).toHaveBeenCalledOnce();
@@ -110,16 +117,31 @@ describe("runPrePush", () => {
     expect(runAffectedCheck).not.toHaveBeenCalled();
   });
 
-  it("skips with a message when origin/main is missing", () => {
+  it("skips with a message when neither origin/develop nor origin/main exists", () => {
     const log = vi.fn();
     const runAffectedCheck = vi.fn(() => 1);
     const code = runPrePush(
       pushLine("refs/heads/feat/x"),
-      dependencies({ hasOriginMain: () => false, log, runAffectedCheck }),
+      dependencies({ hasRemoteRef: () => false, log, runAffectedCheck }),
     );
     expect(code).toBe(0);
-    expect(log).toHaveBeenCalledWith(expect.stringContaining("origin/main"));
+    expect(log).toHaveBeenCalledWith(expect.stringContaining("origin/develop"));
     expect(runAffectedCheck).not.toHaveBeenCalled();
+  });
+
+  it("uses origin/develop as the base when it exists", () => {
+    const runAffectedCheck = vi.fn(() => 0);
+    runPrePush(pushLine("refs/heads/feat/x"), dependencies({ runAffectedCheck }));
+    expect(runAffectedCheck).toHaveBeenCalledWith("origin/develop");
+  });
+
+  it("falls back to origin/main when origin/develop is missing", () => {
+    const runAffectedCheck = vi.fn(() => 0);
+    runPrePush(
+      pushLine("refs/heads/feat/x"),
+      dependencies({ hasRemoteRef: (reference) => reference === "origin/main", runAffectedCheck }),
+    );
+    expect(runAffectedCheck).toHaveBeenCalledWith("origin/main");
   });
 
   it("prints what it runs and returns the check exit code", () => {

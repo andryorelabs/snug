@@ -20,5 +20,16 @@
     "node_id": "RRS_lACqUmVwb3NpdG9yec4xOB4ZzgFxnc4",
     "created_at": "2026-09-30T04:23:01.124+02:00",
     "updated_at": "2026-11-05T03:14:33.115+01:00"
+  },
+  {
+    "id": 24223183,
+    "name": "develop",
+    "target": "branch",
+    "source_type": "Repository",
+    "source": "andryorelabs/snug",
+    "enforcement": "active",
+    "node_id": "RRS_lACqUmVwb3NpdG9yec4xOB4ZzgFxnc8",
+    "created_at": "2026-11-11T16:00:00.000+01:00",
+    "updated_at": "2026-11-11T16:00:00.000+01:00"
   }
 ]

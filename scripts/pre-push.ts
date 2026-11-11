@@ -1,5 +1,6 @@
 const ZERO_SHA = "0".repeat(40);
-const MAIN_REF = "refs/heads/main";
+const PROTECTED_REFS = new Set(["refs/heads/main", "refs/heads/develop"]);
+const BASE_REFERENCES = ["origin/develop", "origin/main"];
 const HEADS_PREFIX = "refs/heads/";
 const SLUG = "[a-z0-9._-]+";
 const CONVENTIONAL_TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert";
@@ -28,15 +29,15 @@ export type PushDecision =
  * Side effects the hook needs, injectable so the policy stays testable.
  */
 export interface PrePushDependencies {
-  hasOriginMain: () => boolean;
-  runAffectedCheck: () => number;
+  hasRemoteRef: (reference: string) => boolean;
+  runAffectedCheck: (base: string) => number;
   log: (message: string) => void;
 }
 
 /**
  * Whether a branch name follows the repo convention: `<type>/<slug>`,
- * `ao-<n>-<slug>`, `renovate/*` or `worktree-*`. `main` is not valid here;
- * pushing it is refused separately.
+ * `ao-<n>-<slug>`, `renovate/*` or `worktree-*`. `main` and `develop` are not
+ * valid here; pushing them is refused separately.
  * @param name - The branch name without the `refs/heads/` prefix.
  * @returns True when the name is accepted.
  */
@@ -70,7 +71,7 @@ function invalidBranchMessage(branch: string): string {
 }
 
 /**
- * Decides what a push means: refuse `main` and invalid branch names, skip
+ * Decides what a push means: refuse `main`, `develop` and invalid branch names, skip
  * pushes that carry no commits (deletes, tag-only), otherwise run the check.
  * @param lines - The pushed refs.
  * @returns The decision.
@@ -82,10 +83,11 @@ export function decidePush(lines: readonly PushLine[]): PushDecision {
     if (localSha === ZERO_SHA) {
       continue;
     }
-    if (remoteReference === MAIN_REF) {
+    if (PROTECTED_REFS.has(remoteReference)) {
+      const protectedBranch = remoteReference.slice(HEADS_PREFIX.length);
       return {
         kind: "reject",
-        message: "Refusing to push to main directly. Push a feature branch and open a PR.",
+        message: `Refusing to push to ${protectedBranch} directly. Push a feature branch and open a PR.`,
       };
     }
     if (!remoteReference.startsWith(HEADS_PREFIX)) {
@@ -104,7 +106,7 @@ export function decidePush(lines: readonly PushLine[]): PushDecision {
 /**
  * Runs the pre-push policy and returns the hook's exit code.
  * @param input - Raw hook stdin.
- * @param dependencies - Side effects: origin/main probe, check runner, logger.
+ * @param dependencies - Side effects: base-ref probe, check runner, logger.
  * @returns 0 to allow the push, non-zero to block it.
  */
 export function runPrePush(input: string, dependencies: PrePushDependencies): number {
@@ -116,12 +118,15 @@ export function runPrePush(input: string, dependencies: PrePushDependencies): nu
   if (decision.kind === "skip") {
     return 0;
   }
-  if (!dependencies.hasOriginMain()) {
-    dependencies.log("pre-push: origin/main not found, skipping affected check");
+  const base = BASE_REFERENCES.find((reference) => dependencies.hasRemoteRef(reference));
+  if (base === undefined) {
+    dependencies.log(
+      "pre-push: neither origin/develop nor origin/main found, skipping affected check",
+    );
     return 0;
   }
-  dependencies.log("pre-push: TURBO_SCM_BASE=origin/main bunx turbo run check --affected");
-  return dependencies.runAffectedCheck();
+  dependencies.log(`pre-push: TURBO_SCM_BASE=${base} bunx turbo run check --affected`);
+  return dependencies.runAffectedCheck(base);
 }
 
 function spawnSyncStatus(command: string[], environment?: Record<string, string>) {
@@ -135,11 +140,11 @@ function spawnSyncStatus(command: string[], environment?: Record<string, string>
 
 if (import.meta.main) {
   const exitCode = runPrePush(await Bun.stdin.text(), {
-    hasOriginMain: () =>
-      spawnSyncStatus(["git", "rev-parse", "--verify", "--quiet", "origin/main"]) === 0,
-    runAffectedCheck: () =>
+    hasRemoteRef: (reference) =>
+      spawnSyncStatus(["git", "rev-parse", "--verify", "--quiet", reference]) === 0,
+    runAffectedCheck: (base) =>
       spawnSyncStatus(["bunx", "turbo", "run", "check", "--affected"], {
-        TURBO_SCM_BASE: "origin/main",
+        TURBO_SCM_BASE: base,
       }),
     log: (message) => console.error(message),
   });

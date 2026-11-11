@@ -33,17 +33,20 @@ function runGit(arguments_: string[]): GitResult {
   };
 }
 
+const BASE_REFERENCES = ["origin/develop", "origin/main", "main"];
+
 /**
- * Resolves the merge-base of `origin/main` (or local `main`) and HEAD.
+ * Resolves the merge-base of HEAD and `origin/develop`, `origin/main` or local `main`, in that order.
  * @param git The git runner, defaults to the real `git`.
  * @returns The merge-base commit SHA.
  */
 export function resolveCommitlintBase(git: GitRunner = runGit): string {
-  for (const mainReference of ["origin/main", "main"]) {
-    const result = git(["merge-base", mainReference, "HEAD"]);
+  for (const baseReference of BASE_REFERENCES) {
+    const result = git(["merge-base", baseReference, "HEAD"]);
     if (result.ok) return result.output;
   }
-  throw new Error('lint-commits: could not resolve a merge-base against "origin/main" or "main".');
+  const tried = BASE_REFERENCES.map((reference) => `"${reference}"`).join(", ");
+  throw new Error(`lint-commits: could not resolve a merge-base against ${tried}.`);
 }
 
 function exitCodeOf(code: number | null): number {

@@ -31,8 +31,11 @@ checked locally (git hooks) and in CI.
 
 ## Merging
 
-This repository merges pull requests via **squash merge only**, keeping a linear
-history on `main`. Your commits within a PR don't need to follow the format
+Open pull requests against `develop` (`gh pr create --base develop`). This
+repository merges them via **squash merge only**, keeping a linear history on
+`develop`; the maintainer promotes `develop` to `main` with a merge commit
+([ADR 0040](docs/adr/0040-develop-branch-promoted-by-merge-commit.md)). Your
+commits within a PR don't need to follow the format
 above individually, but the final PR title does, since it becomes the squashed
 commit message.
 

@@ -28,6 +28,7 @@ const RECORDED_RESPONSES: Readonly<Record<string, string>> = {
   [`repos/${REPOSITORY}/rulesets`]: "rulesets.json",
   [`repos/${REPOSITORY}/rulesets/24223181`]: "ruleset-main.json",
   [`repos/${REPOSITORY}/rulesets/24223182`]: "ruleset-tags.json",
+  [`repos/${REPOSITORY}/rulesets/24223183`]: "ruleset-develop.json",
 };
 
 /**
@@ -186,11 +187,13 @@ describe("recorded live output against the committed files", () => {
   const live = collectLiveSettings(REPOSITORY, requestRecorded);
   const committed = readExpectedSettings();
 
-  test("the committed files carry the settings table and both rulesets", () => {
-    expect(Object.keys(committed.rulesets)).toEqual(["main.json", "tags.json"]);
+  test("the committed files carry the settings table and all three rulesets", () => {
+    expect(Object.keys(committed.rulesets)).toEqual(["develop.json", "main.json", "tags.json"]);
     expect(committed.settings).toMatchObject({
       allow_squash_merge: true,
-      allow_merge_commit: false,
+      allow_merge_commit: true,
+      merge_commit_title: "PR_TITLE",
+      merge_commit_message: "PR_BODY",
       allow_rebase_merge: false,
       squash_merge_commit_title: "PR_TITLE",
       squash_merge_commit_message: "PR_BODY",
@@ -219,7 +222,10 @@ describe("recorded live output against the committed files", () => {
   test("the settings that differed when recorded are each named", () => {
     expect(diffSettings(live, committed).map(({ path: differencePath }) => differencePath)).toEqual(
       [
+        "settings allow_merge_commit",
         "settings squash_merge_commit_message",
+        "settings merge_commit_title",
+        "settings merge_commit_message",
         "settings security_and_analysis.secret_scanning.status",
         "settings security_and_analysis.secret_scanning_push_protection.status",
         "settings security_and_analysis.dependabot_security_updates.status",

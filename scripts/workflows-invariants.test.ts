@@ -215,6 +215,77 @@ function findJobsNotGuardedToMain(workflow: Workflow): string[] {
     .map(([jobName]) => jobName);
 }
 
+function pushBranches(workflow: Workflow): string[] {
+  const trigger = workflow.on;
+  if (trigger === null || typeof trigger !== "object" || Array.isArray(trigger)) return [];
+  const branches = (trigger as { push?: { branches?: unknown } | null }).push?.branches;
+  return Array.isArray(branches) ? branches.map(String) : [];
+}
+
+function unwrapExpression(value: string): string {
+  return value.replaceAll(/^\s*\$\{\{|\}\}\s*$/g, "").trim();
+}
+
+/**
+ * Evaluates a workflow's `cancel-in-progress` for a run on the given ref.
+ * @param workflow The parsed workflow document.
+ * @param gitReference The `github.ref` of the run, e.g. `refs/heads/main`.
+ * @returns Whether a newer run on that ref cancels the one in progress.
+ * @throws {Error} When the expression is not a literal or a conjunction of
+ * `github.ref != '<ref>'` terms.
+ */
+function doesCancelInProgress(workflow: Workflow, gitReference: string): boolean {
+  const setting = (workflow.concurrency as { "cancel-in-progress"?: unknown } | undefined)?.[
+    "cancel-in-progress"
+  ];
+  if (typeof setting === "boolean") return setting;
+  return unwrapExpression(String(setting))
+    .split("&&")
+    .every((term) => {
+      const match = /^github\.ref != '([^']+)'$/.exec(term.trim());
+      if (!match) throw new Error(`unsupported cancel-in-progress term: ${term.trim()}`);
+      return match[1] !== gitReference;
+    });
+}
+
+const PROMOTION_EXCLUSION = "!(github.base_ref == 'main' && github.head_ref == 'develop')";
+
+/**
+ * Checks that a job runs on pull requests only and never on a promotion
+ * pull request (base `main`, head `develop`).
+ * @param condition The job's `if` expression.
+ * @returns Whether the condition both requires a pull request and excludes a promotion.
+ */
+function doesSkipPromotionPullRequests(condition: string | undefined): boolean {
+  const terms = unwrapExpression(condition ?? "")
+    .replaceAll(/\s+/g, " ")
+    .split(/ && (?![^(]*\))/)
+    .map((term) => term.trim());
+  return (
+    terms.every((term) => !term.includes("||")) &&
+    terms.includes("github.event_name == 'pull_request'") &&
+    terms.includes(PROMOTION_EXCLUSION)
+  );
+}
+
+/**
+ * Checks that an aggregate job always runs and fails only on a failed or
+ * cancelled dependency, so a skipped dependency still lets it pass.
+ * @param job The aggregate job.
+ * @returns Whether a skipped dependency leaves the aggregate job green.
+ */
+function doesTolerateSkippedNeeds(job: WorkflowJob | undefined): boolean {
+  const verdict = (job?.steps ?? [])
+    .map((step) => (typeof step.env?.FAILED === "string" ? step.env.FAILED : ""))
+    .join("\n");
+  return (
+    unwrapExpression(job?.if ?? "") === "always()" &&
+    verdict.includes("contains(needs.*.result, 'failure')") &&
+    !verdict.includes("'skipped'") &&
+    !verdict.includes("success")
+  );
+}
+
 function matrixLanguages(job: WorkflowJob): string[] {
   const languages = job.strategy?.matrix?.language;
   return Array.isArray(languages) ? languages.map(String) : [];
@@ -467,6 +538,65 @@ describe("ci.yml", () => {
       expect.arrayContaining(["quality", "build", "build-site", "e2e", "commitlint"]),
     );
     expect(needs).not.toContain("browserstack");
+  });
+
+  describe("develop branch (ADR 0040)", () => {
+    test("runs on a push to main and to develop", () => {
+      expect(pushBranches(workflow)).toEqual(["main", "develop"]);
+    });
+
+    test("never cancels an in-progress run on main or develop", () => {
+      expect(doesCancelInProgress(workflow, "refs/heads/main")).toBe(false);
+      expect(doesCancelInProgress(workflow, "refs/heads/develop")).toBe(false);
+    });
+
+    test("still cancels a superseded pull request run", () => {
+      expect(doesCancelInProgress(workflow, "refs/pull/1/merge")).toBe(true);
+    });
+
+    test("skips Commitlint on a promotion pull request", () => {
+      expect(doesSkipPromotionPullRequests(workflow.jobs?.commitlint?.if)).toBe(true);
+    });
+
+    test("the aggregate job passes when Commitlint is skipped", () => {
+      expect(needsList(workflow.jobs?.["ci-passed"]?.needs)).toContain("commitlint");
+      expect(doesTolerateSkippedNeeds(workflow.jobs?.["ci-passed"])).toBe(true);
+    });
+
+    test("the rules reject a cancelling main, a lint on promotion and a strict aggregate", () => {
+      const cancelling = parse(
+        "concurrency:\n  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}\n",
+      ) as Workflow;
+      expect(doesCancelInProgress(cancelling, "refs/heads/develop")).toBe(true);
+      expect(doesSkipPromotionPullRequests("github.event_name == 'pull_request'")).toBe(false);
+      expect(
+        doesSkipPromotionPullRequests(
+          `github.event_name == 'pull_request' || ${PROMOTION_EXCLUSION}`,
+        ),
+      ).toBe(false);
+      expect(
+        doesSkipPromotionPullRequests(
+          `github.event_name == 'pull_request' && ${PROMOTION_EXCLUSION}`,
+        ),
+      ).toBe(true);
+      const strict = parse(`
+jobs:
+  ci-passed:
+    if: always()
+    steps:
+      - env:
+          FAILED: \${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') }}
+`) as Workflow;
+      expect(doesTolerateSkippedNeeds(strict.jobs?.["ci-passed"])).toBe(false);
+      const gated = parse(`
+jobs:
+  ci-passed:
+    steps:
+      - env:
+          FAILED: \${{ contains(needs.*.result, 'failure') }}
+`) as Workflow;
+      expect(doesTolerateSkippedNeeds(gated.jobs?.["ci-passed"])).toBe(false);
+    });
   });
 
   test("keys the eslint cache on the local eslint rules too", () => {
@@ -1036,6 +1166,47 @@ jobs:
     expect(findCodeqlViolations(parse("jobs: {}") as Workflow)).toEqual([
       "no job initializes CodeQL",
     ]);
+  });
+
+  test("runs on a push to main and to develop (ADR 0040)", () => {
+    expect(pushBranches(readWorkflow("codeql.yml"))).toEqual(["main", "develop"]);
+  });
+
+  test("never cancels an in-progress run on main or develop", () => {
+    const workflow = readWorkflow("codeql.yml");
+    expect(doesCancelInProgress(workflow, "refs/heads/main")).toBe(false);
+    expect(doesCancelInProgress(workflow, "refs/heads/develop")).toBe(false);
+    expect(doesCancelInProgress(workflow, "refs/pull/1/merge")).toBe(true);
+  });
+});
+
+describe("main-only workflows never trigger or run on develop (ADR 0040)", () => {
+  test.each(["deploy-site.yml", "labels.yml", "scorecard.yml", "browserstack.yml"])(
+    "%s pushes run from main only",
+    (fileName) => {
+      expect(pushBranches(readWorkflow(fileName))).toEqual(["main"]);
+    },
+  );
+
+  test("release.yml runs on version tags only", () => {
+    const trigger = readWorkflow("release.yml").on as {
+      push?: Record<string, unknown>;
+    };
+    expect(Object.keys(trigger)).toEqual(["push"]);
+    expect(trigger.push).toEqual({ tags: ["v*"] });
+  });
+
+  test.each(["deploy-site.yml", "release.yml", "labels.yml", "scorecard.yml", "browserstack.yml"])(
+    "%s never names develop",
+    (fileName) => {
+      expect(readWorkflowText(fileName)).not.toMatch(/\bdevelop\b/);
+    },
+  );
+
+  test("the rule reads the push branches a workflow lists", () => {
+    const widened = parse("on:\n  push:\n    branches: [main, develop]\n") as Workflow;
+    expect(pushBranches(widened)).not.toEqual(["main"]);
+    expect(pushBranches(parse("on: push\n") as Workflow)).toEqual([]);
   });
 });
 

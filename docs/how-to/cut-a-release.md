@@ -44,9 +44,12 @@
    in `bun run test` fails on a stale translation.
 
 5. Run `bun run check` and `bun run test` to confirm the version bump, changelog
-   entry, and locale keys are all consistent. Commit, then open a PR titled
-   `chore: 🔖 release vX.Y.Z`; the squash merge makes that title the release
-   commit on `main`.
+   entry, and locale keys are all consistent. Commit, then open a PR against
+   `develop` titled `chore: 🔖 release vX.Y.Z`; the squash merge makes that title
+   the release commit on `develop`. Then promote: open a pull request from
+   `develop` to `main` titled `chore: 🔀 promote develop to main` and merge it
+   with a merge commit (see
+   [Branching and promotion](../development.md#branching-and-promotion)).
 
 6. Run `bun run zip` (the root `zip` script, which runs `wxt zip` in
    `apps/extension`) to produce the distributable extension archive and the
@@ -60,7 +63,7 @@
    `bun install --frozen-lockfile && bun run build`. If a root file the build
    needs is added later, add it to that allowlist.
 
-7. After the release PR merges, tag the merge commit on `main` with a **signed,
+7. After the promotion merges, tag the promotion merge commit on `main` with a **signed,
    annotated** tag and push it:
    `git tag -s vX.Y.Z -m "vX.Y.Z" <merge-commit-sha> && git push origin vX.Y.Z`.
    `-s` signs the tag (GPG or SSH per your `git config`) and always creates an

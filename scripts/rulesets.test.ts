@@ -124,6 +124,7 @@ const checkNames = new Set(
 const rulesetFiles = readdirSync(RULESETS_DIRECTORY)
   .filter((file) => file.endsWith(".json"))
   .toSorted((first, second) => first.localeCompare(second));
+const developRuleset = readRuleset("develop.json");
 const mainRuleset = readRuleset("main.json");
 const tagsRuleset = readRuleset("tags.json");
 
@@ -166,8 +167,8 @@ describe("workflow check names", () => {
 });
 
 describe(".github/rulesets", () => {
-  test("holds exactly the main and tags rulesets", () => {
-    expect(rulesetFiles).toEqual(["main.json", "tags.json"]);
+  test("holds exactly the develop, main and tags rulesets", () => {
+    expect(rulesetFiles).toEqual(["develop.json", "main.json", "tags.json"]);
   });
 
   test("every required check equals a real workflow job name", () => {
@@ -203,10 +204,11 @@ describe(".github/rulesets", () => {
   });
 });
 
-describe("main ruleset", () => {
-  test("targets the default branch", () => {
-    expect(asRecord(mainRuleset)["target"]).toBe("branch");
-    expect(includedReferences(mainRuleset)).toEqual(["~DEFAULT_BRANCH"]);
+describe("develop ruleset", () => {
+  test("is named develop and targets refs/heads/develop", () => {
+    expect(asRecord(developRuleset)["name"]).toBe("develop");
+    expect(asRecord(developRuleset)["target"]).toBe("branch");
+    expect(includedReferences(developRuleset)).toEqual(["refs/heads/develop"]);
   });
 
   test.each([
@@ -217,20 +219,58 @@ describe("main ruleset", () => {
     "pull_request",
     "required_status_checks",
   ])("has the %s rule", (type) => {
-    expect(findRule(mainRuleset, type)).toBeDefined();
+    expect(findRule(developRuleset, type)).toBeDefined();
   });
 
   test("requires a squash-merged pull request with resolved threads", () => {
-    const parameters = ruleParameters(mainRuleset, "pull_request");
+    const parameters = ruleParameters(developRuleset, "pull_request");
 
     expect(parameters["allowed_merge_methods"]).toEqual(["squash"]);
     expect(parameters["required_review_thread_resolution"]).toBe(true);
   });
 
   test("requires the three checks, strictly, from GitHub Actions", () => {
-    const parameters = ruleParameters(mainRuleset, "required_status_checks");
+    const parameters = ruleParameters(developRuleset, "required_status_checks");
 
     expect(parameters["strict_required_status_checks_policy"]).toBe(true);
+    expect(listRequiredCheckNames(developRuleset)).toEqual(REQUIRED_CHECKS);
+    expect(
+      listRequiredStatusChecks(developRuleset).map((check) => check["integration_id"]),
+    ).toEqual(REQUIRED_CHECKS.map(() => GITHUB_ACTIONS_INTEGRATION_ID));
+  });
+});
+
+describe("main ruleset", () => {
+  test("targets the default branch", () => {
+    expect(asRecord(mainRuleset)["target"]).toBe("branch");
+    expect(includedReferences(mainRuleset)).toEqual(["~DEFAULT_BRANCH"]);
+  });
+
+  test.each([
+    "deletion",
+    "non_fast_forward",
+    "required_signatures",
+    "pull_request",
+    "required_status_checks",
+  ])("has the %s rule", (type) => {
+    expect(findRule(mainRuleset, type)).toBeDefined();
+  });
+
+  test("does not require linear history, so promotions can be merge commits", () => {
+    expect(findRule(mainRuleset, "required_linear_history")).toBeUndefined();
+  });
+
+  test("allows merge commits only, with resolved threads", () => {
+    const parameters = ruleParameters(mainRuleset, "pull_request");
+
+    expect(parameters["allowed_merge_methods"]).toEqual(["merge"]);
+    expect(parameters["required_review_thread_resolution"]).toBe(true);
+  });
+
+  test("requires the three checks, not strictly, from GitHub Actions", () => {
+    const parameters = ruleParameters(mainRuleset, "required_status_checks");
+
+    expect(parameters["strict_required_status_checks_policy"]).toBe(false);
     expect(listRequiredCheckNames(mainRuleset)).toEqual(REQUIRED_CHECKS);
     expect(listRequiredStatusChecks(mainRuleset).map((check) => check["integration_id"])).toEqual(
       REQUIRED_CHECKS.map(() => GITHUB_ACTIONS_INTEGRATION_ID),
