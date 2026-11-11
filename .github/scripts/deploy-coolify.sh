@@ -5,19 +5,34 @@
 # Requires COOLIFY_API_TOKEN (a GitHub secret with `read`, `write` and `deploy`),
 # COOLIFY_APP_UUID (repo variable) and LAST_MODIFIED_DATES (the JSON printed by
 # apps/site/docker/last-modified.sh).
+# Optional overrides, used by scripts/deploy-site.test.ts to run against a local
+# stub: COOLIFY_API_BASE (the API root, without a trailing slash) and
+# COOLIFY_POLL_INTERVAL (whole seconds between status checks).
 set -euo pipefail
 
-api_base="https://app.coolify.io/api/v1"
-poll_interval_seconds=10
+api_base="${COOLIFY_API_BASE:-https://app.coolify.io/api/v1}"
+poll_interval_seconds="${COOLIFY_POLL_INTERVAL:-10}"
 max_polls=90
 
-if [[ -z "${COOLIFY_API_TOKEN:-}" || -z "${COOLIFY_APP_UUID:-}" ]]; then
-  echo "::error::COOLIFY_API_TOKEN or COOLIFY_APP_UUID is missing."
+missing=()
+for name in COOLIFY_API_TOKEN COOLIFY_APP_UUID LAST_MODIFIED_DATES; do
+  if [[ -z "${!name:-}" ]]; then
+    missing+=("${name}")
+  fi
+done
+if ((${#missing[@]} > 0)); then
+  names=$(printf '%s, ' "${missing[@]}")
+  echo "::error::Missing required environment variables: ${names%, }."
   exit 1
 fi
 
-if ! jq -e 'type == "object" and length > 0' >/dev/null 2>&1 <<<"${LAST_MODIFIED_DATES:-}"; then
-  echo "::error::LAST_MODIFIED_DATES is missing or is not a non-empty JSON object."
+if ! jq -e 'type == "object" and length > 0' >/dev/null 2>&1 <<<"${LAST_MODIFIED_DATES}"; then
+  echo "::error::LAST_MODIFIED_DATES is not a non-empty JSON object."
+  exit 1
+fi
+
+if [[ ! "${poll_interval_seconds}" =~ ^[0-9]+$ ]]; then
+  echo "::error::COOLIFY_POLL_INTERVAL must be a whole number of seconds."
   exit 1
 fi
 
@@ -73,5 +88,5 @@ for ((poll = 1; poll <= max_polls; poll++)); do
   sleep "${poll_interval_seconds}"
 done
 
-echo "::error::Coolify deployment ${deployment_uuid} did not finish within $((max_polls * poll_interval_seconds)) seconds."
+echo "::error::Coolify deployment ${deployment_uuid} did not finish after ${max_polls} status checks ($((max_polls * poll_interval_seconds)) seconds)."
 exit 1
