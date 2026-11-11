@@ -152,9 +152,9 @@ export function youtubeEmbedUrl(videoId: string): string {
  */
 export const TRUST_LINK_HREFS = {
   source: STORE_FACTS.sourceUrl,
-  scorecard: 'https://scorecard.dev/viewer/?uri=github.com/AndryOre/snug',
+  scorecard: 'https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug',
   bestPractices: 'https://www.bestpractices.dev/projects/15093',
-  ci: 'https://github.com/AndryOre/snug/actions/workflows/ci.yml',
+  ci: 'https://github.com/andryorelabs/snug/actions/workflows/ci.yml',
   privacy: privacyPath,
 } as const
 
@@ -253,6 +253,27 @@ export const FOOTER_LINK_HREFS = {
   alternatives: (locale: Locale) => alternativesPath(locale),
   howTo: (locale: Locale) => howToIndexPath(locale),
 } as const
+
+/**
+ * Owner site the footer credit links to.
+ */
+export const CREDIT_URL = 'https://andryore.dev'
+
+/**
+ * Splits a localized footer credit around its `{name}` placeholder so the
+ * owner name can be rendered as a link inside translated words.
+ * @param credit - The localized credit, such as `Built by {name}`.
+ * @returns The text before and after the placeholder.
+ */
+export function splitCredit(credit: string): { before: string; after: string } {
+  const marker = '{name}'
+  const index = credit.indexOf(marker)
+  if (index === -1) return { before: credit, after: '' }
+  return {
+    before: credit.slice(0, index),
+    after: credit.slice(index + marker.length),
+  }
+}
 
 /**
  * Splits a localized stat value into the integer a CSS counter animates and

@@ -26,9 +26,9 @@ export const GOODBYE_REINSTALL_HREF = '/install?c=goodbye'
  * Where the feature-request and bug templates live on GitHub.
  */
 export const GOODBYE_FEATURE_REQUEST_HREF =
-  'https://github.com/AndryOre/snug/issues/new?template=2-feature-request.yml'
+  'https://github.com/andryorelabs/snug/issues/new?template=2-feature-request.yml'
 export const GOODBYE_BUG_REPORT_HREF =
-  'https://github.com/AndryOre/snug/issues/new?template=1-bug-report.yml'
+  'https://github.com/andryorelabs/snug/issues/new?template=1-bug-report.yml'
 
 /**
  * Contact address shown in the replies.

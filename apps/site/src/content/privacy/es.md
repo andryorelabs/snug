@@ -163,7 +163,7 @@ con nosotros:
 
 - Por correo electrónico: hello@andryore.dev
 - Abriendo una incidencia en nuestro repositorio de GitHub:
-  https://github.com/AndryOre/snug/issues
+  https://github.com/andryorelabs/snug/issues
 
 ## Consentimiento
 

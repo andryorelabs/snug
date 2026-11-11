@@ -74,6 +74,7 @@
     "alternatives": "Alternativen",
     "howTo": "Anleitungen",
     "note": "Snug ist Open Source unter der MIT-Lizenz.",
+    "credit": "Entwickelt von {name}",
     "navLabel": "Fußbereich"
   },
   "header": {

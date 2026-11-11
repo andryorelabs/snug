@@ -28,7 +28,7 @@ taken on 2026-10-07.
 | Search terms   | 7 terms, all bookmark-related                                                                   | 7 terms, 21 words or fewer                                                                                  |
 | Privacy URL    | `https://github.com/AndryOre/bookmarks-import-export/blob/main/PRIVACY_POLICY.md`               | `https://snug.andryore.dev/privacy/`                                                                        |
 | Website        | `https://github.com/AndryOre/bookmarks-import-export` (old repository slug)                     | `https://snug.andryore.dev/`                                                                                |
-| Support        | `https://github.com/AndryOre/bookmarks-import-export/issues` (old slug, inside the description) | `https://github.com/AndryOre/snug/issues`                                                                   |
+| Support        | `https://github.com/AndryOre/bookmarks-import-export/issues` (old slug, inside the description) | `https://github.com/andryorelabs/snug/issues`                                                               |
 | Languages      | 1 (`en-US`)                                                                                     | 10                                                                                                          |
 | Screenshots    | 5, old product                                                                                  | up to 6, new set                                                                                            |
 | Videos         | none                                                                                            | none                                                                                                        |
@@ -284,7 +284,7 @@ https://snug.andryore.dev/
 Support URL:
 
 ```text
-https://github.com/AndryOre/snug/issues
+https://github.com/andryorelabs/snug/issues
 ```
 
 Privacy policy URL (Properties page):

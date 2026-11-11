@@ -93,7 +93,7 @@ describe('store URL helpers', () => {
 
 describe('GITHUB_URL', () => {
   it('points at the project repository', () => {
-    expect(GITHUB_URL).toBe('https://github.com/AndryOre/snug')
+    expect(GITHUB_URL).toBe('https://github.com/andryorelabs/snug')
   })
 })
 
