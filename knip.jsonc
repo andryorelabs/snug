@@ -10,6 +10,9 @@
     // caller needs them, since acquireLock/releaseLock/resolveLockDirectory
     // cover every consumer so far (scripts/lint-docs.ts included).
     "scripts/locks.ts",
+    // Type declarations for `lint-policy.mjs`; TypeScript pairs them with the
+    // `.mjs` import in `oxlint.config.ts`, so no module imports them by name.
+    "lint-policy.d.mts",
   ],
   // The video is composition code whose exports document scene timing and
   // layout helpers, not a public API; only files and dependencies are policed.
@@ -18,19 +21,31 @@
   },
   "workspaces": {
     "apps/extension": {
+      // `#imports` is WXT's generated virtual module; knip resolves it through
+      // the declaration file `wxt prepare` writes, or it reports every import.
       "paths": {
         "#imports": [".wxt/types/imports-module.d.ts"],
       },
     },
     "apps/video": {
+      // Remotion loads its root, config and render scripts by name, not by
+      // import, so none of them is reachable from the module graph.
       "entry": ["src/index.ts", "scripts/*.ts", "remotion.config.ts"],
+      // `beats.ts` is the beat-grid helper kept for retiming a swapped track;
+      // no scene imports it while the default track sits on a fixed grid.
       "ignore": ["src/audio/beats.ts"],
-      // `@snug/extension` is a graph edge only: it makes Turborepo hash the
-      // video against the locales and captions it imports by relative path.
+      // `@types/web` supplies DOM types the video tsconfig loads by name, not
+      // by import. `@snug/extension` is a graph edge only: it makes Turborepo
+      // hash the video against the locales and captions it imports by
+      // relative path.
       "ignoreDependencies": ["@types/web", "@snug/extension"],
+      // The `studio` script probes for a globally installed `remotion-studio`
+      // and falls back to the local CLI, so knip sees an unresolved binary.
       "ignoreBinaries": ["remotion-studio"],
     },
     "apps/site": {
+      // Each entry is run by a package script, CI or a config loader by path,
+      // so nothing in the module graph imports it.
       "entry": [
         "src/scripts/render-security-headers.ts",
         "src/docs/route-middleware.ts",
@@ -38,11 +53,13 @@
         "playwright.percy.config.ts",
         "browserstack-timing-reporter.ts",
       ],
-      // `@fontsource-variable/geist-mono` is only referenced by a relative
-      // `url()` in the site's CSS entry, which knip does not trace.
-      "ignoreDependencies": ["lighthouse", "@fontsource-variable/geist-mono"],
+      // `lighthouse` is pinned here so Renovate bumps it; the budget script
+      // runs it through `bunx`, never an import.
+      "ignoreDependencies": ["lighthouse"],
     },
     "packages/ui": {
+      // The package is a registry: consumers import these files by subpath,
+      // which knip cannot enumerate on its own.
       "entry": ["src/components/*.tsx", "src/hooks/*.ts", "src/lib/*.ts"],
     },
   },
