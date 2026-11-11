@@ -232,7 +232,8 @@ after a promotion `main` already contains `develop`. A squash would break that
 ancestry and force a follow-up merge of `main` back into `develop`, which the
 pull-request-only `develop` ruleset blocks. `develop` never deploys and is never
 tagged. Commitlint is skipped on a promotion, whose commits were linted when
-they reached `develop`.
+they reached `develop`. Head branches are deleted on merge, but a promotion
+leaves `develop` in place: its ruleset forbids deleting it.
 
 ## Branch naming
 
