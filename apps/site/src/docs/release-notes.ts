@@ -7,6 +7,7 @@ export interface ReleaseNote {
 const RELEASE_HEADING = /^## \[(\d+\.\d+\.\d+)\] - (\d{4}-\d{2}-\d{2})$/
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i
 const SECOND_LEVEL_HEADING = /^## /
+const LINK_REFERENCE_DEFINITION = /^\[[^\]]+\]:\s+\S+$/
 
 function compareVersionsDescending(left: string, right: string): number {
   const leftParts = left.split('.').map(Number)
@@ -39,7 +40,8 @@ interface OpenEntry {
 /**
  * Parses a Keep a Changelog document into release entries, newest first.
  * Everything before the first release heading is ignored, and a bare
- * `## [Unreleased]` section is skipped. Any other `## ` heading that is not
+ * `## [Unreleased]` section is skipped, as are the compare-link reference
+ * definitions (`[x.y.z]: https://…`) at the end of the file. Any other `## ` heading that is not
  * `## [x.y.z] - YYYY-MM-DD` throws an error naming the offending line.
  * @param markdown - The raw `CHANGELOG.md` contents.
  * @returns The release entries, newest first.
@@ -60,6 +62,7 @@ export function parseChangelog(markdown: string): ReleaseNote[] {
 
   const lines = markdown.split(/\r?\n/)
   for (const [index, line] of lines.entries()) {
+    if (LINK_REFERENCE_DEFINITION.test(line)) continue
     if (!SECOND_LEVEL_HEADING.test(line)) {
       current?.lines.push(line)
       continue

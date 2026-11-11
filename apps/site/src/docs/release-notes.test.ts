@@ -10,6 +10,32 @@ const changelog = readFileSync(
 )
 
 describe('parseChangelog', () => {
+  it('leaves compare-link reference definitions out of every entry body', () => {
+    const entries = parseChangelog(
+      [
+        '## [Unreleased]',
+        '',
+        '## [1.1.0] - 2026-01-02',
+        '',
+        '- Second.',
+        '',
+        '## [1.0.0] - 2026-01-01',
+        '',
+        '- First.',
+        '',
+        '[Unreleased]: https://example.com/compare/v1.1.0...HEAD',
+        '[1.1.0]: https://example.com/compare/v1.0.0...v1.1.0',
+        '[1.0.0]: https://example.com/releases/tag/v1.0.0',
+        '',
+      ].join('\n'),
+    )
+
+    expect(entries.map((entry) => entry.body)).toEqual([
+      '- Second.',
+      '- First.',
+    ])
+  })
+
   it('parses every version of the real changelog newest first', () => {
     const entries = parseChangelog(changelog)
     const headingVersions = changelog
