@@ -12,6 +12,7 @@ export default defineConfig({
       'eslint-rules/**/*.test.ts',
       'oxlint-plugins/**/*.test.ts',
       'docs/adr/**/*.test.ts',
+      'docs/brand/**/*.test.ts',
     ],
     coverage: {
       provider: 'v8',
