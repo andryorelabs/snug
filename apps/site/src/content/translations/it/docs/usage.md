@@ -1,10 +1,9 @@
 ---
 title: Utilizzo
 sourceHash: e1c70f0d3247c344
-description:
-  "Apri l'app di Snug e segui le pagine della guida per esportare, importare,
+description: "Apri l'app di Snug e segui le pagine della guida per esportare, importare,
   trovare i duplicati, regolare le impostazioni e programmare l'esportazione."
-seoTitle: 'Usare Snug: esportare e importare i segnalibri'
+seoTitle: "Usare Snug: esportare e importare i segnalibri"
 ---
 
 ## Aprire l'app

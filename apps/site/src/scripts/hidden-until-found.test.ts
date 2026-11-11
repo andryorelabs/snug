@@ -1,37 +1,34 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-import {
-  markCollapsedPanelsFindable,
-  markMarkdownTablesFocusable,
-} from './hidden-until-found'
+import { markCollapsedPanelsFindable, markMarkdownTablesFocusable } from "./hidden-until-found";
 
 const collapsedPanel =
-  '<div data-orientation="vertical" data-closed="" hidden="" id="p1" role="region" data-slot="accordion-content" class="x">A</div>'
+  '<div data-orientation="vertical" data-closed="" hidden="" id="p1" role="region" data-slot="accordion-content" class="x">A</div>';
 
-describe('markCollapsedPanelsFindable', () => {
-  it('turns the hidden attribute of every collapsed accordion panel into until-found', () => {
-    const html = `<main>${collapsedPanel}${collapsedPanel}</main>`
-    const result = markCollapsedPanelsFindable(html)
-    expect(result.match(/hidden="until-found"/g)).toHaveLength(2)
-    expect(result).not.toContain('hidden=""')
-  })
+describe("markCollapsedPanelsFindable", () => {
+  it("turns the hidden attribute of every collapsed accordion panel into until-found", () => {
+    const html = `<main>${collapsedPanel}${collapsedPanel}</main>`;
+    const result = markCollapsedPanelsFindable(html);
+    expect(result.match(/hidden="until-found"/g)).toHaveLength(2);
+    expect(result).not.toContain('hidden=""');
+  });
 
-  it('leaves other hidden elements and open panels alone', () => {
+  it("leaves other hidden elements and open panels alone", () => {
     const html =
-      '<div hidden="" id="other"></div><div data-open="" id="p2" role="region" data-slot="accordion-content"></div>'
-    expect(markCollapsedPanelsFindable(html)).toBe(html)
-  })
-})
+      '<div hidden="" id="other"></div><div data-open="" id="p2" role="region" data-slot="accordion-content"></div>';
+    expect(markCollapsedPanelsFindable(html)).toBe(html);
+  });
+});
 
-describe('markMarkdownTablesFocusable', () => {
-  it('gives every bare table a tab stop', () => {
-    const html = '<table><tr><td>a</td></tr></table><table></table>'
-    const result = markMarkdownTablesFocusable(html)
-    expect(result.match(/<table tabindex="0">/g)).toHaveLength(2)
-  })
+describe("markMarkdownTablesFocusable", () => {
+  it("gives every bare table a tab stop", () => {
+    const html = "<table><tr><td>a</td></tr></table><table></table>";
+    const result = markMarkdownTablesFocusable(html);
+    expect(result.match(/<table tabindex="0">/g)).toHaveLength(2);
+  });
 
-  it('leaves tables that already carry attributes alone', () => {
-    const html = '<table data-slot="table" class="x"></table>'
-    expect(markMarkdownTablesFocusable(html)).toBe(html)
-  })
-})
+  it("leaves tables that already carry attributes alone", () => {
+    const html = '<table data-slot="table" class="x"></table>';
+    expect(markMarkdownTablesFocusable(html)).toBe(html);
+  });
+});

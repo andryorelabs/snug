@@ -1,12 +1,12 @@
-import unicorn from 'eslint-plugin-unicorn'
+import unicorn from "eslint-plugin-unicorn";
 
-import { withTypeInformation } from './typed-react.mjs'
+import { withTypeInformation } from "./typed-react.mjs";
 
-const TYPESCRIPT_FILE = /\.tsx?$/
+const TYPESCRIPT_FILE = /\.tsx?$/;
 
-const SKIPPED_KEYS = new Set(['parent', 'loc', 'range'])
+const SKIPPED_KEYS = new Set(["parent", "loc", "range"]);
 
-const normalizedPrograms = new WeakSet()
+const normalizedPrograms = new WeakSet();
 
 /**
  * Rewrites the `accessibility: null` Oxlint puts on every class member to
@@ -17,24 +17,20 @@ const normalizedPrograms = new WeakSet()
  * @param program The file's root AST node.
  */
 function clearNullAccessibility(program) {
-  const pending = [program]
+  const pending = [program];
   while (pending.length > 0) {
-    const node = pending.pop()
+    const node = pending.pop();
     if (node.accessibility === null) {
-      node.accessibility = undefined
+      node.accessibility = undefined;
     }
     for (const [key, value] of Object.entries(node)) {
-      if (
-        typeof value !== 'object' ||
-        value === null ||
-        SKIPPED_KEYS.has(key)
-      ) {
-        continue
+      if (typeof value !== "object" || value === null || SKIPPED_KEYS.has(key)) {
+        continue;
       }
-      const children = Array.isArray(value) ? value : [value]
+      const children = Array.isArray(value) ? value : [value];
       for (const child of children) {
-        if (typeof child?.type === 'string') {
-          pending.push(child)
+        if (typeof child?.type === "string") {
+          pending.push(child);
         }
       }
     }
@@ -53,8 +49,8 @@ function addDefinitionKinds(scopeManager) {
   for (const scope of scopeManager.scopes) {
     for (const variable of scope.variables) {
       for (const definition of variable.defs) {
-        if (definition.type === 'Variable' && definition.kind === undefined) {
-          definition.kind = definition.parent?.kind
+        if (definition.type === "Variable" && definition.kind === undefined) {
+          definition.kind = definition.parent?.kind;
         }
       }
     }
@@ -71,14 +67,14 @@ function addDefinitionKinds(scopeManager) {
  * @param isTypeScript Whether the file is linted as TypeScript.
  */
 function normalizeForEslint(context, isTypeScript) {
-  const { sourceCode } = context
+  const { sourceCode } = context;
   if (normalizedPrograms.has(sourceCode.ast)) {
-    return
+    return;
   }
-  normalizedPrograms.add(sourceCode.ast)
-  clearNullAccessibility(sourceCode.ast)
+  normalizedPrograms.add(sourceCode.ast);
+  clearNullAccessibility(sourceCode.ast);
   if (!isTypeScript) {
-    addDefinitionKinds(sourceCode.scopeManager)
+    addDefinitionKinds(sourceCode.scopeManager);
   }
 }
 
@@ -93,16 +89,16 @@ function normalizeForEslint(context, isTypeScript) {
  * @returns A rule with the same `meta` and options.
  */
 function withEslintCompatibility(rule) {
-  const typedRule = withTypeInformation(rule)
+  const typedRule = withTypeInformation(rule);
   return {
     meta: rule.meta,
     create(context) {
-      const fileName = context.physicalFilename ?? context.filename
-      const isTypeScript = TYPESCRIPT_FILE.test(fileName)
-      normalizeForEslint(context, isTypeScript)
-      return isTypeScript ? typedRule.create(context) : rule.create(context)
+      const fileName = context.physicalFilename ?? context.filename;
+      const isTypeScript = TYPESCRIPT_FILE.test(fileName);
+      normalizeForEslint(context, isTypeScript);
+      return isTypeScript ? typedRule.create(context) : rule.create(context);
     },
-  }
+  };
 }
 
 /**
@@ -112,13 +108,10 @@ function withEslintCompatibility(rule) {
  * valid in both linters.
  */
 const typedUnicornPlugin = {
-  meta: { name: 'unicorn-js' },
+  meta: { name: "unicorn-js" },
   rules: Object.fromEntries(
-    Object.entries(unicorn.rules).map(([name, rule]) => [
-      name,
-      withEslintCompatibility(rule),
-    ]),
+    Object.entries(unicorn.rules).map(([name, rule]) => [name, withEslintCompatibility(rule)]),
   ),
-}
+};
 
-export default typedUnicornPlugin
+export default typedUnicornPlugin;

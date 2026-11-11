@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 /**
  * Named screen positions shared by the end of one scene and the start of the
@@ -7,18 +7,18 @@ import type { ReactNode } from 'react'
 export const MATCH_POINTS = {
   fileChip: { x: 960, y: 540 },
   center: { x: 960, y: 540 },
-} as const
+} as const;
 
-export type MatchPoint = { x: number; y: number }
+export type MatchPoint = { x: number; y: number };
 
 export type MatchCutProps = {
   /**
    * Screen position (1920x1080 space) of the element's centre.
    */
-  at: MatchPoint
-  scale?: number
-  children: ReactNode
-}
+  at: MatchPoint;
+  scale?: number;
+  children: ReactNode;
+};
 
 /**
  * Pins its children's centre to a fixed screen position. Render the same
@@ -28,7 +28,7 @@ export type MatchCutProps = {
 export const MatchCut = ({ at, scale = 1, children }: MatchCutProps) => (
   <div
     style={{
-      position: 'absolute',
+      position: "absolute",
       left: at.x,
       top: at.y,
       transform: `translate(-50%, -50%) scale(${scale})`,
@@ -36,4 +36,4 @@ export const MatchCut = ({ at, scale = 1, children }: MatchCutProps) => (
   >
     {children}
   </div>
-)
+);

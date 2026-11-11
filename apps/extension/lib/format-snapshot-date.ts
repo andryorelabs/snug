@@ -6,7 +6,7 @@
  */
 export function formatSnapshotDate(takenAt: number): string {
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(takenAt))
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(takenAt));
 }

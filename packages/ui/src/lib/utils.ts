@@ -1,4 +1,4 @@
-import { createCn } from 'cn/config'
+import { createCn } from "cn/config";
 
 /**
  * Class-name merger that knows the custom `--text-*` font sizes declared in
@@ -8,18 +8,11 @@ import { createCn } from 'cn/config'
 export const cn = createCn({
   extend: {
     classGroups: {
-      'font-size': [
+      "font-size": [
         {
-          text: [
-            'display',
-            'display-sm',
-            'headline',
-            'lead',
-            'eyebrow',
-            'code',
-          ],
+          text: ["display", "display-sm", "headline", "lead", "eyebrow", "code"],
         },
       ],
     },
   },
-})
+});

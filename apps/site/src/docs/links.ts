@@ -1,8 +1,8 @@
-import path from 'node:path'
+import path from "node:path";
 
-import { DEFAULT_LOCALE, type Locale } from '../i18n/locales'
-import { githubViewUrl } from './paths'
-import { findPublishedSource, publishedRoute } from './published'
+import { DEFAULT_LOCALE, type Locale } from "../i18n/locales";
+import { githubViewUrl } from "./paths";
+import { findPublishedSource, publishedRoute } from "./published";
 
 /**
  * Anchors of the pre-split `docs/usage.md`, each mapped to the published file
@@ -10,23 +10,23 @@ import { findPublishedSource, publishedRoute } from './published'
  * keep landing on the right page.
  */
 export const LEGACY_USAGE_ANCHORS: Readonly<Record<string, string>> = {
-  'opening-the-app': 'docs/usage.md',
-  'exporting-bookmarks': 'docs/guide/exporting.md',
-  'export-formats': 'docs/guide/exporting.md',
-  'progress-and-cancel': 'docs/guide/exporting.md',
-  'naming-exported-files': 'docs/guide/exporting.md',
-  'importing-bookmarks': 'docs/guide/importing.md',
-  'import-selection': 'docs/guide/importing.md',
-  'import-batch': 'docs/guide/importing.md',
-  'import-sources': 'docs/guide/importing.md',
-  'the-safety-snapshot-and-undo': 'docs/guide/importing.md',
-  'finding-duplicates': 'docs/guide/duplicates.md',
-  settings: 'docs/guide/settings.md',
-  'auto-export': 'docs/guide/auto-export.md',
-}
+  "opening-the-app": "docs/usage.md",
+  "exporting-bookmarks": "docs/guide/exporting.md",
+  "export-formats": "docs/guide/exporting.md",
+  "progress-and-cancel": "docs/guide/exporting.md",
+  "naming-exported-files": "docs/guide/exporting.md",
+  "importing-bookmarks": "docs/guide/importing.md",
+  "import-selection": "docs/guide/importing.md",
+  "import-batch": "docs/guide/importing.md",
+  "import-sources": "docs/guide/importing.md",
+  "the-safety-snapshot-and-undo": "docs/guide/importing.md",
+  "finding-duplicates": "docs/guide/duplicates.md",
+  settings: "docs/guide/settings.md",
+  "auto-export": "docs/guide/auto-export.md",
+};
 
-const USAGE_SOURCE_PATH = 'docs/usage.md'
-const EXTERNAL_HREF = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i
+const USAGE_SOURCE_PATH = "docs/usage.md";
+const EXTERNAL_HREF = /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i;
 
 /**
  * Where a link was found and which locale is being rendered.
@@ -35,11 +35,11 @@ export interface LinkContext {
   /**
   Repository path of the file containing the link.
    */
-  sourcePath: string
+  sourcePath: string;
   /**
   Locale of the page being rendered. Defaults to English.
    */
-  locale?: Locale
+  locale?: Locale;
 }
 
 /**
@@ -53,28 +53,26 @@ export interface LinkContext {
  * @returns The rewritten target.
  */
 export function rewriteLink(href: string, context: LinkContext): string {
-  if (href === '' || href.startsWith('#') || EXTERNAL_HREF.test(href)) {
-    return href
+  if (href === "" || href.startsWith("#") || EXTERNAL_HREF.test(href)) {
+    return href;
   }
-  const hashIndex = href.indexOf('#')
-  const target = hashIndex === -1 ? href : href.slice(0, hashIndex)
-  const fragment = hashIndex === -1 ? '' : href.slice(hashIndex)
-  if (target === '') return href
+  const hashIndex = href.indexOf("#");
+  const target = hashIndex === -1 ? href : href.slice(0, hashIndex);
+  const fragment = hashIndex === -1 ? "" : href.slice(hashIndex);
+  if (target === "") return href;
 
   const resolved = path.posix.normalize(
     path.posix.join(path.posix.dirname(context.sourcePath), target),
-  )
-  if (resolved === '..' || resolved.startsWith('../')) return href
-  const repositoryPath = resolved.replace(/\/$/, '')
+  );
+  if (resolved === ".." || resolved.startsWith("../")) return href;
+  const repositoryPath = resolved.replace(/\/$/, "");
 
   const legacyPath =
-    repositoryPath === USAGE_SOURCE_PATH
-      ? LEGACY_USAGE_ANCHORS[fragment.slice(1)]
-      : undefined
-  const source = findPublishedSource(legacyPath ?? repositoryPath)
+    repositoryPath === USAGE_SOURCE_PATH ? LEGACY_USAGE_ANCHORS[fragment.slice(1)] : undefined;
+  const source = findPublishedSource(legacyPath ?? repositoryPath);
   return source
     ? `${publishedRoute(source, context.locale ?? DEFAULT_LOCALE)}${fragment}`
-    : `${githubViewUrl(repositoryPath, target.endsWith('/'))}${fragment}`
+    : `${githubViewUrl(repositoryPath, target.endsWith("/"))}${fragment}`;
 }
 
 /**
@@ -88,7 +86,7 @@ export function legacyAnchorRoute(
   anchor: string,
   locale: Locale = DEFAULT_LOCALE,
 ): string | undefined {
-  const sourcePath = LEGACY_USAGE_ANCHORS[anchor]
-  const source = sourcePath ? findPublishedSource(sourcePath) : undefined
-  return source ? `${publishedRoute(source, locale)}#${anchor}` : undefined
+  const sourcePath = LEGACY_USAGE_ANCHORS[anchor];
+  const source = sourcePath ? findPublishedSource(sourcePath) : undefined;
+  return source ? `${publishedRoute(source, locale)}#${anchor}` : undefined;
 }

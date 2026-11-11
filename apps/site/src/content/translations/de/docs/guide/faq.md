@@ -1,11 +1,10 @@
 ---
 title: FAQ
 sourceHash: 304e0622b68c13d7
-description:
-  'Antworten auf häufige Fragen zu Snug: mehrere Dateien importieren,
+description: "Antworten auf häufige Fragen zu Snug: mehrere Dateien importieren,
   Berechtigungen, unterstützte Formate und Browser, Sicherheit und
-  Backup-Ordner.'
-seoTitle: 'Snug-FAQ: Formate, Browser, Sicherheit und Backups'
+  Backup-Ordner."
+seoTitle: "Snug-FAQ: Formate, Browser, Sicherheit und Backups"
 ---
 
 Kurze Antworten auf die Fragen, die zu Snug am häufigsten gestellt werden.

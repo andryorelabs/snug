@@ -1,15 +1,16 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 /// <reference types="chrome" />
-import { test as base, chromium } from '@playwright/test'
-import type { BrowserContext, Page, Worker } from '@playwright/test'
-import { mkdtemp, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { test as base, chromium } from "@playwright/test";
+import type { BrowserContext, Page, Worker } from "@playwright/test";
 
 const EXTENSION_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../.output/chrome-mv3',
-)
+  "../.output/chrome-mv3",
+);
 
 /**
  * A bookmark or folder to create via {@link ExtensionFixtures.seedBookmarks},
@@ -17,10 +18,10 @@ const EXTENSION_DIR = path.resolve(
  * `url` becomes a folder, and its `children` are created underneath it.
  */
 export type SeedBookmark = {
-  title: string
-  url?: string
-  children?: SeedBookmark[]
-}
+  title: string;
+  url?: string;
+  children?: SeedBookmark[];
+};
 
 /**
  * The fixtures `e2e/fixtures.ts` adds on top of `@playwright/test`'s base
@@ -30,15 +31,15 @@ export type SeedBookmark = {
  * instead of reimplementing `launchPersistentContext` setup.
  */
 type ExtensionFixtures = {
-  browserLocale: string | undefined
-  context: BrowserContext
-  extensionId: string
-  serviceWorker: Worker
-  openExtensionPage: (pageName: string) => Promise<Page>
-  seedBookmarks: (nodes: SeedBookmark[]) => Promise<void>
-  readBookmarkTree: () => Promise<chrome.bookmarks.BookmarkTreeNode[]>
-  seedStorage: (values: Record<string, unknown>) => Promise<void>
-}
+  browserLocale: string | undefined;
+  context: BrowserContext;
+  extensionId: string;
+  serviceWorker: Worker;
+  openExtensionPage: (pageName: string) => Promise<Page>;
+  seedBookmarks: (nodes: SeedBookmark[]) => Promise<void>;
+  readBookmarkTree: () => Promise<chrome.bookmarks.BookmarkTreeNode[]>;
+  seedStorage: (values: Record<string, unknown>) => Promise<void>;
+};
 
 /**
  * Playwright `test`, extended with fixtures that load this repo's built
@@ -53,10 +54,10 @@ export const test = base.extend<ExtensionFixtures>({
   browserLocale: [undefined, { option: true }],
 
   context: async ({ browserLocale, deviceScaleFactor, viewport }, use) => {
-    const userDataDirectory = await mkdtemp(path.join(tmpdir(), 'snug-e2e-'))
+    const userDataDirectory = await mkdtemp(path.join(tmpdir(), "snug-e2e-"));
 
     const context = await chromium.launchPersistentContext(userDataDirectory, {
-      channel: 'chromium',
+      channel: "chromium",
       ...(browserLocale !== undefined && { locale: browserLocale }),
       ...(deviceScaleFactor !== undefined && { deviceScaleFactor }),
       viewport,
@@ -69,58 +70,55 @@ export const test = base.extend<ExtensionFixtures>({
       ...(browserLocale && {
         env: { ...process.env, LANGUAGE: browserLocale },
       }),
-    })
+    });
 
-    await use(context)
+    await use(context);
 
-    await context.close()
-    await rm(userDataDirectory, { recursive: true, force: true })
+    await context.close();
+    await rm(userDataDirectory, { recursive: true, force: true });
   },
 
   serviceWorker: async ({ context }, use) => {
-    let [worker] = context.serviceWorkers()
-    worker ??= await context.waitForEvent('serviceworker')
-    await use(worker)
+    let [worker] = context.serviceWorkers();
+    worker ??= await context.waitForEvent("serviceworker");
+    await use(worker);
   },
 
   extensionId: async ({ serviceWorker }, use) => {
-    await use(new URL(serviceWorker.url()).hostname)
+    await use(new URL(serviceWorker.url()).hostname);
   },
 
   openExtensionPage: async ({ context, extensionId }, use) => {
     await use(async (pageName) => {
-      const page = await context.newPage()
-      await page.goto(`chrome-extension://${extensionId}/${pageName}`)
-      return page
-    })
+      const page = await context.newPage();
+      await page.goto(`chrome-extension://${extensionId}/${pageName}`);
+      return page;
+    });
   },
 
   seedBookmarks: async ({ serviceWorker }, use) => {
     await use(async (nodes) => {
       await serviceWorker.evaluate(async (seed: SeedBookmark[]) => {
-        const createRecursively = async (
-          node: SeedBookmark,
-          parentId?: string,
-        ): Promise<void> => {
+        const createRecursively = async (node: SeedBookmark, parentId?: string): Promise<void> => {
           const created = await chrome.bookmarks.create({
             ...(parentId !== undefined && { parentId }),
             title: node.title,
             ...(node.url !== undefined && { url: node.url }),
-          })
-          const children = node.children ?? []
+          });
+          const children = node.children ?? [];
           for (const child of children) {
-            await createRecursively(child, created.id)
+            await createRecursively(child, created.id);
           }
-        }
+        };
         for (const node of seed) {
-          await createRecursively(node)
+          await createRecursively(node);
         }
-      }, nodes)
-    })
+      }, nodes);
+    });
   },
 
   readBookmarkTree: async ({ serviceWorker }, use) => {
-    await use(() => serviceWorker.evaluate(() => chrome.bookmarks.getTree()))
+    await use(() => serviceWorker.evaluate(() => chrome.bookmarks.getTree()));
   },
 
   /**
@@ -137,9 +135,9 @@ export const test = base.extend<ExtensionFixtures>({
       await serviceWorker.evaluate(
         (seed: Record<string, unknown>) => chrome.storage.local.set(seed),
         values,
-      )
-    })
+      );
+    });
   },
-})
+});
 
-export { expect } from '@playwright/test'
+export { expect } from "@playwright/test";

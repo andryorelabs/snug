@@ -1,11 +1,11 @@
-import type { Page } from '@playwright/test'
+import type { Page } from "@playwright/test";
 
-import { UMAMI_COLLECT_ORIGIN, UMAMI_SCRIPT_ORIGIN } from '../src/seo/umami'
+import { UMAMI_COLLECT_ORIGIN, UMAMI_SCRIPT_ORIGIN } from "../src/seo/umami";
 
-export const UMAMI_ORIGINS = [UMAMI_SCRIPT_ORIGIN, UMAMI_COLLECT_ORIGIN]
+export const UMAMI_ORIGINS = [UMAMI_SCRIPT_ORIGIN, UMAMI_COLLECT_ORIGIN];
 
 export function isUmamiOrigin(origin: string): boolean {
-  return UMAMI_ORIGINS.includes(origin)
+  return UMAMI_ORIGINS.includes(origin);
 }
 
 /**
@@ -17,6 +17,6 @@ export function isUmamiOrigin(origin: string): boolean {
 export async function blockUmami(page: Page): Promise<void> {
   for (const origin of UMAMI_ORIGINS)
     await page.route(`${origin}/**`, (route) =>
-      route.fulfill({ status: 200, contentType: 'text/javascript', body: '' }),
-    )
+      route.fulfill({ status: 200, contentType: "text/javascript", body: "" }),
+    );
 }

@@ -1,7 +1,7 @@
 ---
-import { Separator } from '@workspace/ui/components/separator'
+import { Separator } from "@workspace/ui/components/separator";
 
-import { DOCS_UI } from '../i18n/docs-ui'
+import { DOCS_UI } from "../i18n/docs-ui";
 import {
   CREDIT_URL,
   FOOTER_LINK_HREFS,
@@ -10,74 +10,62 @@ import {
   installHref,
   resolveHref,
   splitCredit,
-} from '../i18n/landing'
-import {
-  languageTag,
-  LOCALE_NAMES,
-  localePath,
-  LOCALES,
-  type Locale,
-} from '../i18n/locales'
-import TextLink from './TextLink.astro'
+} from "../i18n/landing";
+import { languageTag, LOCALE_NAMES, localePath, LOCALES, type Locale } from "../i18n/locales";
+import TextLink from "./TextLink.astro";
 
 interface Props {
-  locale: Locale
-  markCurrent?: boolean
-  pageHref?: (locale: Locale) => string
+  locale: Locale;
+  markCurrent?: boolean;
+  pageHref?: (locale: Locale) => string;
 }
 
-const { locale, markCurrent = true, pageHref = localePath } = Astro.props
-const { footer, header } = getClosingCopy(locale)
-const { trust } = getLandingCopy(locale)
+const { locale, markCurrent = true, pageHref = localePath } = Astro.props;
+const { footer, header } = getClosingCopy(locale);
+const { trust } = getLandingCopy(locale);
 const links = [
-  { key: 'source', href: FOOTER_LINK_HREFS.source, label: footer.source },
+  { key: "source", href: FOOTER_LINK_HREFS.source, label: footer.source },
   {
-    key: 'scorecard',
+    key: "scorecard",
     href: FOOTER_LINK_HREFS.scorecard,
     label: trust.links.scorecard,
   },
   {
-    key: 'bestPractices',
+    key: "bestPractices",
     href: FOOTER_LINK_HREFS.bestPractices,
     label: trust.links.bestPractices,
   },
-  { key: 'ci', href: FOOTER_LINK_HREFS.ci, label: trust.links.ci },
+  { key: "ci", href: FOOTER_LINK_HREFS.ci, label: trust.links.ci },
   {
-    key: 'alternatives',
+    key: "alternatives",
     href: resolveHref(FOOTER_LINK_HREFS.alternatives, locale),
     label: footer.alternatives,
   },
   {
-    key: 'how-to',
+    key: "how-to",
     href: resolveHref(FOOTER_LINK_HREFS.howTo, locale),
     label: footer.howTo,
   },
   {
-    key: 'privacy',
+    key: "privacy",
     href: resolveHref(FOOTER_LINK_HREFS.privacy, locale),
     label: footer.privacy,
   },
   {
-    key: 'guide',
+    key: "guide",
     href: resolveHref(FOOTER_LINK_HREFS.guide, locale),
     label: DOCS_UI.guide,
   },
   {
-    key: 'changelog',
+    key: "changelog",
     href: resolveHref(FOOTER_LINK_HREFS.changelog, locale),
     label: DOCS_UI.whatsNew,
   },
-  { key: 'listing', href: installHref('footer'), label: footer.listing },
-]
-const OUTBOUND_LINK_KEYS = new Set([
-  'source',
-  'scorecard',
-  'bestPractices',
-  'ci',
-  'listing',
-])
-const noteParts = footer.note.split('Snug')
-const credit = splitCredit(footer.credit)
+  { key: "listing", href: installHref("footer"), label: footer.listing },
+];
+const OUTBOUND_LINK_KEYS = new Set(["source", "scorecard", "bestPractices", "ci", "listing"]);
+const noteParts = footer.note.split("Snug");
+const credit = splitCredit(footer.credit);
 ---
 
 <footer data-section="footer" class="border-t border-border">
@@ -89,13 +77,9 @@ const credit = splitCredit(footer.credit)
             <TextLink
               href={link.href}
               data-footer-link={link.key}
-              target={link.key === 'listing' ? '_blank' : undefined}
-              rel={link.key === 'listing' ? 'noopener' : undefined}
-              data-umami-event={
-                OUTBOUND_LINK_KEYS.has(link.key)
-                  ? 'outbound-click'
-                  : 'nav-click'
-              }
+              target={link.key === "listing" ? "_blank" : undefined}
+              rel={link.key === "listing" ? "noopener" : undefined}
+              data-umami-event={OUTBOUND_LINK_KEYS.has(link.key) ? "outbound-click" : "nav-click"}
               data-umami-event-target={`footer-${link.key}`}
             >
               {link.label}
@@ -113,7 +97,7 @@ const credit = splitCredit(footer.credit)
               href={pageHref(code)}
               lang={languageTag(code)}
               hreflang={languageTag(code)}
-              aria-current={markCurrent && code === locale ? 'page' : undefined}
+              aria-current={markCurrent && code === locale ? "page" : undefined}
               class="font-system aria-[current=page]:text-primary-text"
             >
               {LOCALE_NAMES[code]}

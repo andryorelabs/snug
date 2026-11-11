@@ -1,16 +1,11 @@
-import { existsSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { existsSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { COMPARISON_PAGE_SLUGS } from '../src/content/competitors'
-import {
-  DEFAULT_LOCALE,
-  type Locale,
-  localePath,
-  LOCALES,
-} from '../src/i18n/locales'
+import { COMPARISON_PAGE_SLUGS } from "../src/content/competitors";
+import { DEFAULT_LOCALE, type Locale, localePath, LOCALES } from "../src/i18n/locales";
 
-const siteRoot = fileURLToPath(new URL('..', import.meta.url))
+const siteRoot = fileURLToPath(new URL("..", import.meta.url));
 
 /**
  * Locales that have comparison copy, English first. Read from the copy files
@@ -19,10 +14,8 @@ const siteRoot = fileURLToPath(new URL('..', import.meta.url))
 export const COMPARISON_LOCALES: readonly Locale[] = LOCALES.filter(
   (locale) =>
     locale === DEFAULT_LOCALE ||
-    existsSync(
-      path.join(siteRoot, 'src/content/comparisons', `${locale}.json`),
-    ),
-)
+    existsSync(path.join(siteRoot, "src/content/comparisons", `${locale}.json`)),
+);
 
 /**
  * Site-relative path of the Alternatives page or a comparison page.
@@ -31,11 +24,8 @@ export const COMPARISON_LOCALES: readonly Locale[] = LOCALES.filter(
  * @returns The path with a trailing slash.
  */
 export function comparisonPath(locale: Locale, slug?: string): string {
-  const page = slug ? `/alternatives/${slug}/` : '/alternatives/'
-  return localePath(
-    COMPARISON_LOCALES.includes(locale) ? locale : DEFAULT_LOCALE,
-    page,
-  )
+  const page = slug ? `/alternatives/${slug}/` : "/alternatives/";
+  return localePath(COMPARISON_LOCALES.includes(locale) ? locale : DEFAULT_LOCALE, page);
 }
 
 /**
@@ -47,9 +37,9 @@ export const COMPARISON_PAGES = COMPARISON_LOCALES.flatMap((locale) =>
     slug,
     path: comparisonPath(locale, slug),
   })),
-)
+);
 
 /**
  * The paths of `COMPARISON_PAGES`.
  */
-export const COMPARISON_PATHS = COMPARISON_PAGES.map((page) => page.path)
+export const COMPARISON_PATHS = COMPARISON_PAGES.map((page) => page.path);

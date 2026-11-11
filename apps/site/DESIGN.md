@@ -1,63 +1,62 @@
 ---
 name: Snug landing
-description:
-  Dark-first, amber-accented landing for a local-only bookmark extension,
+description: Dark-first, amber-accented landing for a local-only bookmark extension,
   inheriting the shipped Snug brand.
 colors:
-  aurora-ground: 'oklch(0.186 0.017 79.1)'
-  aurora-panel: 'oklch(0.25 0.023 69.2)'
-  paper-text: 'oklch(0.943 0.019 80.1)'
-  muted-text: 'oklch(0.74 0.041 82.3)'
-  amber: 'oklch(0.789 0.161 65.7)'
-  hairline: 'oklch(0.943 0.019 80.1 / 16%)'
+  aurora-ground: "oklch(0.186 0.017 79.1)"
+  aurora-panel: "oklch(0.25 0.023 69.2)"
+  paper-text: "oklch(0.943 0.019 80.1)"
+  muted-text: "oklch(0.74 0.041 82.3)"
+  amber: "oklch(0.789 0.161 65.7)"
+  hairline: "oklch(0.943 0.019 80.1 / 16%)"
 typography:
   display:
-    fontFamily: 'Space Grotesk Variable, sans-serif'
-    fontSize: 'clamp(2.5rem, 6vw, 5rem)'
+    fontFamily: "Space Grotesk Variable, sans-serif"
+    fontSize: "clamp(2.5rem, 6vw, 5rem)"
     fontWeight: 700
     lineHeight: 1.02
-    letterSpacing: '-0.025em'
+    letterSpacing: "-0.025em"
   headline:
-    fontFamily: 'Space Grotesk Variable, sans-serif'
-    fontSize: 'clamp(1.875rem, 4vw, 3.25rem)'
+    fontFamily: "Space Grotesk Variable, sans-serif"
+    fontSize: "clamp(1.875rem, 4vw, 3.25rem)"
     fontWeight: 700
     lineHeight: 1.08
-    letterSpacing: '-0.02em'
+    letterSpacing: "-0.02em"
   title:
-    fontFamily: 'Space Grotesk Variable, sans-serif'
-    fontSize: '1.5rem'
+    fontFamily: "Space Grotesk Variable, sans-serif"
+    fontSize: "1.5rem"
     fontWeight: 500
     lineHeight: 1.2
   body:
-    fontFamily: 'Geist Variable, sans-serif'
-    fontSize: '1.0625rem'
+    fontFamily: "Geist Variable, sans-serif"
+    fontSize: "1.0625rem"
     fontWeight: 400
     lineHeight: 1.55
   label:
-    fontFamily: 'Geist Mono, monospace'
-    fontSize: '0.8125rem'
+    fontFamily: "Geist Mono, monospace"
+    fontSize: "0.8125rem"
     fontWeight: 400
-    letterSpacing: '0.12em'
+    letterSpacing: "0.12em"
 rounded:
-  md: '10px'
-  lg: '14px'
-  xl: '20px'
+  md: "10px"
+  lg: "14px"
+  xl: "20px"
 spacing:
-  sm: '8px'
-  md: '16px'
-  lg: '32px'
-  section: '96px'
+  sm: "8px"
+  md: "16px"
+  lg: "32px"
+  section: "96px"
 components:
   button-primary:
-    backgroundColor: '{colors.amber}'
-    textColor: '{colors.aurora-ground}'
-    rounded: '{rounded.md}'
-    padding: '16px 28px'
+    backgroundColor: "{colors.amber}"
+    textColor: "{colors.aurora-ground}"
+    rounded: "{rounded.md}"
+    padding: "16px 28px"
   panel:
-    backgroundColor: '{colors.aurora-panel}'
-    textColor: '{colors.paper-text}'
-    rounded: '{rounded.lg}'
-    padding: '28px'
+    backgroundColor: "{colors.aurora-panel}"
+    textColor: "{colors.paper-text}"
+    rounded: "{rounded.lg}"
+    padding: "28px"
 ---
 
 # Design System: Snug landing

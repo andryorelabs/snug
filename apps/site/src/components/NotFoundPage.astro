@@ -1,29 +1,24 @@
 ---
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-} from '@workspace/ui/components/empty'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader } from "@workspace/ui/components/empty";
 
-import { DOCS_UI } from '../i18n/docs-ui'
-import { FOOTER_LINK_HREFS, getClosingCopy, resolveHref } from '../i18n/landing'
-import { localePath, type Locale } from '../i18n/locales'
-import Layout from '../layouts/Layout.astro'
-import SectionHeading from './SectionHeading.astro'
-import TextLink from './TextLink.astro'
+import { DOCS_UI } from "../i18n/docs-ui";
+import { FOOTER_LINK_HREFS, getClosingCopy, resolveHref } from "../i18n/landing";
+import { localePath, type Locale } from "../i18n/locales";
+import Layout from "../layouts/Layout.astro";
+import SectionHeading from "./SectionHeading.astro";
+import TextLink from "./TextLink.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { locale } = Astro.props
-const { footer, notFound } = getClosingCopy(locale)
+const { locale } = Astro.props;
+const { footer, notFound } = getClosingCopy(locale);
 const page = {
   meta: { title: `${notFound.title} | Snug`, description: notFound.body },
-  path: () => '/404/',
+  path: () => "/404/",
   alternateLocales: [],
-}
+};
 ---
 
 <Layout locale={locale} notFound page={page}>
@@ -40,14 +35,10 @@ const page = {
           data-not-found-links
         >
           <li>
-            <TextLink href={resolveHref(FOOTER_LINK_HREFS.guide, locale)}>
-              {DOCS_UI.guide}
-            </TextLink>
+            <TextLink href={resolveHref(FOOTER_LINK_HREFS.guide, locale)}>{DOCS_UI.guide}</TextLink>
           </li>
           <li>
-            <TextLink href={resolveHref(FOOTER_LINK_HREFS.howTo, locale)}>
-              {footer.howTo}
-            </TextLink>
+            <TextLink href={resolveHref(FOOTER_LINK_HREFS.howTo, locale)}>{footer.howTo}</TextLink>
           </li>
         </ul>
       </EmptyContent>

@@ -1,52 +1,49 @@
-import { i18n } from '#i18n'
-import { Alert, AlertDescription } from '@workspace/ui/components/alert'
+import { i18n } from "#i18n";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import {
   Field,
   FieldContent,
   FieldDescription,
   FieldLabel,
   FieldTitle,
-} from '@workspace/ui/components/field'
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@workspace/ui/components/radio-group'
-import { TriangleAlertIcon } from 'lucide-react'
+} from "@workspace/ui/components/field";
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
+import { TriangleAlertIcon } from "lucide-react";
 
-import type { ImportMode } from '@/lib/types'
+import type { ImportMode } from "@/lib/types";
 
 interface ModeOption {
-  value: ImportMode
-  label: string
-  description: string
+  value: ImportMode;
+  label: string;
+  description: string;
 }
 
 interface ImportModeStepProperties {
-  value: ImportMode
-  onChange: (mode: ImportMode) => void
-  hasLocationData: boolean
-  isReplaceDisabled?: boolean
-  disabled: boolean
+  value: ImportMode;
+  onChange: (mode: ImportMode) => void;
+  hasLocationData: boolean;
+  isReplaceDisabled?: boolean;
+  disabled: boolean;
 }
 
 function getModeOptions(): ModeOption[] {
   return [
     {
-      value: 'folder',
-      label: i18n.t('importModeFolder'),
-      description: i18n.t('importModeFolderDescription'),
+      value: "folder",
+      label: i18n.t("importModeFolder"),
+      description: i18n.t("importModeFolderDescription"),
     },
     {
-      value: 'restore-merge',
-      label: i18n.t('importModeRestoreMerge'),
-      description: i18n.t('importModeRestoreMergeDescription'),
+      value: "restore-merge",
+      label: i18n.t("importModeRestoreMerge"),
+      description: i18n.t("importModeRestoreMergeDescription"),
     },
     {
-      value: 'restore-replace',
-      label: i18n.t('importModeRestoreReplace'),
-      description: i18n.t('importModeRestoreReplaceDescription'),
+      value: "restore-replace",
+      label: i18n.t("importModeRestoreReplace"),
+      description: i18n.t("importModeRestoreReplaceDescription"),
     },
-  ]
+  ];
 }
 
 /**
@@ -75,31 +72,26 @@ export function ImportModeStep({
       <RadioGroup
         value={value}
         disabled={disabled}
-        aria-label={i18n.t('importMode')}
+        aria-label={i18n.t("importMode")}
         onValueChange={(next) => onChange(next as ImportMode)}
       >
         {getModeOptions().map((option) => {
-          const isRestoreUnavailable =
-            !hasLocationData && option.value !== 'folder'
-          const isBatchBlocked =
-            isReplaceDisabled && option.value === 'restore-replace'
-          const isUnavailable = isRestoreUnavailable || isBatchBlocked
-          const id = `import-mode-${option.value}`
+          const isRestoreUnavailable = !hasLocationData && option.value !== "folder";
+          const isBatchBlocked = isReplaceDisabled && option.value === "restore-replace";
+          const isUnavailable = isRestoreUnavailable || isBatchBlocked;
+          const id = `import-mode-${option.value}`;
 
           return (
             <FieldLabel key={option.value} htmlFor={id}>
-              <Field
-                orientation="horizontal"
-                data-disabled={isUnavailable || undefined}
-              >
+              <Field orientation="horizontal" data-disabled={isUnavailable || undefined}>
                 <FieldContent>
                   <FieldTitle>{option.label}</FieldTitle>
                   <FieldDescription>
                     {isUnavailable
                       ? i18n.t(
                           isRestoreUnavailable
-                            ? 'import_restoreUnavailable'
-                            : 'importBatchReplaceNeedsOneFile',
+                            ? "import_restoreUnavailable"
+                            : "importBatchReplaceNeedsOneFile",
                         )
                       : option.description}
                   </FieldDescription>
@@ -112,18 +104,16 @@ export function ImportModeStep({
                 />
               </Field>
             </FieldLabel>
-          )
+          );
         })}
       </RadioGroup>
 
-      {value === 'restore-replace' && (
+      {value === "restore-replace" && (
         <Alert variant="destructive">
           <TriangleAlertIcon />
-          <AlertDescription>
-            {i18n.t('importModeRestoreReplaceWarning')}
-          </AlertDescription>
+          <AlertDescription>{i18n.t("importModeRestoreReplaceWarning")}</AlertDescription>
         </Alert>
       )}
     </div>
-  )
+  );
 }

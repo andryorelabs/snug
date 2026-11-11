@@ -1,16 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-import { loadCatalog } from '../docs/catalog'
-import { markdownTwinPath } from '../docs/markdown-twin'
-import { PUBLISHED_SOURCES, publishedRoute } from '../docs/published'
+import { loadCatalog } from "../docs/catalog";
+import { markdownTwinPath } from "../docs/markdown-twin";
+import { PUBLISHED_SOURCES, publishedRoute } from "../docs/published";
 import {
   alternativesPath,
   COMPARISON_PAGE_LOCALES,
   COMPARISON_SLUGS,
   getComparisonContent,
   getComparisonMeta,
-} from '../i18n/comparisons'
-import { getContent } from '../i18n/content'
+} from "../i18n/comparisons";
+import { getContent } from "../i18n/content";
 import {
   getHowToContent,
   getHowToIndexMeta,
@@ -20,445 +20,415 @@ import {
   howToIndexPath,
   howToPageLocales,
   howToPath,
-} from '../i18n/how-to'
-import { fullHeadline, PROMO_VIDEO_IDS } from '../i18n/landing'
-import {
-  hreflangAlternates,
-  languageTag,
-  localePath,
-  LOCALES,
-  SITE_ORIGIN,
-} from '../i18n/locales'
-import { PRIVACY_PAGE_LOCALES, privacyPath } from '../i18n/privacy'
-import { REVIEWS } from '../i18n/proof'
-import { GET as getLlmsFullTxt } from '../pages/llms-full.txt'
-import { GET as getLlmsTxt } from '../pages/llms.txt'
-import { GET as getRobotsTxt } from '../pages/robots.txt'
-import { GET as getSitemapXml } from '../pages/sitemap.xml'
-import { comparisonLlmsFullSections } from './comparison-pages'
-import {
-  buildLlmsFullTxt,
-  buildLlmsTxt,
-  buildRobotsTxt,
-  buildSitemapXml,
-} from './crawlers'
-import { demoteHeadings, guideLlmsFullSections } from './documentation-pages'
-import { howToLlmsFullSections } from './how-to-pages'
-import { lastCommitDate } from './last-modified'
-import { STORE_FACTS } from './store-facts'
+} from "../i18n/how-to";
+import { fullHeadline, PROMO_VIDEO_IDS } from "../i18n/landing";
+import { hreflangAlternates, languageTag, localePath, LOCALES, SITE_ORIGIN } from "../i18n/locales";
+import { PRIVACY_PAGE_LOCALES, privacyPath } from "../i18n/privacy";
+import { REVIEWS } from "../i18n/proof";
+import { GET as getLlmsFullTxt } from "../pages/llms-full.txt";
+import { GET as getLlmsTxt } from "../pages/llms.txt";
+import { GET as getRobotsTxt } from "../pages/robots.txt";
+import { GET as getSitemapXml } from "../pages/sitemap.xml";
+import { comparisonLlmsFullSections } from "./comparison-pages";
+import { buildLlmsFullTxt, buildLlmsTxt, buildRobotsTxt, buildSitemapXml } from "./crawlers";
+import { demoteHeadings, guideLlmsFullSections } from "./documentation-pages";
+import { howToLlmsFullSections } from "./how-to-pages";
+import { lastCommitDate } from "./last-modified";
+import { STORE_FACTS } from "./store-facts";
 import {
   buildComparisonStructuredData,
   buildHowToStructuredData,
   buildStructuredData,
-} from './structured-data'
+} from "./structured-data";
 
 const HOW_TO_PAGE_COUNT =
-  HOW_TO_SLUGS.flatMap((slug) => howToPageLocales(slug)).length +
-  HOW_TO_INDEX_LOCALES.length
-let HOW_TO_ALTERNATE_COUNT =
-  HOW_TO_INDEX_LOCALES.length * (HOW_TO_INDEX_LOCALES.length + 1)
+  HOW_TO_SLUGS.flatMap((slug) => howToPageLocales(slug)).length + HOW_TO_INDEX_LOCALES.length;
+let HOW_TO_ALTERNATE_COUNT = HOW_TO_INDEX_LOCALES.length * (HOW_TO_INDEX_LOCALES.length + 1);
 for (const slug of HOW_TO_SLUGS) {
-  const carrying = howToPageLocales(slug).length
-  HOW_TO_ALTERNATE_COUNT += carrying * (carrying + 1)
+  const carrying = howToPageLocales(slug).length;
+  HOW_TO_ALTERNATE_COUNT += carrying * (carrying + 1);
 }
 
-describe('buildRobotsTxt', () => {
-  it('keeps search crawlers and training crawlers in separate groups', () => {
-    const groups = buildRobotsTxt().split('\n\n')
+describe("buildRobotsTxt", () => {
+  it("keeps search crawlers and training crawlers in separate groups", () => {
+    const groups = buildRobotsTxt().split("\n\n");
     const groupFor = (agent: string): string =>
-      groups.find((entry) => entry.includes(`User-agent: ${agent}\n`)) ?? ''
+      groups.find((entry) => entry.includes(`User-agent: ${agent}\n`)) ?? "";
 
-    expect(groupFor('Googlebot').split('\n')).toContain('Allow: /')
-    expect(groupFor('Googlebot').split('\n')).not.toContain('Disallow: /')
-    expect(groupFor('ClaudeBot').split('\n')).toContain('Disallow: /')
-    expect(groupFor('ClaudeBot').split('\n')).not.toContain('Allow: /')
-  })
+    expect(groupFor("Googlebot").split("\n")).toContain("Allow: /");
+    expect(groupFor("Googlebot").split("\n")).not.toContain("Disallow: /");
+    expect(groupFor("ClaudeBot").split("\n")).toContain("Disallow: /");
+    expect(groupFor("ClaudeBot").split("\n")).not.toContain("Allow: /");
+  });
 
-  it('disallows the redirect-only paths in every group', () => {
+  it("disallows the redirect-only paths in every group", () => {
     const groups = buildRobotsTxt()
-      .split('\n\n')
-      .filter((entry) => entry.includes('User-agent:'))
-    expect(groups.length).toBeGreaterThan(0)
+      .split("\n\n")
+      .filter((entry) => entry.includes("User-agent:"));
+    expect(groups.length).toBeGreaterThan(0);
     for (const entry of groups) {
-      expect(entry.split('\n')).toContain('Disallow: /install')
-      expect(entry.split('\n')).toContain('Disallow: /reviews')
+      expect(entry.split("\n")).toContain("Disallow: /install");
+      expect(entry.split("\n")).toContain("Disallow: /reviews");
     }
-  })
+  });
 
-  it('does not block Google-Extended, which feeds Gemini grounding', () => {
-    expect(buildRobotsTxt()).not.toContain('User-agent: Google-Extended')
-  })
+  it("does not block Google-Extended, which feeds Gemini grounding", () => {
+    expect(buildRobotsTxt()).not.toContain("User-agent: Google-Extended");
+  });
 
-  it('points at the sitemap', () => {
-    expect(buildRobotsTxt()).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`)
-  })
-})
+  it("points at the sitemap", () => {
+    expect(buildRobotsTxt()).toContain(`Sitemap: ${SITE_ORIGIN}/sitemap.xml`);
+  });
+});
 
-describe('buildLlmsTxt', () => {
+describe("buildLlmsTxt", () => {
   const pages = [
-    { languageTag: 'en', title: 'Snug EN', url: `${SITE_ORIGIN}/` },
-    { languageTag: 'es', title: 'Snug ES', url: `${SITE_ORIGIN}/es/` },
-  ]
+    { languageTag: "en", title: "Snug EN", url: `${SITE_ORIGIN}/` },
+    { languageTag: "es", title: "Snug ES", url: `${SITE_ORIGIN}/es/` },
+  ];
 
-  it('starts with the product name and embeds the description', () => {
-    const body = buildLlmsTxt('A short description.', pages)
-    expect(body).toMatch(/^# Snug\n/)
-    expect(body).toContain('> A short description.')
-    expect(body).toContain(`${SITE_ORIGIN}/install`)
-    expect(body).toContain(`${SITE_ORIGIN}/privacy/`)
-  })
+  it("starts with the product name and embeds the description", () => {
+    const body = buildLlmsTxt("A short description.", pages);
+    expect(body).toMatch(/^# Snug\n/);
+    expect(body).toContain("> A short description.");
+    expect(body).toContain(`${SITE_ORIGIN}/install`);
+    expect(body).toContain(`${SITE_ORIGIN}/privacy/`);
+  });
 
-  it('lists every locale page', () => {
-    const body = buildLlmsTxt('A short description.', pages)
-    expect(body).toContain(`[Snug EN](${SITE_ORIGIN}/)`)
-    expect(body).toContain(`[Snug ES](${SITE_ORIGIN}/es/)`)
-  })
+  it("lists every locale page", () => {
+    const body = buildLlmsTxt("A short description.", pages);
+    expect(body).toContain(`[Snug EN](${SITE_ORIGIN}/)`);
+    expect(body).toContain(`[Snug ES](${SITE_ORIGIN}/es/)`);
+  });
 
-  it('points at llms-full.txt', () => {
-    expect(buildLlmsTxt('d', pages)).toContain(`${SITE_ORIGIN}/llms-full.txt`)
-  })
+  it("points at llms-full.txt", () => {
+    expect(buildLlmsTxt("d", pages)).toContain(`${SITE_ORIGIN}/llms-full.txt`);
+  });
 
-  it('lists each Guide page once, with its description and Markdown link', () => {
-    const body = buildLlmsTxt('d', pages, [
+  it("lists each Guide page once, with its description and Markdown link", () => {
+    const body = buildLlmsTxt("d", pages, [
       {
-        title: 'Exporting',
-        description: 'Save your tabs to a file.',
+        title: "Exporting",
+        description: "Save your tabs to a file.",
         markdownUrl: `${SITE_ORIGIN}/guide/exporting.md`,
       },
-    ])
-    expect(body).toContain('## Guide\n')
+    ]);
+    expect(body).toContain("## Guide\n");
     expect(body).toContain(
       `- [Exporting](${SITE_ORIGIN}/guide/exporting.md): Save your tabs to a file.`,
-    )
-    expect(body).toContain('every page exists under `/<locale>/`')
-  })
+    );
+    expect(body).toContain("every page exists under `/<locale>/`");
+  });
 
-  it('moves secondary pages under Optional', () => {
-    const body = buildLlmsTxt('d', pages, [
+  it("moves secondary pages under Optional", () => {
+    const body = buildLlmsTxt("d", pages, [
       {
         title: "What's new",
-        description: 'Release notes.',
+        description: "Release notes.",
         markdownUrl: `${SITE_ORIGIN}/whats-new.md`,
         secondary: true,
       },
-    ])
-    const [beforeOptional, optional] = body.split('## Optional', 2)
-    expect(beforeOptional).not.toContain(`${SITE_ORIGIN}/whats-new.md`)
-    expect(optional).toContain(`[What's new](${SITE_ORIGIN}/whats-new.md)`)
-  })
+    ]);
+    const [beforeOptional, optional] = body.split("## Optional", 2);
+    expect(beforeOptional).not.toContain(`${SITE_ORIGIN}/whats-new.md`);
+    expect(optional).toContain(`[What's new](${SITE_ORIGIN}/whats-new.md)`);
+  });
 
-  it('omits the Guide section when there are no Guide pages', () => {
-    expect(buildLlmsTxt('d', pages)).not.toContain('## Guide')
-  })
-})
+  it("omits the Guide section when there are no Guide pages", () => {
+    expect(buildLlmsTxt("d", pages)).not.toContain("## Guide");
+  });
+});
 
-describe('buildLlmsTxt comparisons', () => {
-  const pages = [
-    { languageTag: 'en', title: 'Snug EN', url: `${SITE_ORIGIN}/` },
-  ]
+describe("buildLlmsTxt comparisons", () => {
+  const pages = [{ languageTag: "en", title: "Snug EN", url: `${SITE_ORIGIN}/` }];
 
-  it('lists each comparison page with its description under its own heading', () => {
+  it("lists each comparison page with its description under its own heading", () => {
     const body = buildLlmsTxt(
-      'd',
+      "d",
       pages,
       [],
       [
         {
-          title: 'Snug vs Maple',
-          description: 'Compared on snapshots.',
+          title: "Snug vs Maple",
+          description: "Compared on snapshots.",
           url: `${SITE_ORIGIN}/alternatives/maple-backup/`,
         },
       ],
-    )
+    );
 
-    expect(body).toContain('## Comparisons')
+    expect(body).toContain("## Comparisons");
     expect(body).toContain(
       `- [Snug vs Maple](${SITE_ORIGIN}/alternatives/maple-backup/): Compared on snapshots.`,
-    )
-  })
+    );
+  });
 
-  it('omits the section when there are no comparison pages', () => {
-    expect(buildLlmsTxt('d', pages)).not.toContain('## Comparisons')
-  })
-})
+  it("omits the section when there are no comparison pages", () => {
+    expect(buildLlmsTxt("d", pages)).not.toContain("## Comparisons");
+  });
+});
 
-describe('buildLlmsFullTxt', () => {
-  const body = buildLlmsFullTxt(getContent('en'))
+describe("buildLlmsFullTxt", () => {
+  const body = buildLlmsFullTxt(getContent("en"));
 
-  it('flattens the English page to Markdown', () => {
-    expect(body).toMatch(/^# Snug\n/)
-    expect(body).toContain(`## ${getContent('en').landing.showcase.heading}`)
-    expect(body).toContain(getContent('en').landing.hero.subheadline)
-  })
+  it("flattens the English page to Markdown", () => {
+    expect(body).toMatch(/^# Snug\n/);
+    expect(body).toContain(`## ${getContent("en").landing.showcase.heading}`);
+    expect(body).toContain(getContent("en").landing.hero.subheadline);
+  });
 
-  it('links the counted redirects, never the raw store URL', () => {
-    expect(body).toContain(`${SITE_ORIGIN}/reviews`)
-    expect(body).not.toContain('chromewebstore.google.com')
-  })
+  it("links the counted redirects, never the raw store URL", () => {
+    expect(body).toContain(`${SITE_ORIGIN}/reviews`);
+    expect(body).not.toContain("chromewebstore.google.com");
+  });
 
-  it('quotes every review with attribution and links the video', () => {
+  it("quotes every review with attribution and links the video", () => {
     for (const { quote, author, date } of REVIEWS) {
-      expect(body).toContain(quote)
-      expect(body).toContain(`${author}, ${date}`)
+      expect(body).toContain(quote);
+      expect(body).toContain(`${author}, ${date}`);
     }
-    expect(body).toContain(
-      `https://www.youtube.com/watch?v=${PROMO_VIDEO_IDS.en}`,
-    )
-  })
+    expect(body).toContain(`https://www.youtube.com/watch?v=${PROMO_VIDEO_IDS.en}`);
+  });
 
-  it('uses the hero headline as the first heading', () => {
-    const { hero } = getContent('en').landing
-    expect(body).toContain(`## ${fullHeadline(hero, 'en')}\n`)
-  })
+  it("uses the hero headline as the first heading", () => {
+    const { hero } = getContent("en").landing;
+    expect(body).toContain(`## ${fullHeadline(hero, "en")}\n`);
+  });
 
-  it('lists the stats and the bento cards', () => {
-    const { stats, bento } = getContent('en').landing
-    expect(body).toContain(`- ${stats.users.label}: ${stats.users.value}`)
-    expect(body).toContain(`### ${bento.export.title}`)
-  })
+  it("lists the stats and the bento cards", () => {
+    const { stats, bento } = getContent("en").landing;
+    expect(body).toContain(`- ${stats.users.label}: ${stats.users.value}`);
+    expect(body).toContain(`### ${bento.export.title}`);
+  });
 
-  it('keeps every FAQ question and answer', () => {
-    for (const item of Object.values(getContent('en').faq.items)) {
-      expect(body).toContain(`### ${item.question}`)
-      expect(body).toContain(item.answer)
+  it("keeps every FAQ question and answer", () => {
+    for (const item of Object.values(getContent("en").faq.items)) {
+      expect(body).toContain(`### ${item.question}`);
+      expect(body).toContain(item.answer);
     }
-  })
+  });
 
-  it('appends each extra section under a title and url heading', () => {
-    const extended = buildLlmsFullTxt(getContent('en'), [
-      { title: 'Extra', url: `${SITE_ORIGIN}/extra`, body: 'Body text.\n' },
-    ])
-    expect(extended).toContain(
-      `## Extra (${SITE_ORIGIN}/extra)\n\nBody text.\n`,
-    )
-    expect(extended.endsWith('\n')).toBe(true)
-  })
-})
+  it("appends each extra section under a title and url heading", () => {
+    const extended = buildLlmsFullTxt(getContent("en"), [
+      { title: "Extra", url: `${SITE_ORIGIN}/extra`, body: "Body text.\n" },
+    ]);
+    expect(extended).toContain(`## Extra (${SITE_ORIGIN}/extra)\n\nBody text.\n`);
+    expect(extended.endsWith("\n")).toBe(true);
+  });
+});
 
-describe('llms-full.txt sections', () => {
-  it('has one how-to section per page with its answer and checked date', () => {
-    const sections = howToLlmsFullSections()
-    expect(sections).toHaveLength(HOW_TO_SLUGS.length)
+describe("llms-full.txt sections", () => {
+  it("has one how-to section per page with its answer and checked date", () => {
+    const sections = howToLlmsFullSections();
+    expect(sections).toHaveLength(HOW_TO_SLUGS.length);
     for (const slug of HOW_TO_SLUGS) {
-      const section = sections.find(
-        ({ url }) => url === `${SITE_ORIGIN}${howToPath('en', slug)}`,
-      )
-      expect(section?.title).toBe(getHowToContent('en', slug).title)
-      expect(section?.body).toContain('1. ')
-      expect(section?.body).not.toMatch(/\{[a-zA-Z]+\}/)
+      const section = sections.find(({ url }) => url === `${SITE_ORIGIN}${howToPath("en", slug)}`);
+      expect(section?.title).toBe(getHowToContent("en", slug).title);
+      expect(section?.body).toContain("1. ");
+      expect(section?.body).not.toMatch(/\{[a-zA-Z]+\}/);
     }
-  })
+  });
 
-  it('has the Alternatives page and each comparison with its checked date', () => {
-    const sections = comparisonLlmsFullSections()
-    expect(sections).toHaveLength(COMPARISON_SLUGS.length + 1)
-    const { pages } = getComparisonContent('en')
+  it("has the Alternatives page and each comparison with its checked date", () => {
+    const sections = comparisonLlmsFullSections();
+    expect(sections).toHaveLength(COMPARISON_SLUGS.length + 1);
+    const { pages } = getComparisonContent("en");
     for (const slug of COMPARISON_SLUGS) {
-      expect(
-        sections.find(({ title }) => title === pages[slug].title)?.body,
-      ).toMatch(/\d{4}-\d{2}-\d{2}|\b20\d{2}\b/)
+      expect(sections.find(({ title }) => title === pages[slug].title)?.body).toMatch(
+        /\d{4}-\d{2}-\d{2}|\b20\d{2}\b/,
+      );
     }
     for (const { body } of sections) {
-      expect(body).not.toMatch(/\{[a-zA-Z]+\}/)
+      expect(body).not.toMatch(/\{[a-zA-Z]+\}/);
     }
-  })
+  });
 
-  it('has every Guide page body below the section heading', () => {
-    const sections = guideLlmsFullSections()
-    expect(sections.length).toBeGreaterThan(0)
+  it("has every Guide page body below the section heading", () => {
+    const sections = guideLlmsFullSections();
+    expect(sections.length).toBeGreaterThan(0);
     for (const { body } of sections) {
-      expect(body).not.toMatch(/^# /m)
+      expect(body).not.toMatch(/^# /m);
     }
-  })
+  });
 
-  it('demotes headings but leaves fenced code alone', () => {
-    expect(demoteHeadings('## A\n```\n# not a heading\n```\n### B')).toBe(
-      '### A\n```\n# not a heading\n```\n#### B',
-    )
-  })
-})
+  it("demotes headings but leaves fenced code alone", () => {
+    expect(demoteHeadings("## A\n```\n# not a heading\n```\n### B")).toBe(
+      "### A\n```\n# not a heading\n```\n#### B",
+    );
+  });
+});
 
-describe('buildSitemapXml', () => {
-  it('lists every entry with every alternate', () => {
+describe("buildSitemapXml", () => {
+  it("lists every entry with every alternate", () => {
     const alternates = [
-      { hreflang: 'en', href: 'https://example.test/' },
-      { hreflang: 'es', href: 'https://example.test/es/' },
-    ]
+      { hreflang: "en", href: "https://example.test/" },
+      { hreflang: "es", href: "https://example.test/es/" },
+    ];
     const entries = [
-      { loc: 'https://example.test/', lastmod: '2026-10-05', alternates },
-      { loc: 'https://example.test/es/', alternates },
-    ]
-    const xml = buildSitemapXml(entries)
+      { loc: "https://example.test/", lastmod: "2026-10-05", alternates },
+      { loc: "https://example.test/es/", alternates },
+    ];
+    const xml = buildSitemapXml(entries);
 
-    expect(xml.match(/<url>/g)).toHaveLength(entries.length)
-    expect(xml.match(/<xhtml:link /g)).toHaveLength(
-      entries.length * alternates.length,
-    )
-  })
+    expect(xml.match(/<url>/g)).toHaveLength(entries.length);
+    expect(xml.match(/<xhtml:link /g)).toHaveLength(entries.length * alternates.length);
+  });
 
-  it('omits lastmod for entries without a known date', () => {
-    const xml = buildSitemapXml([{ loc: 'https://example.test/' }])
+  it("omits lastmod for entries without a known date", () => {
+    const xml = buildSitemapXml([{ loc: "https://example.test/" }]);
 
-    expect(xml).not.toContain('<lastmod>')
-  })
-})
+    expect(xml).not.toContain("<lastmod>");
+  });
+});
 
-const FEATURES = ['Export what you choose', 'Undo a replace']
+const FEATURES = ["Export what you choose", "Undo a replace"];
 
 function graphNodes(locale: (typeof LOCALES)[number]) {
-  const data = buildStructuredData(locale, 'Description', FEATURES, {
+  const data = buildStructuredData(locale, "Description", FEATURES, {
     title: `Snug ${locale}`,
     videoId: PROMO_VIDEO_IDS[locale],
     videoDescription: `Walkthrough ${locale}`,
-  })
-  const find = (type: string) =>
-    data['@graph'].find((node) => node['@type'] === type)
+  });
+  const find = (type: string) => data["@graph"].find((node) => node["@type"] === type);
   return {
     data,
-    app: find('SoftwareApplication') as Record<string, unknown> & {
-      offers: { price: string }
+    app: find("SoftwareApplication") as Record<string, unknown> & {
+      offers: { price: string };
     },
-    site: find('WebSite'),
-    person: find('Person'),
-    page: find('WebPage'),
-    video: find('VideoObject'),
-  }
+    site: find("WebSite"),
+    person: find("Person"),
+    page: find("WebPage"),
+    video: find("VideoObject"),
+  };
 }
 
-describe('buildStructuredData', () => {
-  it.each(LOCALES)('%s emits one @graph of linked nodes', (locale) => {
-    const { data, app, site, person } = graphNodes(locale)
+describe("buildStructuredData", () => {
+  it.each(LOCALES)("%s emits one @graph of linked nodes", (locale) => {
+    const { data, app, site, person } = graphNodes(locale);
 
-    expect(data['@context']).toBe('https://schema.org')
-    expect(data['@graph']).toHaveLength(5)
-    expect(app['@id']).toBe(`${SITE_ORIGIN}/#software`)
-    expect(site?.['@id']).toBe(`${SITE_ORIGIN}/#website`)
-    expect(app.author).toEqual({ '@id': person?.['@id'] })
-  })
+    expect(data["@context"]).toBe("https://schema.org");
+    expect(data["@graph"]).toHaveLength(5);
+    expect(app["@id"]).toBe(`${SITE_ORIGIN}/#software`);
+    expect(site?.["@id"]).toBe(`${SITE_ORIGIN}/#website`);
+    expect(app.author).toEqual({ "@id": person?.["@id"] });
+  });
 
-  it.each(LOCALES)('%s carries the store facts', (locale) => {
-    const { app } = graphNodes(locale)
+  it.each(LOCALES)("%s carries the store facts", (locale) => {
+    const { app } = graphNodes(locale);
 
-    expect(app.name).toBe(STORE_FACTS.name)
-    expect(app.applicationCategory).toBe('BrowserApplication')
-    expect(app.operatingSystem).toBe(STORE_FACTS.operatingSystem)
-    expect(app.isAccessibleForFree).toBe(true)
-    expect(app.offers.price).toBe('0')
-    expect(app.featureList).toEqual(FEATURES)
-  })
+    expect(app.name).toBe(STORE_FACTS.name);
+    expect(app.applicationCategory).toBe("BrowserApplication");
+    expect(app.operatingSystem).toBe(STORE_FACTS.operatingSystem);
+    expect(app.isAccessibleForFree).toBe(true);
+    expect(app.offers.price).toBe("0");
+    expect(app.featureList).toEqual(FEATURES);
+  });
 
-  it.each(LOCALES)('%s points the install links at /install', (locale) => {
-    const { app, data } = graphNodes(locale)
+  it.each(LOCALES)("%s points the install links at /install", (locale) => {
+    const { app, data } = graphNodes(locale);
 
-    expect(app.downloadUrl).toBe(`${SITE_ORIGIN}/install`)
-    expect(app.installUrl).toBe(`${SITE_ORIGIN}/install`)
-    expect(app.sameAs).toEqual([STORE_FACTS.sourceUrl])
-    expect(JSON.stringify(data)).not.toContain('chromewebstore.google.com')
-  })
+    expect(app.downloadUrl).toBe(`${SITE_ORIGIN}/install`);
+    expect(app.installUrl).toBe(`${SITE_ORIGIN}/install`);
+    expect(app.sameAs).toEqual([STORE_FACTS.sourceUrl]);
+    expect(JSON.stringify(data)).not.toContain("chromewebstore.google.com");
+  });
 
-  it.each(LOCALES)('%s expresses the locale on a WebPage node', (locale) => {
-    const { page, site } = graphNodes(locale)
+  it.each(LOCALES)("%s expresses the locale on a WebPage node", (locale) => {
+    const { page, site } = graphNodes(locale);
 
     expect(page).toMatchObject({
-      '@type': 'WebPage',
+      "@type": "WebPage",
       url: `${SITE_ORIGIN}${localePath(locale)}`,
       inLanguage: languageTag(locale),
-      isPartOf: { '@id': site?.['@id'] },
-    })
-  })
+      isPartOf: { "@id": site?.["@id"] },
+    });
+  });
 
-  it.each(LOCALES)('%s has a complete VideoObject', (locale) => {
-    const { video } = graphNodes(locale)
+  it.each(LOCALES)("%s has a complete VideoObject", (locale) => {
+    const { video } = graphNodes(locale);
 
     expect(video).toMatchObject({
-      '@type': 'VideoObject',
+      "@type": "VideoObject",
       name: `Snug ${locale}`,
       description: `Walkthrough ${locale}`,
       thumbnailUrl: expect.stringContaining(PROMO_VIDEO_IDS[locale]) as string,
       uploadDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
       embedUrl: `https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_IDS[locale]}`,
-    })
-  })
+    });
+  });
 
-  it.each(LOCALES)('%s names the site in its own language', (locale) => {
-    const { site } = graphNodes(locale)
+  it.each(LOCALES)("%s names the site in its own language", (locale) => {
+    const { site } = graphNodes(locale);
 
     expect(site).toMatchObject({
-      '@type': 'WebSite',
+      "@type": "WebSite",
       name: STORE_FACTS.name,
       url: `${SITE_ORIGIN}/`,
-    })
-  })
+    });
+  });
 
-  it.each(LOCALES)(
-    '%s omits aggregateRating and keeps interactionStatistic',
-    (locale) => {
-      const { app } = graphNodes(locale)
+  it.each(LOCALES)("%s omits aggregateRating and keeps interactionStatistic", (locale) => {
+    const { app } = graphNodes(locale);
 
-      expect(app).not.toHaveProperty('aggregateRating')
-      expect(app).not.toHaveProperty('review')
-      expect(app).toHaveProperty('interactionStatistic')
-      expect(JSON.stringify(graphNodes(locale).data)).not.toContain('FAQPage')
-    },
-  )
+    expect(app).not.toHaveProperty("aggregateRating");
+    expect(app).not.toHaveProperty("review");
+    expect(app).toHaveProperty("interactionStatistic");
+    expect(JSON.stringify(graphNodes(locale).data)).not.toContain("FAQPage");
+  });
 
-  it.each(LOCALES)('%s points screenshot at its OG image', (locale) => {
-    const { app } = graphNodes(locale)
+  it.each(LOCALES)("%s points screenshot at its OG image", (locale) => {
+    const { app } = graphNodes(locale);
 
-    expect(app.screenshot).toBe(`${SITE_ORIGIN}/og/og-${locale}.png`)
-  })
+    expect(app.screenshot).toBe(`${SITE_ORIGIN}/og/og-${locale}.png`);
+  });
 
-  it('credits the author as a Person linked to GitHub', () => {
-    const { person } = graphNodes('en')
+  it("credits the author as a Person linked to GitHub", () => {
+    const { person } = graphNodes("en");
 
     expect(person).toMatchObject({
-      '@type': 'Person',
+      "@type": "Person",
       name: STORE_FACTS.author.name,
       url: STORE_FACTS.author.url,
       sameAs: [STORE_FACTS.author.url],
-    })
-  })
-})
+    });
+  });
+});
 
-describe('buildComparisonStructuredData', () => {
+describe("buildComparisonStructuredData", () => {
   const page = {
-    title: 'Snug vs Maple Backup | Snug',
-    description: 'Compared.',
-    path: '/alternatives/maple-backup/',
+    title: "Snug vs Maple Backup | Snug",
+    description: "Compared.",
+    path: "/alternatives/maple-backup/",
     breadcrumbs: [
-      { name: 'Snug', path: '/' },
-      { name: 'Alternatives', path: '/alternatives/' },
-      { name: 'Snug vs Maple Backup', path: '/alternatives/maple-backup/' },
+      { name: "Snug", path: "/" },
+      { name: "Alternatives", path: "/alternatives/" },
+      { name: "Snug vs Maple Backup", path: "/alternatives/maple-backup/" },
     ],
-  }
-  const data = buildComparisonStructuredData('en', page)
-  const [webPage, breadcrumb] = data['@graph']
+  };
+  const data = buildComparisonStructuredData("en", page);
+  const [webPage, breadcrumb] = data["@graph"];
 
-  it('emits a WebPage and a BreadcrumbList', () => {
-    expect(data['@context']).toBe('https://schema.org')
-    expect(data['@graph'].map((node) => node['@type'])).toEqual([
-      'WebPage',
-      'BreadcrumbList',
-    ])
-  })
+  it("emits a WebPage and a BreadcrumbList", () => {
+    expect(data["@context"]).toBe("https://schema.org");
+    expect(data["@graph"].map((node) => node["@type"])).toEqual(["WebPage", "BreadcrumbList"]);
+  });
 
-  it('points about at the shared SoftwareApplication id', () => {
+  it("points about at the shared SoftwareApplication id", () => {
     expect(webPage).toMatchObject({
       url: `${SITE_ORIGIN}/alternatives/maple-backup/`,
-      inLanguage: 'en',
-      about: { '@id': `${SITE_ORIGIN}/#software` },
-      isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
-      breadcrumb: { '@id': breadcrumb?.['@id'] },
-    })
-  })
+      inLanguage: "en",
+      about: { "@id": `${SITE_ORIGIN}/#software` },
+      isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+      breadcrumb: { "@id": breadcrumb?.["@id"] },
+    });
+  });
 
-  it('numbers breadcrumb items from one with absolute URLs', () => {
+  it("numbers breadcrumb items from one with absolute URLs", () => {
     expect(breadcrumb).toMatchObject({
       itemListElement: [
-        { position: 1, name: 'Snug', item: `${SITE_ORIGIN}/` },
+        { position: 1, name: "Snug", item: `${SITE_ORIGIN}/` },
         {
           position: 2,
-          name: 'Alternatives',
+          name: "Alternatives",
           item: `${SITE_ORIGIN}/alternatives/`,
         },
         {
@@ -466,193 +436,175 @@ describe('buildComparisonStructuredData', () => {
           item: `${SITE_ORIGIN}/alternatives/maple-backup/`,
         },
       ],
-    })
-  })
+    });
+  });
 
-  it('never carries a rating, review or product', () => {
-    const serialized = JSON.stringify(data)
+  it("never carries a rating, review or product", () => {
+    const serialized = JSON.stringify(data);
 
-    expect(serialized).not.toMatch(/AggregateRating|Review|Product/)
-  })
+    expect(serialized).not.toMatch(/AggregateRating|Review|Product/);
+  });
 
-  it('tags a translated locale with its BCP 47 tag', () => {
-    const translated = buildComparisonStructuredData('pt_BR', page)
+  it("tags a translated locale with its BCP 47 tag", () => {
+    const translated = buildComparisonStructuredData("pt_BR", page);
 
-    expect(translated['@graph'][0]).toMatchObject({ inLanguage: 'pt-BR' })
-  })
-})
+    expect(translated["@graph"][0]).toMatchObject({ inLanguage: "pt-BR" });
+  });
+});
 
-describe('buildHowToStructuredData', () => {
+describe("buildHowToStructuredData", () => {
   const page = {
-    title: 'Move Firefox bookmarks to Chrome',
-    description: 'Export from Firefox, import into Chrome.',
-    path: '/how-to/move-bookmarks-from-firefox-to-chrome/',
+    title: "Move Firefox bookmarks to Chrome",
+    description: "Export from Firefox, import into Chrome.",
+    path: "/how-to/move-bookmarks-from-firefox-to-chrome/",
     breadcrumbs: [
-      { name: 'Snug', path: '/' },
-      { name: 'How-to', path: '/how-to/' },
+      { name: "Snug", path: "/" },
+      { name: "How-to", path: "/how-to/" },
       {
-        name: 'Move Firefox bookmarks to Chrome',
-        path: '/how-to/move-bookmarks-from-firefox-to-chrome/',
+        name: "Move Firefox bookmarks to Chrome",
+        path: "/how-to/move-bookmarks-from-firefox-to-chrome/",
       },
     ],
-    dateModified: '2026-10-11',
-  }
+    dateModified: "2026-10-11",
+  };
 
-  it('emits only a WebPage and a BreadcrumbList', () => {
-    const data = buildHowToStructuredData('en', {
+  it("emits only a WebPage and a BreadcrumbList", () => {
+    const data = buildHowToStructuredData("en", {
       ...page,
       hasSnugSection: true,
-    })
-    expect(data['@graph'].map((node) => node['@type'])).toEqual([
-      'WebPage',
-      'BreadcrumbList',
-    ])
-    expect(JSON.stringify(data)).not.toMatch(
-      /HowTo"|FAQPage|AggregateRating|Review/,
-    )
-  })
+    });
+    expect(data["@graph"].map((node) => node["@type"])).toEqual(["WebPage", "BreadcrumbList"]);
+    expect(JSON.stringify(data)).not.toMatch(/HowTo"|FAQPage|AggregateRating|Review/);
+  });
 
-  it('is about the software only when the page has a Snug section', () => {
-    const withSnug = buildHowToStructuredData('en', {
+  it("is about the software only when the page has a Snug section", () => {
+    const withSnug = buildHowToStructuredData("en", {
       ...page,
       hasSnugSection: true,
-    })
-    const withoutSnug = buildHowToStructuredData('en', {
+    });
+    const withoutSnug = buildHowToStructuredData("en", {
       ...page,
       hasSnugSection: false,
-    })
-    expect(withSnug['@graph'][0]).toMatchObject({
-      about: { '@id': `${SITE_ORIGIN}/#software` },
-      dateModified: '2026-10-11',
-    })
-    expect(withoutSnug['@graph'][0]).not.toHaveProperty('about')
-  })
-})
+    });
+    expect(withSnug["@graph"][0]).toMatchObject({
+      about: { "@id": `${SITE_ORIGIN}/#software` },
+      dateModified: "2026-10-11",
+    });
+    expect(withoutSnug["@graph"][0]).not.toHaveProperty("about");
+  });
+});
 
-describe('buildSitemapXml lastmod', () => {
-  it('stamps every url that has a date', () => {
+describe("buildSitemapXml lastmod", () => {
+  it("stamps every url that has a date", () => {
     const xml = buildSitemapXml([
-      { loc: 'https://example.test/', lastmod: '2026-10-05' },
-      { loc: 'https://example.test/privacy/', lastmod: '2026-10-05' },
-    ])
+      { loc: "https://example.test/", lastmod: "2026-10-05" },
+      { loc: "https://example.test/privacy/", lastmod: "2026-10-05" },
+    ]);
 
-    expect(xml.match(/<lastmod>2026-10-05<\/lastmod>/g)).toHaveLength(2)
-  })
-})
+    expect(xml.match(/<lastmod>2026-10-05<\/lastmod>/g)).toHaveLength(2);
+  });
+});
 
-describe('root file routes', () => {
-  it('serves robots.txt as plain text', async () => {
-    const response = getRobotsTxt()
-    expect(response.headers.get('Content-Type')).toContain('text/plain')
-    expect(await response.text()).toBe(buildRobotsTxt())
-  })
+describe("root file routes", () => {
+  it("serves robots.txt as plain text", async () => {
+    const response = getRobotsTxt();
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+    expect(await response.text()).toBe(buildRobotsTxt());
+  });
 
-  it('serves llms.txt as plain text', async () => {
-    const response = getLlmsTxt()
-    expect(response.headers.get('Content-Type')).toContain('text/plain')
-    const text = await response.text()
-    expect(text).toMatch(/^# Snug\n/)
-    expect(text).toContain(`${SITE_ORIGIN}/install`)
-    expect(text).not.toContain('chromewebstore.google.com')
+  it("serves llms.txt as plain text", async () => {
+    const response = getLlmsTxt();
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+    const text = await response.text();
+    expect(text).toMatch(/^# Snug\n/);
+    expect(text).toContain(`${SITE_ORIGIN}/install`);
+    expect(text).not.toContain("chromewebstore.google.com");
+    expect(text).toContain("redirects to the Chrome Web Store or Microsoft Edge Add-ons listing");
     expect(text).toContain(
-      'redirects to the Chrome Web Store or Microsoft Edge Add-ons listing',
-    )
-    expect(text).toContain(
-      'microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho',
-    )
+      "microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho",
+    );
     for (const locale of LOCALES) {
-      expect(text).toContain(`(${SITE_ORIGIN}${localePath(locale)})`)
+      expect(text).toContain(`(${SITE_ORIGIN}${localePath(locale)})`);
     }
-    expect(text).toContain(`${SITE_ORIGIN}/privacy/`)
+    expect(text).toContain(`${SITE_ORIGIN}/privacy/`);
     for (const source of PUBLISHED_SOURCES) {
       expect(text).toContain(
-        `(${SITE_ORIGIN}${markdownTwinPath(publishedRoute(source, 'en'))}): ${source.description}`,
-      )
+        `(${SITE_ORIGIN}${markdownTwinPath(publishedRoute(source, "en"))}): ${source.description}`,
+      );
       for (const locale of LOCALES) {
-        if (locale === 'en') continue
-        expect(text).not.toContain(
-          `(${SITE_ORIGIN}${publishedRoute(source, locale)})`,
-        )
+        if (locale === "en") continue;
+        expect(text).not.toContain(`(${SITE_ORIGIN}${publishedRoute(source, locale)})`);
       }
     }
     for (const entry of loadCatalog()) {
-      expect(text).toContain(`[${entry.title}](`)
+      expect(text).toContain(`[${entry.title}](`);
     }
-    expect(text).toContain('every page exists under `/<locale>/`')
-    expect(text).toContain('## Comparisons')
+    expect(text).toContain("every page exists under `/<locale>/`");
+    expect(text).toContain("## Comparisons");
     for (const slug of [undefined, ...COMPARISON_SLUGS]) {
-      const { title, description } = getComparisonMeta(
-        'en',
-        slug ?? 'alternatives',
-      )
+      const { title, description } = getComparisonMeta("en", slug ?? "alternatives");
       expect(text).toContain(
-        `- [${title}](${SITE_ORIGIN}${alternativesPath('en', slug)}): ${description}`,
-      )
+        `- [${title}](${SITE_ORIGIN}${alternativesPath("en", slug)}): ${description}`,
+      );
     }
-    expect(text).toContain('## How-to')
-    const indexMeta = getHowToIndexMeta('en')
+    expect(text).toContain("## How-to");
+    const indexMeta = getHowToIndexMeta("en");
     expect(text).toContain(
-      `- [${indexMeta.title}](${SITE_ORIGIN}${howToIndexPath('en')}): ${indexMeta.description}`,
-    )
+      `- [${indexMeta.title}](${SITE_ORIGIN}${howToIndexPath("en")}): ${indexMeta.description}`,
+    );
     for (const slug of HOW_TO_SLUGS) {
-      const { title, description } = getHowToMeta('en', slug)
+      const { title, description } = getHowToMeta("en", slug);
       expect(text).toContain(
-        `- [${title}](${SITE_ORIGIN}${howToPath('en', slug)}): ${description}`,
-      )
+        `- [${title}](${SITE_ORIGIN}${howToPath("en", slug)}): ${description}`,
+      );
     }
-    expect(text).not.toContain('{date}')
-  })
+    expect(text).not.toContain("{date}");
+  });
 
-  it('serves llms-full.txt as plain text', async () => {
-    const response = getLlmsFullTxt()
-    expect(response.headers.get('Content-Type')).toContain('text/plain')
-    const text = await response.text()
-    const llmsTxt = await getLlmsTxt().text()
-    expect(text.length).toBeGreaterThan(llmsTxt.length)
+  it("serves llms-full.txt as plain text", async () => {
+    const response = getLlmsFullTxt();
+    expect(response.headers.get("Content-Type")).toContain("text/plain");
+    const text = await response.text();
+    const llmsTxt = await getLlmsTxt().text();
+    expect(text.length).toBeGreaterThan(llmsTxt.length);
     for (const slug of HOW_TO_SLUGS) {
-      expect(text).toContain(`## ${getHowToContent('en', slug).title} (`)
+      expect(text).toContain(`## ${getHowToContent("en", slug).title} (`);
     }
-    for (const section of [
-      ...comparisonLlmsFullSections(),
-      ...guideLlmsFullSections(),
-    ]) {
-      expect(text).toContain(`## ${section.title} (${section.url})`)
+    for (const section of [...comparisonLlmsFullSections(), ...guideLlmsFullSections()]) {
+      expect(text).toContain(`## ${section.title} (${section.url})`);
     }
-    expect(text).not.toContain('{date}')
-  })
+    expect(text).not.toContain("{date}");
+  });
 
   it("serves a sitemap with one url per locale, privacy page, guide page and What's new", async () => {
-    const response = getSitemapXml()
-    expect(response.headers.get('Content-Type')).toContain('application/xml')
-    const xml = await response.text()
+    const response = getSitemapXml();
+    expect(response.headers.get("Content-Type")).toContain("application/xml");
+    const xml = await response.text();
     expect(xml.match(/<url>/g)).toHaveLength(
       LOCALES.length +
         PRIVACY_PAGE_LOCALES.length +
         (COMPARISON_SLUGS.length + 1) * COMPARISON_PAGE_LOCALES.length +
         HOW_TO_PAGE_COUNT +
         PUBLISHED_SOURCES.length * LOCALES.length,
-    )
+    );
     for (const locale of LOCALES) {
-      const expected = lastCommitDate([`src/content/${locale}.json`])
-      expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      const expected = lastCommitDate([`src/content/${locale}.json`]);
+      expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(xml).toContain(
         `<loc>${SITE_ORIGIN}${localePath(locale)}</loc>\n    <lastmod>${expected}</lastmod>`,
-      )
+      );
     }
-    const privacyAlternates = hreflangAlternates(
-      '/privacy/',
-      PRIVACY_PAGE_LOCALES,
-    )
+    const privacyAlternates = hreflangAlternates("/privacy/", PRIVACY_PAGE_LOCALES);
     for (const locale of PRIVACY_PAGE_LOCALES) {
-      expect(xml).toContain(`<loc>${SITE_ORIGIN}${privacyPath(locale)}</loc>`)
+      expect(xml).toContain(`<loc>${SITE_ORIGIN}${privacyPath(locale)}</loc>`);
     }
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="es" href="${SITE_ORIGIN}/es/privacy/"/>`,
-    )
+    );
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}/privacy/"/>`,
-    )
-    expect(xml).toContain(`${SITE_ORIGIN}/de/privacy/`)
+    );
+    expect(xml).toContain(`${SITE_ORIGIN}/de/privacy/`);
     expect(xml.match(/<xhtml:link /g)).toHaveLength(
       LOCALES.length * hreflangAlternates().length +
         PRIVACY_PAGE_LOCALES.length * privacyAlternates.length +
@@ -660,73 +612,65 @@ describe('root file routes', () => {
           COMPARISON_PAGE_LOCALES.length *
           (COMPARISON_PAGE_LOCALES.length + 1) +
         HOW_TO_ALTERNATE_COUNT +
-        PUBLISHED_SOURCES.length *
-          LOCALES.length *
-          hreflangAlternates('/guide/').length,
-    )
+        PUBLISHED_SOURCES.length * LOCALES.length * hreflangAlternates("/guide/").length,
+    );
     for (const source of PUBLISHED_SOURCES) {
-      const expected = lastCommitDate([`../../${source.sourcePath}`])
-      expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      const expected = lastCommitDate([`../../${source.sourcePath}`]);
+      expect(expected).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       for (const locale of LOCALES) {
         expect(xml).toContain(
           `<loc>${SITE_ORIGIN}${publishedRoute(source, locale)}</loc>\n    <lastmod>${expected}</lastmod>`,
-        )
+        );
       }
     }
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="ja" href="${SITE_ORIGIN}/ja/changelog/"/>`,
-    )
+    );
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}/guide/exporting/"/>`,
-    )
+    );
     for (const slug of [undefined, ...COMPARISON_SLUGS]) {
       for (const locale of COMPARISON_PAGE_LOCALES) {
         expect(xml).toContain(
           `<loc>${SITE_ORIGIN}${alternativesPath(locale, slug)}</loc>\n    <lastmod>`,
-        )
+        );
       }
       expect(xml).toContain(
-        `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}${alternativesPath('en', slug)}"/>`,
-      )
+        `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}${alternativesPath("en", slug)}"/>`,
+      );
     }
     for (const locale of HOW_TO_INDEX_LOCALES) {
-      expect(xml).toContain(
-        `<loc>${SITE_ORIGIN}${howToIndexPath(locale)}</loc>\n    <lastmod>`,
-      )
+      expect(xml).toContain(`<loc>${SITE_ORIGIN}${howToIndexPath(locale)}</loc>\n    <lastmod>`);
     }
     expect(xml).toContain(
       `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}/how-to/"/>`,
-    )
+    );
     for (const slug of HOW_TO_SLUGS) {
-      const locales = howToPageLocales(slug)
+      const locales = howToPageLocales(slug);
       for (const locale of locales) {
-        expect(xml).toContain(
-          `<loc>${SITE_ORIGIN}${howToPath(locale, slug)}</loc>\n    <lastmod>`,
-        )
+        expect(xml).toContain(`<loc>${SITE_ORIGIN}${howToPath(locale, slug)}</loc>\n    <lastmod>`);
       }
       expect(xml).toContain(
-        `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}${howToPath('en', slug)}"/>`,
-      )
+        `<xhtml:link rel="alternate" hreflang="x-default" href="${SITE_ORIGIN}${howToPath("en", slug)}"/>`,
+      );
       for (const locale of LOCALES) {
-        if (locales.includes(locale)) continue
+        if (locales.includes(locale)) continue;
         expect(xml).not.toContain(
           `<loc>${SITE_ORIGIN}${localePath(locale, `/how-to/${slug}/`)}</loc>`,
-        )
+        );
       }
     }
-    const privacyBlock = xml.slice(xml.indexOf(`<loc>${SITE_ORIGIN}/privacy/`))
-    expect(privacyBlock).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/)
-  })
-})
+    const privacyBlock = xml.slice(xml.indexOf(`<loc>${SITE_ORIGIN}/privacy/`));
+    expect(privacyBlock).toMatch(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/);
+  });
+});
 
-describe('lastCommitDate', () => {
-  it('returns the commit date of a tracked file', () => {
-    expect(lastCommitDate(['src/content/en.json'])).toMatch(
-      /^\d{4}-\d{2}-\d{2}$/,
-    )
-  })
+describe("lastCommitDate", () => {
+  it("returns the commit date of a tracked file", () => {
+    expect(lastCommitDate(["src/content/en.json"])).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
 
-  it('returns undefined for a path git has never seen', () => {
-    expect(lastCommitDate(['src/content/never-committed.json'])).toBeUndefined()
-  })
-})
+  it("returns undefined for a path git has never seen", () => {
+    expect(lastCommitDate(["src/content/never-committed.json"])).toBeUndefined();
+  });
+});

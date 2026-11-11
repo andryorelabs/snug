@@ -1,14 +1,14 @@
-import { countImportableBookmarks } from './count-bookmarks'
-import { parseImportFile } from './importers/parse-import'
-import { resolveImportRootTitles } from './importers/resolve-roots'
-import { collectExistingUrls, dropDuplicateBookmarks } from './skip-duplicates'
+import { countImportableBookmarks } from "./count-bookmarks";
+import { parseImportFile } from "./importers/parse-import";
+import { resolveImportRootTitles } from "./importers/resolve-roots";
+import { collectExistingUrls, dropDuplicateBookmarks } from "./skip-duplicates";
 
 /**
  * What Skip duplicates would do to an import file.
  */
 export interface ImportDuplicateSummary {
-  skippedDuplicates: number
-  importableCount: number
+  skippedDuplicates: number;
+  importableCount: number;
 }
 
 /**
@@ -27,22 +27,22 @@ export async function summarizeImportDuplicates(
   fileName?: string,
 ): Promise<ImportDuplicateSummary> {
   try {
-    const liveTree = await browser.bookmarks.getTree()
+    const liveTree = await browser.bookmarks.getTree();
     const { tree } = parseImportFile(
       text,
       mimeType,
       fileName,
       resolveImportRootTitles(liveTree[0]?.children ?? []),
-    )
+    );
     const { nodes, skippedDuplicates } = dropDuplicateBookmarks(
       tree,
       collectExistingUrls(liveTree),
-    )
+    );
     return {
       skippedDuplicates,
       importableCount: countImportableBookmarks(nodes),
-    }
+    };
   } catch {
-    return { skippedDuplicates: 0, importableCount: 0 }
+    return { skippedDuplicates: 0, importableCount: 0 };
   }
 }

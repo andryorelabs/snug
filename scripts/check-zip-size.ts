@@ -1,5 +1,5 @@
-import { appendFileSync, readdirSync, statSync } from 'node:fs'
-import path from 'node:path'
+import { appendFileSync, readdirSync, statSync } from "node:fs";
+import path from "node:path";
 
 /**
  * Size budget for the Chrome extension zip, in bytes.
@@ -8,12 +8,12 @@ import path from 'node:path'
  * `extension-chrome-zip` artifact of the `main` run on 2026-10-19) plus 10%,
  * rounded up. Raise it deliberately, in the same change that adds the weight.
  */
-export const ZIP_SIZE_BUDGET_BYTES = 706_009
+export const ZIP_SIZE_BUDGET_BYTES = 706_009;
 
 export type ZipSizeVerdict = {
-  isWithinBudget: boolean
-  summaryLine: string
-}
+  isWithinBudget: boolean;
+  summaryLine: string;
+};
 
 /**
  * Compares a zip size against a budget and renders the job-summary line.
@@ -27,12 +27,12 @@ export function evaluateZipSize(
   sizeBytes: number,
   budgetBytes: number,
 ): ZipSizeVerdict {
-  const isWithinBudget = sizeBytes <= budgetBytes
-  const status = isWithinBudget ? 'within' : 'OVER'
+  const isWithinBudget = sizeBytes <= budgetBytes;
+  const status = isWithinBudget ? "within" : "OVER";
   return {
     isWithinBudget,
     summaryLine: `**Extension zip size:** \`${sizeBytes}\` bytes of \`${budgetBytes}\` budget (${status}) (\`${zipName}\`)`,
-  }
+  };
 }
 
 /**
@@ -41,14 +41,14 @@ export function evaluateZipSize(
  * @returns The Chrome zip path, or `undefined` when none was built.
  */
 export function findChromeZip(outputDirectory: string): string | undefined {
-  let entries: string[]
+  let entries: string[];
   try {
-    entries = readdirSync(outputDirectory)
+    entries = readdirSync(outputDirectory);
   } catch {
-    return undefined
+    return undefined;
   }
-  const zipName = entries.find((entry) => entry.endsWith('-chrome.zip'))
-  return zipName === undefined ? undefined : path.join(outputDirectory, zipName)
+  const zipName = entries.find((entry) => entry.endsWith("-chrome.zip"));
+  return zipName === undefined ? undefined : path.join(outputDirectory, zipName);
 }
 
 /**
@@ -62,26 +62,26 @@ export function runZipSizeCheck(
   argv: readonly string[],
   environment: Readonly<Record<string, string | undefined>>,
 ): number {
-  const outputDirectory = argv[0] ?? 'apps/extension/.output'
-  const summaryPath = environment['GITHUB_STEP_SUMMARY']
+  const outputDirectory = argv[0] ?? "apps/extension/.output";
+  const summaryPath = environment["GITHUB_STEP_SUMMARY"];
   const report = (line: string) => {
-    console.log(line)
-    if (summaryPath) appendFileSync(summaryPath, `${line}\n`)
-  }
-  const zipPath = findChromeZip(outputDirectory)
+    console.log(line);
+    if (summaryPath) appendFileSync(summaryPath, `${line}\n`);
+  };
+  const zipPath = findChromeZip(outputDirectory);
   if (zipPath === undefined) {
-    report('No extension zip built (extension not affected by this change).')
-    return 0
+    report("No extension zip built (extension not affected by this change).");
+    return 0;
   }
   const verdict = evaluateZipSize(
     path.basename(zipPath),
     statSync(zipPath).size,
     ZIP_SIZE_BUDGET_BYTES,
-  )
-  report(verdict.summaryLine)
-  return verdict.isWithinBudget ? 0 : 1
+  );
+  report(verdict.summaryLine);
+  return verdict.isWithinBudget ? 0 : 1;
 }
 
 if (import.meta.main) {
-  process.exitCode = runZipSizeCheck(process.argv.slice(2), process.env)
+  process.exitCode = runZipSizeCheck(process.argv.slice(2), process.env);
 }

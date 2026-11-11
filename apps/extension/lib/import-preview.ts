@@ -1,12 +1,9 @@
-import { countImportableBookmarks } from './count-bookmarks'
-import { detectFormat } from './detect-format'
-import { shouldClearMobileRoot } from './importers/mobile-root'
-import { parseImportFile } from './importers/parse-import'
-import {
-  findSplitRootTypes,
-  type ResolvedImportRootTitles,
-} from './importers/resolve-roots'
-import type { ImportPreview, ParsedBookmark } from './types'
+import { countImportableBookmarks } from "./count-bookmarks";
+import { detectFormat } from "./detect-format";
+import { shouldClearMobileRoot } from "./importers/mobile-root";
+import { parseImportFile } from "./importers/parse-import";
+import { findSplitRootTypes, type ResolvedImportRootTitles } from "./importers/resolve-roots";
+import type { ImportPreview, ParsedBookmark } from "./types";
 
 /**
  * Builds a summary of what importing `text` would do, without importing
@@ -29,40 +26,35 @@ export function getImportPreview(
   liveRootTitles?: ResolvedImportRootTitles,
 ): ImportPreview {
   try {
-    const parsed = parseImportFile(text, mimeType, fileName, liveRootTitles)
-    const { format } = parsed
-    if (parsed.format !== 'csv') {
-      const countRootChildren = (
-        isRoot: (node: ParsedBookmark) => boolean | undefined,
-      ) => {
-        let total = 0
+    const parsed = parseImportFile(text, mimeType, fileName, liveRootTitles);
+    const { format } = parsed;
+    if (parsed.format !== "csv") {
+      const countRootChildren = (isRoot: (node: ParsedBookmark) => boolean | undefined) => {
+        let total = 0;
         for (const node of parsed.tree) {
           if (isRoot(node)) {
-            total += countImportableBookmarks(node.children ?? [])
+            total += countImportableBookmarks(node.children ?? []);
           }
         }
-        return total
-      }
-      const bookmarksBarCount = countRootChildren((n) => n.isBookmarksBar)
-      const otherBookmarksCount = countRootChildren((n) => n.isOtherBookmarks)
-      const mobileBookmarksCount = countRootChildren((n) => n.isMobileBookmarks)
-      const splitRootTypes = findSplitRootTypes(parsed.tree)
+        return total;
+      };
+      const bookmarksBarCount = countRootChildren((n) => n.isBookmarksBar);
+      const otherBookmarksCount = countRootChildren((n) => n.isOtherBookmarks);
+      const mobileBookmarksCount = countRootChildren((n) => n.isMobileBookmarks);
+      const splitRootTypes = findSplitRootTypes(parsed.tree);
       return {
         format,
         bookmarksBarCount,
         otherBookmarksCount,
         mobileBookmarksCount,
         ...(splitRootTypes.length > 0 && { splitRootTypes }),
-        clearsMobileRoot: parsed.tree.some(
-          (n) => n.isMobileBookmarks && shouldClearMobileRoot(n),
-        ),
-        totalCount:
-          bookmarksBarCount + otherBookmarksCount + mobileBookmarksCount,
+        clearsMobileRoot: parsed.tree.some((n) => n.isMobileBookmarks && shouldClearMobileRoot(n)),
+        totalCount: bookmarksBarCount + otherBookmarksCount + mobileBookmarksCount,
         hasLocationData: parsed.hasLocationData,
-      }
+      };
     }
 
-    const count = countImportableBookmarks(parsed.tree)
+    const count = countImportableBookmarks(parsed.tree);
     return {
       format,
       bookmarksBarCount: 0,
@@ -71,7 +63,7 @@ export function getImportPreview(
       clearsMobileRoot: false,
       totalCount: count,
       hasLocationData: false,
-    }
+    };
   } catch {}
 
   return {
@@ -82,5 +74,5 @@ export function getImportPreview(
     clearsMobileRoot: false,
     totalCount: 0,
     hasLocationData: false,
-  }
+  };
 }

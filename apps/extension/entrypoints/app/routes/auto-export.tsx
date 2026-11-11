@@ -1,12 +1,7 @@
-import { i18n } from '#i18n'
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-  AlertTitle,
-} from '@workspace/ui/components/alert'
-import { Badge } from '@workspace/ui/components/badge'
-import { Button } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
@@ -14,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@workspace/ui/components/card'
+} from "@workspace/ui/components/card";
 import {
   Field,
   FieldContent,
@@ -24,20 +19,20 @@ import {
   FieldLabel,
   FieldLegend,
   FieldSet,
-} from '@workspace/ui/components/field'
+} from "@workspace/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
-} from '@workspace/ui/components/input-group'
+} from "@workspace/ui/components/input-group";
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemMedia,
   ItemTitle,
-} from '@workspace/ui/components/item'
+} from "@workspace/ui/components/item";
 import {
   Select,
   SelectContent,
@@ -45,99 +40,86 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select'
-import { Spinner } from '@workspace/ui/components/spinner'
-import { Switch } from '@workspace/ui/components/switch'
-import { toast } from '@workspace/ui/components/toast'
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@workspace/ui/components/toggle-group'
-import {
-  CircleAlertIcon,
-  CircleCheckIcon,
-  DownloadIcon,
-  FolderIcon,
-  InfoIcon,
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+} from "@workspace/ui/components/select";
+import { Spinner } from "@workspace/ui/components/spinner";
+import { Switch } from "@workspace/ui/components/switch";
+import { toast } from "@workspace/ui/components/toast";
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group";
+import { CircleAlertIcon, CircleCheckIcon, DownloadIcon, FolderIcon, InfoIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import {
   AccessInlineMessage,
   AutoExportAccessAlert,
   didCommitWithAccess,
-} from '@/components/auto-export-access-alert'
-import { NotificationAccessAlert } from '@/components/notification-access-alert'
-import { TimePicker } from '@/components/time-picker'
+} from "@/components/auto-export-access-alert";
+import { NotificationAccessAlert } from "@/components/notification-access-alert";
+import { TimePicker } from "@/components/time-picker";
 import {
   readAutoExportLastRun,
   RUN_MANUAL_EXPORT_MESSAGE_TYPE,
   type RunManualExportMessage,
   type RunManualExportResponse,
-} from '@/lib/auto-export'
-import { getAutoExportErrorMessage } from '@/lib/auto-export-error'
+} from "@/lib/auto-export";
+import { getAutoExportErrorMessage } from "@/lib/auto-export-error";
 import {
   parseKeepLast,
   resolveEffectiveDestination,
   resolveFolder,
   resolveFormats,
-} from '@/lib/auto-export-form'
-import {
-  EXPORT_FORMAT_INFO,
-  EXPORT_FORMATS,
-  type ExportFormat,
-} from '@/lib/export-formats'
+} from "@/lib/auto-export-form";
+import { EXPORT_FORMAT_INFO, EXPORT_FORMATS, type ExportFormat } from "@/lib/export-formats";
 import {
   allowFolderAccess,
   readFolderAccess,
   resolveFolderAccessAlert,
-} from '@/lib/folder-access-recovery'
+} from "@/lib/folder-access-recovery";
 import {
   canPickFolder,
   clearFolderHandle,
   type FolderAccess,
   pickFolder,
   saveFolderHandle,
-} from '@/lib/folder-handle'
-import { resolveNextRunStatus } from '@/lib/next-run-status'
+} from "@/lib/folder-handle";
+import { resolveNextRunStatus } from "@/lib/next-run-status";
 import {
   didUserGrantAccess,
   hasDownloadsAccess,
   hasNotificationAccess,
   watchAccessChanges,
-} from '@/lib/permission-access'
+} from "@/lib/permission-access";
 import {
   autoExportConfigStore,
   autoExportLastRunStore,
   autoExportNextRunStore,
   autoExportNotifyOnFailureStore,
-} from '@/lib/storage'
+} from "@/lib/storage";
 import type {
   AutoExportConfig,
   AutoExportInterval,
   AutoExportLastRun,
   DayOfWeek,
   ExportDestination,
-} from '@/lib/types'
-import { useStorageItem } from '@/lib/use-storage-item'
+} from "@/lib/types";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 const INTERVAL_OPTIONS: { value: AutoExportInterval; label: string }[] = [
-  { value: '1h', label: 'autoExportPage_interval1h' },
-  { value: '12h', label: 'autoExportPage_interval12h' },
-  { value: '1d', label: 'autoExportPage_interval1d' },
-  { value: '3d', label: 'autoExportPage_interval3d' },
-  { value: '7d', label: 'autoExportPage_interval7d' },
-]
+  { value: "1h", label: "autoExportPage_interval1h" },
+  { value: "12h", label: "autoExportPage_interval12h" },
+  { value: "1d", label: "autoExportPage_interval1d" },
+  { value: "3d", label: "autoExportPage_interval3d" },
+  { value: "7d", label: "autoExportPage_interval7d" },
+];
 
 const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
-  { value: 1, label: 'autoExportPage_day1' },
-  { value: 2, label: 'autoExportPage_day2' },
-  { value: 3, label: 'autoExportPage_day3' },
-  { value: 4, label: 'autoExportPage_day4' },
-  { value: 5, label: 'autoExportPage_day5' },
-  { value: 6, label: 'autoExportPage_day6' },
-  { value: 0, label: 'autoExportPage_day0' },
-]
+  { value: 1, label: "autoExportPage_day1" },
+  { value: 2, label: "autoExportPage_day2" },
+  { value: 3, label: "autoExportPage_day3" },
+  { value: 4, label: "autoExportPage_day4" },
+  { value: 5, label: "autoExportPage_day5" },
+  { value: 6, label: "autoExportPage_day6" },
+  { value: 0, label: "autoExportPage_day0" },
+];
 
 /**
  * Mirrors the normalized last run as React state, re-reading it whenever
@@ -146,25 +128,25 @@ const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
  * @returns The last auto-export run, or `null` if it never ran.
  */
 function useLastRun(): AutoExportLastRun | null {
-  const [lastRun, setLastRun] = useState<AutoExportLastRun | null>(null)
+  const [lastRun, setLastRun] = useState<AutoExportLastRun | null>(null);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
     const load = async () => {
-      const value = await readAutoExportLastRun()
-      if (isMounted) setLastRun(value)
-    }
-    void load()
+      const value = await readAutoExportLastRun();
+      if (isMounted) setLastRun(value);
+    };
+    void load();
     const unwatch = autoExportLastRunStore.watch(() => {
-      void load()
-    })
+      void load();
+    });
     return () => {
-      isMounted = false
-      unwatch()
-    }
-  }, [])
+      isMounted = false;
+      unwatch();
+    };
+  }, []);
 
-  return lastRun
+  return lastRun;
 }
 
 /**
@@ -174,23 +156,23 @@ function useLastRun(): AutoExportLastRun | null {
  */
 function formatDateTime(at: number): string {
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(new Date(at))
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(at));
 }
 
 /**
  * Shows the discreet "Saved" toast after a setting persists.
  */
 function notifySaved(): void {
-  toast.add({ title: i18n.t('autoExportPage_saved'), timeout: 1500 })
+  toast.add({ title: i18n.t("autoExportPage_saved"), timeout: 1500 });
 }
 
 interface StatusCardProperties {
-  config: AutoExportConfig
-  folder: string
-  destination: ExportDestination
-  isFolderMissing: boolean
+  config: AutoExportConfig;
+  folder: string;
+  destination: ExportDestination;
+  isFolderMissing: boolean;
 }
 
 /**
@@ -205,141 +187,123 @@ interface StatusCardProperties {
  *   a chosen folder, which blocks Export now.
  * @returns The status card element.
  */
-function StatusCard({
-  config,
-  folder,
-  destination,
-  isFolderMissing,
-}: StatusCardProperties) {
-  const [nextRun] = useStorageItem(autoExportNextRunStore)
-  const lastRun = useLastRun()
-  const [isRunning, setIsRunning] = useState(false)
-  const [isAccessDenied, setIsAccessDenied] = useState(false)
+function StatusCard({ config, folder, destination, isFolderMissing }: StatusCardProperties) {
+  const [nextRun] = useStorageItem(autoExportNextRunStore);
+  const lastRun = useLastRun();
+  const [isRunning, setIsRunning] = useState(false);
+  const [isAccessDenied, setIsAccessDenied] = useState(false);
 
   const runExport = async () => {
-    setIsRunning(true)
+    setIsRunning(true);
     const message: RunManualExportMessage = {
       type: RUN_MANUAL_EXPORT_MESSAGE_TYPE,
       formats: config.formats,
       path: resolveFolder(folder, config.path),
       destination,
-    }
+    };
     try {
       const response = await browser.runtime.sendMessage<
         RunManualExportMessage,
         RunManualExportResponse | undefined
-      >(message)
+      >(message);
       if (response?.ok) {
         toast.add({
-          title: i18n.t('exportNowSuccess'),
-          type: 'success',
-        })
+          title: i18n.t("exportNowSuccess"),
+          type: "success",
+        });
       } else {
         toast.add({
-          title: i18n.t('exportNowFailed'),
-          description: getAutoExportErrorMessage(
-            response?.error,
-            response?.error ?? '',
-          ),
-          type: 'error',
-        })
+          title: i18n.t("exportNowFailed"),
+          description: getAutoExportErrorMessage(response?.error, response?.error ?? ""),
+          type: "error",
+        });
       }
     } catch (error) {
       toast.add({
-        title: i18n.t('exportNowFailed'),
+        title: i18n.t("exportNowFailed"),
         description: error instanceof Error ? error.message : String(error),
-        type: 'error',
-      })
+        type: "error",
+      });
     } finally {
-      setIsRunning(false)
+      setIsRunning(false);
     }
-  }
+  };
 
   const handleExportNow = async () => {
-    if (destination !== 'downloads') {
-      setIsAccessDenied(false)
-      await runExport()
-      return
+    if (destination !== "downloads") {
+      setIsAccessDenied(false);
+      await runExport();
+      return;
     }
-    const isGranted = await didCommitWithAccess(['downloads'], runExport)
-    setIsAccessDenied(!isGranted)
-  }
+    const isGranted = await didCommitWithAccess(["downloads"], runExport);
+    setIsAccessDenied(!isGranted);
+  };
 
-  let lastRunBadge: React.ReactNode
+  let lastRunBadge: React.ReactNode;
   if (lastRun === null) {
-    lastRunBadge = (
-      <Badge variant="outline">{i18n.t('autoExportNeverRun')}</Badge>
-    )
+    lastRunBadge = <Badge variant="outline">{i18n.t("autoExportNeverRun")}</Badge>;
   } else if (lastRun.ok) {
     lastRunBadge = (
       <Badge variant="secondary">
         <CircleCheckIcon data-icon="inline-start" />
-        {i18n.t('autoExportPage_succeeded')}
+        {i18n.t("autoExportPage_succeeded")}
       </Badge>
-    )
+    );
   } else {
     lastRunBadge = (
       <Badge variant="destructive">
         <CircleAlertIcon data-icon="inline-start" />
-        {i18n.t('autoExportPage_failed')}
+        {i18n.t("autoExportPage_failed")}
       </Badge>
-    )
+    );
   }
 
-  const nextRunStatus = resolveNextRunStatus(config.enabled, nextRun)
-  let nextRunText: string
-  if (nextRunStatus.kind === 'off') {
-    nextRunText = i18n.t('autoExportPage_off')
-  } else if (nextRunStatus.kind === 'scheduling') {
-    nextRunText = i18n.t('autoExportScheduling')
+  const nextRunStatus = resolveNextRunStatus(config.enabled, nextRun);
+  let nextRunText: string;
+  if (nextRunStatus.kind === "off") {
+    nextRunText = i18n.t("autoExportPage_off");
+  } else if (nextRunStatus.kind === "scheduling") {
+    nextRunText = i18n.t("autoExportScheduling");
   } else {
-    nextRunText = formatDateTime(nextRunStatus.nextRun)
+    nextRunText = formatDateTime(nextRunStatus.nextRun);
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{i18n.t('autoExportPage_statusTitle')}</CardTitle>
+        <CardTitle>{i18n.t("autoExportPage_statusTitle")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">
           <dl className="flex flex-col gap-3 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">
-                {i18n.t('autoExportPage_lastRun')}
-              </dt>
+              <dt className="text-muted-foreground">{i18n.t("autoExportPage_lastRun")}</dt>
               <dd className="flex items-center gap-2">
                 {lastRunBadge}
                 {lastRun !== null && (
-                  <span className="text-muted-foreground">
-                    {formatDateTime(lastRun.at)}
-                  </span>
+                  <span className="text-muted-foreground">{formatDateTime(lastRun.at)}</span>
                 )}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-muted-foreground">
-                {i18n.t('autoExportPage_nextRun')}
-              </dt>
+              <dt className="text-muted-foreground">{i18n.t("autoExportPage_nextRun")}</dt>
               <dd>{nextRunText}</dd>
             </div>
           </dl>
           {lastRun !== null && !lastRun.ok && (
             <Alert variant="destructive">
               <CircleAlertIcon />
-              <AlertTitle>{i18n.t('autoExportPage_failureTitle')}</AlertTitle>
+              <AlertTitle>{i18n.t("autoExportPage_failureTitle")}</AlertTitle>
               <AlertDescription>
                 {getAutoExportErrorMessage(
                   lastRun.errorCode,
-                  lastRun.error || i18n.t('exportNowFailed'),
+                  lastRun.error || i18n.t("exportNowFailed"),
                 )}
               </AlertDescription>
             </Alert>
           )}
           {isAccessDenied && (
-            <AccessInlineMessage>
-              {i18n.t('autoExportPage_accessDeniedExport')}
-            </AccessInlineMessage>
+            <AccessInlineMessage>{i18n.t("autoExportPage_accessDeniedExport")}</AccessInlineMessage>
           )}
         </div>
       </CardContent>
@@ -354,11 +318,11 @@ function StatusCard({
           ) : (
             <DownloadIcon data-icon="inline-start" />
           )}
-          {i18n.t('exportNow')}
+          {i18n.t("exportNow")}
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 
 /**
@@ -368,217 +332,209 @@ function StatusCard({
  * @returns The Auto-export page.
  */
 export function AutoExportRoute() {
-  const [config, setConfig] = useStorageItem(autoExportConfigStore)
-  const [notifyOnFailure, setNotifyOnFailure] = useStorageItem(
-    autoExportNotifyOnFailureStore,
-  )
-  const [folderDraft, setFolderDraft] = useState<string | null>(null)
+  const [config, setConfig] = useStorageItem(autoExportConfigStore);
+  const [notifyOnFailure, setNotifyOnFailure] = useStorageItem(autoExportNotifyOnFailureStore);
+  const [folderDraft, setFolderDraft] = useState<string | null>(null);
 
-  const [keepLastDraft, setKeepLastDraft] = useState<string | null>(null)
+  const [keepLastDraft, setKeepLastDraft] = useState<string | null>(null);
 
-  const folder = folderDraft ?? config.path
-  const isPickerAvailable = canPickFolder()
-  const destination = resolveEffectiveDestination(
-    config.destination,
-    isPickerAvailable,
-  )
-  const folderName = destination === 'folder' ? config.folderName : null
-  const isFolderMissing = destination === 'folder' && folderName === null
-  const [folderAccess, setFolderAccess] = useState<FolderAccess | null>(null)
-  const [wasAccessRefused, setWasAccessRefused] = useState(false)
-  const [downloadsAccess, setDownloadsAccess] = useState<boolean | null>(null)
-  const [notificationAccess, setNotificationAccess] = useState<boolean | null>(
+  const folder = folderDraft ?? config.path;
+  const isPickerAvailable = canPickFolder();
+  const destination = resolveEffectiveDestination(config.destination, isPickerAvailable);
+  const folderName = destination === "folder" ? config.folderName : null;
+  const isFolderMissing = destination === "folder" && folderName === null;
+  const [folderAccess, setFolderAccess] = useState<FolderAccess | null>(null);
+  const [wasAccessRefused, setWasAccessRefused] = useState(false);
+  const [downloadsAccess, setDownloadsAccess] = useState<boolean | null>(null);
+  const [notificationAccess, setNotificationAccess] = useState<boolean | null>(null);
+  const [accessMessage, setAccessMessage] = useState<"enable" | "destination" | "notify" | null>(
     null,
-  )
-  const [accessMessage, setAccessMessage] = useState<
-    'enable' | 'destination' | 'notify' | null
-  >(null)
-  const [isRequestingEnable, setIsRequestingEnable] = useState(false)
-  const hasChosenFolder = folderName !== null
+  );
+  const [isRequestingEnable, setIsRequestingEnable] = useState(false);
+  const hasChosenFolder = folderName !== null;
   const accessAlert = resolveFolderAccessAlert({
     isFolderDestination: hasChosenFolder,
     access: folderAccess,
     wasRefused: wasAccessRefused,
-  })
+  });
 
   useEffect(() => {
-    if (!hasChosenFolder) return
-    let isMounted = true
+    if (!hasChosenFolder) return;
+    let isMounted = true;
     const refresh = async () => {
       try {
-        const access = await readFolderAccess()
-        if (isMounted) setFolderAccess(access)
+        const access = await readFolderAccess();
+        if (isMounted) setFolderAccess(access);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
-    }
-    void refresh()
-    const onFocus = () => void refresh()
-    window.addEventListener('focus', onFocus)
+    };
+    void refresh();
+    const onFocus = () => void refresh();
+    window.addEventListener("focus", onFocus);
     return () => {
-      isMounted = false
-      window.removeEventListener('focus', onFocus)
-    }
-  }, [hasChosenFolder, folderName])
+      isMounted = false;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [hasChosenFolder, folderName]);
 
   useEffect(() => {
-    let isMounted = true
+    let isMounted = true;
     const refresh = async () => {
       const [hasDownloads, hasNotifications] = await Promise.all([
         hasDownloadsAccess(),
         hasNotificationAccess(),
-      ])
-      if (!isMounted) return
-      setDownloadsAccess(hasDownloads)
-      setNotificationAccess(hasNotifications)
-    }
-    void refresh()
+      ]);
+      if (!isMounted) return;
+      setDownloadsAccess(hasDownloads);
+      setNotificationAccess(hasNotifications);
+    };
+    void refresh();
     const unwatch = watchAccessChanges((change) => {
-      if (change.permission === 'downloads') {
-        setDownloadsAccess(change.isGranted)
+      if (change.permission === "downloads") {
+        setDownloadsAccess(change.isGranted);
       } else {
-        setNotificationAccess(change.isGranted)
+        setNotificationAccess(change.isGranted);
       }
-    })
+    });
     return () => {
-      isMounted = false
-      unwatch()
-    }
-  }, [])
-  const isDownloadsAccessMissing =
-    destination === 'downloads' && downloadsAccess === false
-  const isNotificationAccessMissing = notificationAccess === false
-  const isNotifySwitchOn = notifyOnFailure && !isNotificationAccessMissing
-  const keepLast = config.keepLast ?? 10
-  const keepLastText = keepLastDraft ?? String(keepLast)
-  const isKeepLastInvalid = parseKeepLast(keepLastText) === null
-  const isOff = !config.enabled
-  const isTimeUnused = config.interval === '1h' || config.interval === '12h'
-  const isWeekly = config.interval === '7d'
+      isMounted = false;
+      unwatch();
+    };
+  }, []);
+  const isDownloadsAccessMissing = destination === "downloads" && downloadsAccess === false;
+  const isNotificationAccessMissing = notificationAccess === false;
+  const isNotifySwitchOn = notifyOnFailure && !isNotificationAccessMissing;
+  const keepLast = config.keepLast ?? 10;
+  const keepLastText = keepLastDraft ?? String(keepLast);
+  const isKeepLastInvalid = parseKeepLast(keepLastText) === null;
+  const isOff = !config.enabled;
+  const isTimeUnused = config.interval === "1h" || config.interval === "12h";
+  const isWeekly = config.interval === "7d";
   const dayItems = DAY_OPTIONS.map(({ value, label }) => ({
     value: String(value),
-    label: i18n.t(label as 'autoExportPage_day0'),
-  }))
+    label: i18n.t(label as "autoExportPage_day0"),
+  }));
 
   const save = async (patch: Partial<AutoExportConfig>) => {
-    await setConfig({ ...(await autoExportConfigStore.getValue()), ...patch })
-    notifySaved()
-  }
+    await setConfig({ ...(await autoExportConfigStore.getValue()), ...patch });
+    notifySaved();
+  };
 
   const changeDestination = async (next: ExportDestination) => {
-    if (next === destination) return
-    if (next === 'downloads') {
-      setAccessMessage(null)
-      const isGranted = await didCommitWithAccess(['downloads'], async () => {
-        await clearFolderHandle()
-        await save({ destination: 'downloads', folderName: null })
-      })
-      if (!isGranted) setAccessMessage('destination')
-      return
+    if (next === destination) return;
+    if (next === "downloads") {
+      setAccessMessage(null);
+      const isGranted = await didCommitWithAccess(["downloads"], async () => {
+        await clearFolderHandle();
+        await save({ destination: "downloads", folderName: null });
+      });
+      if (!isGranted) setAccessMessage("destination");
+      return;
     }
-    await save({ destination: 'folder' })
-  }
+    await save({ destination: "folder" });
+  };
 
   const changeEnabled = async (isEnabled: boolean) => {
-    if (!isEnabled || destination !== 'downloads') {
-      await save({ enabled: isEnabled })
-      return
+    if (!isEnabled || destination !== "downloads") {
+      await save({ enabled: isEnabled });
+      return;
     }
-    setAccessMessage(null)
-    setIsRequestingEnable(true)
+    setAccessMessage(null);
+    setIsRequestingEnable(true);
     try {
       const isGranted = await didCommitWithAccess(
-        notifyOnFailure ? ['downloads', 'notifications'] : ['downloads'],
+        notifyOnFailure ? ["downloads", "notifications"] : ["downloads"],
         () => save({ enabled: true }),
-      )
-      if (isGranted) return
+      );
+      if (isGranted) return;
       if (notifyOnFailure && (await hasDownloadsAccess())) {
-        await setNotifyOnFailure(false)
-        await save({ enabled: true })
-        setAccessMessage('notify')
-        return
+        await setNotifyOnFailure(false);
+        await save({ enabled: true });
+        setAccessMessage("notify");
+        return;
       }
-      setAccessMessage('enable')
+      setAccessMessage("enable");
     } finally {
-      setIsRequestingEnable(false)
+      setIsRequestingEnable(false);
     }
-  }
+  };
 
   const changeNotifyOnFailure = async (isOn: boolean) => {
     if (!isOn) {
-      await setNotifyOnFailure(false)
-      notifySaved()
-      return
+      await setNotifyOnFailure(false);
+      notifySaved();
+      return;
     }
-    setAccessMessage(null)
-    const isGranted = await didCommitWithAccess(['notifications'], async () => {
-      if (!notifyOnFailure) await setNotifyOnFailure(true)
-      notifySaved()
-    })
-    if (isGranted) setNotificationAccess(true)
-    else setAccessMessage('notify')
-  }
+    setAccessMessage(null);
+    const isGranted = await didCommitWithAccess(["notifications"], async () => {
+      if (!notifyOnFailure) await setNotifyOnFailure(true);
+      notifySaved();
+    });
+    if (isGranted) setNotificationAccess(true);
+    else setAccessMessage("notify");
+  };
 
   const allowNotificationAccess = async () => {
-    setAccessMessage(null)
-    const isGranted = await didUserGrantAccess('notifications')
-    setNotificationAccess(isGranted)
-    if (!isGranted) setAccessMessage('notify')
-  }
+    setAccessMessage(null);
+    const isGranted = await didUserGrantAccess("notifications");
+    setNotificationAccess(isGranted);
+    if (!isGranted) setAccessMessage("notify");
+  };
 
   const allowDownloadsAccess = async () => {
-    const isGranted = await didUserGrantAccess('downloads')
-    setDownloadsAccess(isGranted)
-  }
+    const isGranted = await didUserGrantAccess("downloads");
+    setDownloadsAccess(isGranted);
+  };
 
   const chooseFolder = async () => {
-    let handle: FileSystemDirectoryHandle
+    let handle: FileSystemDirectoryHandle;
     try {
-      handle = await pickFolder()
+      handle = await pickFolder();
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return
+      if (error instanceof DOMException && error.name === "AbortError") return;
       toast.add({
-        title: i18n.t('exportNowFailed'),
+        title: i18n.t("exportNowFailed"),
         description: error instanceof Error ? error.message : String(error),
-        type: 'error',
-      })
-      return
+        type: "error",
+      });
+      return;
     }
-    await saveFolderHandle(handle)
-    await save({ destination: 'folder', folderName: handle.name })
-  }
+    await saveFolderHandle(handle);
+    await save({ destination: "folder", folderName: handle.name });
+  };
 
   const allowAccess = async () => {
     try {
-      const result = await allowFolderAccess()
-      if (result === 'missing') {
-        setWasAccessRefused(false)
-        await save({ folderName: null })
-        return
+      const result = await allowFolderAccess();
+      if (result === "missing") {
+        setWasAccessRefused(false);
+        await save({ folderName: null });
+        return;
       }
-      setWasAccessRefused(result === 'refused')
-      setFolderAccess(result === 'granted' ? 'granted' : 'prompt')
+      setWasAccessRefused(result === "refused");
+      setFolderAccess(result === "granted" ? "granted" : "prompt");
     } catch (error) {
       toast.add({
-        title: i18n.t('exportNowFailed'),
+        title: i18n.t("exportNowFailed"),
         description: error instanceof Error ? error.message : String(error),
-        type: 'error',
-      })
+        type: "error",
+      });
     }
-  }
+  };
 
   const commitFolder = async () => {
-    const next = resolveFolder(folder, config.path)
-    setFolderDraft(null)
-    if (next !== config.path) await save({ path: next })
-  }
+    const next = resolveFolder(folder, config.path);
+    setFolderDraft(null);
+    if (next !== config.path) await save({ path: next });
+  };
 
   const commitKeepLast = async () => {
-    const parsed = parseKeepLast(keepLastText)
-    if (parsed === null) return
-    setKeepLastDraft(null)
-    if (parsed !== keepLast) await save({ keepLast: parsed })
-  }
+    const parsed = parseKeepLast(keepLastText);
+    if (parsed === null) return;
+    setKeepLastDraft(null);
+    if (parsed !== keepLast) await save({ keepLast: parsed });
+  };
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
@@ -590,21 +546,15 @@ export function AutoExportRoute() {
       />
       <Card>
         <CardHeader>
-          <CardTitle>{i18n.t('autoExportPage_settingsTitle')}</CardTitle>
-          <CardDescription>
-            {i18n.t('autoExportPage_settingsDescription')}
-          </CardDescription>
+          <CardTitle>{i18n.t("autoExportPage_settingsTitle")}</CardTitle>
+          <CardDescription>{i18n.t("autoExportPage_settingsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <FieldGroup>
             <Field orientation="horizontal">
               <FieldContent>
-                <FieldLabel htmlFor="auto-export-enabled">
-                  {i18n.t('enableAutoExport')}
-                </FieldLabel>
-                <FieldDescription>
-                  {i18n.t('enableAutoExportDescription')}
-                </FieldDescription>
+                <FieldLabel htmlFor="auto-export-enabled">{i18n.t("enableAutoExport")}</FieldLabel>
+                <FieldDescription>{i18n.t("enableAutoExportDescription")}</FieldDescription>
               </FieldContent>
               <div className="flex items-center gap-2">
                 {isRequestingEnable && <Spinner />}
@@ -619,39 +569,34 @@ export function AutoExportRoute() {
             </Field>
 
             {config.enabled && isDownloadsAccessMissing && (
-              <AutoExportAccessAlert
-                onAllow={() => void allowDownloadsAccess()}
-              />
+              <AutoExportAccessAlert onAllow={() => void allowDownloadsAccess()} />
             )}
 
-            {(accessMessage === 'enable' ||
-              accessMessage === 'destination') && (
+            {(accessMessage === "enable" || accessMessage === "destination") && (
               <AccessInlineMessage>
                 {i18n.t(
-                  accessMessage === 'enable'
-                    ? 'autoExportPage_accessDeniedEnable'
-                    : 'autoExportPage_accessDeniedDestination',
+                  accessMessage === "enable"
+                    ? "autoExportPage_accessDeniedEnable"
+                    : "autoExportPage_accessDeniedDestination",
                 )}
               </AccessInlineMessage>
             )}
 
             <FieldSet data-disabled={isOff || undefined} disabled={isOff}>
-              <FieldLegend variant="label">
-                {i18n.t('autoExportPage_frequency')}
-              </FieldLegend>
+              <FieldLegend variant="label">{i18n.t("autoExportPage_frequency")}</FieldLegend>
               <ToggleGroup
                 variant="outline"
-                aria-label={i18n.t('autoExportPage_frequency')}
+                aria-label={i18n.t("autoExportPage_frequency")}
                 value={[config.interval]}
                 disabled={isOff}
                 onValueChange={(value) => {
-                  const [interval] = value as AutoExportInterval[]
-                  if (interval) void save({ interval })
+                  const [interval] = value as AutoExportInterval[];
+                  if (interval) void save({ interval });
                 }}
               >
                 {INTERVAL_OPTIONS.map(({ value, label }) => (
                   <ToggleGroupItem key={value} value={value}>
-                    {i18n.t(label as 'autoExportPage_interval1d')}
+                    {i18n.t(label as "autoExportPage_interval1d")}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -660,15 +605,13 @@ export function AutoExportRoute() {
             {isWeekly && (
               <Field data-disabled={isOff || undefined}>
                 <FieldLabel htmlFor="auto-export-day">
-                  {i18n.t('autoExportPage_dayOfWeek')}
+                  {i18n.t("autoExportPage_dayOfWeek")}
                 </FieldLabel>
                 <Select
                   items={dayItems}
                   value={String(config.dayOfWeek)}
                   disabled={isOff}
-                  onValueChange={(value) =>
-                    void save({ dayOfWeek: Number(value) as DayOfWeek })
-                  }
+                  onValueChange={(value) => void save({ dayOfWeek: Number(value) as DayOfWeek })}
                 >
                   <SelectTrigger id="auto-export-day" className="w-full">
                     <SelectValue />
@@ -687,45 +630,39 @@ export function AutoExportRoute() {
             )}
 
             <Field data-disabled={isOff || isTimeUnused || undefined}>
-              <FieldLabel htmlFor="auto-export-time">
-                {i18n.t('preferredExportTime')}
-              </FieldLabel>
+              <FieldLabel htmlFor="auto-export-time">{i18n.t("preferredExportTime")}</FieldLabel>
               <TimePicker
                 id="auto-export-time"
                 value={config.preferredTime}
                 onChange={(preferredTime) => void save({ preferredTime })}
-                hourLabel={i18n.t('hoursLabel')}
-                minuteLabel={i18n.t('minutesLabel')}
-                periodLabel={i18n.t('periodLabel')}
+                hourLabel={i18n.t("hoursLabel")}
+                minuteLabel={i18n.t("minutesLabel")}
+                periodLabel={i18n.t("periodLabel")}
                 disabled={isOff || isTimeUnused}
               />
               {isTimeUnused && (
-                <FieldDescription>
-                  {i18n.t('timeSelectionUnavailable')}
-                </FieldDescription>
+                <FieldDescription>{i18n.t("timeSelectionUnavailable")}</FieldDescription>
               )}
             </Field>
 
             {isPickerAvailable && (
               <FieldSet data-disabled={isOff || undefined} disabled={isOff}>
-                <FieldLegend variant="label">
-                  {i18n.t('autoExportPage_saveTo')}
-                </FieldLegend>
+                <FieldLegend variant="label">{i18n.t("autoExportPage_saveTo")}</FieldLegend>
                 <ToggleGroup
                   variant="outline"
-                  aria-label={i18n.t('autoExportPage_saveTo')}
+                  aria-label={i18n.t("autoExportPage_saveTo")}
                   value={[destination]}
                   disabled={isOff}
                   onValueChange={(value) => {
-                    const [next] = value as ExportDestination[]
-                    if (next) void changeDestination(next)
+                    const [next] = value as ExportDestination[];
+                    if (next) void changeDestination(next);
                   }}
                 >
                   <ToggleGroupItem value="downloads">
-                    {i18n.t('autoExportPage_destinationDownloads')}
+                    {i18n.t("autoExportPage_destinationDownloads")}
                   </ToggleGroupItem>
                   <ToggleGroupItem value="folder">
-                    {i18n.t('autoExportPage_destinationFolder')}
+                    {i18n.t("autoExportPage_destinationFolder")}
                   </ToggleGroupItem>
                 </ToggleGroup>
               </FieldSet>
@@ -734,41 +671,29 @@ export function AutoExportRoute() {
             {isFolderMissing && (
               <Field data-disabled={isOff || undefined}>
                 <FieldDescription>
-                  {i18n.t('autoExportPage_chooseFolderDescription')}
+                  {i18n.t("autoExportPage_chooseFolderDescription")}
                 </FieldDescription>
                 <div>
-                  <Button
-                    variant="outline"
-                    disabled={isOff}
-                    onClick={() => void chooseFolder()}
-                  >
+                  <Button variant="outline" disabled={isOff} onClick={() => void chooseFolder()}>
                     <FolderIcon data-icon="inline-start" />
-                    {i18n.t('autoExportPage_chooseFolder')}
+                    {i18n.t("autoExportPage_chooseFolder")}
                   </Button>
                 </div>
               </Field>
             )}
 
-            {accessAlert !== 'hidden' && folderName !== null && (
+            {accessAlert !== "hidden" && folderName !== null && (
               <Alert variant="destructive">
                 <CircleAlertIcon />
-                <AlertTitle>
-                  {i18n.t('autoExportPage_folderAccessTitle')}
-                </AlertTitle>
+                <AlertTitle>{i18n.t("autoExportPage_folderAccessTitle")}</AlertTitle>
                 <AlertDescription>
-                  {accessAlert === 'refused'
-                    ? i18n.t('autoExportPage_folderAccessRefused')
-                    : i18n.t('autoExportPage_folderAccessDescription', [
-                        folderName,
-                      ])}
+                  {accessAlert === "refused"
+                    ? i18n.t("autoExportPage_folderAccessRefused")
+                    : i18n.t("autoExportPage_folderAccessDescription", [folderName])}
                 </AlertDescription>
                 <AlertAction>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void allowAccess()}
-                  >
-                    {i18n.t('autoExportPage_allowAccess')}
+                  <Button variant="outline" size="sm" onClick={() => void allowAccess()}>
+                    {i18n.t("autoExportPage_allowAccess")}
                   </Button>
                 </AlertAction>
               </Alert>
@@ -789,7 +714,7 @@ export function AutoExportRoute() {
                     disabled={isOff}
                     onClick={() => void chooseFolder()}
                   >
-                    {i18n.t('autoExportPage_changeFolder')}
+                    {i18n.t("autoExportPage_changeFolder")}
                   </Button>
                 </ItemActions>
               </Item>
@@ -797,14 +722,12 @@ export function AutoExportRoute() {
 
             {!isFolderMissing && (
               <Field data-disabled={isOff || undefined}>
-                <FieldLabel htmlFor="auto-export-folder">
-                  {i18n.t('exportPath')}
-                </FieldLabel>
+                <FieldLabel htmlFor="auto-export-folder">{i18n.t("exportPath")}</FieldLabel>
                 <InputGroup>
                   <InputGroupAddon>
                     <InputGroupText>
                       {folderName === null
-                        ? i18n.t('autoExportPage_downloadsPrefix')
+                        ? i18n.t("autoExportPage_downloadsPrefix")
                         : `${folderName}/`}
                     </InputGroupText>
                   </InputGroupAddon>
@@ -815,16 +738,14 @@ export function AutoExportRoute() {
                     onChange={(event) => setFolderDraft(event.target.value)}
                     onBlur={() => void commitFolder()}
                     onKeyDown={(event) => {
-                      if (event.key === 'Enter') event.currentTarget.blur()
+                      if (event.key === "Enter") event.currentTarget.blur();
                     }}
                   />
                 </InputGroup>
                 <FieldDescription>
                   {folderName === null
-                    ? i18n.t('autoExportPage_folderDescription')
-                    : i18n.t('autoExportPage_folderChosenDescription', [
-                        folderName,
-                      ])}
+                    ? i18n.t("autoExportPage_folderDescription")
+                    : i18n.t("autoExportPage_folderChosenDescription", [folderName])}
                 </FieldDescription>
               </Field>
             )}
@@ -832,28 +753,21 @@ export function AutoExportRoute() {
             {folderName !== null && (
               <Alert>
                 <InfoIcon />
-                <AlertDescription>
-                  {i18n.t('autoExportPage_folderRestartHint')}
-                </AlertDescription>
+                <AlertDescription>{i18n.t("autoExportPage_folderRestartHint")}</AlertDescription>
               </Alert>
             )}
 
             <FieldSet data-disabled={isOff || undefined} disabled={isOff}>
-              <FieldLegend variant="label">
-                {i18n.t('autoExportFormats')}
-              </FieldLegend>
+              <FieldLegend variant="label">{i18n.t("autoExportFormats")}</FieldLegend>
               <ToggleGroup
                 multiple
                 variant="outline"
-                aria-label={i18n.t('autoExportFormats')}
+                aria-label={i18n.t("autoExportFormats")}
                 value={config.formats}
                 disabled={isOff}
                 onValueChange={(value) =>
                   void save({
-                    formats: resolveFormats(
-                      value as ExportFormat[],
-                      config.formats,
-                    ),
+                    formats: resolveFormats(value as ExportFormat[], config.formats),
                   })
                 }
               >
@@ -863,17 +777,12 @@ export function AutoExportRoute() {
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
-              <FieldDescription>
-                {i18n.t('autoExportPage_formatsDescription')}
-              </FieldDescription>
+              <FieldDescription>{i18n.t("autoExportPage_formatsDescription")}</FieldDescription>
             </FieldSet>
 
-            <Field
-              data-disabled={isOff || undefined}
-              data-invalid={isKeepLastInvalid || undefined}
-            >
+            <Field data-disabled={isOff || undefined} data-invalid={isKeepLastInvalid || undefined}>
               <FieldLabel htmlFor="auto-export-keep-last">
-                {i18n.t('autoExportPage_keepLast')}
+                {i18n.t("autoExportPage_keepLast")}
               </FieldLabel>
               <InputGroup>
                 <InputGroupInput
@@ -887,32 +796,28 @@ export function AutoExportRoute() {
                   aria-invalid={isKeepLastInvalid}
                   onChange={(event) => setKeepLastDraft(event.target.value)}
                   onBlur={() => {
-                    if (isKeepLastInvalid) setKeepLastDraft(null)
-                    else void commitKeepLast()
+                    if (isKeepLastInvalid) setKeepLastDraft(null);
+                    else void commitKeepLast();
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === 'Enter') event.currentTarget.blur()
+                    if (event.key === "Enter") event.currentTarget.blur();
                   }}
                 />
               </InputGroup>
               {isKeepLastInvalid ? (
-                <FieldError>
-                  {i18n.t('autoExportPage_keepLastInvalid')}
-                </FieldError>
+                <FieldError>{i18n.t("autoExportPage_keepLastInvalid")}</FieldError>
               ) : (
-                <FieldDescription>
-                  {i18n.t('autoExportPage_keepLastDescription')}
-                </FieldDescription>
+                <FieldDescription>{i18n.t("autoExportPage_keepLastDescription")}</FieldDescription>
               )}
             </Field>
 
             <Field orientation="horizontal">
               <FieldContent>
                 <FieldLabel htmlFor="auto-export-notify-on-failure">
-                  {i18n.t('autoExportPage_notifyOnFailure')}
+                  {i18n.t("autoExportPage_notifyOnFailure")}
                 </FieldLabel>
                 <FieldDescription>
-                  {i18n.t('autoExportPage_notifyOnFailureDescription')}
+                  {i18n.t("autoExportPage_notifyOnFailureDescription")}
                 </FieldDescription>
               </FieldContent>
               <Switch
@@ -923,19 +828,17 @@ export function AutoExportRoute() {
             </Field>
 
             {!isOff && notifyOnFailure && isNotificationAccessMissing && (
-              <NotificationAccessAlert
-                onAllow={() => void allowNotificationAccess()}
-              />
+              <NotificationAccessAlert onAllow={() => void allowNotificationAccess()} />
             )}
 
-            {accessMessage === 'notify' && (
+            {accessMessage === "notify" && (
               <AccessInlineMessage>
-                {i18n.t('autoExportPage_accessDeniedNotify')}
+                {i18n.t("autoExportPage_accessDeniedNotify")}
               </AccessInlineMessage>
             )}
           </FieldGroup>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

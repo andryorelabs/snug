@@ -1,13 +1,13 @@
 ---
-import { getContent } from '../i18n/content'
-import type { Locale } from '../i18n/locales'
-import InstallButton from './InstallButton.astro'
+import { getContent } from "../i18n/content";
+import type { Locale } from "../i18n/locales";
+import InstallButton from "./InstallButton.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { dock } = getContent(Astro.props.locale).landing
+const { dock } = getContent(Astro.props.locale).landing;
 ---
 
 <div data-dock>

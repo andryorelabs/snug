@@ -71,9 +71,7 @@ a Badge variant or ask the user about adding a custom CSS variable to the theme
 **Incorrect:**
 
 ```tsx
-<Button className="border border-input bg-transparent hover:bg-accent">
-  Click me
-</Button>
+<Button className="border border-input bg-transparent hover:bg-accent">Click me</Button>
 ```
 
 **Correct:**

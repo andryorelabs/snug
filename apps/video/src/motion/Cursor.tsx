@@ -1,23 +1,23 @@
-import { interpolate, useCurrentFrame } from 'remotion'
+import { interpolate, useCurrentFrame } from "remotion";
 
-import { EASE, progressBetween } from './easing'
+import { EASE, progressBetween } from "./easing";
 
 const CLAMP = {
-  extrapolateLeft: 'clamp',
-  extrapolateRight: 'clamp',
-} as const
+  extrapolateLeft: "clamp",
+  extrapolateRight: "clamp",
+} as const;
 
 export type Waypoint = {
   /**
    * Frame the cursor arrives at this point.
    */
-  frame: number
-  x: number
-  y: number
-}
+  frame: number;
+  x: number;
+  y: number;
+};
 
-const RIPPLE_FRAMES = 16
-const PRESS_FRAMES = 6
+const RIPPLE_FRAMES = 16;
+const PRESS_FRAMES = 6;
 
 /**
  * Cursor position at a frame: eased travel between waypoints, held before the
@@ -27,90 +27,84 @@ export const cursorPositionAt = (
   waypoints: readonly Waypoint[],
   frame: number,
 ): { x: number; y: number } => {
-  const first = waypoints[0]
-  if (!first) return { x: 0, y: 0 }
-  let index = 0
+  const first = waypoints[0];
+  if (!first) return { x: 0, y: 0 };
+  let index = 0;
   for (const [position, waypoint] of waypoints.entries()) {
-    if (waypoint.frame <= frame) index = position
+    if (waypoint.frame <= frame) index = position;
   }
-  const from = waypoints[index] ?? first
-  const to = waypoints[index + 1]
-  if (!to) return { x: from.x, y: from.y }
-  const amount = progressBetween(frame, from.frame, to.frame, EASE.standard)
+  const from = waypoints[index] ?? first;
+  const to = waypoints[index + 1];
+  if (!to) return { x: from.x, y: from.y };
+  const amount = progressBetween(frame, from.frame, to.frame, EASE.standard);
   return {
     x: interpolate(amount, [0, 1], [from.x, to.x], CLAMP),
     y: interpolate(amount, [0, 1], [from.y, to.y], CLAMP),
-  }
-}
+  };
+};
 
 /**
  * How many of the click frames have happened by `frame`. Scenes use it (or
  * `clicks.includes`) to flip UI state in sync with the cursor.
  */
 export const clicksBy = (clicks: readonly number[], frame: number): number =>
-  clicks.filter((click) => click <= frame).length
+  clicks.filter((click) => click <= frame).length;
 
 export type CursorProps = {
-  waypoints: readonly Waypoint[]
+  waypoints: readonly Waypoint[];
   /**
    * Frames at which a click lands.
    */
-  clicks?: readonly number[]
+  clicks?: readonly number[];
   /**
    * Arrow scale, 1 is 20x28 px. Default 1.4.
    */
-  scale?: number
-}
+  scale?: number;
+};
 
 /**
  * Arrow cursor on a waypoint path with a ripple per click. Absolutely
  * positioned in its parent's coordinates; render it inside the Camera layer.
  */
-export const Cursor = ({
-  waypoints,
-  clicks = [],
-  scale = 1.4,
-}: CursorProps) => {
-  const frame = useCurrentFrame()
-  const position = cursorPositionAt(waypoints, frame)
-  const pressing = clicks.some(
-    (click) => frame >= click && frame < click + PRESS_FRAMES,
-  )
+export const Cursor = ({ waypoints, clicks = [], scale = 1.4 }: CursorProps) => {
+  const frame = useCurrentFrame();
+  const position = cursorPositionAt(waypoints, frame);
+  const pressing = clicks.some((click) => frame >= click && frame < click + PRESS_FRAMES);
   return (
     <>
       {clicks.map((click) => {
-        const age = frame - click
-        if (age < 0 || age > RIPPLE_FRAMES) return null
-        const at = cursorPositionAt(waypoints, click)
-        const growth = progressBetween(age, 0, RIPPLE_FRAMES, EASE.settle)
-        const size = 12 + growth * 64
+        const age = frame - click;
+        if (age < 0 || age > RIPPLE_FRAMES) return null;
+        const at = cursorPositionAt(waypoints, click);
+        const growth = progressBetween(age, 0, RIPPLE_FRAMES, EASE.settle);
+        const size = 12 + growth * 64;
         return (
           <div
             key={click}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: at.x - size / 2,
               top: at.y - size / 2,
               width: size,
               height: size,
-              borderRadius: '50%',
-              border: '3px solid rgba(255, 162, 48, 0.9)',
+              borderRadius: "50%",
+              border: "3px solid rgba(255, 162, 48, 0.9)",
               opacity: 1 - growth,
             }}
           />
-        )
+        );
       })}
       <svg
         width={20 * scale}
         height={28 * scale}
         viewBox="0 0 20 28"
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: position.x,
           top: position.y,
-          transformOrigin: '0 0',
+          transformOrigin: "0 0",
           transform: `scale(${pressing ? 0.88 : 1})`,
-          filter: 'drop-shadow(0 3px 5px rgba(0,0,0,0.5))',
+          filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.5))",
         }}
       >
         <path
@@ -122,5 +116,5 @@ export const Cursor = ({
         />
       </svg>
     </>
-  )
-}
+  );
+};

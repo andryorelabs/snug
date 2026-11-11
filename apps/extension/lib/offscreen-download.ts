@@ -1,52 +1,52 @@
-import type { Browser } from '@wxt-dev/browser'
+import type { Browser } from "@wxt-dev/browser";
 
 /**
  * Relative URL of the offscreen document created by
  * {@link downloadViaOffscreenDocument}, served by the `entrypoints/offscreen`
  * unlisted entrypoint.
  */
-export const OFFSCREEN_DOCUMENT_PATH = '/offscreen.html'
+export const OFFSCREEN_DOCUMENT_PATH = "/offscreen.html";
 
 /**
  * How long {@link downloadViaOffscreenDocument} waits for a download to reach
  * `'complete'` or `'interrupted'` before giving up.
  */
-export const DOWNLOAD_SETTLE_TIMEOUT_MS = 60_000
+export const DOWNLOAD_SETTLE_TIMEOUT_MS = 60_000;
 
 /**
  * Message type asking the offscreen document to turn export content into a
  * `Blob` object URL.
  */
-export const CREATE_BLOB_URL_MESSAGE_TYPE = 'auto-export-create-blob-url'
+export const CREATE_BLOB_URL_MESSAGE_TYPE = "auto-export-create-blob-url";
 
 /**
  * Message type asking the offscreen document to revoke a previously created
  * object URL.
  */
-export const REVOKE_BLOB_URL_MESSAGE_TYPE = 'auto-export-revoke-blob-url'
+export const REVOKE_BLOB_URL_MESSAGE_TYPE = "auto-export-revoke-blob-url";
 
 /**
  * Sent to the offscreen document to request a `Blob` object URL.
  */
 export interface CreateBlobUrlMessage {
-  type: typeof CREATE_BLOB_URL_MESSAGE_TYPE
-  content: string
-  mimeType: string
+  type: typeof CREATE_BLOB_URL_MESSAGE_TYPE;
+  content: string;
+  mimeType: string;
 }
 
 /**
  * Sent to the offscreen document to revoke a `Blob` object URL.
  */
 export interface RevokeBlobUrlMessage {
-  type: typeof REVOKE_BLOB_URL_MESSAGE_TYPE
-  url: string
+  type: typeof REVOKE_BLOB_URL_MESSAGE_TYPE;
+  url: string;
 }
 
 /**
  * Reply to a {@link CreateBlobUrlMessage}.
  */
 export interface CreateBlobUrlResponse {
-  url: string
+  url: string;
 }
 
 /**
@@ -63,14 +63,14 @@ export interface CreateBlobUrlResponse {
  * {@link closeOffscreenDocumentIfIdle}.
  */
 const offscreenState: {
-  documentOpened: boolean
-  pendingDownloads: number
-  lifecycle: Promise<void>
+  documentOpened: boolean;
+  pendingDownloads: number;
+  lifecycle: Promise<void>;
 } = {
   documentOpened: false,
   pendingDownloads: 0,
   lifecycle: Promise.resolve(),
-}
+};
 
 /**
  * Chains `step` onto {@link offscreenState}'s `lifecycle` promise so it runs
@@ -87,17 +87,17 @@ const offscreenState: {
  * @returns `step`'s own result.
  */
 async function runLifecycleStep<T>(step: () => Promise<T>): Promise<T> {
-  const previous = offscreenState.lifecycle
-  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>()
-  offscreenState.lifecycle = gate
+  const previous = offscreenState.lifecycle;
+  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>();
+  offscreenState.lifecycle = gate;
 
   try {
-    await previous
+    await previous;
   } catch {}
   try {
-    return await step()
+    return await step();
   } finally {
-    releaseGate()
+    releaseGate();
   }
 }
 
@@ -109,8 +109,8 @@ async function runLifecycleStep<T>(step: () => Promise<T>): Promise<T> {
  * @returns `true` if the document already exists.
  */
 function isOffscreenAlreadyExistsError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error)
-  return message.includes('Only a single offscreen document may be created')
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("Only a single offscreen document may be created");
 }
 
 /**
@@ -123,19 +123,19 @@ function isOffscreenAlreadyExistsError(error: unknown): boolean {
  */
 async function openOffscreenDocument(): Promise<void> {
   const existingContexts = await chrome.runtime.getContexts({
-    contextTypes: ['OFFSCREEN_DOCUMENT'],
-  })
-  if (existingContexts.length > 0) return
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+  });
+  if (existingContexts.length > 0) return;
 
   try {
     await chrome.offscreen.createDocument({
       url: chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH),
-      reasons: ['BLOBS'],
+      reasons: ["BLOBS"],
       justification:
-        'Create Blob object URLs for exported bookmark files too large for a data URL.',
-    })
+        "Create Blob object URLs for exported bookmark files too large for a data URL.",
+    });
   } catch (error) {
-    if (!isOffscreenAlreadyExistsError(error)) throw error
+    if (!isOffscreenAlreadyExistsError(error)) throw error;
   }
 }
 
@@ -149,9 +149,9 @@ async function openOffscreenDocument(): Promise<void> {
  */
 async function ensureOffscreenDocument(): Promise<void> {
   await runLifecycleStep(async () => {
-    await openOffscreenDocument()
-    offscreenState.documentOpened = true
-  })
+    await openOffscreenDocument();
+    offscreenState.documentOpened = true;
+  });
 }
 
 /**
@@ -168,15 +168,14 @@ async function ensureOffscreenDocument(): Promise<void> {
  */
 async function closeOffscreenDocumentIfIdle(): Promise<void> {
   await runLifecycleStep(async () => {
-    if (offscreenState.pendingDownloads > 0 || !offscreenState.documentOpened)
-      return
-    offscreenState.documentOpened = false
+    if (offscreenState.pendingDownloads > 0 || !offscreenState.documentOpened) return;
+    offscreenState.documentOpened = false;
     try {
-      await chrome.offscreen.closeDocument()
+      await chrome.offscreen.closeDocument();
     } catch (error) {
-      console.error('Failed to close the offscreen document.', error)
+      console.error("Failed to close the offscreen document.", error);
     }
-  })
+  });
 }
 
 /**
@@ -187,20 +186,16 @@ async function closeOffscreenDocumentIfIdle(): Promise<void> {
  * @param mimeType The content's MIME type.
  * @returns The resulting `Blob` object URL.
  */
-async function requestBlobUrl(
-  content: string,
-  mimeType: string,
-): Promise<string> {
+async function requestBlobUrl(content: string, mimeType: string): Promise<string> {
   const message: CreateBlobUrlMessage = {
     type: CREATE_BLOB_URL_MESSAGE_TYPE,
     content,
     mimeType,
-  }
-  const response = await browser.runtime.sendMessage<
-    typeof message,
-    CreateBlobUrlResponse
-  >(message)
-  return response.url
+  };
+  const response = await browser.runtime.sendMessage<typeof message, CreateBlobUrlResponse>(
+    message,
+  );
+  return response.url;
 }
 
 /**
@@ -212,18 +207,16 @@ async function revokeBlobUrl(url: string): Promise<void> {
   const message: RevokeBlobUrlMessage = {
     type: REVOKE_BLOB_URL_MESSAGE_TYPE,
     url,
-  }
-  await browser.runtime.sendMessage(message)
+  };
+  await browser.runtime.sendMessage(message);
 }
 
-async function readDownloadState(
-  downloadId: number,
-): Promise<string | undefined> {
+async function readDownloadState(downloadId: number): Promise<string | undefined> {
   try {
-    const [item] = await browser.downloads.search({ id: downloadId })
-    return item?.state
+    const [item] = await browser.downloads.search({ id: downloadId });
+    return item?.state;
   } catch {
-    return
+    return;
   }
 }
 
@@ -231,7 +224,7 @@ async function readDownloadState(
  * How a watched download ended: it reached a terminal `downloads.onChanged`
  * state, or the optional wait limit ran out first.
  */
-type DownloadOutcome = 'complete' | 'interrupted' | 'timeout'
+type DownloadOutcome = "complete" | "interrupted" | "timeout";
 
 /**
  * Resolves once `downloadId` reaches a terminal `browser.downloads.onChanged`
@@ -243,30 +236,27 @@ type DownloadOutcome = 'complete' | 'interrupted' | 'timeout'
  * @param timeoutMs How long to wait, or `null` to wait for as long as it takes.
  * @returns The download's outcome.
  */
-function watchDownload(
-  downloadId: number,
-  timeoutMs: number | null,
-): Promise<DownloadOutcome> {
+function watchDownload(downloadId: number, timeoutMs: number | null): Promise<DownloadOutcome> {
   return new Promise((resolve) => {
-    let timeoutHandle: ReturnType<typeof setTimeout> | undefined
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     const finish = (outcome: DownloadOutcome): void => {
-      clearTimeout(timeoutHandle)
-      browser.downloads.onChanged.removeListener(listener)
-      resolve(outcome)
-    }
+      clearTimeout(timeoutHandle);
+      browser.downloads.onChanged.removeListener(listener);
+      resolve(outcome);
+    };
     const settle = (state: string | undefined): void => {
-      if (state === 'complete' || state === 'interrupted') finish(state)
-    }
+      if (state === "complete" || state === "interrupted") finish(state);
+    };
     const listener = (delta: Browser.downloads.DownloadDelta): void => {
-      if (delta.id !== downloadId) return
-      settle(delta.state?.current)
-    }
+      if (delta.id !== downloadId) return;
+      settle(delta.state?.current);
+    };
     if (timeoutMs !== null) {
-      timeoutHandle = setTimeout(() => finish('timeout'), timeoutMs)
+      timeoutHandle = setTimeout(() => finish("timeout"), timeoutMs);
     }
-    browser.downloads.onChanged.addListener(listener)
-    void readDownloadState(downloadId).then(settle)
-  })
+    browser.downloads.onChanged.addListener(listener);
+    void readDownloadState(downloadId).then(settle);
+  });
 }
 
 /**
@@ -275,18 +265,16 @@ function watchDownload(
  * @param url The blob URL to revoke, if one was created.
  * @returns Resolves once the cleanup has run.
  */
-async function releaseDownloadResources(
-  url: string | undefined,
-): Promise<void> {
+async function releaseDownloadResources(url: string | undefined): Promise<void> {
   if (url !== undefined) {
     try {
-      await revokeBlobUrl(url)
+      await revokeBlobUrl(url);
     } catch (error) {
-      console.error('Failed to revoke the export blob URL.', error)
+      console.error("Failed to revoke the export blob URL.", error);
     }
   }
-  offscreenState.pendingDownloads -= 1
-  await closeOffscreenDocumentIfIdle()
+  offscreenState.pendingDownloads -= 1;
+  await closeOffscreenDocumentIfIdle();
 }
 
 /**
@@ -316,35 +304,33 @@ export async function downloadViaOffscreenDocument(
   filename: string,
   onDownloadStarted?: (downloadId: number) => Promise<void> | void,
 ): Promise<number> {
-  offscreenState.pendingDownloads += 1
-  let url: string | undefined
-  let isReleaseDeferred = false
+  offscreenState.pendingDownloads += 1;
+  let url: string | undefined;
+  let isReleaseDeferred = false;
   try {
-    await ensureOffscreenDocument()
-    url = await requestBlobUrl(content, mimeType)
+    await ensureOffscreenDocument();
+    url = await requestBlobUrl(content, mimeType);
 
     const downloadId = await browser.downloads.download({
       url,
       filename,
       saveAs: false,
-      conflictAction: 'uniquify',
-    })
-    await onDownloadStarted?.(downloadId)
+      conflictAction: "uniquify",
+    });
+    await onDownloadStarted?.(downloadId);
 
-    const outcome = await watchDownload(downloadId, DOWNLOAD_SETTLE_TIMEOUT_MS)
-    if (outcome === 'interrupted') {
-      throw new Error(i18n.t('downloadInterrupted', [String(downloadId)]))
+    const outcome = await watchDownload(downloadId, DOWNLOAD_SETTLE_TIMEOUT_MS);
+    if (outcome === "interrupted") {
+      throw new Error(i18n.t("downloadInterrupted", [String(downloadId)]));
     }
-    if (outcome === 'timeout') {
-      isReleaseDeferred = true
-      const heldUrl = url
-      void watchDownload(downloadId, null).then(() =>
-        releaseDownloadResources(heldUrl),
-      )
-      throw new Error(i18n.t('downloadTimedOut', [String(downloadId)]))
+    if (outcome === "timeout") {
+      isReleaseDeferred = true;
+      const heldUrl = url;
+      void watchDownload(downloadId, null).then(() => releaseDownloadResources(heldUrl));
+      throw new Error(i18n.t("downloadTimedOut", [String(downloadId)]));
     }
-    return downloadId
+    return downloadId;
   } finally {
-    if (!isReleaseDeferred) await releaseDownloadResources(url)
+    if (!isReleaseDeferred) await releaseDownloadResources(url);
   }
 }

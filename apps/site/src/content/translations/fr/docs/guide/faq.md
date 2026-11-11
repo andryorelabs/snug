@@ -1,10 +1,9 @@
 ---
 title: FAQ
 sourceHash: 304e0622b68c13d7
-description:
-  'Réponses aux questions courantes sur Snug : plusieurs fichiers,
-  autorisations, formats, navigateurs, sécurité et dossiers de sauvegarde.'
-seoTitle: 'FAQ Snug : formats, navigateurs et sauvegardes'
+description: "Réponses aux questions courantes sur Snug : plusieurs fichiers,
+  autorisations, formats, navigateurs, sécurité et dossiers de sauvegarde."
+seoTitle: "FAQ Snug : formats, navigateurs et sauvegardes"
 ---
 
 Des réponses courtes aux questions les plus fréquentes sur Snug.

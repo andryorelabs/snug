@@ -1,36 +1,28 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { countBookmarks, countImportableBookmarks } from './count-bookmarks'
-import { ImportWriter, withImportRollback } from './import-control'
-import { withImportLock } from './import-lock'
-import { writeCsvTree } from './importers/import-csv'
-import { toImportError, writeParsedTree } from './importers/import-json'
-import { parseImportFile } from './importers/parse-import'
-import {
-  loadLiveRootTitles,
-  resolveImportRoots,
-} from './importers/resolve-roots'
-import { runImport } from './run-import'
-import { collectExistingUrls, dropDuplicateBookmarks } from './skip-duplicates'
-import type {
-  ImportMode,
-  ImportOptions,
-  ImportResult,
-  ParsedBookmark,
-} from './types'
+import { countBookmarks, countImportableBookmarks } from "./count-bookmarks";
+import { ImportWriter, withImportRollback } from "./import-control";
+import { withImportLock } from "./import-lock";
+import { writeCsvTree } from "./importers/import-csv";
+import { toImportError, writeParsedTree } from "./importers/import-json";
+import { parseImportFile } from "./importers/parse-import";
+import { loadLiveRootTitles, resolveImportRoots } from "./importers/resolve-roots";
+import { runImport } from "./run-import";
+import { collectExistingUrls, dropDuplicateBookmarks } from "./skip-duplicates";
+import type { ImportMode, ImportOptions, ImportResult, ParsedBookmark } from "./types";
 
 /**
  * One file of an Import batch.
  */
 export interface ImportBatchFile {
-  text: string
-  mimeType: string
-  fileName: string
+  text: string;
+  mimeType: string;
+  fileName: string;
   /**
    * The file's tree after selection (the import plan's output shape). When
    * set it is written instead of the tree parsed from `text`.
    */
-  prunedTree?: ParsedBookmark[]
+  prunedTree?: ParsedBookmark[];
 }
 
 /**
@@ -39,16 +31,16 @@ export interface ImportBatchFile {
  */
 export class ImportBatchReplaceError extends Error {
   constructor() {
-    super(i18n.t('importBatchReplaceNeedsOneFile'))
-    this.name = 'ImportBatchReplaceError'
+    super(i18n.t("importBatchReplaceNeedsOneFile"));
+    this.name = "ImportBatchReplaceError";
   }
 }
 
 interface PreparedFile {
-  tree: ParsedBookmark[]
-  isCsv: boolean
-  mode: ImportMode
-  folderTitle: string | undefined
+  tree: ParsedBookmark[];
+  isCsv: boolean;
+  mode: ImportMode;
+  folderTitle: string | undefined;
 }
 
 /**
@@ -58,8 +50,8 @@ interface PreparedFile {
  *   would leave nothing.
  */
 export function stripFileExtension(fileName: string): string {
-  const stripped = fileName.replace(/\.[^./\\]*$/, '').trim()
-  return stripped === '' ? fileName : stripped
+  const stripped = fileName.replace(/\.[^./\\]*$/, "").trim();
+  return stripped === "" ? fileName : stripped;
 }
 
 /**
@@ -87,19 +79,13 @@ export function runImportBatch(
   mode: ImportMode,
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  if (mode !== 'restore-replace') {
-    return withImportLock(() => importBatchUnlocked(files, mode, options))
+  if (mode !== "restore-replace") {
+    return withImportLock(() => importBatchUnlocked(files, mode, options));
   }
-  const [onlyFile] = files
+  const [onlyFile] = files;
   return onlyFile && files.length === 1
-    ? runImport(
-        onlyFile.text,
-        onlyFile.mimeType,
-        mode,
-        onlyFile.fileName,
-        options,
-      )
-    : Promise.reject(new ImportBatchReplaceError())
+    ? runImport(onlyFile.text, onlyFile.mimeType, mode, onlyFile.fileName, options)
+    : Promise.reject(new ImportBatchReplaceError());
 }
 
 async function importBatchUnlocked(
@@ -107,67 +93,57 @@ async function importBatchUnlocked(
   mode: ImportMode,
   options: ImportOptions,
 ): Promise<ImportResult> {
-  const liveRootTitles = await loadLiveRootTitles()
-  const liveTree = await browser.bookmarks.getTree()
-  const shouldSkipDuplicates = options.skipDuplicates ?? false
-  const seenUrls = collectExistingUrls(liveTree)
-  const result: ImportResult = { skippedInvalidUrl: 0, skippedDuplicates: 0 }
-  const prepared: PreparedFile[] = []
+  const liveRootTitles = await loadLiveRootTitles();
+  const liveTree = await browser.bookmarks.getTree();
+  const shouldSkipDuplicates = options.skipDuplicates ?? false;
+  const seenUrls = collectExistingUrls(liveTree);
+  const result: ImportResult = { skippedInvalidUrl: 0, skippedDuplicates: 0 };
+  const prepared: PreparedFile[] = [];
 
   for (const file of files) {
-    const parsed = parseImportFile(
-      file.text,
-      file.mimeType,
-      file.fileName,
-      liveRootTitles,
-    )
-    const isCsv = parsed.format === 'csv'
-    const isFolderOnly =
-      isCsv || (parsed.format === 'xbel' && !parsed.hasLocationData)
-    const fileMode = isFolderOnly ? 'folder' : mode
-    let tree = file.prunedTree ?? parsed.tree
-    if (shouldSkipDuplicates && fileMode !== 'restore-replace') {
-      const dropped = dropDuplicateBookmarks(tree, seenUrls)
-      tree = dropped.nodes
-      result.skippedDuplicates += dropped.skippedDuplicates
-      for (const url of collectExistingUrls(tree)) seenUrls.add(url)
+    const parsed = parseImportFile(file.text, file.mimeType, file.fileName, liveRootTitles);
+    const isCsv = parsed.format === "csv";
+    const isFolderOnly = isCsv || (parsed.format === "xbel" && !parsed.hasLocationData);
+    const fileMode = isFolderOnly ? "folder" : mode;
+    let tree = file.prunedTree ?? parsed.tree;
+    if (shouldSkipDuplicates && fileMode !== "restore-replace") {
+      const dropped = dropDuplicateBookmarks(tree, seenUrls);
+      tree = dropped.nodes;
+      result.skippedDuplicates += dropped.skippedDuplicates;
+      for (const url of collectExistingUrls(tree)) seenUrls.add(url);
     }
-    result.skippedInvalidUrl += parsed.skippedInvalidUrl
-    if (files.length > 1 && countBookmarks(tree) === 0) continue
+    result.skippedInvalidUrl += parsed.skippedInvalidUrl;
+    if (files.length > 1 && countBookmarks(tree) === 0) continue;
     prepared.push({
       tree,
       isCsv,
       mode: fileMode,
       folderTitle:
-        !isCsv && fileMode === 'folder' && files.length > 1
+        !isCsv && fileMode === "folder" && files.length > 1
           ? stripFileExtension(file.fileName)
           : undefined,
-    })
+    });
   }
 
-  const isTrusted = options.trusted ?? false
-  let total = 0
+  const isTrusted = options.trusted ?? false;
+  let total = 0;
   for (const file of prepared) {
     total +=
-      isTrusted || file.isCsv
-        ? countBookmarks(file.tree)
-        : countImportableBookmarks(file.tree)
+      isTrusted || file.isCsv ? countBookmarks(file.tree) : countImportableBookmarks(file.tree);
   }
-  const writer = new ImportWriter(options, total, result.skippedDuplicates)
-  const root = liveTree[0]
-  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(
-    root?.children ?? [],
-  )
+  const writer = new ImportWriter(options, total, result.skippedDuplicates);
+  const root = liveTree[0];
+  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(root?.children ?? []);
 
   try {
     await withImportRollback(writer, async () => {
       for (const file of prepared) {
         if (file.isCsv) {
-          await writeCsvTree(file.tree, writer)
-          continue
+          await writeCsvTree(file.tree, writer);
+          continue;
         }
         if (!bookmarksBarId || !otherBookmarksId) {
-          throw new Error('PROCESS_ERROR')
+          throw new Error("PROCESS_ERROR");
         }
         await writeParsedTree({
           parsed: file.tree,
@@ -182,12 +158,12 @@ async function importBatchUnlocked(
           ...(file.folderTitle !== undefined && {
             folderTitle: file.folderTitle,
           }),
-        })
+        });
       }
-    })
+    });
   } catch (error) {
-    throw toImportError(error)
+    throw toImportError(error);
   }
-  writer.finish()
-  return result
+  writer.finish();
+  return result;
 }

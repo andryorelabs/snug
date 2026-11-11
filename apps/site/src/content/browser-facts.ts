@@ -3,78 +3,68 @@
  * checked help pages say nothing either way. It is never a claim that the
  * capability is absent.
  */
-export type Listed<T> = T | 'not-listed'
+export type Listed<T> = T | "not-listed";
 
 /**
  * A value and the official help page it was read from.
  */
 export interface SourcedFact<T> {
-  value: T
-  sourceUrl: string
+  value: T;
+  sourceUrl: string;
 }
 
-export type BrowserSlug =
-  | 'chrome'
-  | 'edge'
-  | 'brave'
-  | 'opera'
-  | 'firefox'
-  | 'safari'
+export type BrowserSlug = "chrome" | "edge" | "brave" | "opera" | "firefox" | "safari";
 
 /**
  * Where a browser puts imported bookmarks. The wording lives in the shared
  * How-to copy, so each locale describes it in its own language.
  */
-type ImportPlacement =
-  | 'importedFolderOrBar'
-  | 'favoritesBarFolder'
-  | 'sidebarDatedFolder'
+type ImportPlacement = "importedFolderOrBar" | "favoritesBarFolder" | "sidebarDatedFolder";
 
-type ProfileOs = 'windows' | 'macos' | 'linux'
+type ProfileOs = "windows" | "macos" | "linux";
 
 /**
  * One browser, as read from its official help pages on `verifiedOn`.
  * `versionChecked` is `'not-listed'` when the pages do not state a version.
  */
 export interface BrowserFacts {
-  name: string
-  verifiedOn: string
-  versionChecked: Listed<string>
-  exportPath: Listed<SourcedFact<readonly string[]>>
-  bookmarkManagerPath: Listed<SourcedFact<readonly string[]>>
-  importPath: Listed<SourcedFact<readonly string[]>>
-  importSources: Listed<SourcedFact<readonly string[]>>
-  exportFormats: Listed<SourcedFact<readonly string[]>>
-  exportFileName: Listed<SourcedFact<string>>
-  importPlacement: Listed<SourcedFact<ImportPlacement>>
-  profileFolder: Record<ProfileOs, Listed<SourcedFact<string>>>
-  profileBookmarksFile: Listed<SourcedFact<string>>
-  htmlExportKeeps: Listed<SourcedFact<readonly string[]>>
-  htmlExportDrops: Listed<SourcedFact<readonly string[]>>
+  name: string;
+  verifiedOn: string;
+  versionChecked: Listed<string>;
+  exportPath: Listed<SourcedFact<readonly string[]>>;
+  bookmarkManagerPath: Listed<SourcedFact<readonly string[]>>;
+  importPath: Listed<SourcedFact<readonly string[]>>;
+  importSources: Listed<SourcedFact<readonly string[]>>;
+  exportFormats: Listed<SourcedFact<readonly string[]>>;
+  exportFileName: Listed<SourcedFact<string>>;
+  importPlacement: Listed<SourcedFact<ImportPlacement>>;
+  profileFolder: Record<ProfileOs, Listed<SourcedFact<string>>>;
+  profileBookmarksFile: Listed<SourcedFact<string>>;
+  htmlExportKeeps: Listed<SourcedFact<readonly string[]>>;
+  htmlExportDrops: Listed<SourcedFact<readonly string[]>>;
 }
 
-const NOT_LISTED_PROFILE: BrowserFacts['profileFolder'] = {
-  windows: 'not-listed',
-  macos: 'not-listed',
-  linux: 'not-listed',
-}
+const NOT_LISTED_PROFILE: BrowserFacts["profileFolder"] = {
+  windows: "not-listed",
+  macos: "not-listed",
+  linux: "not-listed",
+};
 
-const CHROME_BOOKMARKS_HELP = 'https://support.google.com/chrome/answer/96816'
+const CHROME_BOOKMARKS_HELP = "https://support.google.com/chrome/answer/96816";
 const CHROMIUM_EXPORT_FILE_NAME =
-  'https://chromium.googlesource.com/chromium/src/+/main/chrome/app/generated_resources.grd'
+  "https://chromium.googlesource.com/chromium/src/+/main/chrome/app/generated_resources.grd";
 const CHROMIUM_BOOKMARKS_FILE_NAME =
-  'https://chromium.googlesource.com/chromium/src/+/main/components/bookmarks/common/bookmark_constants.cc'
+  "https://chromium.googlesource.com/chromium/src/+/main/components/bookmarks/common/bookmark_constants.cc";
 const CHROMIUM_USER_DATA_DIR =
-  'https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md'
+  "https://chromium.googlesource.com/chromium/src/+/main/docs/user_data_dir.md";
 const FIREFOX_EXPORT_HELP =
-  'https://support.mozilla.org/en-US/kb/export-firefox-bookmarks-to-backup-or-transfer'
+  "https://support.mozilla.org/en-US/kb/export-firefox-bookmarks-to-backup-or-transfer";
 const EDGE_IMPORT_HELP =
-  'https://support.microsoft.com/en-us/topic/eb26f747-ab82-c8fb-ad3b-c227f99ba8a4'
+  "https://support.microsoft.com/en-us/topic/eb26f747-ab82-c8fb-ad3b-c227f99ba8a4";
 const BRAVE_IMPORT_HELP =
-  'https://support.brave.app/hc/en-us/articles/360019782291-How-do-I-import-or-export-browsing-data'
-const OPERA_FEATURES_HELP = 'https://help.opera.com/en/latest/features/'
-const SAFARI_BOOKMARKS_HELP =
-  'https://help.apple.com/safari/mac/9.0/en.lproj/ibrw1015.html'
+  "https://support.brave.app/hc/en-us/articles/360019782291-How-do-I-import-or-export-browsing-data";
+const OPERA_FEATURES_HELP = "https://help.opera.com/en/latest/features/";
+const SAFARI_BOOKMARKS_HELP = "https://help.apple.com/safari/mac/9.0/en.lproj/ibrw1015.html";
 
 /**
  * Single source of browser facts for the How-to pages. Copy never states a
@@ -84,41 +74,35 @@ const SAFARI_BOOKMARKS_HELP =
  */
 export const BROWSER_FACTS: Record<BrowserSlug, BrowserFacts> = {
   chrome: {
-    name: 'Chrome',
-    verifiedOn: '2026-10-11',
-    versionChecked: 'not-listed',
+    name: "Chrome",
+    verifiedOn: "2026-10-11",
+    versionChecked: "not-listed",
     exportPath: {
-      value: [
-        'More',
-        'Bookmarks and lists',
-        'Bookmark Manager',
-        'More',
-        'Export Bookmarks',
-      ],
+      value: ["More", "Bookmarks and lists", "Bookmark Manager", "More", "Export Bookmarks"],
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     bookmarkManagerPath: {
-      value: ['More', 'Bookmarks and lists', 'Bookmark manager'],
+      value: ["More", "Bookmarks and lists", "Bookmark manager"],
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     importPath: {
-      value: ['More', 'Bookmarks and lists', 'Import bookmarks and settings'],
+      value: ["More", "Bookmarks and lists", "Import bookmarks and settings"],
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     importSources: {
-      value: ['Bookmarks HTML file'],
+      value: ["Bookmarks HTML file"],
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     exportFormats: {
-      value: ['HTML'],
+      value: ["HTML"],
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     exportFileName: {
-      value: 'bookmarks_<date>.html',
+      value: "bookmarks_<date>.html",
       sourceUrl: CHROMIUM_EXPORT_FILE_NAME,
     },
     importPlacement: {
-      value: 'importedFolderOrBar',
+      value: "importedFolderOrBar",
       sourceUrl: CHROME_BOOKMARKS_HELP,
     },
     profileFolder: {
@@ -127,156 +111,146 @@ export const BROWSER_FACTS: Record<BrowserSlug, BrowserFacts> = {
         sourceUrl: CHROMIUM_USER_DATA_DIR,
       },
       macos: {
-        value: '~/Library/Application Support/Google/Chrome/Default',
+        value: "~/Library/Application Support/Google/Chrome/Default",
         sourceUrl: CHROMIUM_USER_DATA_DIR,
       },
       linux: {
-        value: '~/.config/google-chrome/Default',
+        value: "~/.config/google-chrome/Default",
         sourceUrl: CHROMIUM_USER_DATA_DIR,
       },
     },
     profileBookmarksFile: {
-      value: 'Bookmarks',
+      value: "Bookmarks",
       sourceUrl: CHROMIUM_BOOKMARKS_FILE_NAME,
     },
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
   edge: {
-    name: 'Edge',
-    verifiedOn: '2026-10-11',
-    versionChecked: 'not-listed',
-    exportPath: 'not-listed',
-    bookmarkManagerPath: 'not-listed',
+    name: "Edge",
+    verifiedOn: "2026-10-11",
+    versionChecked: "not-listed",
+    exportPath: "not-listed",
+    bookmarkManagerPath: "not-listed",
     importPath: {
-      value: [
-        'Settings and more',
-        'Settings',
-        'Profiles',
-        'Import browser data',
-      ],
+      value: ["Settings and more", "Settings", "Profiles", "Import browser data"],
       sourceUrl: EDGE_IMPORT_HELP,
     },
     importSources: {
-      value: ['Google Chrome', 'IE11', 'Favorites or bookmarks HTML file'],
+      value: ["Google Chrome", "IE11", "Favorites or bookmarks HTML file"],
       sourceUrl: EDGE_IMPORT_HELP,
     },
-    exportFormats: 'not-listed',
-    exportFileName: 'not-listed',
+    exportFormats: "not-listed",
+    exportFileName: "not-listed",
     importPlacement: {
-      value: 'favoritesBarFolder',
+      value: "favoritesBarFolder",
       sourceUrl: EDGE_IMPORT_HELP,
     },
     profileFolder: NOT_LISTED_PROFILE,
-    profileBookmarksFile: 'not-listed',
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    profileBookmarksFile: "not-listed",
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
   brave: {
-    name: 'Brave',
-    verifiedOn: '2026-10-11',
-    versionChecked: 'not-listed',
-    exportPath: 'not-listed',
-    bookmarkManagerPath: 'not-listed',
+    name: "Brave",
+    verifiedOn: "2026-10-11",
+    versionChecked: "not-listed",
+    exportPath: "not-listed",
+    bookmarkManagerPath: "not-listed",
     importPath: {
-      value: ['Main menu', 'Bookmarks', 'Import Bookmarks and Settings'],
+      value: ["Main menu", "Bookmarks", "Import Bookmarks and Settings"],
       sourceUrl: BRAVE_IMPORT_HELP,
     },
     importSources: {
-      value: ['Browsers detected on this computer', 'Bookmarks HTML file'],
+      value: ["Browsers detected on this computer", "Bookmarks HTML file"],
       sourceUrl: BRAVE_IMPORT_HELP,
     },
-    exportFormats: 'not-listed',
-    exportFileName: 'not-listed',
-    importPlacement: 'not-listed',
+    exportFormats: "not-listed",
+    exportFileName: "not-listed",
+    importPlacement: "not-listed",
     profileFolder: NOT_LISTED_PROFILE,
-    profileBookmarksFile: 'not-listed',
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    profileBookmarksFile: "not-listed",
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
   opera: {
-    name: 'Opera',
-    verifiedOn: '2026-10-11',
-    versionChecked: 'not-listed',
+    name: "Opera",
+    verifiedOn: "2026-10-11",
+    versionChecked: "not-listed",
     exportPath: {
-      value: ['Bookmarks', 'import/export button', 'export'],
+      value: ["Bookmarks", "import/export button", "export"],
       sourceUrl: OPERA_FEATURES_HELP,
     },
-    bookmarkManagerPath: 'not-listed',
+    bookmarkManagerPath: "not-listed",
     importPath: {
-      value: ['Bookmarks', 'import/export button', 'import'],
+      value: ["Bookmarks", "import/export button", "import"],
       sourceUrl: OPERA_FEATURES_HELP,
     },
-    importSources: 'not-listed',
-    exportFormats: 'not-listed',
-    exportFileName: 'not-listed',
-    importPlacement: 'not-listed',
+    importSources: "not-listed",
+    exportFormats: "not-listed",
+    exportFileName: "not-listed",
+    importPlacement: "not-listed",
     profileFolder: NOT_LISTED_PROFILE,
-    profileBookmarksFile: 'not-listed',
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    profileBookmarksFile: "not-listed",
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
   firefox: {
-    name: 'Firefox',
-    verifiedOn: '2026-10-11',
-    versionChecked: 'not-listed',
+    name: "Firefox",
+    verifiedOn: "2026-10-11",
+    versionChecked: "not-listed",
     exportPath: {
-      value: [
-        'Bookmarks',
-        'Manage bookmarks',
-        'Import and Backup',
-        'Export Bookmarks to HTML',
-      ],
+      value: ["Bookmarks", "Manage bookmarks", "Import and Backup", "Export Bookmarks to HTML"],
       sourceUrl: FIREFOX_EXPORT_HELP,
     },
-    bookmarkManagerPath: 'not-listed',
-    importPath: 'not-listed',
-    importSources: 'not-listed',
-    exportFormats: 'not-listed',
-    exportFileName: { value: 'bookmarks.html', sourceUrl: FIREFOX_EXPORT_HELP },
-    importPlacement: 'not-listed',
+    bookmarkManagerPath: "not-listed",
+    importPath: "not-listed",
+    importSources: "not-listed",
+    exportFormats: "not-listed",
+    exportFileName: { value: "bookmarks.html", sourceUrl: FIREFOX_EXPORT_HELP },
+    importPlacement: "not-listed",
     profileFolder: NOT_LISTED_PROFILE,
-    profileBookmarksFile: 'not-listed',
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    profileBookmarksFile: "not-listed",
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
   safari: {
-    name: 'Safari',
-    verifiedOn: '2026-10-11',
-    versionChecked: '9.0',
+    name: "Safari",
+    verifiedOn: "2026-10-11",
+    versionChecked: "9.0",
     exportPath: {
-      value: ['File', 'Export Bookmarks'],
+      value: ["File", "Export Bookmarks"],
       sourceUrl: SAFARI_BOOKMARKS_HELP,
     },
-    bookmarkManagerPath: 'not-listed',
+    bookmarkManagerPath: "not-listed",
     importPath: {
-      value: ['File', 'Import From', 'Bookmarks HTML File'],
+      value: ["File", "Import From", "Bookmarks HTML File"],
       sourceUrl: SAFARI_BOOKMARKS_HELP,
     },
     importSources: {
-      value: ['Google Chrome', 'Firefox', 'Bookmarks HTML File'],
+      value: ["Google Chrome", "Firefox", "Bookmarks HTML File"],
       sourceUrl: SAFARI_BOOKMARKS_HELP,
     },
-    exportFormats: 'not-listed',
+    exportFormats: "not-listed",
     exportFileName: {
-      value: 'Safari Bookmarks.html',
+      value: "Safari Bookmarks.html",
       sourceUrl: SAFARI_BOOKMARKS_HELP,
     },
     importPlacement: {
-      value: 'sidebarDatedFolder',
+      value: "sidebarDatedFolder",
       sourceUrl: SAFARI_BOOKMARKS_HELP,
     },
     profileFolder: NOT_LISTED_PROFILE,
-    profileBookmarksFile: 'not-listed',
-    htmlExportKeeps: 'not-listed',
-    htmlExportDrops: 'not-listed',
+    profileBookmarksFile: "not-listed",
+    htmlExportKeeps: "not-listed",
+    htmlExportDrops: "not-listed",
   },
-}
+};
 
 /**
  * Every browser the facts module covers, in a stable order.
  */
-export const BROWSER_SLUGS = Object.keys(BROWSER_FACTS) as BrowserSlug[]
+export const BROWSER_SLUGS = Object.keys(BROWSER_FACTS) as BrowserSlug[];
 
 /**
  * Every sourced fact of one browser, flattened for validation and for the
@@ -284,26 +258,22 @@ export const BROWSER_SLUGS = Object.keys(BROWSER_FACTS) as BrowserSlug[]
  * @param facts - One browser's facts.
  * @returns Each sourced fact's label and value.
  */
-export function sourcedFacts(
-  facts: BrowserFacts,
-): { label: string; fact: SourcedFact<unknown> }[] {
+export function sourcedFacts(facts: BrowserFacts): { label: string; fact: SourcedFact<unknown> }[] {
   const entries: [string, Listed<SourcedFact<unknown>>][] = [
-    ['exportPath', facts.exportPath],
-    ['bookmarkManagerPath', facts.bookmarkManagerPath],
-    ['importPath', facts.importPath],
-    ['importSources', facts.importSources],
-    ['exportFormats', facts.exportFormats],
-    ['exportFileName', facts.exportFileName],
-    ['importPlacement', facts.importPlacement],
-    ['htmlExportKeeps', facts.htmlExportKeeps],
-    ['htmlExportDrops', facts.htmlExportDrops],
-    ['profileBookmarksFile', facts.profileBookmarksFile],
-    ...(Object.entries(facts.profileFolder).map(([os, fact]) => [
-      `profileFolder.${os}`,
-      fact,
-    ]) as [string, Listed<SourcedFact<unknown>>][]),
-  ]
-  return entries.flatMap(([label, fact]) =>
-    fact === 'not-listed' ? [] : { label, fact },
-  )
+    ["exportPath", facts.exportPath],
+    ["bookmarkManagerPath", facts.bookmarkManagerPath],
+    ["importPath", facts.importPath],
+    ["importSources", facts.importSources],
+    ["exportFormats", facts.exportFormats],
+    ["exportFileName", facts.exportFileName],
+    ["importPlacement", facts.importPlacement],
+    ["htmlExportKeeps", facts.htmlExportKeeps],
+    ["htmlExportDrops", facts.htmlExportDrops],
+    ["profileBookmarksFile", facts.profileBookmarksFile],
+    ...(Object.entries(facts.profileFolder).map(([os, fact]) => [`profileFolder.${os}`, fact]) as [
+      string,
+      Listed<SourcedFact<unknown>>,
+    ][]),
+  ];
+  return entries.flatMap(([label, fact]) => (fact === "not-listed" ? [] : { label, fact }));
 }

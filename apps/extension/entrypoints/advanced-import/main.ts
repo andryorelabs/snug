@@ -1,4 +1,4 @@
-import { APP_ROUTES } from '@/lib/app-url'
-import { redirectToApp } from '@/lib/legacy-redirect'
+import { APP_ROUTES } from "@/lib/app-url";
+import { redirectToApp } from "@/lib/legacy-redirect";
 
-redirectToApp(APP_ROUTES.import)
+redirectToApp(APP_ROUTES.import);

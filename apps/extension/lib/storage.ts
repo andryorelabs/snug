@@ -1,12 +1,12 @@
-import { storage } from '#imports'
+import { storage } from "#imports";
 
-import type { ExportFormat } from '@/lib/export-formats'
+import type { ExportFormat } from "@/lib/export-formats";
 import type {
   AutoExportConfig,
   AutoExportLastRun,
   ImportMode,
   ReviewPromptState,
-} from '@/lib/types'
+} from "@/lib/types";
 
 /**
  * All persisted extension settings, defined with `storage.defineItem` so
@@ -15,123 +15,113 @@ import type {
  * specifically, so any change to auto-export settings re-syncs the
  * `auto-export` alarm without waiting for the next `onStartup`.
  */
-export const themeStore = storage.defineItem<'dark' | 'light' | 'system'>(
-  'local:theme',
-  { fallback: 'system' },
-)
+export const themeStore = storage.defineItem<"dark" | "light" | "system">("local:theme", {
+  fallback: "system",
+});
 
-export const showBookmarkIconStore = storage.defineItem<boolean>(
-  'local:showBookmarkIcon',
-  { fallback: true },
-)
+export const showBookmarkIconStore = storage.defineItem<boolean>("local:showBookmarkIcon", {
+  fallback: true,
+});
 
-export const autoExpandFoldersStore = storage.defineItem<boolean>(
-  'local:autoExpandFolders',
-  { fallback: false },
-)
+export const autoExpandFoldersStore = storage.defineItem<boolean>("local:autoExpandFolders", {
+  fallback: false,
+});
 
-export const includeIconDataStore = storage.defineItem<boolean>(
-  'local:includeIconData',
-  { fallback: true },
-)
+export const includeIconDataStore = storage.defineItem<boolean>("local:includeIconData", {
+  fallback: true,
+});
 
-export const includeDateAddedStore = storage.defineItem<boolean>(
-  'local:includeDateAdded',
-  { fallback: true },
-)
+export const includeDateAddedStore = storage.defineItem<boolean>("local:includeDateAdded", {
+  fallback: true,
+});
 
-export const includeDateLastUsedStore = storage.defineItem<boolean>(
-  'local:includeDateLastUsed',
-  { fallback: false },
-)
+export const includeDateLastUsedStore = storage.defineItem<boolean>("local:includeDateLastUsed", {
+  fallback: false,
+});
 
 export const includeDateGroupModifiedStore = storage.defineItem<boolean>(
-  'local:includeDateGroupModified',
+  "local:includeDateGroupModified",
   { fallback: true },
-)
+);
 
-export const hideOtherBookmarksStore = storage.defineItem<boolean>(
-  'local:hideOtherBookmarks',
-  { fallback: true },
-)
+export const hideOtherBookmarksStore = storage.defineItem<boolean>("local:hideOtherBookmarks", {
+  fallback: true,
+});
 
-export const hideParentFolderStore = storage.defineItem<boolean>(
-  'local:hideParentFolder',
-  { fallback: false },
-)
+export const hideParentFolderStore = storage.defineItem<boolean>("local:hideParentFolder", {
+  fallback: false,
+});
 
 export const exportFilenameTemplateStore = storage.defineItem<string>(
-  'local:exportFilenameTemplate',
-  { fallback: 'Bookmarks_%yyyy-%mm-%dd_%hh-%min-%sec' },
-)
+  "local:exportFilenameTemplate",
+  { fallback: "Bookmarks_%yyyy-%mm-%dd_%hh-%min-%sec" },
+);
 
 /**
  * The format last chosen in the popup's Export section, so a one-click
  * "Export all" repeats it next time.
  */
-export const lastExportFormatStore = storage.defineItem<ExportFormat>(
-  'local:lastExportFormat',
-  { fallback: 'html' },
-)
+export const lastExportFormatStore = storage.defineItem<ExportFormat>("local:lastExportFormat", {
+  fallback: "html",
+});
 
 const DEFAULT_AUTO_EXPORT_CONFIG: AutoExportConfig = {
   enabled: false,
-  interval: '1d',
-  preferredTime: '00:00',
+  interval: "1d",
+  preferredTime: "00:00",
   dayOfWeek: 1,
-  path: 'bookmarks-backup/',
-  formats: ['html'],
+  path: "bookmarks-backup/",
+  formats: ["html"],
   keepLast: 10,
-  destination: 'downloads',
+  destination: "downloads",
   folderName: null,
-}
+};
 
 export const autoExportConfigStore = storage.defineItem<AutoExportConfig>(
-  'local:autoExportConfig',
+  "local:autoExportConfig",
   {
     fallback: DEFAULT_AUTO_EXPORT_CONFIG,
     version: 4,
     migrations: {
-      2: (stored: Omit<AutoExportConfig, 'dayOfWeek'>): AutoExportConfig => ({
+      2: (stored: Omit<AutoExportConfig, "dayOfWeek">): AutoExportConfig => ({
         ...stored,
         dayOfWeek: DEFAULT_AUTO_EXPORT_CONFIG.dayOfWeek,
       }),
-      3: (stored: Omit<AutoExportConfig, 'keepLast'>): AutoExportConfig => ({
+      3: (stored: Omit<AutoExportConfig, "keepLast">): AutoExportConfig => ({
         ...stored,
         keepLast: DEFAULT_AUTO_EXPORT_CONFIG.keepLast,
       }),
-      4: (
-        stored: Omit<AutoExportConfig, 'destination' | 'folderName'>,
-      ): AutoExportConfig => ({
+      4: (stored: Omit<AutoExportConfig, "destination" | "folderName">): AutoExportConfig => ({
         ...stored,
         destination: DEFAULT_AUTO_EXPORT_CONFIG.destination,
         folderName: DEFAULT_AUTO_EXPORT_CONFIG.folderName,
       }),
     },
   },
-)
+);
 
 /**
  * Whether a failed Auto-export run shows the Failure notification. Kept apart
  * from the config so existing users get the default (on) without a migration.
  */
 export const autoExportNotifyOnFailureStore = storage.defineItem<boolean>(
-  'local:autoExportNotifyOnFailure',
+  "local:autoExportNotifyOnFailure",
   { fallback: true },
-)
+);
 
-export const autoExportLastRunStore = storage.defineItem<
-  AutoExportLastRun | number | null
->('local:autoExportLastRun', { fallback: null })
+export const autoExportLastRunStore = storage.defineItem<AutoExportLastRun | number | null>(
+  "local:autoExportLastRun",
+  { fallback: null },
+);
 
 /**
  * The Downloads files one auto-export run saved: every id of a run is grouped
  * so retention counts runs, not files.
  */
 export interface AutoExportDownloadsRun {
-  destination: 'downloads'
-  runAt: number
-  ids: number[]
+  destination: "downloads";
+  runAt: number;
+  ids: number[];
 }
 
 /**
@@ -141,16 +131,16 @@ export interface AutoExportDownloadsRun {
  * the folder that is current now.
  */
 export interface AutoExportFolderRun {
-  destination: 'folder'
-  runAt: number
-  folderId: string
-  paths: string[]
+  destination: "folder";
+  runAt: number;
+  folderId: string;
+  paths: string[];
 }
 
 /**
  * One auto-export run in the retention history, tagged by Export destination.
  */
-export type AutoExportRun = AutoExportDownloadsRun | AutoExportFolderRun
+export type AutoExportRun = AutoExportDownloadsRun | AutoExportFolderRun;
 
 /**
  * Runs Snug itself saved for auto-export in either Export destination, oldest
@@ -162,7 +152,7 @@ export type AutoExportRun = AutoExportDownloadsRun | AutoExportFolderRun
  * `lib/auto-export-retention.ts`.
  */
 export const autoExportRunsStore = storage.defineItem<AutoExportRun[]>(
-  'local:autoExportDownloadIds',
+  "local:autoExportDownloadIds",
   {
     fallback: [],
     version: 3,
@@ -170,10 +160,10 @@ export const autoExportRunsStore = storage.defineItem<AutoExportRun[]>(
       2: (legacyIds: number[]): { runAt: number; ids: number[] }[] =>
         legacyIds.map((id) => ({ runAt: 0, ids: [id] })),
       3: (runs: { runAt: number; ids: number[] }[]): AutoExportDownloadsRun[] =>
-        runs.map((run) => ({ destination: 'downloads', ...run })),
+        runs.map((run) => ({ destination: "downloads", ...run })),
     },
   },
-)
+);
 
 /**
  * The authoritative next due time for auto-export, in epoch milliseconds.
@@ -181,10 +171,9 @@ export const autoExportRunsStore = storage.defineItem<AutoExportRun[]>(
  * `syncAlarm` in `lib/auto-export.ts`, which is the only writer besides
  * `runAutoExport` re-arming after a scheduled/catch-up run.
  */
-export const autoExportNextRunStore = storage.defineItem<number | null>(
-  'local:autoExportNextRun',
-  { fallback: null },
-)
+export const autoExportNextRunStore = storage.defineItem<number | null>("local:autoExportNextRun", {
+  fallback: null,
+});
 
 /**
  * Epoch milliseconds at which a scheduled/catch-up auto-export run started,
@@ -193,39 +182,35 @@ export const autoExportNextRunStore = storage.defineItem<number | null>(
  * cannot block future runs forever.
  */
 export const autoExportRunInFlightStore = storage.defineItem<number | null>(
-  'local:autoExportRunInFlight',
+  "local:autoExportRunInFlight",
   { fallback: null },
-)
+);
 
 /**
  * The last extension version whose changelog the user has seen in the App.
  * `null` until the What's new screen is first visited; the sidebar shows an
  * unseen dot while this differs from the installed version.
  */
-export const lastSeenVersionStore = storage.defineItem<string | null>(
-  'local:lastSeenVersion',
-  { fallback: null },
-)
+export const lastSeenVersionStore = storage.defineItem<string | null>("local:lastSeenVersion", {
+  fallback: null,
+});
 
-export const defaultImportModeStore = storage.defineItem<ImportMode>(
-  'local:defaultImportMode',
-  { fallback: 'restore-merge' },
-)
+export const defaultImportModeStore = storage.defineItem<ImportMode>("local:defaultImportMode", {
+  fallback: "restore-merge",
+});
 
 /**
  * Whether imports skip bookmarks whose URL already exists. Shared by the
  * Import page switch and the popup quick import; on by default.
  */
-export const skipDuplicatesStore = storage.defineItem<boolean>(
-  'local:skipDuplicates',
-  { fallback: true },
-)
+export const skipDuplicatesStore = storage.defineItem<boolean>("local:skipDuplicates", {
+  fallback: true,
+});
 
 /**
  * Local state of the one-time Review prompt. A fresh profile is neither
  * eligible nor dismissed. See `lib/review-prompt.ts` for the rules.
  */
-export const reviewPromptStore = storage.defineItem<ReviewPromptState>(
-  'local:reviewPrompt',
-  { fallback: { eligibleAt: null, dismissedAt: null } },
-)
+export const reviewPromptStore = storage.defineItem<ReviewPromptState>("local:reviewPrompt", {
+  fallback: { eligibleAt: null, dismissedAt: null },
+});

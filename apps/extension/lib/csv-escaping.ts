@@ -1,4 +1,4 @@
-const FORMULA_ESCAPE_PATTERN = /^'([=+\-@\t\r])/
+const FORMULA_ESCAPE_PATTERN = /^'([=+\-@\t\r])/;
 
 /**
  * Escapes one folder name for the CSV `folder` column by prefixing every `\`
@@ -7,7 +7,7 @@ const FORMULA_ESCAPE_PATTERN = /^'([=+\-@\t\r])/
  * @returns The title safe to join with `/`.
  */
 export function escapeFolderSegment(segment: string): string {
-  return segment.replaceAll('\\', '\\\\').replaceAll('/', String.raw`\/`)
+  return segment.replaceAll("\\", "\\\\").replaceAll("/", String.raw`\/`);
 }
 
 /**
@@ -19,23 +19,23 @@ export function escapeFolderSegment(segment: string): string {
  * @returns The folder titles from outermost to innermost.
  */
 export function splitFolderPath(folderPath: string): string[] {
-  const segments: string[] = []
-  let current = ''
+  const segments: string[] = [];
+  let current = "";
   for (let index = 0; index < folderPath.length; index++) {
-    const char = folderPath.charAt(index)
-    const next = folderPath.charAt(index + 1)
-    if (char === '\\' && (next === '/' || next === '\\')) {
-      current += next
-      index++
-    } else if (char === '/') {
-      segments.push(current)
-      current = ''
+    const char = folderPath.charAt(index);
+    const next = folderPath.charAt(index + 1);
+    if (char === "\\" && (next === "/" || next === "\\")) {
+      current += next;
+      index++;
+    } else if (char === "/") {
+      segments.push(current);
+      current = "";
     } else {
-      current += char
+      current += char;
     }
   }
-  segments.push(current)
-  return segments.filter(Boolean)
+  segments.push(current);
+  return segments.filter(Boolean);
 }
 
 /**
@@ -45,5 +45,5 @@ export function splitFolderPath(folderPath: string): string[] {
  * @returns The value without the formula-escape prefix.
  */
 export function unescapeFormulaField(value: string): string {
-  return value.replace(FORMULA_ESCAPE_PATTERN, '$1')
+  return value.replace(FORMULA_ESCAPE_PATTERN, "$1");
 }

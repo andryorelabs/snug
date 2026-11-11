@@ -1,7 +1,7 @@
 ---
 version: 1
-slug: 'apps-site'
-primary_target: 'apps/site'
+slug: "apps-site"
+primary_target: "apps/site"
 related_targets: []
 ---
 

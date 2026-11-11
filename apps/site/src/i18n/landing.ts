@@ -1,69 +1,62 @@
-import { STORE_FACTS } from '../seo/store-facts'
-import { alternativesPath } from './comparisons'
-import { getContent, type SiteContent } from './content'
-import { DOCS_PATHS } from './docs-ui'
-import { howToIndexPath } from './how-to'
-import { type Locale, localePath } from './locales'
-import { privacyPath } from './privacy'
+import { STORE_FACTS } from "../seo/store-facts";
+import { alternativesPath } from "./comparisons";
+import { getContent, type SiteContent } from "./content";
+import { DOCS_PATHS } from "./docs-ui";
+import { howToIndexPath } from "./how-to";
+import { type Locale, localePath } from "./locales";
+import { privacyPath } from "./privacy";
 
 /**
  * Copy for the hero section of one locale.
  */
-export type HeroCopy = SiteContent['landing']['hero']
+export type HeroCopy = SiteContent["landing"]["hero"];
 
 /**
  * Copy for the folder names of the browser's bookmark tree in one locale.
  */
-export type FoldersCopy = SiteContent['landing']['folders']
+export type FoldersCopy = SiteContent["landing"]["folders"];
 
 /**
  * Copy for the trust links of one locale.
  */
-export type TrustCopy = SiteContent['trust']
+export type TrustCopy = SiteContent["trust"];
 
 /**
  * Copy for the stats strip of one locale.
  */
-export type StatsCopy = SiteContent['landing']['stats']
+export type StatsCopy = SiteContent["landing"]["stats"];
 
 /**
  * Copy for the browser marquee of one locale.
  */
-export type MarqueeCopy = SiteContent['landing']['marquee']
+export type MarqueeCopy = SiteContent["landing"]["marquee"];
 
 /**
  * Keys of the real-interface screenshots, in display order.
  */
-export const SHOT_KEYS = ['export', 'import', 'autoExport', 'popup'] as const
+export const SHOT_KEYS = ["export", "import", "autoExport", "popup"] as const;
 
 /**
  * Export format names shown as chips in the hero.
  */
-export const EXPORT_FORMATS = [
-  'HTML',
-  'JSON',
-  'CSV',
-  'Markdown',
-  'OPML',
-  'XBEL',
-] as const
+export const EXPORT_FORMATS = ["HTML", "JSON", "CSV", "Markdown", "OPML", "XBEL"] as const;
 
 /**
  * Copy for the real-interface captions and alt texts of one locale.
  */
-export type InterfaceCopy = SiteContent['interface']
+export type InterfaceCopy = SiteContent["interface"];
 
 /**
  * Copy for the How it works section of one locale.
  */
-export type HowItWorksCopy = SiteContent['landing']['howItWorks']
+export type HowItWorksCopy = SiteContent["landing"]["howItWorks"];
 
 /**
  * Copy for the click-to-load video section of one locale.
  */
-export type VideoCopy = SiteContent['video']
+export type VideoCopy = SiteContent["video"];
 
-const UNSPACED_HEADLINE_LOCALES = new Set<Locale>(['ja', 'zh_CN'])
+const UNSPACED_HEADLINE_LOCALES = new Set<Locale>(["ja", "zh_CN"]);
 
 /**
  * Separator between the hero headline lead and its accent phrase.
@@ -71,7 +64,7 @@ const UNSPACED_HEADLINE_LOCALES = new Set<Locale>(['ja', 'zh_CN'])
  * @returns An empty string for unspaced scripts, a single space otherwise.
  */
 export function headlineSeparator(locale: Locale): string {
-  return UNSPACED_HEADLINE_LOCALES.has(locale) ? '' : ' '
+  return UNSPACED_HEADLINE_LOCALES.has(locale) ? "" : " ";
 }
 
 /**
@@ -81,7 +74,7 @@ export function headlineSeparator(locale: Locale): string {
  * @returns The lead and the accent, spaced as the locale's script requires.
  */
 export function fullHeadline(hero: HeroCopy, locale: Locale): string {
-  return `${hero.headline}${headlineSeparator(locale)}${hero.headlineAccent}`
+  return `${hero.headline}${headlineSeparator(locale)}${hero.headlineAccent}`;
 }
 
 /**
@@ -91,16 +84,16 @@ export function fullHeadline(hero: HeroCopy, locale: Locale): string {
  * @returns The locale's section content.
  */
 export function getLandingCopy(locale: Locale): {
-  hero: HeroCopy
-  trust: TrustCopy
-  interface: InterfaceCopy
-  video: VideoCopy
-  stats: StatsCopy
-  marquee: MarqueeCopy
-  howItWorks: HowItWorksCopy
-  folders: FoldersCopy
+  hero: HeroCopy;
+  trust: TrustCopy;
+  interface: InterfaceCopy;
+  video: VideoCopy;
+  stats: StatsCopy;
+  marquee: MarqueeCopy;
+  howItWorks: HowItWorksCopy;
+  folders: FoldersCopy;
 } {
-  const { trust, interface: shots, video, landing } = getContent(locale)
+  const { trust, interface: shots, video, landing } = getContent(locale);
   return {
     hero: landing.hero,
     trust,
@@ -110,24 +103,24 @@ export function getLandingCopy(locale: Locale): {
     marquee: landing.marquee,
     howItWorks: landing.howItWorks,
     folders: landing.folders,
-  }
+  };
 }
 
 /**
  * Public YouTube video id of the promo in each locale.
  */
 export const PROMO_VIDEO_IDS: Record<Locale, string> = {
-  en: 'DUZmI5zxA8o',
-  es: 'yDw0nHvvNWc',
-  de: '0HHmaQIHk1Y',
-  fr: '7RATLTBQuxo',
-  it: 'rT8lAtZbXxI',
-  ja: 'Gm9_A9hfUBE',
-  ko: 'XroHiVqJdrI',
-  pt_BR: 'SvuxWtZCAZc',
-  ru: '0EtKg9aj-Hs',
-  zh_CN: '3XTpmuxkYx8',
-}
+  en: "DUZmI5zxA8o",
+  es: "yDw0nHvvNWc",
+  de: "0HHmaQIHk1Y",
+  fr: "7RATLTBQuxo",
+  it: "rT8lAtZbXxI",
+  ja: "Gm9_A9hfUBE",
+  ko: "XroHiVqJdrI",
+  pt_BR: "SvuxWtZCAZc",
+  ru: "0EtKg9aj-Hs",
+  zh_CN: "3XTpmuxkYx8",
+};
 
 /**
  * Watch-page URL of a video, used as the no-JavaScript fallback.
@@ -135,7 +128,7 @@ export const PROMO_VIDEO_IDS: Record<Locale, string> = {
  * @returns The `youtube.com/watch` URL.
  */
 export function youtubeWatchUrl(videoId: string): string {
-  return `https://www.youtube.com/watch?v=${videoId}`
+  return `https://www.youtube.com/watch?v=${videoId}`;
 }
 
 /**
@@ -144,7 +137,7 @@ export function youtubeWatchUrl(videoId: string): string {
  * @returns The `youtube-nocookie.com/embed` URL with autoplay.
  */
 export function youtubeEmbedUrl(videoId: string): string {
-  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`
+  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
 }
 
 /**
@@ -152,11 +145,11 @@ export function youtubeEmbedUrl(videoId: string): string {
  */
 export const TRUST_LINK_HREFS = {
   source: STORE_FACTS.sourceUrl,
-  scorecard: 'https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug',
-  bestPractices: 'https://www.bestpractices.dev/projects/15093',
-  ci: 'https://github.com/andryorelabs/snug/actions/workflows/ci.yml',
+  scorecard: "https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug",
+  bestPractices: "https://www.bestpractices.dev/projects/15093",
+  ci: "https://github.com/andryorelabs/snug/actions/workflows/ci.yml",
   privacy: privacyPath,
-} as const
+} as const;
 
 /**
  * Resolves a link target that may depend on the locale.
@@ -164,17 +157,14 @@ export const TRUST_LINK_HREFS = {
  * @param locale - The page's locale.
  * @returns The URL for that locale.
  */
-export function resolveHref(
-  href: string | ((locale: Locale) => string),
-  locale: Locale,
-): string {
-  return typeof href === 'function' ? href(locale) : href
+export function resolveHref(href: string | ((locale: Locale) => string), locale: Locale): string {
+  return typeof href === "function" ? href(locale) : href;
 }
 
 /**
  * Placements that tag an install button for the counted redirect.
  */
-export type InstallPlacement = 'hero' | 'final' | 'dock' | 'footer'
+export type InstallPlacement = "hero" | "final" | "dock" | "footer";
 
 /**
  * Site-relative install URL carrying a placement tag.
@@ -182,38 +172,38 @@ export type InstallPlacement = 'hero' | 'final' | 'dock' | 'footer'
  * @returns `/install?c=<placement>`.
  */
 export function installHref(placement: InstallPlacement): string {
-  return `/install?c=${placement}`
+  return `/install?c=${placement}`;
 }
 
 /**
  * Copy for the social proof section of one locale.
  */
-export type ProofCopy = SiteContent['proof']
+export type ProofCopy = SiteContent["proof"];
 
 /**
  * Copy for the FAQ section of one locale, entries in display order.
  */
-export type FaqCopy = SiteContent['faq']
+export type FaqCopy = SiteContent["faq"];
 
 /**
  * Copy for the closing install panel of one locale.
  */
-export type ClosingPanelCopy = SiteContent['landing']['closing']
+export type ClosingPanelCopy = SiteContent["landing"]["closing"];
 
 /**
  * Copy for the footer of one locale.
  */
-export type FooterCopy = SiteContent['footer']
+export type FooterCopy = SiteContent["footer"];
 
 /**
  * Copy for the page header of one locale.
  */
-export type HeaderCopy = SiteContent['header']
+export type HeaderCopy = SiteContent["header"];
 
 /**
  * Copy for the 404 page of one locale.
  */
-export type NotFoundCopy = SiteContent['notFound']
+export type NotFoundCopy = SiteContent["notFound"];
 
 /**
  * Proof, FAQ, closing panel, footer, header and 404 copy for one locale.
@@ -221,14 +211,14 @@ export type NotFoundCopy = SiteContent['notFound']
  * @returns The locale's `proof`, `faq`, `closing`, `footer`, `header` and `notFound` content.
  */
 export function getClosingCopy(locale: Locale): {
-  proof: ProofCopy
-  faq: FaqCopy
-  closing: ClosingPanelCopy
-  footer: FooterCopy
-  header: HeaderCopy
-  notFound: NotFoundCopy
+  proof: ProofCopy;
+  faq: FaqCopy;
+  closing: ClosingPanelCopy;
+  footer: FooterCopy;
+  header: HeaderCopy;
+  notFound: NotFoundCopy;
 } {
-  const { proof, faq, landing, footer, header, notFound } = getContent(locale)
+  const { proof, faq, landing, footer, header, notFound } = getContent(locale);
   return {
     proof,
     faq,
@@ -236,7 +226,7 @@ export function getClosingCopy(locale: Locale): {
     footer,
     header,
     notFound,
-  }
+  };
 }
 
 /**
@@ -252,12 +242,12 @@ export const FOOTER_LINK_HREFS = {
   changelog: (locale: Locale) => localePath(locale, DOCS_PATHS.whatsNew),
   alternatives: (locale: Locale) => alternativesPath(locale),
   howTo: (locale: Locale) => howToIndexPath(locale),
-} as const
+} as const;
 
 /**
  * Owner site the footer credit links to.
  */
-export const CREDIT_URL = 'https://andryore.dev'
+export const CREDIT_URL = "https://andryore.dev";
 
 /**
  * Splits a localized footer credit around its `{name}` placeholder so the
@@ -266,13 +256,13 @@ export const CREDIT_URL = 'https://andryore.dev'
  * @returns The text before and after the placeholder.
  */
 export function splitCredit(credit: string): { before: string; after: string } {
-  const marker = '{name}'
-  const index = credit.indexOf(marker)
-  if (index === -1) return { before: credit, after: '' }
+  const marker = "{name}";
+  const index = credit.indexOf(marker);
+  if (index === -1) return { before: credit, after: "" };
   return {
     before: credit.slice(0, index),
     after: credit.slice(index + marker.length),
-  }
+  };
 }
 
 /**
@@ -282,16 +272,16 @@ export function splitCredit(credit: string): { before: string; after: string } {
  * @returns The digits, the counter format and the separator character.
  */
 export function countUpParts(value: string): {
-  target: string
-  format: 'tenths' | 'grouped' | 'plain'
-  separator: string
+  target: string;
+  format: "tenths" | "grouped" | "plain";
+  separator: string;
 } {
-  const target = value.replaceAll(/\D/g, '')
-  const mark = /^\d+([.,])\d$/.exec(value)?.[1]
-  const group = /^\d{1,3}(\D)\d{3}$/.exec(value)?.[1]
+  const target = value.replaceAll(/\D/g, "");
+  const mark = /^\d+([.,])\d$/.exec(value)?.[1];
+  const group = /^\d{1,3}(\D)\d{3}$/.exec(value)?.[1];
   return {
     target,
-    format: mark ? 'tenths' : group ? 'grouped' : 'plain',
-    separator: mark ?? group ?? '',
-  }
+    format: mark ? "tenths" : group ? "grouped" : "plain",
+    separator: mark ?? group ?? "",
+  };
 }

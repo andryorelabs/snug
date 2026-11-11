@@ -1,14 +1,14 @@
-import { i18n } from '#i18n'
-import { storage } from '#imports'
+import { i18n } from "#i18n";
+import { storage } from "#imports";
 
-import { countBookmarks } from '@/lib/count-bookmarks'
-import { triggerDownload } from '@/lib/export-all-bookmarks'
-import { markImportRestored } from '@/lib/import-control'
-import { withImportLock } from '@/lib/import-lock'
-import { importFromJSON } from '@/lib/importers/import-json'
-import { resolveImportRoots } from '@/lib/importers/resolve-roots'
-import { ROOT_FOLDER_IDS } from '@/lib/root-folders'
-import type { ParsedBookmark } from '@/lib/types'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { triggerDownload } from "@/lib/export-all-bookmarks";
+import { markImportRestored } from "@/lib/import-control";
+import { withImportLock } from "@/lib/import-lock";
+import { importFromJSON } from "@/lib/importers/import-json";
+import { resolveImportRoots } from "@/lib/importers/resolve-roots";
+import { ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import type { ParsedBookmark } from "@/lib/types";
 
 /**
  * One Safety snapshot: the bookmarks-bar, other-bookmarks and, when the
@@ -17,31 +17,27 @@ import type { ParsedBookmark } from '@/lib/types'
  * `'1'`, `'2'` and `'3'`), so the downloaded file can be imported again as-is.
  */
 export interface SafetySnapshot {
-  takenAt: number
-  roots: ParsedBookmark[]
+  takenAt: number;
+  roots: ParsedBookmark[];
 }
 
 /**
  * How many Safety snapshots are kept.
  */
-export const MAX_SAFETY_SNAPSHOTS = 5
+export const MAX_SAFETY_SNAPSHOTS = 5;
 
 /**
  * Storage key of the Safety snapshots in `chrome.storage.local`, newest
  * first. Version 1 held a single snapshot (or `null`); it migrates to a list
  * of zero or one.
  */
-export const safetySnapshotStore = storage.defineItem<SafetySnapshot[]>(
-  'local:safetySnapshot',
-  {
-    fallback: [],
-    version: 2,
-    migrations: {
-      2: (stored: SafetySnapshot | null): SafetySnapshot[] =>
-        stored ? [stored] : [],
-    },
+export const safetySnapshotStore = storage.defineItem<SafetySnapshot[]>("local:safetySnapshot", {
+  fallback: [],
+  version: 2,
+  migrations: {
+    2: (stored: SafetySnapshot | null): SafetySnapshot[] => (stored ? [stored] : []),
   },
-)
+});
 
 /**
  * Prepends a snapshot and enforces the retention cap: at most
@@ -56,23 +52,21 @@ export function addSnapshotToList(
   snapshots: SafetySnapshot[],
   snapshot: SafetySnapshot,
 ): SafetySnapshot[] {
-  const next = [snapshot, ...snapshots]
-  const protectedIndex = next.findIndex(
-    (entry) => countBookmarks(entry.roots) > 0,
-  )
+  const next = [snapshot, ...snapshots];
+  const protectedIndex = next.findIndex((entry) => countBookmarks(entry.roots) > 0);
   while (next.length > MAX_SAFETY_SNAPSHOTS) {
-    let dropIndex = next.length - 1
-    if (dropIndex === protectedIndex) dropIndex -= 1
-    next.splice(dropIndex, 1)
+    let dropIndex = next.length - 1;
+    if (dropIndex === protectedIndex) dropIndex -= 1;
+    next.splice(dropIndex, 1);
   }
-  return next
+  return next;
 }
 
 interface LiveNode {
-  title: string
-  url?: string
-  dateAdded?: number
-  children?: LiveNode[]
+  title: string;
+  url?: string;
+  dateAdded?: number;
+  children?: LiveNode[];
 }
 
 function toParsedBookmark(node: LiveNode): ParsedBookmark {
@@ -83,7 +77,7 @@ function toParsedBookmark(node: LiveNode): ParsedBookmark {
     ...(node.children !== undefined && {
       children: node.children.map((child) => toParsedBookmark(child)),
     }),
-  }
+  };
 }
 
 /**
@@ -98,25 +92,22 @@ function toParsedBookmark(node: LiveNode): ParsedBookmark {
  * @throws {Error} When either root cannot be found in the bookmarks tree.
  */
 export async function captureSafetySnapshot(): Promise<SafetySnapshot> {
-  const [treeRoot] = await browser.bookmarks.getTree()
-  const rootChildren = treeRoot?.children ?? []
-  const { bookmarksBarId, otherBookmarksId, mobileId } =
-    resolveImportRoots(rootChildren)
-  const barNode = rootChildren.find((node) => node.id === bookmarksBarId)
-  const otherNode = rootChildren.find((node) => node.id === otherBookmarksId)
+  const [treeRoot] = await browser.bookmarks.getTree();
+  const rootChildren = treeRoot?.children ?? [];
+  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(rootChildren);
+  const barNode = rootChildren.find((node) => node.id === bookmarksBarId);
+  const otherNode = rootChildren.find((node) => node.id === otherBookmarksId);
   if (!barNode || !otherNode) {
-    throw new Error(i18n.t('importFromJSONProcessError'))
+    throw new Error(i18n.t("importFromJSONProcessError"));
   }
-  const mobileNode = mobileId
-    ? rootChildren.find((node) => node.id === mobileId)
-    : undefined
+  const mobileNode = mobileId ? rootChildren.find((node) => node.id === mobileId) : undefined;
 
-  const takenAt = Date.now()
+  const takenAt = Date.now();
   if (hasSeveralSets(rootChildren)) {
     return {
       takenAt,
       roots: rootChildren
-        .filter((node) => ROOT_FOLDER_TYPES.includes(node.folderType ?? ''))
+        .filter((node) => ROOT_FOLDER_TYPES.includes(node.folderType ?? ""))
         .map((node) => ({
           ...toParsedBookmark(node),
           id: node.id,
@@ -125,7 +116,7 @@ export async function captureSafetySnapshot(): Promise<SafetySnapshot> {
           }),
           syncing: node.syncing,
         })),
-    }
+    };
   }
 
   return {
@@ -142,16 +133,15 @@ export async function captureSafetySnapshot(): Promise<SafetySnapshot> {
           ]
         : []),
     ],
-  }
+  };
 }
 
-const ROOT_FOLDER_TYPES = ['bookmarks-bar', 'other', 'mobile']
+const ROOT_FOLDER_TYPES = ["bookmarks-bar", "other", "mobile"];
 
 function hasSeveralSets(rootChildren: { folderType?: string }[]): boolean {
   return ROOT_FOLDER_TYPES.some(
-    (folderType) =>
-      rootChildren.filter((node) => node.folderType === folderType).length > 1,
-  )
+    (folderType) => rootChildren.filter((node) => node.folderType === folderType).length > 1,
+  );
 }
 
 /**
@@ -159,8 +149,8 @@ function hasSeveralSets(rootChildren: { folderType?: string }[]): boolean {
  * @returns The name of the JSON file saved to Downloads for that moment.
  */
 export function snapshotFileName(takenAt: number): string {
-  const stamp = new Date(takenAt).toISOString().replaceAll(/[:.]/g, '-')
-  return `snug-safety-snapshot-${stamp}.json`
+  const stamp = new Date(takenAt).toISOString().replaceAll(/[:.]/g, "-");
+  return `snug-safety-snapshot-${stamp}.json`;
 }
 
 /**
@@ -170,17 +160,15 @@ export function snapshotFileName(takenAt: number): string {
  * @returns Resolves once the download link was clicked.
  * @throws {Error} When the link cannot be created or clicked.
  */
-export function downloadSafetySnapshot(
-  snapshot: SafetySnapshot,
-): Promise<void> {
+export function downloadSafetySnapshot(snapshot: SafetySnapshot): Promise<void> {
   return new Promise((resolve) => {
     triggerDownload(
       JSON.stringify(snapshot.roots, null, 2),
-      'application/json',
+      "application/json",
       snapshotFileName(snapshot.takenAt),
-    )
-    resolve()
-  })
+    );
+    resolve();
+  });
 }
 
 /**
@@ -188,13 +176,11 @@ export function downloadSafetySnapshot(
  * reported with `console.error` and never blocks the stored copy or Replace.
  * @param snapshot The snapshot whose file copy is saved.
  */
-async function saveSnapshotFileBestEffort(
-  snapshot: SafetySnapshot,
-): Promise<void> {
+async function saveSnapshotFileBestEffort(snapshot: SafetySnapshot): Promise<void> {
   try {
-    await downloadSafetySnapshot(snapshot)
+    await downloadSafetySnapshot(snapshot);
   } catch (error) {
-    console.error('Safety snapshot file could not be saved', error)
+    console.error("Safety snapshot file could not be saved", error);
   }
 }
 
@@ -208,17 +194,14 @@ async function saveSnapshotFileBestEffort(
  */
 export async function takeSafetySnapshot(): Promise<SafetySnapshot> {
   try {
-    const snapshot = await captureSafetySnapshot()
+    const snapshot = await captureSafetySnapshot();
     await safetySnapshotStore.setValue(
       addSnapshotToList(await safetySnapshotStore.getValue(), snapshot),
-    )
-    await saveSnapshotFileBestEffort(snapshot)
-    return snapshot
+    );
+    await saveSnapshotFileBestEffort(snapshot);
+    return snapshot;
   } catch (error) {
-    throw new Error(
-      i18n.t('safetySnapshotFailed', [(error as Error).message]),
-      { cause: error },
-    )
+    throw new Error(i18n.t("safetySnapshotFailed", [(error as Error).message]), { cause: error });
   }
 }
 
@@ -227,7 +210,7 @@ export async function takeSafetySnapshot(): Promise<SafetySnapshot> {
  * @returns The snapshots, newest first; empty when none has been taken yet.
  */
 export function readSafetySnapshots(): Promise<SafetySnapshot[]> {
-  return safetySnapshotStore.getValue()
+  return safetySnapshotStore.getValue();
 }
 
 /**
@@ -235,8 +218,8 @@ export function readSafetySnapshots(): Promise<SafetySnapshot[]> {
  * @returns The snapshot, or `null` when none has been taken yet.
  */
 export async function readLatestSafetySnapshot(): Promise<SafetySnapshot | null> {
-  const [latest] = await readSafetySnapshots()
-  return latest ?? null
+  const [latest] = await readSafetySnapshots();
+  return latest ?? null;
 }
 
 /**
@@ -249,15 +232,11 @@ export async function hasRewrittenRootsFully(
   roots: ParsedBookmark[],
   onClearingExisting?: () => void,
 ): Promise<boolean> {
-  const result = await importFromJSON(
-    structuredClone(roots),
-    'restore-replace',
-    {
-      trusted: true,
-      ...(onClearingExisting !== undefined && { onClearingExisting }),
-    },
-  )
-  return result.skippedInvalidUrl === 0
+  const result = await importFromJSON(structuredClone(roots), "restore-replace", {
+    trusted: true,
+    ...(onClearingExisting !== undefined && { onClearingExisting }),
+  });
+  return result.skippedInvalidUrl === 0;
 }
 
 /**
@@ -275,34 +254,29 @@ export async function hasRewrittenRootsFully(
  * @throws {Error} When the rewrite fails or drops nodes.
  */
 export function restoreSafetySnapshot(snapshot: SafetySnapshot): Promise<void> {
-  return withImportLock(() => restoreSafetySnapshotUnlocked(snapshot))
+  return withImportLock(() => restoreSafetySnapshotUnlocked(snapshot));
 }
 
-async function restoreSafetySnapshotUnlocked(
-  snapshot: SafetySnapshot,
-): Promise<void> {
-  const taken = await takeSafetySnapshot()
-  let hasClearedExisting = false
+async function restoreSafetySnapshotUnlocked(snapshot: SafetySnapshot): Promise<void> {
+  const taken = await takeSafetySnapshot();
+  let hasClearedExisting = false;
   try {
     const isComplete = await hasRewrittenRootsFully(snapshot.roots, () => {
-      hasClearedExisting = true
-    })
-    if (!isComplete) throw new Error(i18n.t('safetySnapshotIncomplete'))
+      hasClearedExisting = true;
+    });
+    if (!isComplete) throw new Error(i18n.t("safetySnapshotIncomplete"));
   } catch (error) {
-    if (hasClearedExisting) await recoverFromSnapshot(taken, error)
-    throw error
+    if (hasClearedExisting) await recoverFromSnapshot(taken, error);
+    throw error;
   }
 }
 
-async function recoverFromSnapshot(
-  taken: SafetySnapshot,
-  originalError: unknown,
-): Promise<void> {
+async function recoverFromSnapshot(taken: SafetySnapshot, originalError: unknown): Promise<void> {
   try {
     if (await hasRewrittenRootsFully(taken.roots)) {
-      markImportRestored(originalError)
+      markImportRestored(originalError);
     }
   } catch (recoveryError) {
-    console.error('Safety snapshot recovery failed', recoveryError)
+    console.error("Safety snapshot recovery failed", recoveryError);
   }
 }

@@ -1,54 +1,50 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 import {
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from '@workspace/ui/components/item'
-import { BookmarkIcon, FolderIcon } from 'lucide-react'
+} from "@workspace/ui/components/item";
+import { BookmarkIcon, FolderIcon } from "lucide-react";
 
-import { formatCount } from '@/lib/format-count'
-import type { ImportPreview } from '@/lib/types'
+import { formatCount } from "@/lib/format-count";
+import type { ImportPreview } from "@/lib/types";
 
 interface ImportPreviewStepProperties {
-  preview: ImportPreview
-  newCount: number
-  duplicateCount: number
-  showDuplicates: boolean
+  preview: ImportPreview;
+  newCount: number;
+  duplicateCount: number;
+  showDuplicates: boolean;
 }
 
 function describeRoots(preview: ImportPreview): string {
   if (!preview.hasLocationData) {
-    return `${i18n.t('importedBookmarks')} ${formatCount(preview.totalCount)}`
+    return `${i18n.t("importedBookmarks")} ${formatCount(preview.totalCount)}`;
   }
   const roots: [string, number][] = [
-    [i18n.t('bookmarksBar'), preview.bookmarksBarCount],
-    [i18n.t('otherBookmarks'), preview.otherBookmarksCount],
-  ]
+    [i18n.t("bookmarksBar"), preview.bookmarksBarCount],
+    [i18n.t("otherBookmarks"), preview.otherBookmarksCount],
+  ];
   if (preview.mobileBookmarksCount > 0) {
-    roots.push([i18n.t('mobileBookmarks'), preview.mobileBookmarksCount])
+    roots.push([i18n.t("mobileBookmarks"), preview.mobileBookmarksCount]);
   }
-  return roots
-    .map(([label, count]) => `${label} ${formatCount(count)}`)
-    .join(' · ')
+  return roots.map(([label, count]) => `${label} ${formatCount(count)}`).join(" · ");
 }
 
 function describeOutcome({
   newCount,
   duplicateCount,
   showDuplicates,
-}: Omit<ImportPreviewStepProperties, 'preview'>): string {
+}: Omit<ImportPreviewStepProperties, "preview">): string {
   if (!showDuplicates) {
-    const total = newCount + duplicateCount
-    return i18n.t('import_previewWillImport', total, [formatCount(total)])
+    const total = newCount + duplicateCount;
+    return i18n.t("import_previewWillImport", total, [formatCount(total)]);
   }
   return [
-    i18n.t('import_previewNew', newCount, [formatCount(newCount)]),
-    i18n.t('import_previewDuplicates', duplicateCount, [
-      formatCount(duplicateCount),
-    ]),
-  ].join(' · ')
+    i18n.t("import_previewNew", newCount, [formatCount(newCount)]),
+    i18n.t("import_previewDuplicates", duplicateCount, [formatCount(duplicateCount)]),
+  ].join(" · ");
 }
 
 /**
@@ -83,5 +79,5 @@ export function ImportPreviewStep({
         </ItemDescription>
       </ItemContent>
     </Item>
-  )
+  );
 }

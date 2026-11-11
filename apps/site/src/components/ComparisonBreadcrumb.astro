@@ -1,20 +1,20 @@
 ---
-import { cn } from '@workspace/ui/lib/utils'
+import { cn } from "@workspace/ui/lib/utils";
 
-import TextLink from './TextLink.astro'
+import TextLink from "./TextLink.astro";
 
 interface Crumb {
-  name: string
-  href?: string
+  name: string;
+  href?: string;
 }
 
 interface Props {
-  label: string
-  crumbs: readonly Crumb[]
-  class?: string
+  label: string;
+  crumbs: readonly Crumb[];
+  class?: string;
 }
 
-const { label, crumbs, class: className } = Astro.props
+const { label, crumbs, class: className } = Astro.props;
 ---
 
 <nav aria-label={label} class={cn(className)}>
@@ -23,10 +23,7 @@ const { label, crumbs, class: className } = Astro.props
       <li class="flex items-center gap-x-2">
         {index > 0 && <span aria-hidden="true">›</span>}
         {crumb.href ? (
-          <TextLink
-            href={crumb.href}
-            class="min-w-0 wrap-anywhere text-muted-foreground"
-          >
+          <TextLink href={crumb.href} class="min-w-0 wrap-anywhere text-muted-foreground">
             {crumb.name}
           </TextLink>
         ) : (

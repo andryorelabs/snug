@@ -1,15 +1,14 @@
 name: Feature Request
 description: Propose a brand-new feature or capability
-title: 'feat: '
-labels: ['Type: Feature', 'Status: Needs Info']
+title: "feat: "
+labels: ["Type: Feature", "Status: Needs Info"]
 body:
   - type: checkboxes
     id: preflight
     attributes:
       label: Pre-flight checklist
       options:
-        - label:
-            I have searched the existing issues and confirmed this hasn't been
+        - label: I have searched the existing issues and confirmed this hasn't been
             proposed.
           required: true
 
@@ -24,8 +23,7 @@ body:
     id: problem
     attributes:
       label: Problem / motivation
-      description:
-        What problem does this feature solve? What use case drives it?
+      description: What problem does this feature solve? What use case drives it?
       placeholder: I'm always frustrated when... / Users need to be able to...
     validations:
       required: true

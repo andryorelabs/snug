@@ -1,10 +1,9 @@
 ---
 title: Perguntas frequentes
 sourceHash: 304e0622b68c13d7
-description:
-  'Respostas às dúvidas mais comuns sobre o Snug: importar vários arquivos,
-  permissões, formatos e navegadores compatíveis, segurança e pastas de backup.'
-seoTitle: 'FAQ do Snug: formatos, navegadores e backups'
+description: "Respostas às dúvidas mais comuns sobre o Snug: importar vários arquivos,
+  permissões, formatos e navegadores compatíveis, segurança e pastas de backup."
+seoTitle: "FAQ do Snug: formatos, navegadores e backups"
 ---
 
 Respostas curtas para as perguntas mais comuns sobre o Snug.

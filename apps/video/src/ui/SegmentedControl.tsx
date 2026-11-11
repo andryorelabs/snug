@@ -1,26 +1,26 @@
-import { theme } from '../theme'
+import { theme } from "../theme";
 
 export type SegmentedControlProps = {
   /**
    * Option labels, e.g. merge / replace / new folder, already localized.
    */
-  options: readonly string[]
+  options: readonly string[];
   /**
    * Active option as a fractional index; animate it for a sliding thumb.
    */
-  position?: number
+  position?: number;
   /**
    * Width of every segment in px. Default 220.
    */
-  segmentWidth?: number
+  segmentWidth?: number;
   /**
    * Label font size in px. Default 20.
    */
-  fontSize?: number
-}
+  fontSize?: number;
+};
 
-const HEIGHT = 56
-const INSET = 5
+const HEIGHT = 56;
+const INSET = 5;
 
 /**
  * Segmented control with a sliding amber thumb driven by `position`.
@@ -33,10 +33,10 @@ export const SegmentedControl = ({
 }: SegmentedControlProps) => (
   <div
     style={{
-      position: 'relative',
-      display: 'inline-flex',
+      position: "relative",
+      display: "inline-flex",
       height: HEIGHT,
-      boxSizing: 'border-box',
+      boxSizing: "border-box",
       padding: INSET,
       borderRadius: 14,
       background: theme.ui.surfaceMuted,
@@ -45,7 +45,7 @@ export const SegmentedControl = ({
   >
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         top: INSET,
         left: INSET,
         width: segmentWidth,
@@ -56,30 +56,29 @@ export const SegmentedControl = ({
       }}
     />
     {options.map((label, index) => {
-      const activeness = Math.max(0, 1 - Math.abs(position - index))
+      const activeness = Math.max(0, 1 - Math.abs(position - index));
       return (
         <div
           key={label}
           style={{
-            position: 'relative',
+            position: "relative",
             width: segmentWidth,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 12px',
-            boxSizing: 'border-box',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 12px",
+            boxSizing: "border-box",
             fontSize,
             fontWeight: 600,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            color:
-              activeness > 0.5 ? theme.ui.onAccent : theme.colors.secondary,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            color: activeness > 0.5 ? theme.ui.onAccent : theme.colors.secondary,
           }}
         >
           {label}
         </div>
-      )
+      );
     })}
   </div>
-)
+);

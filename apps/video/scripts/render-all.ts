@@ -1,216 +1,190 @@
-import { bundle } from '@remotion/bundler'
-import { renderMedia, selectComposition } from '@remotion/renderer'
-import { existsSync, mkdirSync } from 'node:fs'
-import path from 'node:path'
+import { existsSync, mkdirSync } from "node:fs";
+import path from "node:path";
 
-import { type Locale, LOCALES } from '../src/copy'
-import { FPS, HEIGHT, TOTAL_FRAMES, WIDTH } from '../src/timing'
+import { bundle } from "@remotion/bundler";
+import { renderMedia, selectComposition } from "@remotion/renderer";
 
-const ROOT = path.resolve(import.meta.dirname, '..')
-const OUT_DIR = path.join(ROOT, 'out')
-const MUSIC_TRACK = path.join(ROOT, 'public', 'music', 'track.wav')
-const DURATION_TOLERANCE_SECONDS = 0.1
-const EXPECTED_SECONDS = TOTAL_FRAMES / FPS
+import { type Locale, LOCALES } from "../src/copy";
+import { FPS, HEIGHT, TOTAL_FRAMES, WIDTH } from "../src/timing";
+
+const ROOT = path.resolve(import.meta.dirname, "..");
+const OUT_DIR = path.join(ROOT, "out");
+const MUSIC_TRACK = path.join(ROOT, "public", "music", "track.wav");
+const DURATION_TOLERANCE_SECONDS = 0.1;
+const EXPECTED_SECONDS = TOTAL_FRAMES / FPS;
 
 type ProbeStream = {
-  codec_type: string
-  codec_name?: string
-  width?: number
-  height?: number
-  r_frame_rate?: string
-}
+  codec_type: string;
+  codec_name?: string;
+  width?: number;
+  height?: number;
+  r_frame_rate?: string;
+};
 
 type ProbeResult = {
-  streams: ProbeStream[]
-  format: { duration: string }
-}
+  streams: ProbeStream[];
+  format: { duration: string };
+};
 
-const isLocale = (value: string): value is Locale =>
-  (LOCALES as readonly string[]).includes(value)
+const isLocale = (value: string): value is Locale => (LOCALES as readonly string[]).includes(value);
 
 const parseLocales = (argv: string[]): Locale[] => {
-  const flagIndex = argv.findIndex(
-    (arg) => arg === '--locales' || arg.startsWith('--locales='),
-  )
-  if (flagIndex === -1) return [...LOCALES]
-  const flag = argv[flagIndex] ?? ''
-  const raw = flag.includes('=') ? flag.split('=', 2)[1] : argv[flagIndex + 1]
-  const requested = (raw ?? '').split(',').filter(Boolean)
-  const unknown = requested.filter((code) => !isLocale(code))
+  const flagIndex = argv.findIndex((arg) => arg === "--locales" || arg.startsWith("--locales="));
+  if (flagIndex === -1) return [...LOCALES];
+  const flag = argv[flagIndex] ?? "";
+  const raw = flag.includes("=") ? flag.split("=", 2)[1] : argv[flagIndex + 1];
+  const requested = (raw ?? "").split(",").filter(Boolean);
+  const unknown = requested.filter((code) => !isLocale(code));
   if (requested.length === 0 || unknown.length > 0) {
     throw new Error(
-      `Invalid --locales "${raw ?? ''}". Unknown: ${unknown.join(', ') || 'none given'}. Valid: ${LOCALES.join(', ')}`,
-    )
+      `Invalid --locales "${raw ?? ""}". Unknown: ${unknown.join(", ") || "none given"}. Valid: ${LOCALES.join(", ")}`,
+    );
   }
-  return requested.filter(isLocale)
-}
+  return requested.filter(isLocale);
+};
 
-const DEFAULT_CONCURRENCY = 8
+const DEFAULT_CONCURRENCY = 8;
 
 const parseConcurrency = (argv: string[]): number => {
   const flagIndex = argv.findIndex(
-    (arg) => arg === '--concurrency' || arg.startsWith('--concurrency='),
-  )
-  if (flagIndex === -1) return DEFAULT_CONCURRENCY
-  const flag = argv[flagIndex] ?? ''
-  const raw = flag.includes('=') ? flag.split('=', 2)[1] : argv[flagIndex + 1]
-  const value = Number(raw)
+    (arg) => arg === "--concurrency" || arg.startsWith("--concurrency="),
+  );
+  if (flagIndex === -1) return DEFAULT_CONCURRENCY;
+  const flag = argv[flagIndex] ?? "";
+  const raw = flag.includes("=") ? flag.split("=", 2)[1] : argv[flagIndex + 1];
+  const value = Number(raw);
   if (!Number.isSafeInteger(value) || value < 1) {
-    throw new Error(`Invalid --concurrency "${raw ?? ''}". Use a whole number.`)
+    throw new Error(`Invalid --concurrency "${raw ?? ""}". Use a whole number.`);
   }
-  return value
-}
+  return value;
+};
 
 const parseFrameRate = (rate: string | undefined): number => {
-  const [numerator, denominator] = (rate ?? '0/1').split('/').map(Number)
-  return (numerator ?? 0) / (denominator || 1)
-}
+  const [numerator, denominator] = (rate ?? "0/1").split("/").map(Number);
+  return (numerator ?? 0) / (denominator || 1);
+};
 
 const probe = async (file: string): Promise<ProbeResult> => {
   const process = Bun.spawn(
-    [
-      'ffprobe',
-      '-v',
-      'error',
-      '-print_format',
-      'json',
-      '-show_streams',
-      '-show_format',
-      file,
-    ],
-    { stdout: 'pipe', stderr: 'pipe' },
-  )
+    ["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", "-show_format", file],
+    { stdout: "pipe", stderr: "pipe" },
+  );
   const [stdout, stderr, exitCode] = await Promise.all([
     new Response(process.stdout).text(),
     new Response(process.stderr).text(),
     process.exited,
-  ])
-  if (exitCode !== 0) throw new Error(`ffprobe failed on ${file}: ${stderr}`)
-  return JSON.parse(stdout) as ProbeResult
-}
+  ]);
+  if (exitCode !== 0) throw new Error(`ffprobe failed on ${file}: ${stderr}`);
+  return JSON.parse(stdout) as ProbeResult;
+};
 
-const SILENCE_FLOOR_DB = -50
+const SILENCE_FLOOR_DB = -50;
 
-const parseAllowSilent = (argv: string[]): boolean =>
-  argv.includes('--allow-silent')
+const parseAllowSilent = (argv: string[]): boolean => argv.includes("--allow-silent");
 
 const measureMaxVolumeDb = async (file: string): Promise<number | null> => {
   const process = Bun.spawn(
-    [
-      'ffmpeg',
-      '-hide_banner',
-      '-i',
-      file,
-      '-af',
-      'volumedetect',
-      '-vn',
-      '-f',
-      'null',
-      '-',
-    ],
-    { stdout: 'pipe', stderr: 'pipe' },
-  )
+    ["ffmpeg", "-hide_banner", "-i", file, "-af", "volumedetect", "-vn", "-f", "null", "-"],
+    { stdout: "pipe", stderr: "pipe" },
+  );
   const [stderr, exitCode] = await Promise.all([
     new Response(process.stderr).text(),
     process.exited,
-  ])
-  if (exitCode !== 0) throw new Error(`ffmpeg failed on ${file}: ${stderr}`)
-  const match = /max_volume: (-?[\d.]+) dB/.exec(stderr)
-  return match?.[1] === undefined ? null : Number(match[1])
-}
+  ]);
+  if (exitCode !== 0) throw new Error(`ffmpeg failed on ${file}: ${stderr}`);
+  const match = /max_volume: (-?[\d.]+) dB/.exec(stderr);
+  return match?.[1] === undefined ? null : Number(match[1]);
+};
 
-const verify = async (
-  file: string,
-  allowSilent: boolean,
-): Promise<string[]> => {
-  const { streams, format } = await probe(file)
-  const problems: string[] = []
-  const video = streams.find((stream) => stream.codec_type === 'video')
-  const duration = Number(format.duration)
+const verify = async (file: string, allowSilent: boolean): Promise<string[]> => {
+  const { streams, format } = await probe(file);
+  const problems: string[] = [];
+  const video = streams.find((stream) => stream.codec_type === "video");
+  const duration = Number(format.duration);
   if (Math.abs(duration - EXPECTED_SECONDS) > DURATION_TOLERANCE_SECONDS) {
-    problems.push(`duration ${duration}s, expected ${EXPECTED_SECONDS}s`)
+    problems.push(`duration ${duration}s, expected ${EXPECTED_SECONDS}s`);
   }
   if (video) {
     if (video.width !== WIDTH || video.height !== HEIGHT) {
-      problems.push(`size ${video.width}x${video.height}`)
+      problems.push(`size ${video.width}x${video.height}`);
     }
-    if (video.codec_name !== 'h264') {
-      problems.push(`codec ${video.codec_name}`)
+    if (video.codec_name !== "h264") {
+      problems.push(`codec ${video.codec_name}`);
     }
     if (parseFrameRate(video.r_frame_rate) !== FPS) {
-      problems.push(`frame rate ${video.r_frame_rate}`)
+      problems.push(`frame rate ${video.r_frame_rate}`);
     }
   } else {
-    problems.push('no video stream')
+    problems.push("no video stream");
   }
-  const hasAudio = streams.some((stream) => stream.codec_type === 'audio')
+  const hasAudio = streams.some((stream) => stream.codec_type === "audio");
   if (!hasAudio) {
-    if (!allowSilent) problems.push('missing audio stream')
+    if (!allowSilent) problems.push("missing audio stream");
   } else if (!allowSilent) {
-    const maxVolumeDb = await measureMaxVolumeDb(file)
+    const maxVolumeDb = await measureMaxVolumeDb(file);
     if (maxVolumeDb === null || maxVolumeDb < SILENCE_FLOOR_DB) {
       problems.push(
-        `audio is silent (max volume ${maxVolumeDb ?? 'unknown'} dB, floor ${SILENCE_FLOOR_DB} dB)`,
-      )
+        `audio is silent (max volume ${maxVolumeDb ?? "unknown"} dB, floor ${SILENCE_FLOOR_DB} dB)`,
+      );
     }
   }
-  return problems
-}
+  return problems;
+};
 
 const main = async () => {
-  const locales = parseLocales(process.argv.slice(2))
-  const concurrency = parseConcurrency(process.argv.slice(2))
-  const allowSilent = parseAllowSilent(process.argv.slice(2))
+  const locales = parseLocales(process.argv.slice(2));
+  const concurrency = parseConcurrency(process.argv.slice(2));
+  const allowSilent = parseAllowSilent(process.argv.slice(2));
   if (!allowSilent && !existsSync(MUSIC_TRACK)) {
     throw new Error(
       `Missing ${MUSIC_TRACK}: a render would be silent. Restore the Epidemic assets (apps/video/README.md#epidemic-assets) or pass --allow-silent.`,
-    )
+    );
   }
-  mkdirSync(OUT_DIR, { recursive: true })
-  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ?? null
+  mkdirSync(OUT_DIR, { recursive: true });
+  const browserExecutable = process.env.REMOTION_BROWSER_EXECUTABLE ?? null;
 
-  console.log('Bundling…')
+  console.log("Bundling…");
   const serveUrl = await bundle({
-    entryPoint: path.join(ROOT, 'src', 'index.ts'),
+    entryPoint: path.join(ROOT, "src", "index.ts"),
     rspack: true,
-  })
+  });
 
-  const failures: string[] = []
+  const failures: string[] = [];
   for (const locale of locales) {
-    const outputLocation = path.join(OUT_DIR, `snug-promo-${locale}.mp4`)
-    const inputProps = { locale }
+    const outputLocation = path.join(OUT_DIR, `snug-promo-${locale}.mp4`);
+    const inputProps = { locale };
     const composition = await selectComposition({
       serveUrl,
-      id: 'Promo',
+      id: "Promo",
       inputProps,
       browserExecutable,
-    })
-    console.log(`Rendering ${locale}…`)
+    });
+    console.log(`Rendering ${locale}…`);
     await renderMedia({
       composition,
       serveUrl,
-      codec: 'h264',
+      codec: "h264",
       outputLocation,
       inputProps,
       browserExecutable,
       concurrency,
-    })
-    const problems = await verify(outputLocation, allowSilent)
+    });
+    const problems = await verify(outputLocation, allowSilent);
     if (problems.length > 0) {
-      failures.push(`${locale}: ${problems.join('; ')}`)
+      failures.push(`${locale}: ${problems.join("; ")}`);
     } else {
-      console.log(`${locale}: ok -> ${outputLocation}`)
+      console.log(`${locale}: ok -> ${outputLocation}`);
     }
   }
 
   if (failures.length > 0) {
-    throw new Error(`Verification failed:\n${failures.join('\n')}`)
+    throw new Error(`Verification failed:\n${failures.join("\n")}`);
   }
-}
+};
 
 try {
-  await main()
+  await main();
 } catch (error: unknown) {
-  console.error(error)
-  process.exitCode = 1
+  console.error(error);
+  process.exitCode = 1;
 }

@@ -1,38 +1,38 @@
 ---
-import { Card, CardHeader, CardTitle } from '@workspace/ui/components/card'
+import { Card, CardHeader, CardTitle } from "@workspace/ui/components/card";
 
-import { COMPETITORS } from '../content/competitors'
-import { comparisonSubjects } from '../i18n/comparison-table'
+import { COMPETITORS } from "../content/competitors";
+import { comparisonSubjects } from "../i18n/comparison-table";
 import {
   alternativesPath,
   type ComparisonSlug,
   getComparisonContent,
   interpolateComparison,
-} from '../i18n/comparisons'
-import { type Locale, localePath } from '../i18n/locales'
-import Layout from '../layouts/Layout.astro'
-import { comparisonPageDescriptor } from '../seo/comparison-descriptor'
-import ComparisonBreadcrumb from './ComparisonBreadcrumb.astro'
-import ComparisonTable from './ComparisonTable.astro'
-import Eyebrow from './Eyebrow.astro'
-import FinalCta from './FinalCta.astro'
-import SectionHeading from './SectionHeading.astro'
-import TextLink from './TextLink.astro'
+} from "../i18n/comparisons";
+import { type Locale, localePath } from "../i18n/locales";
+import Layout from "../layouts/Layout.astro";
+import { comparisonPageDescriptor } from "../seo/comparison-descriptor";
+import ComparisonBreadcrumb from "./ComparisonBreadcrumb.astro";
+import ComparisonTable from "./ComparisonTable.astro";
+import Eyebrow from "./Eyebrow.astro";
+import FinalCta from "./FinalCta.astro";
+import SectionHeading from "./SectionHeading.astro";
+import TextLink from "./TextLink.astro";
 
 interface Props {
-  locale: Locale
-  slug: ComparisonSlug
+  locale: Locale;
+  slug: ComparisonSlug;
 }
 
-const { locale, slug } = Astro.props
-const { shared, pages } = getComparisonContent(locale)
-const copy = pages[slug]
-const facts = COMPETITORS[slug]
-const page = comparisonPageDescriptor(locale, slug)
+const { locale, slug } = Astro.props;
+const { shared, pages } = getComparisonContent(locale);
+const copy = pages[slug];
+const facts = COMPETITORS[slug];
+const page = comparisonPageDescriptor(locale, slug);
 const values = {
   users: facts.userCount,
   rating: facts.ratingValue,
-  ...(facts.languageCount !== 'not-listed' && {
+  ...(facts.languageCount !== "not-listed" && {
     languages: facts.languageCount,
   }),
   ...(facts.historyLimitMonths !== undefined && {
@@ -40,12 +40,9 @@ const values = {
   }),
   date: facts.verifiedOn,
   name: facts.shortName,
-}
-const fill = (template: string) =>
-  interpolateComparison(template, locale, values)
-const subjects = comparisonSubjects().filter(
-  (subject) => subject.isSnug || subject.slug === slug,
-)
+};
+const fill = (template: string) => interpolateComparison(template, locale, values);
+const subjects = comparisonSubjects().filter((subject) => subject.isSnug || subject.slug === slug);
 const crumbs = [
   { name: shared.breadcrumb.home, href: localePath(locale) },
   {
@@ -53,9 +50,9 @@ const crumbs = [
     href: alternativesPath(locale),
   },
   { name: facts.name },
-]
-const headingClass = 'font-heading text-2xl font-bold md:text-3xl'
-const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
+];
+const headingClass = "font-heading text-2xl font-bold md:text-3xl";
+const listClass = "mt-4 list-disc space-y-2 pl-6 leading-prose";
 ---
 
 <Layout locale={locale} page={page}>
@@ -80,11 +77,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
           <p class="mt-1 text-base leading-prose">{fill(copy.tldr)}</p>
         </div>
       </section>
-      <section
-        data-section="at-a-glance"
-        aria-labelledby="at-a-glance-heading"
-        class="mt-12"
-      >
+      <section data-section="at-a-glance" aria-labelledby="at-a-glance-heading" class="mt-12">
         <h2 id="at-a-glance-heading" class={headingClass}>
           {shared.atAGlance}
         </h2>
@@ -98,11 +91,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
           />
         </div>
       </section>
-      <section
-        data-section="why-look"
-        aria-labelledby="why-look-heading"
-        class="mt-12 max-w-3xl"
-      >
+      <section data-section="why-look" aria-labelledby="why-look-heading" class="mt-12 max-w-3xl">
         <h2 id="why-look-heading" class={headingClass}>
           {copy.whyLook.title}
         </h2>
@@ -117,10 +106,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
           <Card size="lg" className="w-full">
             <CardHeader>
               <CardTitle>
-                <h2
-                  id="pick-snug-heading"
-                  class="text-xl leading-tight break-words"
-                >
+                <h2 id="pick-snug-heading" class="text-xl leading-tight break-words">
                   {shared.pickSnug}
                 </h2>
               </CardTitle>
@@ -134,10 +120,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
           <Card size="lg" className="w-full">
             <CardHeader>
               <CardTitle>
-                <h2
-                  id="pick-other-heading"
-                  class="text-xl leading-tight break-words"
-                >
+                <h2 id="pick-other-heading" class="text-xl leading-tight break-words">
                   {fill(shared.pickOther)}
                 </h2>
               </CardTitle>
@@ -150,11 +133,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
           </Card>
         </div>
       </section>
-      <section
-        data-section="switching"
-        aria-labelledby="switching-heading"
-        class="mt-12 max-w-3xl"
-      >
+      <section data-section="switching" aria-labelledby="switching-heading" class="mt-12 max-w-3xl">
         <h2 id="switching-heading" class={headingClass}>
           {shared.switching}
         </h2>
@@ -168,7 +147,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose'
         data-section="as-of"
         class="mt-12 max-w-3xl border-t border-border pt-4 text-sm text-muted-foreground"
       >
-        {fill(shared.checkedNote)}{' '}
+        {fill(shared.checkedNote)}{" "}
         <TextLink
           href={facts.storeUrl}
           rel="noopener nofollow"

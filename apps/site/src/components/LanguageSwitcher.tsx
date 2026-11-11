@@ -1,25 +1,21 @@
-import { Button, buttonVariants } from '@workspace/ui/components/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@workspace/ui/components/popover'
+import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
 
 interface LanguageOption {
-  code: string
-  href: string
-  tag: string
-  name: string
+  code: string;
+  href: string;
+  tag: string;
+  name: string;
 }
 
 export interface LanguageSwitcherProperties {
-  current: string
-  currentTag: string
-  currentName: string
-  label: string
-  separator: string
-  options: readonly LanguageOption[]
-  markCurrent: boolean
+  current: string;
+  currentTag: string;
+  currentName: string;
+  label: string;
+  separator: string;
+  options: readonly LanguageOption[];
+  markCurrent: boolean;
 }
 
 /**
@@ -45,27 +41,18 @@ export default function LanguageSwitcher({
   options,
   markCurrent,
 }: LanguageSwitcherProperties) {
-  const accessibleLabel = `${label}${separator}`
+  const accessibleLabel = `${label}${separator}`;
   return (
     <div className="min-w-0" data-language-switcher>
       <Popover>
         <PopoverTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="touch"
-              className="max-w-full focus-ring-solid"
-            />
-          }
+          render={<Button variant="ghost" size="touch" className="max-w-full focus-ring-solid" />}
         >
           <span className="sr-only">{accessibleLabel}</span>
           <span lang={currentTag} className="min-w-0 truncate">
             {currentName}
           </span>
-          <span
-            aria-hidden="true"
-            className="shrink-0 font-mono text-sm text-primary-text"
-          >
+          <span aria-hidden="true" className="shrink-0 font-mono text-sm text-primary-text">
             {currentTag}
           </span>
         </PopoverTrigger>
@@ -85,14 +72,12 @@ export default function LanguageSwitcher({
                   data-umami-event-locale={option.code}
                   lang={option.tag}
                   hrefLang={option.tag}
-                  aria-current={
-                    markCurrent && option.code === current ? 'page' : undefined
-                  }
+                  aria-current={markCurrent && option.code === current ? "page" : undefined}
                   className={buttonVariants({
-                    variant: 'ghost',
-                    size: 'touch',
+                    variant: "ghost",
+                    size: "touch",
                     className:
-                      'w-full justify-start focus-ring-solid aria-[current=page]:text-primary-text',
+                      "w-full justify-start focus-ring-solid aria-[current=page]:text-primary-text",
                   })}
                 >
                   {option.name}
@@ -103,5 +88,5 @@ export default function LanguageSwitcher({
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

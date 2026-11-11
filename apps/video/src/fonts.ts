@@ -1,101 +1,100 @@
-import { loadFont } from '@remotion/fonts'
-import { loadFont as loadGeistGoogle } from '@remotion/google-fonts/Geist'
-import { loadFont as loadNotoSansJP } from '@remotion/google-fonts/NotoSansJP'
-import { loadFont as loadNotoSansKR } from '@remotion/google-fonts/NotoSansKR'
-import { loadFont as loadNotoSansSC } from '@remotion/google-fonts/NotoSansSC'
-import { staticFile } from 'remotion'
+import { loadFont } from "@remotion/fonts";
+import { loadFont as loadGeistGoogle } from "@remotion/google-fonts/Geist";
+import { loadFont as loadNotoSansJP } from "@remotion/google-fonts/NotoSansJP";
+import { loadFont as loadNotoSansKR } from "@remotion/google-fonts/NotoSansKR";
+import { loadFont as loadNotoSansSC } from "@remotion/google-fonts/NotoSansSC";
+import { staticFile } from "remotion";
 
-import type { Locale } from './copy'
+import type { Locale } from "./copy";
 
 export type FontStack = {
-  display: string
-  body: string
-  mono: string
-}
+  display: string;
+  body: string;
+  mono: string;
+};
 
-type CjkLocale = 'ja' | 'ko' | 'zh_CN'
+type CjkLocale = "ja" | "ko" | "zh_CN";
 
-const GEIST = 'Geist'
-const GEIST_MONO = 'Geist Mono'
-const SPACE_GROTESK = 'Space Grotesk'
-const FALLBACK = 'system-ui, sans-serif'
-const MONO_FALLBACK = 'ui-monospace, monospace'
+const GEIST = "Geist";
+const GEIST_MONO = "Geist Mono";
+const SPACE_GROTESK = "Space Grotesk";
+const FALLBACK = "system-ui, sans-serif";
+const MONO_FALLBACK = "ui-monospace, monospace";
 
 const NOTO: Record<CjkLocale, string> = {
-  ja: 'Noto Sans JP',
-  ko: 'Noto Sans KR',
-  zh_CN: 'Noto Sans SC',
-}
+  ja: "Noto Sans JP",
+  ko: "Noto Sans KR",
+  zh_CN: "Noto Sans SC",
+};
 
-const isCjk = (locale: Locale): locale is CjkLocale =>
-  ['ja', 'ko', 'zh_CN'].includes(locale)
+const isCjk = (locale: Locale): locale is CjkLocale => ["ja", "ko", "zh_CN"].includes(locale);
 
 const stack = (display: string, body: string): FontStack => ({
   display: `'${display}', ${FALLBACK}`,
   body: `'${body}', ${FALLBACK}`,
   mono: `'${GEIST_MONO}', ${MONO_FALLBACK}`,
-})
+});
 
 /**
  * The font families a locale renders with. Space Grotesk has no Cyrillic, so
  * Russian uses Geist for display text; CJK locales use Noto Sans.
  */
 export const fontStackFor = (locale: Locale): FontStack => {
-  if (isCjk(locale)) return stack(NOTO[locale], NOTO[locale])
-  return stack(locale === 'ru' ? GEIST : SPACE_GROTESK, GEIST)
-}
+  if (isCjk(locale)) return stack(NOTO[locale], NOTO[locale]);
+  return stack(locale === "ru" ? GEIST : SPACE_GROTESK, GEIST);
+};
 
 const loadBrandFonts = (): Promise<void[]> =>
   Promise.all([
     loadFont({
       family: GEIST,
-      url: staticFile('fonts/Geist-var.woff2'),
-      weight: '100 900',
+      url: staticFile("fonts/Geist-var.woff2"),
+      weight: "100 900",
     }),
     loadFont({
       family: GEIST_MONO,
-      url: staticFile('fonts/GeistMono-var.woff2'),
-      weight: '100 900',
+      url: staticFile("fonts/GeistMono-var.woff2"),
+      weight: "100 900",
     }),
     loadFont({
       family: SPACE_GROTESK,
-      url: staticFile('fonts/SpaceGrotesk-var.woff2'),
-      weight: '300 700',
+      url: staticFile("fonts/SpaceGrotesk-var.woff2"),
+      weight: "300 700",
     }),
-  ])
+  ]);
 
 const loadCjkFont = (locale: CjkLocale): Promise<unknown> => {
   const options = {
-    weights: ['400', '700'] as ('400' | '700')[],
+    weights: ["400", "700"] as ("400" | "700")[],
     ignoreTooManyRequestsWarning: true,
-  }
-  if (locale === 'ja') return loadNotoSansJP('normal', options).waitUntilDone()
-  return locale === 'ko'
-    ? loadNotoSansKR('normal', options).waitUntilDone()
-    : loadNotoSansSC('normal', options).waitUntilDone()
-}
+  };
+  if (locale === "ja") return loadNotoSansJP("normal", options).waitUntilDone();
+  return locale === "ko"
+    ? loadNotoSansKR("normal", options).waitUntilDone()
+    : loadNotoSansSC("normal", options).waitUntilDone();
+};
 
 const loadCyrillicGeist = (): Promise<unknown> =>
-  loadGeistGoogle('normal', {
-    weights: ['400', '500', '600', '700'],
-    subsets: ['cyrillic'],
+  loadGeistGoogle("normal", {
+    weights: ["400", "500", "600", "700"],
+    subsets: ["cyrillic"],
     ignoreTooManyRequestsWarning: true,
-  }).waitUntilDone()
+  }).waitUntilDone();
 
-const pending = new Map<Locale, Promise<unknown>>()
+const pending = new Map<Locale, Promise<unknown>>();
 
 /**
  * Loads every font a locale needs once and resolves when all are ready.
  */
 export const loadFontsFor = (locale: Locale): Promise<unknown> => {
-  const existing = pending.get(locale)
-  if (existing) return existing
-  const brand = loadBrandFonts()
+  const existing = pending.get(locale);
+  if (existing) return existing;
+  const brand = loadBrandFonts();
   const loading = isCjk(locale)
     ? Promise.all([brand, loadCjkFont(locale)])
-    : locale === 'ru'
+    : locale === "ru"
       ? Promise.all([brand, loadCyrillicGeist()])
-      : brand
-  pending.set(locale, loading)
-  return loading
-}
+      : brand;
+  pending.set(locale, loading);
+  return loading;
+};

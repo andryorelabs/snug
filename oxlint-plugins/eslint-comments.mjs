@@ -1,19 +1,19 @@
-import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 
-import { forwardWith } from './forward-with.mjs'
+import { forwardWith } from "./forward-with.mjs";
 
 /**
  * Names of the `@eslint-community/eslint-plugin-eslint-comments` rules this
  * repo enforces: the `recommended` set plus `require-description`.
  */
 const ENFORCED_RULE_NAMES = [
-  'disable-enable-pair',
-  'no-aggregating-enable',
-  'no-duplicate-disable',
-  'no-unlimited-disable',
-  'no-unused-enable',
-  'require-description',
-]
+  "disable-enable-pair",
+  "no-aggregating-enable",
+  "no-duplicate-disable",
+  "no-unlimited-disable",
+  "no-unused-enable",
+  "require-description",
+];
 
 /**
  * Rewrites the "force location" the upstream rules report with — a start
@@ -27,15 +27,15 @@ const ENFORCED_RULE_NAMES = [
  * @returns The same descriptor with a non-negative start column.
  */
 function clampReportLocation(descriptor) {
-  const location = descriptor.loc
+  const location = descriptor.loc;
   if (!location?.start || location.start.column >= 0) {
-    return descriptor
+    return descriptor;
   }
-  const lineStart = { line: location.start.line, column: 0 }
+  const lineStart = { line: location.start.line, column: 0 };
   return {
     ...descriptor,
     loc: { start: lineStart, end: lineStart },
-  }
+  };
 }
 
 /**
@@ -50,10 +50,10 @@ function withClampedReports(rule) {
     create(context) {
       const clampedContext = forwardWith(context, {
         report: (descriptor) => context.report(clampReportLocation(descriptor)),
-      })
-      return rule.create(clampedContext)
+      });
+      return rule.create(clampedContext);
     },
-  }
+  };
 }
 
 /**
@@ -64,13 +64,10 @@ function withClampedReports(rule) {
  * Registered as `eslint-comments` in `oxlint.config.ts`.
  */
 const eslintCommentsPlugin = {
-  meta: { name: 'eslint-comments' },
+  meta: { name: "eslint-comments" },
   rules: Object.fromEntries(
-    ENFORCED_RULE_NAMES.map((name) => [
-      name,
-      withClampedReports(eslintComments.rules[name]),
-    ]),
+    ENFORCED_RULE_NAMES.map((name) => [name, withClampedReports(eslintComments.rules[name])]),
   ),
-}
+};
 
-export default eslintCommentsPlugin
+export default eslintCommentsPlugin;

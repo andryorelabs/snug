@@ -1,12 +1,12 @@
-import { i18n } from '#i18n'
-import Papa from 'papaparse'
+import { i18n } from "#i18n";
+import Papa from "papaparse";
 
-import { countImportableBookmarks } from '@/lib/count-bookmarks'
-import { splitFolderPath, unescapeFormulaField } from '@/lib/csv-escaping'
-import { ImportWriter, withImportRollback } from '@/lib/import-control'
-import { isAllowedBookmarkUrl } from '@/lib/importers/url-validation'
-import { applySkipDuplicates } from '@/lib/skip-duplicates'
-import type { ImportOptions, ImportResult, ParsedBookmark } from '@/lib/types'
+import { countImportableBookmarks } from "@/lib/count-bookmarks";
+import { splitFolderPath, unescapeFormulaField } from "@/lib/csv-escaping";
+import { ImportWriter, withImportRollback } from "@/lib/import-control";
+import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import { applySkipDuplicates } from "@/lib/skip-duplicates";
+import type { ImportOptions, ImportResult, ParsedBookmark } from "@/lib/types";
 
 /**
  * Imports bookmarks from a CSV string with `title`, `url`, and `folder`
@@ -23,9 +23,9 @@ export async function importFromCSV(
   csv: string,
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  const { tree, skippedInvalidUrl } = parseCSVTree(csv)
-  const written = await importCsvTree(tree, options)
-  return { ...written, skippedInvalidUrl }
+  const { tree, skippedInvalidUrl } = parseCSVTree(csv);
+  const written = await importCsvTree(tree, options);
+  return { ...written, skippedInvalidUrl };
 }
 
 /**
@@ -41,21 +41,17 @@ export async function importCsvTree(
   tree: ParsedBookmark[],
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  const liveTree = await browser.bookmarks.getTree()
+  const liveTree = await browser.bookmarks.getTree();
   const { nodes, skippedDuplicates } = applySkipDuplicates(
     tree,
     liveTree,
-    'folder',
+    "folder",
     options.skipDuplicates ?? false,
-  )
-  const writer = new ImportWriter(
-    options,
-    countImportableBookmarks(nodes),
-    skippedDuplicates,
-  )
-  await withImportRollback(writer, () => writeCsvTree(nodes, writer))
-  writer.finish()
-  return { skippedInvalidUrl: 0, skippedDuplicates }
+  );
+  const writer = new ImportWriter(options, countImportableBookmarks(nodes), skippedDuplicates);
+  await withImportRollback(writer, () => writeCsvTree(nodes, writer));
+  writer.finish();
+  return { skippedInvalidUrl: 0, skippedDuplicates };
 }
 
 /**
@@ -67,30 +63,26 @@ export async function importCsvTree(
  * @throws {Error} When Papa Parse reports an error other than `FieldMismatch`.
  */
 export function parseCSVTree(csv: string): {
-  tree: ParsedBookmark[]
-  skippedInvalidUrl: number
+  tree: ParsedBookmark[];
+  skippedInvalidUrl: number;
 } {
   const parsed = Papa.parse<Record<string, string>>(csv.trim(), {
     header: true,
     skipEmptyLines: true,
     transformHeader: (header) => header.toLowerCase().trim(),
-  })
+  });
 
-  const fatalErrors = parsed.errors.filter(
-    (error) => error.type !== 'FieldMismatch',
-  )
+  const fatalErrors = parsed.errors.filter((error) => error.type !== "FieldMismatch");
   if (fatalErrors.length > 0) {
-    throw new Error(fatalErrors.map((error) => error.message).join('; '))
+    throw new Error(fatalErrors.map((error) => error.message).join("; "));
   }
 
   const malformedRows = new Set(
-    parsed.errors.flatMap((error) =>
-      error.row === undefined ? [] : error.row,
-    ),
-  )
-  const rows = parsed.data.filter((_, index) => !malformedRows.has(index))
-  const { tree, skippedInvalidUrl } = processCSVData(rows)
-  return { tree, skippedInvalidUrl: skippedInvalidUrl + malformedRows.size }
+    parsed.errors.flatMap((error) => (error.row === undefined ? [] : error.row)),
+  );
+  const rows = parsed.data.filter((_, index) => !malformedRows.has(index));
+  const { tree, skippedInvalidUrl } = processCSVData(rows);
+  return { tree, skippedInvalidUrl: skippedInvalidUrl + malformedRows.size };
 }
 
 /**
@@ -105,50 +97,50 @@ export function parseCSVTree(csv: string): {
  *   their `url` is not allowed.
  */
 function processCSVData(rows: Record<string, string>[]): {
-  tree: ParsedBookmark[]
-  skippedInvalidUrl: number
+  tree: ParsedBookmark[];
+  skippedInvalidUrl: number;
 } {
-  const root: ParsedBookmark[] = []
-  let skippedInvalidUrl = 0
-  const folderMemo: Record<string, ParsedBookmark> = {}
+  const root: ParsedBookmark[] = [];
+  let skippedInvalidUrl = 0;
+  const folderMemo: Record<string, ParsedBookmark> = {};
 
   for (const row of rows) {
-    const title = unescapeFormulaField(row['title']?.trim() ?? '')
-    const url = row['url']?.trim()
+    const title = unescapeFormulaField(row["title"]?.trim() ?? "");
+    const url = row["url"]?.trim();
 
     if (!isAllowedBookmarkUrl(url)) {
-      skippedInvalidUrl++
-      continue
+      skippedInvalidUrl++;
+      continue;
     }
 
-    const folderPath = unescapeFormulaField(row['folder']?.trim() ?? '')
-    const segments = splitFolderPath(folderPath)
+    const folderPath = unescapeFormulaField(row["folder"]?.trim() ?? "");
+    const segments = splitFolderPath(folderPath);
 
-    let currentLevel = root
-    let currentPath = ''
+    let currentLevel = root;
+    let currentPath = "";
 
     for (const segment of segments) {
-      currentPath = currentPath ? `${currentPath}\0${segment}` : segment
+      currentPath = currentPath ? `${currentPath}\0${segment}` : segment;
 
-      let folder = folderMemo[currentPath]
+      let folder = folderMemo[currentPath];
       if (!folder) {
         folder = {
           title: segment,
           dateAdded: Date.now(),
           dateGroupModified: Date.now(),
           children: [],
-        }
-        currentLevel.push(folder)
-        folderMemo[currentPath] = folder
+        };
+        currentLevel.push(folder);
+        folderMemo[currentPath] = folder;
       }
 
-      currentLevel = folder.children ??= []
+      currentLevel = folder.children ??= [];
     }
 
-    currentLevel.push({ title, url, dateAdded: Date.now() })
+    currentLevel.push({ title, url, dateAdded: Date.now() });
   }
 
-  return { tree: root, skippedInvalidUrl }
+  return { tree: root, skippedInvalidUrl };
 }
 
 /**
@@ -161,41 +153,33 @@ function processCSVData(rows: Record<string, string>[]): {
  * @param writer The writer that creates and journals the nodes.
  * @returns Resolves once the whole tree has been created.
  */
-export async function writeCsvTree(
-  tree: ParsedBookmark[],
-  writer: ImportWriter,
-): Promise<void> {
-  const tree_chrome = await browser.bookmarks.getTree()
-  const root = tree_chrome[0]
+export async function writeCsvTree(tree: ParsedBookmark[], writer: ImportWriter): Promise<void> {
+  const tree_chrome = await browser.bookmarks.getTree();
+  const root = tree_chrome[0];
 
   if (!root?.children?.[0] || !root.children?.[1]) {
-    throw new Error(i18n.t('importFromCSVImportError'))
+    throw new Error(i18n.t("importFromCSVImportError"));
   }
 
-  const importedFolderTitle = i18n.t('importedBookmarks')
+  const importedFolderTitle = i18n.t("importedBookmarks");
   const existing = await browser.bookmarks.search({
     title: importedFolderTitle,
-  })
+  });
 
-  let importedFolderId: string
+  let importedFolderId: string;
 
-  const existingFolder = existing.find((node) => !node.url)
+  const existingFolder = existing.find((node) => !node.url);
   if (existingFolder) {
-    importedFolderId = existingFolder.id
+    importedFolderId = existingFolder.id;
   } else {
-    const created = await writer.create({ title: importedFolderTitle })
-    importedFolderId = created.id
+    const created = await writer.create({ title: importedFolderTitle });
+    importedFolderId = created.id;
   }
 
-  await createBookmarksRecursive(
-    tree,
-    importedFolderId,
-    writer,
-    indexFoldersByParent(tree_chrome),
-  )
+  await createBookmarksRecursive(tree, importedFolderId, writer, indexFoldersByParent(tree_chrome));
 }
 
-type FolderIdsByParent = Map<string, Map<string, string>>
+type FolderIdsByParent = Map<string, Map<string, string>>;
 
 /**
  * Indexes every existing folder by parent id and title in one walk, so reusing
@@ -210,19 +194,19 @@ function indexFoldersByParent(
   index: FolderIdsByParent = new Map(),
 ): FolderIdsByParent {
   for (const node of nodes) {
-    if (node.url || !node.children) continue
+    if (node.url || !node.children) continue;
     for (const child of node.children) {
-      if (child.url || !child.children) continue
-      let titles = index.get(node.id)
+      if (child.url || !child.children) continue;
+      let titles = index.get(node.id);
       if (!titles) {
-        titles = new Map()
-        index.set(node.id, titles)
+        titles = new Map();
+        index.set(node.id, titles);
       }
-      if (!titles.has(child.title)) titles.set(child.title, child.id)
+      if (!titles.has(child.title)) titles.set(child.title, child.id);
     }
-    indexFoldersByParent(node.children, index)
+    indexFoldersByParent(node.children, index);
   }
-  return index
+  return index;
 }
 
 /**
@@ -245,24 +229,19 @@ async function createBookmarksRecursive(
 ): Promise<void> {
   for (const node of nodes) {
     if (node.url) {
-      await writer.create({ parentId, title: node.title, url: node.url })
+      await writer.create({ parentId, title: node.title, url: node.url });
     } else if (node.children) {
-      const matchId = existingFolders.get(parentId)?.get(node.title)
+      const matchId = existingFolders.get(parentId)?.get(node.title);
 
-      let folderId: string
+      let folderId: string;
       if (matchId) {
-        folderId = matchId
+        folderId = matchId;
       } else {
-        const created = await writer.create({ parentId, title: node.title })
-        folderId = created.id
+        const created = await writer.create({ parentId, title: node.title });
+        folderId = created.id;
       }
 
-      await createBookmarksRecursive(
-        node.children,
-        folderId,
-        writer,
-        existingFolders,
-      )
+      await createBookmarksRecursive(node.children, folderId, writer, existingFolders);
     }
   }
 }

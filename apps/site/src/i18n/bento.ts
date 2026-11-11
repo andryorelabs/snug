@@ -1,15 +1,15 @@
-import { getContent, type SiteContent } from './content'
-import type { Locale } from './locales'
+import { getContent, type SiteContent } from "./content";
+import type { Locale } from "./locales";
 
 /**
  * Keys of the bento cards, in display order.
  */
-export const BENTO_KEYS = ['export', 'import', 'backup', 'popup'] as const
+export const BENTO_KEYS = ["export", "import", "backup", "popup"] as const;
 
 /**
  * Copy for the bento cards of one locale.
  */
-export type BentoCopy = SiteContent['landing']['bento']
+export type BentoCopy = SiteContent["landing"]["bento"];
 
 /**
  * Bento card copy for one locale.
@@ -17,7 +17,7 @@ export type BentoCopy = SiteContent['landing']['bento']
  * @returns Title and sentence of each card.
  */
 export function getBentoCopy(locale: Locale): BentoCopy {
-  return getContent(locale).landing.bento
+  return getContent(locale).landing.bento;
 }
 
 /**
@@ -26,6 +26,6 @@ export function getBentoCopy(locale: Locale): BentoCopy {
  * @returns The four bento titles.
  */
 export function bentoTitles(locale: Locale): string[] {
-  const copy = getBentoCopy(locale)
-  return BENTO_KEYS.map((key) => copy[key].title)
+  const copy = getBentoCopy(locale);
+  return BENTO_KEYS.map((key) => copy[key].title);
 }

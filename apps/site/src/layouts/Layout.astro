@@ -1,15 +1,15 @@
 ---
-import '../styles/site.css'
-import geistCyrillic from '@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2?url'
-import geistLatin from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url'
-import spaceGroteskLatin from '@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url'
-import { cn } from '@workspace/ui/lib/utils'
+import "../styles/site.css";
+import geistCyrillic from "@fontsource-variable/geist/files/geist-cyrillic-wght-normal.woff2?url";
+import geistLatin from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
+import spaceGroteskLatin from "@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2?url";
+import { cn } from "@workspace/ui/lib/utils";
 
-import Footer from '../components/Footer.astro'
-import Header from '../components/Header.astro'
-import { bentoTitles } from '../i18n/bento'
-import { getContent, getPageMeta } from '../i18n/content'
-import { PROMO_VIDEO_IDS } from '../i18n/landing'
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { bentoTitles } from "../i18n/bento";
+import { getContent, getPageMeta } from "../i18n/content";
+import { PROMO_VIDEO_IDS } from "../i18n/landing";
 import {
   DEFAULT_LOCALE,
   hreflangAlternates,
@@ -20,52 +20,50 @@ import {
   SITE_ORIGIN,
   type FontPreload,
   type Locale,
-} from '../i18n/locales'
-import { THEME_COLORS } from '../scripts/theme-color'
-import { THEME_INIT_SCRIPT } from '../scripts/theme-init'
-import { OG_IMAGE, ogLocale, ogLocaleAlternates } from '../seo/open-graph'
-import type { PageDescriptor } from '../seo/page-descriptor'
-import { buildStructuredData } from '../seo/structured-data'
-import { UMAMI_DOMAINS, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from '../seo/umami'
+} from "../i18n/locales";
+import { THEME_COLORS } from "../scripts/theme-color";
+import { THEME_INIT_SCRIPT } from "../scripts/theme-init";
+import { OG_IMAGE, ogLocale, ogLocaleAlternates } from "../seo/open-graph";
+import type { PageDescriptor } from "../seo/page-descriptor";
+import { buildStructuredData } from "../seo/structured-data";
+import { UMAMI_DOMAINS, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from "../seo/umami";
 
 const FONT_PRELOAD_URLS: Record<FontPreload, string> = {
-  'space-grotesk-latin': spaceGroteskLatin,
-  'geist-latin': geistLatin,
-  'geist-cyrillic': geistCyrillic,
-}
+  "space-grotesk-latin": spaceGroteskLatin,
+  "geist-latin": geistLatin,
+  "geist-cyrillic": geistCyrillic,
+};
 
 interface Props {
-  locale: Locale
-  notFound?: boolean
-  page?: PageDescriptor
+  locale: Locale;
+  notFound?: boolean;
+  page?: PageDescriptor;
 }
 
-const { locale, notFound = false, page } = Astro.props
-const content = getContent(locale)
-const meta = page?.meta ?? getPageMeta(locale)
-const hasAlternates = page === undefined || page.alternateLocales.length > 0
-const pagePath = page ? page.path(locale) : localePath(locale)
-const canonical = `${SITE_ORIGIN}${pagePath}`
+const { locale, notFound = false, page } = Astro.props;
+const content = getContent(locale);
+const meta = page?.meta ?? getPageMeta(locale);
+const hasAlternates = page === undefined || page.alternateLocales.length > 0;
+const pagePath = page ? page.path(locale) : localePath(locale);
+const canonical = `${SITE_ORIGIN}${pagePath}`;
 const alternates = hasAlternates
   ? hreflangAlternates(page?.path(DEFAULT_LOCALE), page?.alternateLocales)
-  : []
-const ogAlternates = hasAlternates
-  ? ogLocaleAlternates(locale, page?.alternateLocales)
-  : []
-const ogImage = `${SITE_ORIGIN}${ogImagePath(locale)}`
-const ogImageAlt = content.seo.ogImageAlt
-const featureTitles = bentoTitles(locale)
+  : [];
+const ogAlternates = hasAlternates ? ogLocaleAlternates(locale, page?.alternateLocales) : [];
+const ogImage = `${SITE_ORIGIN}${ogImagePath(locale)}`;
+const ogImageAlt = content.seo.ogImageAlt;
+const featureTitles = bentoTitles(locale);
 const structuredData = page
   ? page.jsonLd
   : buildStructuredData(locale, meta.description, featureTitles, {
       title: meta.title,
       videoId: PROMO_VIDEO_IDS[locale],
       videoDescription: content.video.caption,
-    })
+    });
 const jsonLd = structuredData
-  ? JSON.stringify(structuredData).replaceAll('<', String.raw`\u003c`)
-  : null
-const switcherHref = page && hasAlternates ? page.path : undefined
+  ? JSON.stringify(structuredData).replaceAll("<", String.raw`\u003c`)
+  : null;
+const switcherHref = page && hasAlternates ? page.path : undefined;
 ---
 
 <html lang={languageTag(locale)} dir={LOCALE_CONFIG[locale].dir}>
@@ -78,16 +76,8 @@ const switcherHref = page && hasAlternates ? page.path : undefined
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="color-scheme" content="light dark" />
-    <meta
-      name="theme-color"
-      content={THEME_COLORS.light}
-      media="(prefers-color-scheme: light)"
-    />
-    <meta
-      name="theme-color"
-      content={THEME_COLORS.dark}
-      media="(prefers-color-scheme: dark)"
-    />
+    <meta name="theme-color" content={THEME_COLORS.light} media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content={THEME_COLORS.dark} media="(prefers-color-scheme: dark)" />
     <script is:inline set:html={THEME_INIT_SCRIPT} />
     <script
       is:inline
@@ -98,13 +88,7 @@ const switcherHref = page && hasAlternates ? page.path : undefined
       data-domains={UMAMI_DOMAINS}
     ></script>
     {LOCALE_CONFIG[locale].preloadFonts.map((font) => (
-      <link
-        rel="preload"
-        as="font"
-        type="font/woff2"
-        href={FONT_PRELOAD_URLS[font]}
-        crossorigin
-      />
+      <link rel="preload" as="font" type="font/woff2" href={FONT_PRELOAD_URLS[font]} crossorigin />
     ))}
     {notFound ? (
       <meta name="robots" content="noindex" />
@@ -140,10 +124,7 @@ const switcherHref = page && hasAlternates ? page.path : undefined
     )}
   </head>
   <body
-    class={cn(
-      'bg-background font-sans text-foreground',
-      notFound && 'flex min-h-dvh flex-col',
-    )}
+    class={cn("bg-background font-sans text-foreground", notFound && "flex min-h-dvh flex-col")}
   >
     <Header
       locale={locale}

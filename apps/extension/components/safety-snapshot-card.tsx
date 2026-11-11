@@ -1,9 +1,5 @@
-import { i18n } from '#i18n'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@workspace/ui/components/alert'
+import { i18n } from "#i18n";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -12,23 +8,23 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@workspace/ui/components/alert-dialog'
-import { Badge } from '@workspace/ui/components/badge'
-import { Button } from '@workspace/ui/components/button'
+} from "@workspace/ui/components/alert-dialog";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@workspace/ui/components/card'
+} from "@workspace/ui/components/card";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '@workspace/ui/components/empty'
+} from "@workspace/ui/components/empty";
 import {
   Item,
   ItemActions,
@@ -37,28 +33,23 @@ import {
   ItemGroup,
   ItemMedia,
   ItemTitle,
-} from '@workspace/ui/components/item'
-import { Spinner } from '@workspace/ui/components/spinner'
-import {
-  CircleAlertIcon,
-  DownloadIcon,
-  ShieldIcon,
-  Undo2Icon,
-} from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+} from "@workspace/ui/components/item";
+import { Spinner } from "@workspace/ui/components/spinner";
+import { CircleAlertIcon, DownloadIcon, ShieldIcon, Undo2Icon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { countBookmarks } from '@/lib/count-bookmarks'
-import { formatCount } from '@/lib/format-count'
-import { formatSnapshotDate } from '@/lib/format-snapshot-date'
-import { withImportLock } from '@/lib/import-lock'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { formatCount } from "@/lib/format-count";
+import { formatSnapshotDate } from "@/lib/format-snapshot-date";
+import { withImportLock } from "@/lib/import-lock";
 import {
   downloadSafetySnapshot,
   restoreSafetySnapshot,
   safetySnapshotStore,
   takeSafetySnapshot,
-} from '@/lib/safety-snapshot'
-import type { SafetySnapshot } from '@/lib/safety-snapshot'
-import { useStorageItem } from '@/lib/use-storage-item'
+} from "@/lib/safety-snapshot";
+import type { SafetySnapshot } from "@/lib/safety-snapshot";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 /**
  * The Settings card for Safety snapshots: a Take a snapshot now button and
@@ -72,39 +63,33 @@ import { useStorageItem } from '@/lib/use-storage-item'
  * title, after the App shell's page-change heading focus.
  * @returns The snapshot list and its actions.
  */
-export function SafetySnapshotCard({
-  focusTitleOnMount = false,
-}: {
-  focusTitleOnMount?: boolean
-}) {
-  const titleReference = useRef<HTMLDivElement>(null)
+export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOnMount?: boolean }) {
+  const titleReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!focusTitleOnMount) return
+    if (!focusTitleOnMount) return;
     const timer = setTimeout(() => {
-      titleReference.current?.scrollIntoView({ block: 'start' })
-      titleReference.current?.focus()
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [focusTitleOnMount])
+      titleReference.current?.scrollIntoView({ block: "start" });
+      titleReference.current?.focus();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [focusTitleOnMount]);
 
-  const [snapshots] = useStorageItem(safetySnapshotStore)
-  const [restoreTarget, setRestoreTarget] = useState<SafetySnapshot | null>(
-    null,
-  )
+  const [snapshots] = useStorageItem(safetySnapshotStore);
+  const [restoreTarget, setRestoreTarget] = useState<SafetySnapshot | null>(null);
   type CardStatus =
-    | 'idle'
-    | 'restoring'
-    | 'restored'
-    | 'taking'
-    | 'take-error'
-    | 'download-error'
-    | 'restore-error'
+    | "idle"
+    | "restoring"
+    | "restored"
+    | "taking"
+    | "take-error"
+    | "download-error"
+    | "restore-error";
 
-  const [status, setStatus] = useState<CardStatus>('idle')
-  const [errorMessage, setErrorMessage] = useState('')
-  const busyGuard = useRef(false)
-  const isBusy = status === 'restoring' || status === 'taking'
+  const [status, setStatus] = useState<CardStatus>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const busyGuard = useRef(false);
+  const isBusy = status === "restoring" || status === "taking";
 
   const runExclusive = async (
     busyStatus: CardStatus,
@@ -112,49 +97,43 @@ export function SafetySnapshotCard({
     successStatus: CardStatus,
     action: () => Promise<unknown>,
   ) => {
-    if (busyGuard.current) return
-    busyGuard.current = true
-    setStatus(busyStatus)
-    setErrorMessage('')
+    if (busyGuard.current) return;
+    busyGuard.current = true;
+    setStatus(busyStatus);
+    setErrorMessage("");
     try {
-      await action()
-      setStatus(successStatus)
+      await action();
+      setStatus(successStatus);
     } catch (error) {
-      setStatus(failedStatus)
-      setErrorMessage((error as Error).message)
+      setStatus(failedStatus);
+      setErrorMessage((error as Error).message);
     } finally {
-      busyGuard.current = false
+      busyGuard.current = false;
     }
-  }
+  };
 
   const handleTake = () =>
-    runExclusive('taking', 'take-error', 'idle', () =>
-      withImportLock(takeSafetySnapshot),
-    )
+    runExclusive("taking", "take-error", "idle", () => withImportLock(takeSafetySnapshot));
 
   const handleDownload = (snapshot: SafetySnapshot) =>
-    runExclusive('idle', 'download-error', 'idle', () =>
-      downloadSafetySnapshot(snapshot),
-    )
+    runExclusive("idle", "download-error", "idle", () => downloadSafetySnapshot(snapshot));
 
   const handleRestore = () => {
-    const target = restoreTarget
-    if (!target) return Promise.resolve()
-    setRestoreTarget(null)
-    return runExclusive('restoring', 'restore-error', 'restored', () =>
+    const target = restoreTarget;
+    if (!target) return Promise.resolve();
+    setRestoreTarget(null);
+    return runExclusive("restoring", "restore-error", "restored", () =>
       restoreSafetySnapshot(target),
-    )
-  }
+    );
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle ref={titleReference} tabIndex={-1}>
-          {i18n.t('safetySnapshot_title')}
+          {i18n.t("safetySnapshot_title")}
         </CardTitle>
-        <CardDescription>
-          {i18n.t('safetySnapshot_description')}
-        </CardDescription>
+        <CardDescription>{i18n.t("safetySnapshot_description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">
@@ -164,58 +143,44 @@ export function SafetySnapshotCard({
             disabled={isBusy}
             onClick={() => void handleTake()}
           >
-            {status === 'taking' ? (
+            {status === "taking" ? (
               <Spinner data-icon="inline-start" />
             ) : (
               <ShieldIcon data-icon="inline-start" />
             )}
-            {i18n.t(
-              status === 'taking'
-                ? 'safetySnapshot_taking'
-                : 'safetySnapshot_take',
-            )}
+            {i18n.t(status === "taking" ? "safetySnapshot_taking" : "safetySnapshot_take")}
           </Button>
 
-          {status === 'take-error' || status === 'download-error' ? (
+          {status === "take-error" || status === "download-error" ? (
             <Alert variant="destructive">
               <CircleAlertIcon />
               <AlertTitle>
                 {i18n.t(
-                  status === 'take-error'
-                    ? 'safetySnapshot_takeFailedTitle'
-                    : 'safetySnapshot_downloadFailedTitle',
+                  status === "take-error"
+                    ? "safetySnapshot_takeFailedTitle"
+                    : "safetySnapshot_downloadFailedTitle",
                 )}
               </AlertTitle>
-              <AlertDescription>
-                {i18n.t('safetySnapshot_failedDescription')}
-              </AlertDescription>
+              <AlertDescription>{i18n.t("safetySnapshot_failedDescription")}</AlertDescription>
             </Alert>
           ) : null}
 
           {snapshots.length > 0 ? (
             <ItemGroup>
               {snapshots.map((snapshot, index) => {
-                const count = countBookmarks(snapshot.roots)
+                const count = countBookmarks(snapshot.roots);
                 return (
-                  <Item
-                    key={snapshot.takenAt}
-                    variant="muted"
-                    data-testid="safety-snapshot-row"
-                  >
+                  <Item key={snapshot.takenAt} variant="muted" data-testid="safety-snapshot-row">
                     <ItemMedia variant="icon">
                       <ShieldIcon />
                     </ItemMedia>
                     <ItemContent>
                       <ItemTitle>
                         {formatSnapshotDate(snapshot.takenAt)}
-                        {index === 0 && (
-                          <Badge>{i18n.t('safetySnapshot_latest')}</Badge>
-                        )}
+                        {index === 0 && <Badge>{i18n.t("safetySnapshot_latest")}</Badge>}
                       </ItemTitle>
                       <ItemDescription>
-                        {i18n.t('importPreviewCount', count, [
-                          formatCount(count),
-                        ])}
+                        {i18n.t("importPreviewCount", count, [formatCount(count)])}
                       </ItemDescription>
                     </ItemContent>
                     <ItemActions>
@@ -226,7 +191,7 @@ export function SafetySnapshotCard({
                         onClick={() => void handleDownload(snapshot)}
                       >
                         <DownloadIcon data-icon="inline-start" />
-                        {i18n.t('safetySnapshot_download')}
+                        {i18n.t("safetySnapshot_download")}
                       </Button>
                       <Button
                         variant="outline"
@@ -235,11 +200,11 @@ export function SafetySnapshotCard({
                         onClick={() => setRestoreTarget(snapshot)}
                       >
                         <Undo2Icon data-icon="inline-start" />
-                        {i18n.t('safetySnapshot_restore')}
+                        {i18n.t("safetySnapshot_restore")}
                       </Button>
                     </ItemActions>
                   </Item>
-                )
+                );
               })}
             </ItemGroup>
           ) : (
@@ -248,22 +213,18 @@ export function SafetySnapshotCard({
                 <EmptyMedia variant="icon">
                   <ShieldIcon />
                 </EmptyMedia>
-                <EmptyTitle>{i18n.t('safetySnapshot_emptyTitle')}</EmptyTitle>
-                <EmptyDescription>
-                  {i18n.t('safetySnapshot_emptyDescription')}
-                </EmptyDescription>
+                <EmptyTitle>{i18n.t("safetySnapshot_emptyTitle")}</EmptyTitle>
+                <EmptyDescription>{i18n.t("safetySnapshot_emptyDescription")}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           )}
 
-          {status === 'restored' && (
+          {status === "restored" && (
             <Alert role="status">
-              <AlertDescription>
-                {i18n.t('safetySnapshot_restored')}
-              </AlertDescription>
+              <AlertDescription>{i18n.t("safetySnapshot_restored")}</AlertDescription>
             </Alert>
           )}
-          {status === 'restore-error' && (
+          {status === "restore-error" && (
             <Alert variant="destructive">
               <CircleAlertIcon />
               <AlertDescription>{errorMessage}</AlertDescription>
@@ -275,32 +236,26 @@ export function SafetySnapshotCard({
       <AlertDialog
         open={restoreTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setRestoreTarget(null)
+          if (!open) setRestoreTarget(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {i18n.t('safetySnapshot_restoreTitle')}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{i18n.t("safetySnapshot_restoreTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {i18n.t('safetySnapshot_restoreDescription', [
-                restoreTarget ? formatSnapshotDate(restoreTarget.takenAt) : '',
+              {i18n.t("safetySnapshot_restoreDescription", [
+                restoreTarget ? formatSnapshotDate(restoreTarget.takenAt) : "",
               ])}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{i18n.t('cancel')}</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              disabled={isBusy}
-              onClick={() => void handleRestore()}
-            >
-              {i18n.t('safetySnapshot_restoreConfirm')}
+            <AlertDialogCancel>{i18n.t("cancel")}</AlertDialogCancel>
+            <Button variant="destructive" disabled={isBusy} onClick={() => void handleRestore()}>
+              {i18n.t("safetySnapshot_restoreConfirm")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </Card>
-  )
+  );
 }

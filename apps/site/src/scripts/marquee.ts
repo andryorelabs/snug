@@ -1,7 +1,7 @@
 /**
  * The marquee scroll speed, in pixels per second.
  */
-export const MARQUEE_SPEED_PX_PER_SECOND = 40
+export const MARQUEE_SPEED_PX_PER_SECOND = 40;
 
 /**
  * Computes how long one loop of the marquee takes so the track moves at
@@ -12,7 +12,7 @@ export const MARQUEE_SPEED_PX_PER_SECOND = 40
  */
 export function marqueeDurationSeconds(rowWidth: number): number {
   if (!Number.isFinite(rowWidth) || rowWidth <= 0) {
-    throw new RangeError('The marquee row width must be positive.')
+    throw new RangeError("The marquee row width must be positive.");
   }
-  return rowWidth / MARQUEE_SPEED_PX_PER_SECOND
+  return rowWidth / MARQUEE_SPEED_PX_PER_SECOND;
 }

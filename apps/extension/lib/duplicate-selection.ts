@@ -1,9 +1,9 @@
-import type { DuplicateGroup } from './duplicates'
+import type { DuplicateGroup } from "./duplicates";
 
 /**
  * Maps each group's normalized URL to the id of the copy the user keeps.
  */
-export type KeptCopyIds = Record<string, string>
+export type KeptCopyIds = Record<string, string>;
 
 /**
  * @param group A Duplicate group, copies ordered oldest first.
@@ -11,16 +11,12 @@ export type KeptCopyIds = Record<string, string>
  *   oldest modifiable copy, or the oldest copy when none is modifiable.
  * @returns The id of the copy to keep in that group.
  */
-export function getKeptCopyId(
-  group: DuplicateGroup,
-  keptCopyIds: KeptCopyIds,
-): string {
-  const chosen = keptCopyIds[group.normalizedUrl]
-  const isStillPresent = group.copies.some((copy) => copy.id === chosen)
-  if (isStillPresent && chosen !== undefined) return chosen
-  const defaultCopy =
-    group.copies.find((copy) => !copy.unmodifiable) ?? group.copies[0]
-  return defaultCopy.id
+export function getKeptCopyId(group: DuplicateGroup, keptCopyIds: KeptCopyIds): string {
+  const chosen = keptCopyIds[group.normalizedUrl];
+  const isStillPresent = group.copies.some((copy) => copy.id === chosen);
+  if (isStillPresent && chosen !== undefined) return chosen;
+  const defaultCopy = group.copies.find((copy) => !copy.unmodifiable) ?? group.copies[0];
+  return defaultCopy.id;
 }
 
 /**
@@ -28,16 +24,13 @@ export function getKeptCopyId(
  * @param keptCopyIds The user's explicit choices per group.
  * @returns The ids of every copy marked Delete, bookmarks only.
  */
-export function getCopyIdsToDelete(
-  groups: DuplicateGroup[],
-  keptCopyIds: KeptCopyIds,
-): string[] {
+export function getCopyIdsToDelete(groups: DuplicateGroup[], keptCopyIds: KeptCopyIds): string[] {
   return groups.flatMap((group) => {
-    const keptId = getKeptCopyId(group, keptCopyIds)
+    const keptId = getKeptCopyId(group, keptCopyIds);
     return group.copies
       .filter((copy) => copy.id !== keptId && !copy.unmodifiable)
-      .map((copy) => copy.id)
-  })
+      .map((copy) => copy.id);
+  });
 }
 
 /**
@@ -53,16 +46,16 @@ export function getReviewedIdsStillToDelete(
   freshGroups: DuplicateGroup[],
   keptCopyIds: KeptCopyIds,
 ): string[] {
-  const freshIds = new Set(getCopyIdsToDelete(freshGroups, keptCopyIds))
-  return reviewedIds.filter((id) => freshIds.has(id))
+  const freshIds = new Set(getCopyIdsToDelete(freshGroups, keptCopyIds));
+  return reviewedIds.filter((id) => freshIds.has(id));
 }
 
 /**
  * Outcome of {@link deleteBookmarksById}.
  */
 export interface DeleteBookmarksResult {
-  deleted: number
-  failed: number
+  deleted: number;
+  failed: number;
 }
 
 /**
@@ -72,18 +65,16 @@ export interface DeleteBookmarksResult {
  * @param ids The bookmark ids to remove.
  * @returns How many bookmarks were removed and how many failed.
  */
-export async function deleteBookmarksById(
-  ids: string[],
-): Promise<DeleteBookmarksResult> {
-  let deleted = 0
-  let failed = 0
+export async function deleteBookmarksById(ids: string[]): Promise<DeleteBookmarksResult> {
+  let deleted = 0;
+  let failed = 0;
   for (const id of ids) {
     try {
-      await browser.bookmarks.remove(id)
-      deleted += 1
+      await browser.bookmarks.remove(id);
+      deleted += 1;
     } catch {
-      failed += 1
+      failed += 1;
     }
   }
-  return { deleted, failed }
+  return { deleted, failed };
 }

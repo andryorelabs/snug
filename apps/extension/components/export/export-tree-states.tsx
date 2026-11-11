@@ -1,6 +1,6 @@
-import { i18n } from '#i18n'
-import { Link } from '@tanstack/react-router'
-import { Button, buttonVariants } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Link } from "@tanstack/react-router";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -8,28 +8,26 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '@workspace/ui/components/empty'
-import { Skeleton } from '@workspace/ui/components/skeleton'
-import { cn } from '@workspace/ui/lib/utils'
-import { BookmarkXIcon, SearchXIcon, TriangleAlertIcon } from 'lucide-react'
+} from "@workspace/ui/components/empty";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import { cn } from "@workspace/ui/lib/utils";
+import { BookmarkXIcon, SearchXIcon, TriangleAlertIcon } from "lucide-react";
 
-import { APP_ROUTES } from '@/lib/app-url'
+import { APP_ROUTES } from "@/lib/app-url";
 
 interface SkeletonRowProperties {
-  indentClassName: string
-  children: React.ReactNode
+  indentClassName: string;
+  children: React.ReactNode;
 }
 
 function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
   return (
-    <div
-      className={cn('flex h-7.5 items-center gap-1.5 px-1', indentClassName)}
-    >
+    <div className={cn("flex h-7.5 items-center gap-1.5 px-1", indentClassName)}>
       <Skeleton className="size-4" />
       <Skeleton className="size-4" />
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -39,11 +37,7 @@ function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
  */
 export function ExportTreeSkeleton() {
   return (
-    <div
-      className="flex flex-col p-2"
-      role="status"
-      aria-label={i18n.t('exportPage_loading')}
-    >
+    <div className="flex flex-col p-2" role="status" aria-label={i18n.t("exportPage_loading")}>
       <SkeletonRow indentClassName="ml-0">
         <Skeleton className="h-3 w-40" />
       </SkeletonRow>
@@ -72,12 +66,12 @@ export function ExportTreeSkeleton() {
         <Skeleton className="h-3 w-32" />
       </SkeletonRow>
     </div>
-  )
+  );
 }
 
 interface ExportTreeEmptyProperties {
-  searchTerm: string
-  onClearSearch: () => void
+  searchTerm: string;
+  onClearSearch: () => void;
 }
 
 /**
@@ -88,30 +82,23 @@ interface ExportTreeEmptyProperties {
  * @param properties.onClearSearch Called when "Clear search" is pressed.
  * @returns The empty state markup.
  */
-export function ExportTreeEmpty({
-  searchTerm,
-  onClearSearch,
-}: ExportTreeEmptyProperties) {
+export function ExportTreeEmpty({ searchTerm, onClearSearch }: ExportTreeEmptyProperties) {
   return (
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <SearchXIcon />
         </EmptyMedia>
-        <EmptyTitle>
-          {i18n.t('exportPage_noResultsTitle', [searchTerm.trim()])}
-        </EmptyTitle>
-        <EmptyDescription>
-          {i18n.t('exportPage_noResultsDescription')}
-        </EmptyDescription>
+        <EmptyTitle>{i18n.t("exportPage_noResultsTitle", [searchTerm.trim()])}</EmptyTitle>
+        <EmptyDescription>{i18n.t("exportPage_noResultsDescription")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button variant="outline" size="sm" onClick={onClearSearch}>
-          {i18n.t('exportPage_clearSearch')}
+          {i18n.t("exportPage_clearSearch")}
         </Button>
       </EmptyContent>
     </Empty>
-  )
+  );
 }
 
 /**
@@ -126,25 +113,20 @@ export function ExportTreeNoBookmarks() {
         <EmptyMedia variant="icon">
           <BookmarkXIcon />
         </EmptyMedia>
-        <EmptyTitle>{i18n.t('exportPage_emptyTitle')}</EmptyTitle>
-        <EmptyDescription>
-          {i18n.t('exportPage_emptyDescription')}
-        </EmptyDescription>
+        <EmptyTitle>{i18n.t("exportPage_emptyTitle")}</EmptyTitle>
+        <EmptyDescription>{i18n.t("exportPage_emptyDescription")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Link
-          to={APP_ROUTES.import}
-          className={buttonVariants({ variant: 'outline', size: 'sm' })}
-        >
-          {i18n.t('exportPage_goToImport')}
+        <Link to={APP_ROUTES.import} className={buttonVariants({ variant: "outline", size: "sm" })}>
+          {i18n.t("exportPage_goToImport")}
         </Link>
       </EmptyContent>
     </Empty>
-  )
+  );
 }
 
 interface ExportTreeErrorProperties {
-  onRetry: () => void
+  onRetry: () => void;
 }
 
 /**
@@ -161,16 +143,14 @@ export function ExportTreeError({ onRetry }: ExportTreeErrorProperties) {
         <EmptyMedia variant="icon">
           <TriangleAlertIcon />
         </EmptyMedia>
-        <EmptyTitle>{i18n.t('exportPage_errorTitle')}</EmptyTitle>
-        <EmptyDescription>
-          {i18n.t('exportPage_errorDescription')}
-        </EmptyDescription>
+        <EmptyTitle>{i18n.t("exportPage_errorTitle")}</EmptyTitle>
+        <EmptyDescription>{i18n.t("exportPage_errorDescription")}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button variant="outline" size="sm" onClick={onRetry}>
-          {i18n.t('exportPage_tryAgain')}
+          {i18n.t("exportPage_tryAgain")}
         </Button>
       </EmptyContent>
     </Empty>
-  )
+  );
 }

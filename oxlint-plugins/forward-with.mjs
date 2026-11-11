@@ -14,11 +14,11 @@ export function forwardWith(target, overrides) {
     {
       get(_, key) {
         if (Object.hasOwn(overrides, key)) {
-          return overrides[key]
+          return overrides[key];
         }
-        const value = Reflect.get(target, key, target)
-        return typeof value === 'function' ? value.bind(target) : value
+        const value = Reflect.get(target, key, target);
+        return typeof value === "function" ? value.bind(target) : value;
       },
     },
-  )
+  );
 }

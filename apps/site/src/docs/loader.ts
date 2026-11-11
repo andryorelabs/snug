@@ -1,21 +1,20 @@
-import type { Loader, LoaderContext } from 'astro/loaders'
-import path from 'node:path'
+import path from "node:path";
 
-import { loadLocalizedCatalog } from './catalog'
-import { markExternalLinks } from './external-links'
-import { REPOSITORY_ROOT, TRANSLATIONS_DIRECTORY } from './paths'
-import { PUBLISHED_SOURCES } from './published'
+import type { Loader, LoaderContext } from "astro/loaders";
 
-const DOCS_DIRECTORY = path.join(REPOSITORY_ROOT, 'docs')
+import { loadLocalizedCatalog } from "./catalog";
+import { markExternalLinks } from "./external-links";
+import { REPOSITORY_ROOT, TRANSLATIONS_DIRECTORY } from "./paths";
+import { PUBLISHED_SOURCES } from "./published";
+
+const DOCS_DIRECTORY = path.join(REPOSITORY_ROOT, "docs");
 const WATCHED_FILES = new Set(
-  PUBLISHED_SOURCES.map((source) =>
-    path.join(REPOSITORY_ROOT, source.sourcePath),
-  ),
-)
+  PUBLISHED_SOURCES.map((source) => path.join(REPOSITORY_ROOT, source.sourcePath)),
+);
 
 async function fillStore(context: LoaderContext): Promise<void> {
-  const entries = loadLocalizedCatalog()
-  context.store.clear()
+  const entries = loadLocalizedCatalog();
+  context.store.clear();
   for (const entry of entries) {
     const data = await context.parseData({
       id: entry.id,
@@ -27,15 +26,15 @@ async function fillStore(context: LoaderContext): Promise<void> {
         translationStatus: entry.status,
         englishPath: entry.englishPath,
       },
-    })
-    const rendered = await context.renderMarkdown(entry.body)
+    });
+    const rendered = await context.renderMarkdown(entry.body);
     context.store.set({
       id: entry.id,
       data,
       body: entry.body,
       digest: context.generateDigest(`${entry.status}:${entry.body}`),
       rendered: { ...rendered, html: markExternalLinks(rendered.html) },
-    })
+    });
   }
 }
 
@@ -44,7 +43,7 @@ function isWatchedFile(file: string): boolean {
     WATCHED_FILES.has(file) ||
     file.startsWith(DOCS_DIRECTORY) ||
     file.startsWith(TRANSLATIONS_DIRECTORY)
-  )
+  );
 }
 
 /**
@@ -56,28 +55,26 @@ function isWatchedFile(file: string): boolean {
  */
 export function catalogLoader(): Loader {
   return {
-    name: 'catalog-loader',
+    name: "catalog-loader",
     async load(context) {
-      await fillStore(context)
-      const { watcher } = context
-      if (!watcher) return
-      watcher.add([DOCS_DIRECTORY, TRANSLATIONS_DIRECTORY, ...WATCHED_FILES])
+      await fillStore(context);
+      const { watcher } = context;
+      if (!watcher) return;
+      watcher.add([DOCS_DIRECTORY, TRANSLATIONS_DIRECTORY, ...WATCHED_FILES]);
       const refresh = async (file: string) => {
-        if (!isWatchedFile(file)) return
+        if (!isWatchedFile(file)) return;
         try {
-          await fillStore(context)
+          await fillStore(context);
         } catch (error) {
-          context.logger.error(
-            error instanceof Error ? error.message : String(error),
-          )
+          context.logger.error(error instanceof Error ? error.message : String(error));
         }
-      }
+      };
       const onFileEvent = (file: string) => {
-        void refresh(file)
-      }
-      watcher.on('change', onFileEvent)
-      watcher.on('add', onFileEvent)
-      watcher.on('unlink', onFileEvent)
+        void refresh(file);
+      };
+      watcher.on("change", onFileEvent);
+      watcher.on("add", onFileEvent);
+      watcher.on("unlink", onFileEvent);
     },
-  }
+  };
 }

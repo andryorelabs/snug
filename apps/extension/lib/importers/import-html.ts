@@ -1,16 +1,11 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { importParsedTree } from '@/lib/importers/import-json'
-import { loadLiveRootTitles } from '@/lib/importers/resolve-roots'
-import type { ResolvedImportRootTitles } from '@/lib/importers/resolve-roots'
-import { isAllowedBookmarkUrl } from '@/lib/importers/url-validation'
-import { secondsToMilliseconds } from '@/lib/timestamps'
-import type {
-  ImportMode,
-  ImportOptions,
-  ImportResult,
-  ParsedBookmark,
-} from '@/lib/types'
+import { importParsedTree } from "@/lib/importers/import-json";
+import { loadLiveRootTitles } from "@/lib/importers/resolve-roots";
+import type { ResolvedImportRootTitles } from "@/lib/importers/resolve-roots";
+import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import { secondsToMilliseconds } from "@/lib/timestamps";
+import type { ImportMode, ImportOptions, ImportResult, ParsedBookmark } from "@/lib/types";
 
 /**
  * Imports bookmarks from a Netscape-format bookmarks HTML export: parses it
@@ -25,18 +20,16 @@ import type {
  */
 export async function importFromHTML(
   html: string,
-  mode: ImportMode = 'folder',
+  mode: ImportMode = "folder",
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  let parsed: ParsedBookmark[]
+  let parsed: ParsedBookmark[];
   try {
-    parsed = parseHTML(html, await loadLiveRootTitles())
+    parsed = parseHTML(html, await loadLiveRootTitles());
   } catch (error) {
-    throw new Error(
-      i18n.t('importFromHTMLLoadError', [(error as Error).message]),
-    )
+    throw new Error(i18n.t("importFromHTMLLoadError", [(error as Error).message]));
   }
-  return importParsedTree(parsed, mode, options)
+  return importParsedTree(parsed, mode, options);
 }
 
 /**
@@ -70,7 +63,7 @@ export function parseHTML(
   html: string,
   liveRootTitles?: ResolvedImportRootTitles,
 ): ParsedBookmark[] {
-  return parseHTMLWithLocation(html, liveRootTitles).tree
+  return parseHTMLWithLocation(html, liveRootTitles).tree;
 }
 
 /**
@@ -86,77 +79,76 @@ export function parseHTMLWithLocation(
   html: string,
   liveRootTitles?: ResolvedImportRootTitles,
 ): { tree: ParsedBookmark[]; hasLocationData: boolean } {
-  let hasLocationData = false
-  const document = new DOMParser().parseFromString(html, 'text/html')
-  const result: ParsedBookmark[] = []
-  const otherBookmarks: ParsedBookmark[] = []
-  const mobileBookmarks: ParsedBookmark[] = []
+  let hasLocationData = false;
+  const document = new DOMParser().parseFromString(html, "text/html");
+  const result: ParsedBookmark[] = [];
+  const otherBookmarks: ParsedBookmark[] = [];
+  const mobileBookmarks: ParsedBookmark[] = [];
 
-  const outerDl =
-    document.querySelector('body > dl') ?? document.querySelector('dl')
-  if (!outerDl) return { tree: result, hasLocationData }
+  const outerDl = document.querySelector("body > dl") ?? document.querySelector("dl");
+  if (!outerDl) return { tree: result, hasLocationData };
 
-  const nestedToolbarFolders: ParsedBookmark[] = []
-  const topLevelDts = outerDl.querySelectorAll(':scope > dt')
+  const nestedToolbarFolders: ParsedBookmark[] = [];
+  const topLevelDts = outerDl.querySelectorAll(":scope > dt");
 
   for (const dt of topLevelDts) {
-    const firstChild = dt.firstElementChild
-    if (!firstChild) continue
+    const firstChild = dt.firstElementChild;
+    if (!firstChild) continue;
 
-    if (firstChild.tagName === 'A') {
-      otherBookmarks.push(parseBookmarkElement(firstChild as HTMLAnchorElement))
-    } else if (firstChild.tagName === 'H3') {
-      const h3 = firstChild as HTMLElement
+    if (firstChild.tagName === "A") {
+      otherBookmarks.push(parseBookmarkElement(firstChild as HTMLAnchorElement));
+    } else if (firstChild.tagName === "H3") {
+      const h3 = firstChild as HTMLElement;
       const isBookmarksBar =
-        h3.hasAttribute('personal_toolbar_folder') &&
-        h3.getAttribute('personal_toolbar_folder') === 'true'
+        h3.hasAttribute("personal_toolbar_folder") &&
+        h3.getAttribute("personal_toolbar_folder") === "true";
       const isUnfiled =
-        h3.hasAttribute('unfiled_bookmarks_folder') &&
-        h3.getAttribute('unfiled_bookmarks_folder') === 'true'
+        h3.hasAttribute("unfiled_bookmarks_folder") &&
+        h3.getAttribute("unfiled_bookmarks_folder") === "true";
 
-      const folder = parseFolderElement(h3, dt, nestedToolbarFolders)
+      const folder = parseFolderElement(h3, dt, nestedToolbarFolders);
 
       if (isBookmarksBar) {
-        hasLocationData = true
-        folder.isBookmarksBar = true
-        result.unshift(folder)
+        hasLocationData = true;
+        folder.isBookmarksBar = true;
+        result.unshift(folder);
       } else if (isUnfiled || isKnownOtherTitle(folder.title, liveRootTitles)) {
-        hasLocationData = true
-        otherBookmarks.push(...(folder.children ?? []))
+        hasLocationData = true;
+        otherBookmarks.push(...(folder.children ?? []));
       } else if (isKnownMobileTitle(folder.title, liveRootTitles)) {
-        hasLocationData = true
-        mobileBookmarks.push(...(folder.children ?? []))
+        hasLocationData = true;
+        mobileBookmarks.push(...(folder.children ?? []));
       } else {
-        otherBookmarks.push(folder)
+        otherBookmarks.push(folder);
       }
     }
   }
 
   for (const folder of nestedToolbarFolders) {
-    hasLocationData = true
-    folder.isBookmarksBar = true
-    result.unshift(folder)
+    hasLocationData = true;
+    folder.isBookmarksBar = true;
+    result.unshift(folder);
   }
 
   if (otherBookmarks.length > 0) {
     result.push({
       isOtherBookmarks: true,
-      title: i18n.t('otherBookmarks'),
+      title: i18n.t("otherBookmarks"),
       dateAdded: Date.now(),
       children: otherBookmarks,
-    })
+    });
   }
 
   if (mobileBookmarks.length > 0) {
     result.push({
       isMobileBookmarks: true,
-      title: i18n.t('mobileBookmarks'),
+      title: i18n.t("mobileBookmarks"),
       dateAdded: Date.now(),
       children: mobileBookmarks,
-    })
+    });
   }
 
-  return { tree: result, hasLocationData }
+  return { tree: result, hasLocationData };
 }
 
 /**
@@ -168,15 +160,12 @@ export function parseHTMLWithLocation(
  * @param liveRootTitles The current browser's own root titles, if available.
  * @returns Whether `title` identifies the Other bookmarks root.
  */
-function isKnownOtherTitle(
-  title: string,
-  liveRootTitles?: ResolvedImportRootTitles,
-): boolean {
+function isKnownOtherTitle(title: string, liveRootTitles?: ResolvedImportRootTitles): boolean {
   return buildKnownTitleSet(
     liveRootTitles?.otherBookmarksTitle,
-    i18n.t('otherBookmarks'),
-    'Other bookmarks',
-  ).has(title.toLowerCase())
+    i18n.t("otherBookmarks"),
+    "Other bookmarks",
+  ).has(title.toLowerCase());
 }
 
 /**
@@ -188,15 +177,12 @@ function isKnownOtherTitle(
  * @param liveRootTitles The current browser's own root titles, if available.
  * @returns Whether `title` identifies the Mobile bookmarks root.
  */
-function isKnownMobileTitle(
-  title: string,
-  liveRootTitles?: ResolvedImportRootTitles,
-): boolean {
+function isKnownMobileTitle(title: string, liveRootTitles?: ResolvedImportRootTitles): boolean {
   return buildKnownTitleSet(
     liveRootTitles?.mobileTitle,
-    i18n.t('mobileBookmarks'),
-    'Mobile bookmarks',
-  ).has(title.toLowerCase())
+    i18n.t("mobileBookmarks"),
+    "Mobile bookmarks",
+  ).has(title.toLowerCase());
 }
 
 /**
@@ -211,15 +197,15 @@ function isKnownMobileTitle(
 export function classifyRootTitle(
   title: string,
   liveRootTitles?: ResolvedImportRootTitles,
-): 'bar' | 'other' | 'mobile' | undefined {
+): "bar" | "other" | "mobile" | undefined {
   const isBar = buildKnownTitleSet(
     liveRootTitles?.bookmarksBarTitle,
-    i18n.t('bookmarksBar'),
-    'Bookmarks bar',
-  ).has(title.toLowerCase())
-  if (isBar) return 'bar'
-  if (isKnownOtherTitle(title, liveRootTitles)) return 'other'
-  return isKnownMobileTitle(title, liveRootTitles) ? 'mobile' : undefined
+    i18n.t("bookmarksBar"),
+    "Bookmarks bar",
+  ).has(title.toLowerCase());
+  if (isBar) return "bar";
+  if (isKnownOtherTitle(title, liveRootTitles)) return "other";
+  return isKnownMobileTitle(title, liveRootTitles) ? "mobile" : undefined;
 }
 
 /**
@@ -228,14 +214,10 @@ export function classifyRootTitle(
  * @param candidates The candidate titles, some possibly `undefined`.
  * @returns The lowercased, non-empty candidate titles.
  */
-function buildKnownTitleSet(
-  ...candidates: (string | undefined)[]
-): Set<string> {
+function buildKnownTitleSet(...candidates: (string | undefined)[]): Set<string> {
   return new Set(
-    candidates
-      .filter((title): title is string => !!title)
-      .map((title) => title.toLowerCase()),
-  )
+    candidates.filter((title): title is string => !!title).map((title) => title.toLowerCase()),
+  );
 }
 
 /**
@@ -250,18 +232,18 @@ function buildKnownTitleSet(
  * @returns The parsed bookmark.
  */
 function parseBookmarkElement(a: HTMLAnchorElement): ParsedBookmark {
-  const dateAddedAttribute = a.getAttribute('add_date')
-  const href = a.getAttribute('href') ?? undefined
+  const dateAddedAttribute = a.getAttribute("add_date");
+  const href = a.getAttribute("href") ?? undefined;
 
-  const url = isAllowedBookmarkUrl(href) ? href : undefined
+  const url = isAllowedBookmarkUrl(href) ? href : undefined;
 
   return {
-    title: a.textContent?.trim() ?? '',
+    title: a.textContent?.trim() ?? "",
     ...(url !== undefined && { url }),
     dateAdded: dateAddedAttribute
       ? secondsToMilliseconds(parseInt(dateAddedAttribute))
       : Date.now(),
-  }
+  };
 }
 
 /**
@@ -272,17 +254,17 @@ function parseBookmarkElement(a: HTMLAnchorElement): ParsedBookmark {
  * @returns The child `<DL>`, or `null` when the folder has none.
  */
 function findChildDl(dt: Element): Element | null {
-  const inside = dt.querySelector(':scope > dl')
-  if (inside) return inside
-  const next = dt.nextElementSibling
-  if (next?.tagName === 'DL') return next
-  if (next?.tagName === 'DD') {
-    const insideDescription = next.querySelector(':scope > dl')
-    if (insideDescription) return insideDescription
-    const afterDescription = next.nextElementSibling
-    if (afterDescription?.tagName === 'DL') return afterDescription
+  const inside = dt.querySelector(":scope > dl");
+  if (inside) return inside;
+  const next = dt.nextElementSibling;
+  if (next?.tagName === "DL") return next;
+  if (next?.tagName === "DD") {
+    const insideDescription = next.querySelector(":scope > dl");
+    if (insideDescription) return insideDescription;
+    const afterDescription = next.nextElementSibling;
+    if (afterDescription?.tagName === "DL") return afterDescription;
   }
-  return null
+  return null;
 }
 
 /**
@@ -301,11 +283,11 @@ function parseFolderElement(
   dt: Element,
   hoistedToolbarFolders?: ParsedBookmark[],
 ): ParsedBookmark {
-  const dateAddedAttribute = h3.getAttribute('add_date')
-  const lastModifiedAttribute = h3.getAttribute('last_modified')
+  const dateAddedAttribute = h3.getAttribute("add_date");
+  const lastModifiedAttribute = h3.getAttribute("last_modified");
 
   const folder: ParsedBookmark = {
-    title: h3.textContent?.trim() ?? '',
+    title: h3.textContent?.trim() ?? "",
     dateAdded: dateAddedAttribute
       ? secondsToMilliseconds(parseInt(dateAddedAttribute))
       : Date.now(),
@@ -313,38 +295,29 @@ function parseFolderElement(
       ? secondsToMilliseconds(parseInt(lastModifiedAttribute))
       : Date.now(),
     children: [],
-  }
+  };
 
-  const childDl = findChildDl(dt)
+  const childDl = findChildDl(dt);
 
   if (childDl) {
-    const childDts = childDl.querySelectorAll(':scope > dt')
+    const childDts = childDl.querySelectorAll(":scope > dt");
     for (const childDt of childDts) {
-      const firstChild = childDt.firstElementChild
-      if (!firstChild) continue
+      const firstChild = childDt.firstElementChild;
+      if (!firstChild) continue;
 
-      if (firstChild.tagName === 'A') {
-        folder.children!.push(
-          parseBookmarkElement(firstChild as HTMLAnchorElement),
-        )
-      } else if (firstChild.tagName === 'H3') {
-        const childH3 = firstChild as HTMLElement
-        const childFolder = parseFolderElement(
-          childH3,
-          childDt,
-          hoistedToolbarFolders,
-        )
-        if (
-          hoistedToolbarFolders &&
-          childH3.getAttribute('personal_toolbar_folder') === 'true'
-        ) {
-          hoistedToolbarFolders.push(childFolder)
+      if (firstChild.tagName === "A") {
+        folder.children!.push(parseBookmarkElement(firstChild as HTMLAnchorElement));
+      } else if (firstChild.tagName === "H3") {
+        const childH3 = firstChild as HTMLElement;
+        const childFolder = parseFolderElement(childH3, childDt, hoistedToolbarFolders);
+        if (hoistedToolbarFolders && childH3.getAttribute("personal_toolbar_folder") === "true") {
+          hoistedToolbarFolders.push(childFolder);
         } else {
-          folder.children!.push(childFolder)
+          folder.children!.push(childFolder);
         }
       }
     }
   }
 
-  return folder
+  return folder;
 }

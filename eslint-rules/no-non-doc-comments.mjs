@@ -1,1 +1,1 @@
-export { default } from '../oxlint-plugins/no-non-doc-comments.mjs'
+export { default } from "../oxlint-plugins/no-non-doc-comments.mjs";

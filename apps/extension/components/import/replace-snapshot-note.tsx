@@ -1,24 +1,21 @@
-import { i18n } from '#i18n'
-import { Link } from '@tanstack/react-router'
-import { Button, buttonVariants } from '@workspace/ui/components/button'
-import { useState } from 'react'
+import { i18n } from "#i18n";
+import { Link } from "@tanstack/react-router";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
+import { useState } from "react";
 
-import { APP_ROUTES } from '@/lib/app-url'
-import { snapshotFileName } from '@/lib/safety-snapshot'
+import { APP_ROUTES } from "@/lib/app-url";
+import { snapshotFileName } from "@/lib/safety-snapshot";
 
 /**
  * @param message The localized note with the file name inlined.
  * @param fileName The file name inlined in `message`.
  * @returns The note split around the file name so the name can be styled.
  */
-function splitAroundFileName(
-  message: string,
-  fileName: string,
-): [string, string] {
-  const index = message.indexOf(fileName)
+function splitAroundFileName(message: string, fileName: string): [string, string] {
+  const index = message.indexOf(fileName);
   return index === -1
-    ? [message, '']
-    : [message.slice(0, index), message.slice(index + fileName.length)]
+    ? [message, ""]
+    : [message.slice(0, index), message.slice(index + fileName.length)];
 }
 
 /**
@@ -31,17 +28,10 @@ function splitAroundFileName(
  * link cannot navigate the App.
  * @returns The note and its Settings link.
  */
-export function ReplaceSnapshotNote({
-  onOpenSettings,
-}: {
-  onOpenSettings?: () => void
-}) {
-  const [fileName] = useState(() => snapshotFileName(Date.now()))
-  const [before, after] = splitAroundFileName(
-    i18n.t('replaceSnapshotNote', [fileName]),
-    fileName,
-  )
-  const linkLabel = i18n.t('replaceSnapshotSettingsLink')
+export function ReplaceSnapshotNote({ onOpenSettings }: { onOpenSettings?: () => void }) {
+  const [fileName] = useState(() => snapshotFileName(Date.now()));
+  const [before, after] = splitAroundFileName(i18n.t("replaceSnapshotNote", [fileName]), fileName);
+  const linkLabel = i18n.t("replaceSnapshotSettingsLink");
 
   return (
     <div className="flex flex-col items-start gap-1">
@@ -57,12 +47,12 @@ export function ReplaceSnapshotNote({
       ) : (
         <Link
           to={APP_ROUTES.settings}
-          search={{ section: 'safety-snapshot' }}
-          className={buttonVariants({ variant: 'link', size: 'sm' })}
+          search={{ section: "safety-snapshot" }}
+          className={buttonVariants({ variant: "link", size: "sm" })}
         >
           {linkLabel}
         </Link>
       )}
     </div>
-  )
+  );
 }

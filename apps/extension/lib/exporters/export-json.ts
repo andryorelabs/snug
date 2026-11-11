@@ -1,32 +1,23 @@
-import { countBookmarks } from '@/lib/count-bookmarks'
-import {
-  createExportTicker,
-  type ExportControl,
-  type ExportTicker,
-} from '@/lib/export-control'
-import { getFaviconBase64 } from '@/lib/favicon'
-import {
-  isBookmarksBar,
-  isOtherBookmarks,
-  ROOT_FOLDER_IDS,
-} from '@/lib/root-folders'
-import { millisecondsToSeconds } from '@/lib/timestamps'
-import type { ExtendedBookmarkTreeNode } from '@/lib/types'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { createExportTicker, type ExportControl, type ExportTicker } from "@/lib/export-control";
+import { getFaviconBase64 } from "@/lib/favicon";
+import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { millisecondsToSeconds } from "@/lib/timestamps";
+import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
 interface ExportJSONOptions extends ExportControl {
-  selectedBookmarks: ExtendedBookmarkTreeNode[] | null
-  includeIconData: boolean
-  includeDateAdded: boolean
-  includeDateLastUsed: boolean
-  includeDateGroupModified: boolean
-  hideOtherBookmarks: boolean
-  hideParentFolder: boolean
+  selectedBookmarks: ExtendedBookmarkTreeNode[] | null;
+  includeIconData: boolean;
+  includeDateAdded: boolean;
+  includeDateLastUsed: boolean;
+  includeDateGroupModified: boolean;
+  hideOtherBookmarks: boolean;
+  hideParentFolder: boolean;
 }
 
-type NodeOptions = Omit<
-  ExportJSONOptions,
-  'selectedBookmarks' | keyof ExportControl
-> & { ticker: ExportTicker }
+type NodeOptions = Omit<ExportJSONOptions, "selectedBookmarks" | keyof ExportControl> & {
+  ticker: ExportTicker;
+};
 
 /**
  * Exports bookmarks as a single-element array wrapping an `id="0"` root node,
@@ -47,13 +38,13 @@ export async function exportToJSON(
     includeDateGroupModified,
     hideOtherBookmarks,
     hideParentFolder,
-  } = options
+  } = options;
 
-  const rootNodes = await browser.bookmarks.getTree()
-  const rootNode = rootNodes[0] as ExtendedBookmarkTreeNode
-  const nodesToExport = selectedBookmarks ?? rootNode.children ?? []
+  const rootNodes = await browser.bookmarks.getTree();
+  const rootNode = rootNodes[0] as ExtendedBookmarkTreeNode;
+  const nodesToExport = selectedBookmarks ?? rootNode.children ?? [];
 
-  const ticker = createExportTicker(options, countBookmarks(nodesToExport))
+  const ticker = createExportTicker(options, countBookmarks(nodesToExport));
   const options_: NodeOptions = {
     ticker,
     includeIconData,
@@ -62,31 +53,31 @@ export async function exportToJSON(
     includeDateGroupModified,
     hideOtherBookmarks,
     hideParentFolder,
-  }
+  };
 
   const processedChildren = await processNodes(
     nodesToExport as ExtendedBookmarkTreeNode[],
     options_,
-  )
+  );
 
-  ticker.finish()
+  ticker.finish();
 
   const root: ExtendedBookmarkTreeNode = {
     ...rootNode,
     children: processedChildren,
-  }
-  delete root.url
-  delete root.parentId
-  delete root.index
-  delete root.dateLastUsed
-  delete root.iconData
-  if (root.dateAdded) root.dateAdded = millisecondsToSeconds(root.dateAdded)
-  if (!includeDateAdded) delete root.dateAdded
+  };
+  delete root.url;
+  delete root.parentId;
+  delete root.index;
+  delete root.dateLastUsed;
+  delete root.iconData;
+  if (root.dateAdded) root.dateAdded = millisecondsToSeconds(root.dateAdded);
+  if (!includeDateAdded) delete root.dateAdded;
   if (root.dateGroupModified)
-    root.dateGroupModified = millisecondsToSeconds(root.dateGroupModified)
-  if (!includeDateGroupModified) delete root.dateGroupModified
+    root.dateGroupModified = millisecondsToSeconds(root.dateGroupModified);
+  if (!includeDateGroupModified) delete root.dateGroupModified;
 
-  return [root]
+  return [root];
 }
 
 /**
@@ -99,10 +90,10 @@ export async function exportToJSON(
  */
 function isPreservedRoot(node: ExtendedBookmarkTreeNode): boolean {
   return (
-    node.folderType === 'mobile' ||
-    node.folderType === 'managed' ||
+    node.folderType === "mobile" ||
+    node.folderType === "managed" ||
     node.id === ROOT_FOLDER_IDS.mobileBookmarks
-  )
+  );
 }
 
 /**
@@ -116,12 +107,12 @@ async function processNodes(
   nodes: ExtendedBookmarkTreeNode[],
   options: NodeOptions,
 ): Promise<ExtendedBookmarkTreeNode[]> {
-  const result: ExtendedBookmarkTreeNode[] = []
+  const result: ExtendedBookmarkTreeNode[] = [];
   for (const node of nodes) {
-    const processed = await processNode(node, options)
-    result.push(...processed)
+    const processed = await processNode(node, options);
+    result.push(...processed);
   }
-  return result
+  return result;
 }
 
 /**
@@ -140,26 +131,25 @@ async function processNode(
   options: NodeOptions,
 ): Promise<ExtendedBookmarkTreeNode[]> {
   if (node.url) {
-    options.ticker.tick()
-    const processed: ExtendedBookmarkTreeNode = { ...node }
+    options.ticker.tick();
+    const processed: ExtendedBookmarkTreeNode = { ...node };
 
-    if (processed.dateAdded)
-      processed.dateAdded = millisecondsToSeconds(processed.dateAdded)
-    if (!options.includeDateAdded) delete processed.dateAdded
+    if (processed.dateAdded) processed.dateAdded = millisecondsToSeconds(processed.dateAdded);
+    if (!options.includeDateAdded) delete processed.dateAdded;
 
     if (processed.dateLastUsed)
-      processed.dateLastUsed = millisecondsToSeconds(processed.dateLastUsed)
-    if (!options.includeDateLastUsed) delete processed.dateLastUsed
+      processed.dateLastUsed = millisecondsToSeconds(processed.dateLastUsed);
+    if (!options.includeDateLastUsed) delete processed.dateLastUsed;
 
     if (options.includeIconData) {
-      processed.iconData = await getFaviconBase64(node.url)
+      processed.iconData = await getFaviconBase64(node.url);
     }
 
-    return [processed]
+    return [processed];
   }
   if (node.children !== undefined) {
     if (isOtherBookmarks(node) && options.hideOtherBookmarks) {
-      return processNodes(node.children as ExtendedBookmarkTreeNode[], options)
+      return processNodes(node.children as ExtendedBookmarkTreeNode[], options);
     }
 
     if (
@@ -169,34 +159,33 @@ async function processNode(
       !isOtherBookmarks(node) &&
       !isPreservedRoot(node)
     ) {
-      return processNodes(node.children as ExtendedBookmarkTreeNode[], options)
+      return processNodes(node.children as ExtendedBookmarkTreeNode[], options);
     }
 
     const processedChildren = await processNodes(
       node.children as ExtendedBookmarkTreeNode[],
       options,
-    )
+    );
 
     const folder: ExtendedBookmarkTreeNode = {
       ...node,
       children: processedChildren,
-    }
-    delete folder.url
-    delete folder.parentId
-    delete folder.index
-    delete folder.dateLastUsed
-    delete folder.iconData
+    };
+    delete folder.url;
+    delete folder.parentId;
+    delete folder.index;
+    delete folder.dateLastUsed;
+    delete folder.iconData;
 
-    if (folder.dateAdded)
-      folder.dateAdded = millisecondsToSeconds(folder.dateAdded)
-    if (!options.includeDateAdded) delete folder.dateAdded
+    if (folder.dateAdded) folder.dateAdded = millisecondsToSeconds(folder.dateAdded);
+    if (!options.includeDateAdded) delete folder.dateAdded;
 
     if (folder.dateGroupModified)
-      folder.dateGroupModified = millisecondsToSeconds(folder.dateGroupModified)
-    if (!options.includeDateGroupModified) delete folder.dateGroupModified
+      folder.dateGroupModified = millisecondsToSeconds(folder.dateGroupModified);
+    if (!options.includeDateGroupModified) delete folder.dateGroupModified;
 
-    return [folder]
+    return [folder];
   }
 
-  return []
+  return [];
 }

@@ -1,4 +1,4 @@
-import { fakeBrowser } from 'wxt/testing/fake-browser'
+import { fakeBrowser } from "wxt/testing/fake-browser";
 
 /**
  * `@webext-core/fake-browser` does not implement `browser.i18n.getMessage`
@@ -18,56 +18,49 @@ import { fakeBrowser } from 'wxt/testing/fake-browser'
  * `i18n.t(key, count, ...)` then picks the form itself.
  */
 
-const DEFAULT_LOCALE = 'en'
+const DEFAULT_LOCALE = "en";
 
 interface MessageEntry {
-  message: string
-  description?: string
-  placeholders?: Record<string, { content: string }>
+  message: string;
+  description?: string;
+  placeholders?: Record<string, { content: string }>;
 }
 
-type PluralEntry = Record<string, string>
-type LocaleEntry = MessageEntry | PluralEntry
+type PluralEntry = Record<string, string>;
+type LocaleEntry = MessageEntry | PluralEntry;
 
-const localeModules = import.meta.glob<Record<string, LocaleEntry>>(
-  '../../locales/*.json',
-  { eager: true, import: 'default' },
-)
+const localeModules = import.meta.glob<Record<string, LocaleEntry>>("../../locales/*.json", {
+  eager: true,
+  import: "default",
+});
 
 function isMessageEntry(entry: LocaleEntry): entry is MessageEntry {
-  return typeof entry.message === 'string'
+  return typeof entry.message === "string";
 }
 
 function loadLocale(locale: string): Record<string, LocaleEntry> {
-  const match = Object.entries(localeModules).find(([path]) =>
-    path.endsWith(`/${locale}.json`),
-  )
-  if (!match) throw new Error(`Unknown locale: ${locale}`)
-  return match[1]
+  const match = Object.entries(localeModules).find(([path]) => path.endsWith(`/${locale}.json`));
+  if (!match) throw new Error(`Unknown locale: ${locale}`);
+  return match[1];
 }
 
 function resolvePlural(entry: PluralEntry, substitutions?: string[]): string {
   return Object.values(entry)
-    .join(' | ')
-    .replaceAll(
-      /\$(\d)/g,
-      (_token, digit: string) => substitutions?.[Number(digit) - 1] ?? '',
-    )
+    .join(" | ")
+    .replaceAll(/\$(\d)/g, (_token, digit: string) => substitutions?.[Number(digit) - 1] ?? "");
 }
 
 function resolveMessage(entry: MessageEntry, substitutions?: string[]): string {
-  let text = entry.message
-  if (!entry.placeholders) return text
+  let text = entry.message;
+  if (!entry.placeholders) return text;
 
   for (const [name, { content }] of Object.entries(entry.placeholders)) {
-    const token = new RegExp(String.raw`\$${name}\$`, 'gi')
-    const ordinal = /^\$(\d+)$/.exec(content)
-    const value = ordinal
-      ? (substitutions?.[Number(ordinal[1]) - 1] ?? '')
-      : content
-    text = text.replace(token, () => value)
+    const token = new RegExp(String.raw`\$${name}\$`, "gi");
+    const ordinal = /^\$(\d+)$/.exec(content);
+    const value = ordinal ? (substitutions?.[Number(ordinal[1]) - 1] ?? "") : content;
+    text = text.replace(token, () => value);
   }
-  return text
+  return text;
 }
 
 /**
@@ -75,20 +68,15 @@ function resolveMessage(entry: MessageEntry, substitutions?: string[]): string {
  * @param locale The locale file to serve, `en` by default.
  */
 export function resetFakeI18n(locale: string = DEFAULT_LOCALE): void {
-  const messages = loadLocale(locale)
-  fakeBrowser.i18n.getMessage = ((
-    messageName: string,
-    substitutions?: string | string[],
-  ) => {
-    const entry = messages[messageName]
-    if (!entry) return ''
+  const messages = loadLocale(locale);
+  fakeBrowser.i18n.getMessage = ((messageName: string, substitutions?: string | string[]) => {
+    const entry = messages[messageName];
+    if (!entry) return "";
     const subs = substitutions
       ? Array.isArray(substitutions)
         ? substitutions
         : [substitutions]
-      : undefined
-    return isMessageEntry(entry)
-      ? resolveMessage(entry, subs)
-      : resolvePlural(entry, subs)
-  }) as typeof fakeBrowser.i18n.getMessage
+      : undefined;
+    return isMessageEntry(entry) ? resolveMessage(entry, subs) : resolvePlural(entry, subs);
+  }) as typeof fakeBrowser.i18n.getMessage;
 }

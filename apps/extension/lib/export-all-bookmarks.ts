@@ -1,8 +1,8 @@
-import { countBookmarks } from '@/lib/count-bookmarks'
-import { ExportCanceledError, type ExportControl } from '@/lib/export-control'
-import { EXPORT_FORMAT_INFO, type ExportFormat } from '@/lib/export-formats'
-import { formatFilenameTemplate } from '@/lib/filename-template'
-import { renderExport } from '@/lib/render-export'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { ExportCanceledError, type ExportControl } from "@/lib/export-control";
+import { EXPORT_FORMAT_INFO, type ExportFormat } from "@/lib/export-formats";
+import { formatFilenameTemplate } from "@/lib/filename-template";
+import { renderExport } from "@/lib/render-export";
 import {
   exportFilenameTemplateStore,
   hideOtherBookmarksStore,
@@ -11,12 +11,12 @@ import {
   includeDateGroupModifiedStore,
   includeDateLastUsedStore,
   includeIconDataStore,
-} from '@/lib/storage'
-import type { ExtendedBookmarkTreeNode } from '@/lib/types'
+} from "@/lib/storage";
+import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
 interface ExportAllResult {
-  fileName: string
-  count: number
+  fileName: string;
+  count: number;
 }
 
 async function buildContent(
@@ -38,7 +38,7 @@ async function buildContent(
     includeDateGroupModifiedStore.getValue(),
     hideOtherBookmarksStore.getValue(),
     hideParentFolderStore.getValue(),
-  ])
+  ]);
 
   return renderExport(format, {
     ...control,
@@ -49,7 +49,7 @@ async function buildContent(
     includeDateGroupModified,
     hideOtherBookmarks,
     hideParentFolder,
-  })
+  });
 }
 
 /**
@@ -59,19 +59,15 @@ async function buildContent(
  * @param mimeType The MIME type of the file.
  * @param fileName The suggested file name.
  */
-export function triggerDownload(
-  content: string,
-  mimeType: string,
-  fileName: string,
-): void {
-  const url = URL.createObjectURL(new Blob([content], { type: mimeType }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = fileName
-  document.body.append(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
+export function triggerDownload(content: string, mimeType: string, fileName: string): void {
+  const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -90,17 +86,15 @@ export async function exportBookmarks(
   selectedBookmarks: ExtendedBookmarkTreeNode[] | null,
   control: ExportControl = {},
 ): Promise<ExportAllResult> {
-  const content = await buildContent(format, selectedBookmarks, control)
-  if (control.signal?.aborted) throw new ExportCanceledError()
-  const baseName = formatFilenameTemplate(
-    await exportFilenameTemplateStore.getValue(),
-  )
-  const { extension, mimeType } = EXPORT_FORMAT_INFO[format]
-  const fileName = `${baseName}.${extension}`
-  triggerDownload(content, mimeType, fileName)
+  const content = await buildContent(format, selectedBookmarks, control);
+  if (control.signal?.aborted) throw new ExportCanceledError();
+  const baseName = formatFilenameTemplate(await exportFilenameTemplateStore.getValue());
+  const { extension, mimeType } = EXPORT_FORMAT_INFO[format];
+  const fileName = `${baseName}.${extension}`;
+  triggerDownload(content, mimeType, fileName);
 
-  const tree = selectedBookmarks ?? (await browser.bookmarks.getTree())
-  return { fileName, count: countBookmarks(tree) }
+  const tree = selectedBookmarks ?? (await browser.bookmarks.getTree());
+  return { fileName, count: countBookmarks(tree) };
 }
 
 /**
@@ -114,5 +108,5 @@ export function exportAllBookmarks(
   format: ExportFormat,
   control: ExportControl = {},
 ): Promise<ExportAllResult> {
-  return exportBookmarks(format, null, control)
+  return exportBookmarks(format, null, control);
 }

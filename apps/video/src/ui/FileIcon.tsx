@@ -1,32 +1,32 @@
-import { theme } from '../theme'
+import { theme } from "../theme";
 
-export type ExportFormat = 'html' | 'json' | 'csv' | 'md' | 'opml' | 'xbel'
+export type ExportFormat = "html" | "json" | "csv" | "md" | "opml" | "xbel";
 
 export const FORMAT_LABELS: Record<ExportFormat, string> = {
-  html: 'HTML',
-  json: 'JSON',
-  csv: 'CSV',
-  md: 'Markdown',
-  opml: 'OPML',
-  xbel: 'XBEL',
-}
+  html: "HTML",
+  json: "JSON",
+  csv: "CSV",
+  md: "Markdown",
+  opml: "OPML",
+  xbel: "XBEL",
+};
 
 const EXTENSIONS: Record<ExportFormat, string> = {
-  html: '.html',
-  json: '.json',
-  csv: '.csv',
-  md: '.md',
-  opml: '.opml',
-  xbel: '.xbel',
-}
+  html: ".html",
+  json: ".json",
+  csv: ".csv",
+  md: ".md",
+  opml: ".opml",
+  xbel: ".xbel",
+};
 
 export type FileIconProps = {
-  format: ExportFormat
+  format: ExportFormat;
   /**
    * Width in px; height is 1.25x. Default 96.
    */
-  size?: number
-}
+  size?: number;
+};
 
 /**
  * Document silhouette with a folded corner and the format extension on it.
@@ -34,7 +34,7 @@ export type FileIconProps = {
 export const FileIcon = ({ format, size = 96 }: FileIconProps) => (
   <div
     style={{
-      position: 'relative',
+      position: "relative",
       width: size,
       height: size * 1.25,
       flexShrink: 0,
@@ -44,7 +44,7 @@ export const FileIcon = ({ format, size = 96 }: FileIconProps) => (
       width={size}
       height={size * 1.25}
       viewBox="0 0 80 100"
-      style={{ position: 'absolute', inset: 0 }}
+      style={{ position: "absolute", inset: 0 }}
     >
       <path
         d="M8 0h46l26 26v66a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8z"
@@ -56,11 +56,11 @@ export const FileIcon = ({ format, size = 96 }: FileIconProps) => (
     </svg>
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: 0,
         right: 0,
         bottom: size * 0.16,
-        textAlign: 'center',
+        textAlign: "center",
         fontFamily: "'Geist Mono', ui-monospace, monospace",
         fontWeight: 600,
         fontSize: size * 0.2,
@@ -70,4 +70,4 @@ export const FileIcon = ({ format, size = 96 }: FileIconProps) => (
       {EXTENSIONS[format]}
     </div>
   </div>
-)
+);

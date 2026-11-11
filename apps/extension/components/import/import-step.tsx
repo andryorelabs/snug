@@ -1,13 +1,13 @@
-import { i18n } from '#i18n'
-import { Badge } from '@workspace/ui/components/badge'
-import { CheckIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { i18n } from "#i18n";
+import { Badge } from "@workspace/ui/components/badge";
+import { CheckIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface ImportStepProperties {
-  number: number
-  title: string
-  isComplete: boolean
-  children: ReactNode
+  number: number;
+  title: string;
+  isComplete: boolean;
+  children: ReactNode;
 }
 
 /**
@@ -20,20 +20,15 @@ interface ImportStepProperties {
  * @param root0.children The step content.
  * @returns The step section.
  */
-export function ImportStep({
-  number,
-  title,
-  isComplete,
-  children,
-}: ImportStepProperties) {
+export function ImportStep({ number, title, isComplete, children }: ImportStepProperties) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="flex items-center gap-2 text-sm font-medium">
-        <Badge variant={isComplete ? 'default' : 'secondary'}>
+        <Badge variant={isComplete ? "default" : "secondary"}>
           {isComplete ? (
             <>
               <CheckIcon aria-hidden />
-              <span className="sr-only">{i18n.t('import_stepDone')}</span>
+              <span className="sr-only">{i18n.t("import_stepDone")}</span>
             </>
           ) : (
             number
@@ -43,5 +38,5 @@ export function ImportStep({
       </h2>
       {children}
     </section>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { test as base } from '@playwright/test'
+import { test as base } from "@playwright/test";
 
-import { blockUmami } from './umami-helpers'
+import { blockUmami } from "./umami-helpers";
 
-export { expect } from '@playwright/test'
+export { expect } from "@playwright/test";
 
 /**
  * Playwright `test` for the layout specs. It answers every Umami request
@@ -12,9 +12,9 @@ export { expect } from '@playwright/test'
 export const test = base.extend<{ umamiBlocked: undefined }>({
   umamiBlocked: [
     async ({ page }, provide) => {
-      await blockUmami(page)
-      await provide(undefined)
+      await blockUmami(page);
+      await provide(undefined);
     },
     { auto: true },
   ],
-})
+});

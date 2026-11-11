@@ -1,20 +1,17 @@
 ---
-import { cn } from '@workspace/ui/lib/utils'
+import { cn } from "@workspace/ui/lib/utils";
 
 interface Props {
-  as?: 'p' | 'span'
-  class?: string
-  [attribute: string]: unknown
+  as?: "p" | "span";
+  class?: string;
+  [attribute: string]: unknown;
 }
 
-const { as: Tag = 'p', class: className, ...rest } = Astro.props
+const { as: Tag = "p", class: className, ...rest } = Astro.props;
 ---
 
 <Tag
-  class={cn(
-    'font-mono text-eyebrow tracking-eyebrow text-primary-text uppercase',
-    className,
-  )}
+  class={cn("font-mono text-eyebrow tracking-eyebrow text-primary-text uppercase", className)}
   {...rest}
 >
   <slot />

@@ -1,10 +1,10 @@
-import { i18n } from '#i18n'
-import { Skeleton } from '@workspace/ui/components/skeleton'
-import type { ReactNode } from 'react'
+import { i18n } from "#i18n";
+import { Skeleton } from "@workspace/ui/components/skeleton";
+import type { ReactNode } from "react";
 
 interface SkeletonRowProperties {
-  indentClassName: string
-  children: ReactNode
+  indentClassName: string;
+  children: ReactNode;
 }
 
 function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
@@ -13,7 +13,7 @@ function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
       <Skeleton className="size-4" />
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -23,11 +23,7 @@ function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
  */
 export function ImportPreviewSkeleton() {
   return (
-    <div
-      className="flex flex-col gap-3"
-      role="status"
-      aria-label={i18n.t('import_reading')}
-    >
+    <div className="flex flex-col gap-3" role="status" aria-label={i18n.t("import_reading")}>
       <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3">
         <Skeleton className="h-3.5 w-3/4" />
         <Skeleton className="h-3 w-2/5" />
@@ -53,5 +49,5 @@ export function ImportPreviewSkeleton() {
         </SkeletonRow>
       </div>
     </div>
-  )
+  );
 }

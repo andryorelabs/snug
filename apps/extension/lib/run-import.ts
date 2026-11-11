@@ -1,24 +1,17 @@
-import { ImportCanceledError, markImportRestored } from './import-control'
-import { withImportLock } from './import-lock'
-import { importCsvTree } from './importers/import-csv'
-import { importParsedTree } from './importers/import-json'
-import {
-  type ParsedImportFile,
-  parseImportFile,
-} from './importers/parse-import'
-import { loadLiveRootTitles } from './importers/resolve-roots'
-import {
-  hasRewrittenRootsFully,
-  type SafetySnapshot,
-  takeSafetySnapshot,
-} from './safety-snapshot'
-import type { ImportMode, ImportOptions, ImportResult } from './types'
+import { ImportCanceledError, markImportRestored } from "./import-control";
+import { withImportLock } from "./import-lock";
+import { importCsvTree } from "./importers/import-csv";
+import { importParsedTree } from "./importers/import-json";
+import { type ParsedImportFile, parseImportFile } from "./importers/parse-import";
+import { loadLiveRootTitles } from "./importers/resolve-roots";
+import { hasRewrittenRootsFully, type SafetySnapshot, takeSafetySnapshot } from "./safety-snapshot";
+import type { ImportMode, ImportOptions, ImportResult } from "./types";
 
 /**
  * An {@link ImportResult} plus the Safety snapshot the import took, if any.
  */
 export interface RunImportResult extends ImportResult {
-  snapshot?: SafetySnapshot
+  snapshot?: SafetySnapshot;
 }
 
 /**
@@ -49,9 +42,7 @@ export function runImport(
   fileName?: string,
   options: ImportOptions = {},
 ): Promise<RunImportResult> {
-  return withImportLock(() =>
-    runImportUnlocked(text, mimeType, mode, fileName, options),
-  )
+  return withImportLock(() => runImportUnlocked(text, mimeType, mode, fileName, options));
 }
 
 async function runImportUnlocked(
@@ -61,8 +52,8 @@ async function runImportUnlocked(
   fileName: string | undefined,
   options: ImportOptions,
 ): Promise<RunImportResult> {
-  let snapshot: SafetySnapshot | undefined
-  let hasClearedExisting = false
+  let snapshot: SafetySnapshot | undefined;
+  let hasClearedExisting = false;
   try {
     const result = await importWithSnapshot(
       text,
@@ -72,36 +63,32 @@ async function runImportUnlocked(
       {
         ...options,
         onClearingExisting: () => {
-          hasClearedExisting = true
-          options.onClearingExisting?.()
+          hasClearedExisting = true;
+          options.onClearingExisting?.();
         },
       },
       (taken) => {
-        snapshot = taken
+        snapshot = taken;
       },
-    )
-    return snapshot ? { ...result, snapshot } : result
+    );
+    return snapshot ? { ...result, snapshot } : result;
   } catch (error) {
     const wasCleared =
-      hasClearedExisting ||
-      (error instanceof ImportCanceledError && error.hasClearedExisting)
+      hasClearedExisting || (error instanceof ImportCanceledError && error.hasClearedExisting);
     if (snapshot && wasCleared) {
-      await restoreSnapshot(snapshot, error)
+      await restoreSnapshot(snapshot, error);
     }
-    throw error
+    throw error;
   }
 }
 
-async function restoreSnapshot(
-  snapshot: SafetySnapshot,
-  originalError: unknown,
-): Promise<void> {
+async function restoreSnapshot(snapshot: SafetySnapshot, originalError: unknown): Promise<void> {
   try {
     if (await hasRewrittenRootsFully(snapshot.roots)) {
-      markImportRestored(originalError)
+      markImportRestored(originalError);
     }
   } catch (restoreError) {
-    console.error('Safety snapshot restore failed', restoreError)
+    console.error("Safety snapshot restore failed", restoreError);
   }
 }
 
@@ -113,28 +100,19 @@ async function importWithSnapshot(
   options: ImportOptions,
   onSnapshot: (snapshot: SafetySnapshot) => void,
 ): Promise<ImportResult> {
-  const parsed = parseImportFile(
-    text,
-    mimeType,
-    fileName,
-    await loadLiveRootTitles(),
-  )
-  const effectiveMode = resolveEffectiveMode(parsed, mode)
-  if (effectiveMode === 'restore-replace') {
-    if (options.signal?.aborted) throw new ImportCanceledError(false)
-    onSnapshot(await takeSafetySnapshot())
+  const parsed = parseImportFile(text, mimeType, fileName, await loadLiveRootTitles());
+  const effectiveMode = resolveEffectiveMode(parsed, mode);
+  if (effectiveMode === "restore-replace") {
+    if (options.signal?.aborted) throw new ImportCanceledError(false);
+    onSnapshot(await takeSafetySnapshot());
   }
-  return importTree(parsed, effectiveMode, options)
+  return importTree(parsed, effectiveMode, options);
 }
 
-function resolveEffectiveMode(
-  parsed: ParsedImportFile,
-  mode: ImportMode,
-): ImportMode {
+function resolveEffectiveMode(parsed: ParsedImportFile, mode: ImportMode): ImportMode {
   const isFolderOnly =
-    parsed.format === 'csv' ||
-    (parsed.format === 'xbel' && !parsed.hasLocationData)
-  return isFolderOnly ? 'folder' : mode
+    parsed.format === "csv" || (parsed.format === "xbel" && !parsed.hasLocationData);
+  return isFolderOnly ? "folder" : mode;
 }
 
 /**
@@ -151,9 +129,9 @@ export async function importTree(
   mode: ImportMode,
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  if (parsed.format === 'csv') {
-    const written = await importCsvTree(parsed.tree, options)
-    return { ...written, skippedInvalidUrl: parsed.skippedInvalidUrl }
+  if (parsed.format === "csv") {
+    const written = await importCsvTree(parsed.tree, options);
+    return { ...written, skippedInvalidUrl: parsed.skippedInvalidUrl };
   }
-  return importParsedTree(parsed.tree, mode, options)
+  return importParsedTree(parsed.tree, mode, options);
 }

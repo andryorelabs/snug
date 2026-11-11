@@ -2,20 +2,17 @@
  * Highest ` (n)` suffix tried before giving up, so a pathological folder
  * cannot loop forever.
  */
-const MAX_NAME_COLLISIONS = 10_000
+const MAX_NAME_COLLISIONS = 10_000;
 
-async function hasFile(
-  directory: FileSystemDirectoryHandle,
-  name: string,
-): Promise<boolean> {
+async function hasFile(directory: FileSystemDirectoryHandle, name: string): Promise<boolean> {
   try {
-    await directory.getFileHandle(name)
-    return true
+    await directory.getFileHandle(name);
+    return true;
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'NotFoundError') {
-      return false
+    if (error instanceof DOMException && error.name === "NotFoundError") {
+      return false;
     }
-    throw error
+    throw error;
   }
 }
 
@@ -32,13 +29,13 @@ async function resolveFreeName(
   baseName: string,
   extension: string,
 ): Promise<string> {
-  const plain = `${baseName}.${extension}`
-  if (!(await hasFile(directory, plain))) return plain
+  const plain = `${baseName}.${extension}`;
+  if (!(await hasFile(directory, plain))) return plain;
   for (let suffix = 1; suffix <= MAX_NAME_COLLISIONS; suffix++) {
-    const candidate = `${baseName} (${suffix}).${extension}`
-    if (!(await hasFile(directory, candidate))) return candidate
+    const candidate = `${baseName} (${suffix}).${extension}`;
+    if (!(await hasFile(directory, candidate))) return candidate;
   }
-  throw new Error(`No free file name for ${plain}`)
+  throw new Error(`No free file name for ${plain}`);
 }
 
 /**
@@ -61,20 +58,20 @@ export async function writeToCustomFolder(
   extension: string,
   content: string,
 ): Promise<string> {
-  let directory = root
-  const segments = subfolderPath.split('/').filter(Boolean)
+  let directory = root;
+  const segments = subfolderPath.split("/").filter(Boolean);
   for (const segment of segments) {
-    directory = await directory.getDirectoryHandle(segment, { create: true })
+    directory = await directory.getDirectoryHandle(segment, { create: true });
   }
-  const name = await resolveFreeName(directory, baseName, extension)
-  const fileHandle = await directory.getFileHandle(name, { create: true })
-  const writable = await fileHandle.createWritable()
+  const name = await resolveFreeName(directory, baseName, extension);
+  const fileHandle = await directory.getFileHandle(name, { create: true });
+  const writable = await fileHandle.createWritable();
   try {
-    await writable.write(content)
+    await writable.write(content);
   } catch (error) {
-    await writable.abort()
-    throw error
+    await writable.abort();
+    throw error;
   }
-  await writable.close()
-  return name
+  await writable.close();
+  return name;
 }

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig } from "vitest/config";
 
 /**
  * `isolate: false` reuses each worker's module registry across files; measured
@@ -8,17 +8,13 @@ export default defineConfig({
   test: {
     isolate: false,
     testTimeout: 30_000,
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: ["src/**/*.test.{ts,tsx}"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'lcov'],
-      include: [
-        'src/**/*.ts',
-        'src/components/ThemeMenu.tsx',
-        'src/components/FaqAccordion.tsx',
-      ],
-      exclude: ['src/**/*.test.{ts,tsx}'],
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      include: ["src/**/*.ts", "src/components/ThemeMenu.tsx", "src/components/FaqAccordion.tsx"],
+      exclude: ["src/**/*.test.{ts,tsx}"],
       thresholds: { lines: 96, statements: 94, branches: 88, functions: 96 },
     },
   },
-})
+});

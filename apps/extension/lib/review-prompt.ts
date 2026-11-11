@@ -1,5 +1,5 @@
-import { reviewPromptStore } from '@/lib/storage'
-import type { AutoExportLastRun, ReviewPromptState } from '@/lib/types'
+import { reviewPromptStore } from "@/lib/storage";
+import type { AutoExportLastRun, ReviewPromptState } from "@/lib/types";
 
 /**
  * Records that the user completed a successful export. Idempotent: the first
@@ -7,9 +7,9 @@ import type { AutoExportLastRun, ReviewPromptState } from '@/lib/types'
  * @param now Epoch milliseconds of the successful export.
  */
 export async function markReviewPromptEligible(now: number): Promise<void> {
-  const state = await reviewPromptStore.getValue()
-  if (state.eligibleAt !== null) return
-  await reviewPromptStore.setValue({ ...state, eligibleAt: now })
+  const state = await reviewPromptStore.getValue();
+  if (state.eligibleAt !== null) return;
+  await reviewPromptStore.setValue({ ...state, eligibleAt: now });
 }
 
 /**
@@ -18,8 +18,8 @@ export async function markReviewPromptEligible(now: number): Promise<void> {
  * @param now Epoch milliseconds of the dismissal.
  */
 export async function dismissReviewPrompt(now: number): Promise<void> {
-  const state = await reviewPromptStore.getValue()
-  await reviewPromptStore.setValue({ ...state, dismissedAt: now })
+  const state = await reviewPromptStore.getValue();
+  await reviewPromptStore.setValue({ ...state, dismissedAt: now });
 }
 
 /**
@@ -33,6 +33,6 @@ export function isReviewPromptVisible(
   state: ReviewPromptState,
   lastRun: AutoExportLastRun | null,
 ): boolean {
-  const isLive = state.eligibleAt !== null && state.dismissedAt === null
-  return isLive && lastRun?.ok !== false
+  const isLive = state.eligibleAt !== null && state.dismissedAt === null;
+  return isLive && lastRun?.ok !== false;
 }

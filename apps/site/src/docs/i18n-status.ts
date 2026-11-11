@@ -1,5 +1,5 @@
-import { loadLocalizedCatalog } from './catalog'
-import { formatStatusReport } from './status'
+import { loadLocalizedCatalog } from "./catalog";
+import { formatStatusReport } from "./status";
 
 /**
  * Entry point of `bun run i18n:status`. Prints what is outstanding per
@@ -7,13 +7,13 @@ import { formatStatusReport } from './status'
  */
 function main(): void {
   try {
-    process.stdout.write(formatStatusReport(loadLocalizedCatalog()))
+    process.stdout.write(formatStatusReport(loadLocalizedCatalog()));
   } catch (error) {
     process.stderr.write(
       `i18n:status failed: ${error instanceof Error ? error.message : String(error)}\n`,
-    )
-    process.exitCode = 1
+    );
+    process.exitCode = 1;
   }
 }
 
-main()
+main();

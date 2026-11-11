@@ -1,17 +1,8 @@
-import { i18n } from '#i18n'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@workspace/ui/components/alert'
-import { Button } from '@workspace/ui/components/button'
-import { Field, FieldLabel } from '@workspace/ui/components/field'
-import {
-  Item,
-  ItemContent,
-  ItemMedia,
-  ItemTitle,
-} from '@workspace/ui/components/item'
+import { i18n } from "#i18n";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
+import { Button } from "@workspace/ui/components/button";
+import { Field, FieldLabel } from "@workspace/ui/components/field";
+import { Item, ItemContent, ItemMedia, ItemTitle } from "@workspace/ui/components/item";
 import {
   Select,
   SelectContent,
@@ -19,111 +10,102 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select'
-import { Spinner } from '@workspace/ui/components/spinner'
-import { toast } from '@workspace/ui/components/toast'
-import { cn } from '@workspace/ui/lib/utils'
-import { FilesIcon, TriangleAlertIcon, UploadIcon } from 'lucide-react'
-import type { DragEvent } from 'react'
-import { useId, useRef, useState } from 'react'
+} from "@workspace/ui/components/select";
+import { Spinner } from "@workspace/ui/components/spinner";
+import { toast } from "@workspace/ui/components/toast";
+import { cn } from "@workspace/ui/lib/utils";
+import { FilesIcon, TriangleAlertIcon, UploadIcon } from "lucide-react";
+import type { DragEvent } from "react";
+import { useId, useRef, useState } from "react";
 
-import { ReplaceSnapshotNote } from '@/components/import/replace-snapshot-note'
-import { OperationProgressCard } from '@/components/operation-progress-card'
-import {
-  APP_ROUTES,
-  getAppUrl,
-  SAFETY_SNAPSHOT_SETTINGS_ROUTE,
-} from '@/lib/app-url'
-import { formatCount } from '@/lib/format-count'
-import { ImportCanceledError } from '@/lib/import-control'
-import { getImportModeItems } from '@/lib/import-mode-items'
-import type { SkippedPopupFile } from '@/lib/popup-import-plan'
-import { planPopupFileBatch, planPopupImport } from '@/lib/popup-import-plan'
-import { runImport } from '@/lib/run-import'
-import type { ImportBatchFile } from '@/lib/run-import-batch'
-import { runImportBatch } from '@/lib/run-import-batch'
-import { defaultImportModeStore, skipDuplicatesStore } from '@/lib/storage'
-import type { ImportMode, ImportResult } from '@/lib/types'
-import { useOperationProgress } from '@/lib/use-operation-progress'
-import { useStorageItem } from '@/lib/use-storage-item'
+import { ReplaceSnapshotNote } from "@/components/import/replace-snapshot-note";
+import { OperationProgressCard } from "@/components/operation-progress-card";
+import { APP_ROUTES, getAppUrl, SAFETY_SNAPSHOT_SETTINGS_ROUTE } from "@/lib/app-url";
+import { formatCount } from "@/lib/format-count";
+import { ImportCanceledError } from "@/lib/import-control";
+import { getImportModeItems } from "@/lib/import-mode-items";
+import type { SkippedPopupFile } from "@/lib/popup-import-plan";
+import { planPopupFileBatch, planPopupImport } from "@/lib/popup-import-plan";
+import { runImport } from "@/lib/run-import";
+import type { ImportBatchFile } from "@/lib/run-import-batch";
+import { runImportBatch } from "@/lib/run-import-batch";
+import { defaultImportModeStore, skipDuplicatesStore } from "@/lib/storage";
+import type { ImportMode, ImportResult } from "@/lib/types";
+import { useOperationProgress } from "@/lib/use-operation-progress";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 interface PendingImport {
-  text: string
-  mimeType: string
-  fileName: string
-  mode: ImportMode
+  text: string;
+  mimeType: string;
+  fileName: string;
+  mode: ImportMode;
 }
 
 interface PendingBatch {
-  files: ImportBatchFile[]
-  mode: ImportMode
-  skipDuplicates: boolean
-  bookmarkCount: number
-  skippedFiles: SkippedPopupFile[]
+  files: ImportBatchFile[];
+  mode: ImportMode;
+  skipDuplicates: boolean;
+  bookmarkCount: number;
+  skippedFiles: SkippedPopupFile[];
 }
 
-const MAX_NAMED_SKIPPED_FILES = 3
+const MAX_NAMED_SKIPPED_FILES = 3;
 
 function describeSkippedFiles(skippedFiles: SkippedPopupFile[]): string[] {
   const named = skippedFiles
     .slice(0, MAX_NAMED_SKIPPED_FILES)
-    .map(({ fileName, reason }) => `${fileName}: ${reason}`)
-  const hiddenCount = skippedFiles.length - named.length
+    .map(({ fileName, reason }) => `${fileName}: ${reason}`);
+  const hiddenCount = skippedFiles.length - named.length;
   return hiddenCount > 0
-    ? [
-        ...named,
-        i18n.t('popup_importSkippedFilesMore', hiddenCount, [
-          formatCount(hiddenCount),
-        ]),
-      ]
-    : named
+    ? [...named, i18n.t("popup_importSkippedFilesMore", hiddenCount, [formatCount(hiddenCount)])]
+    : named;
 }
 
 interface BatchSummary {
-  fileCount: number
-  bookmarkCount: number
+  fileCount: number;
+  bookmarkCount: number;
 }
 
 async function readFileTextOrEmpty(file: File): Promise<string> {
   try {
-    return await file.text()
+    return await file.text();
   } catch {
-    return ''
+    return "";
   }
 }
 
 function describeSkippedBookmarks(result: ImportResult): string[] {
   return [
     result.skippedDuplicates > 0
-      ? i18n.t('import_skippedDuplicates', result.skippedDuplicates, [
+      ? i18n.t("import_skippedDuplicates", result.skippedDuplicates, [
           formatCount(result.skippedDuplicates),
         ])
-      : '',
+      : "",
     result.skippedInvalidUrl > 0
-      ? i18n.t('import_skippedInvalidUrl', result.skippedInvalidUrl, [
+      ? i18n.t("import_skippedInvalidUrl", result.skippedInvalidUrl, [
           formatCount(result.skippedInvalidUrl),
         ])
-      : '',
-  ].filter(Boolean)
+      : "",
+  ].filter(Boolean);
 }
 
 function hasDraggedFiles(event: DragEvent): boolean {
-  return event.dataTransfer.types.includes('Files')
+  return event.dataTransfer.types.includes("Files");
 }
 
 function reportImportError(error: unknown): void {
   toast.add(
     error instanceof ImportCanceledError
       ? {
-          title: i18n.t('progress_importCanceledTitle'),
-          description: i18n.t('progress_importCanceledDescription'),
+          title: i18n.t("progress_importCanceledTitle"),
+          description: i18n.t("progress_importCanceledDescription"),
         }
       : {
-          type: 'error',
-          title: i18n.t('popup_importFailedTitle'),
+          type: "error",
+          title: i18n.t("popup_importFailedTitle"),
           description: (error as Error).message,
         },
-  )
+  );
 }
 
 /**
@@ -143,66 +125,61 @@ function reportImportError(error: unknown): void {
  * @returns The import section element.
  */
 export function ImportSection() {
-  const fileInputReference = useRef<HTMLInputElement>(null)
-  const modeSelectId = useId()
-  const [mode, setMode] = useStorageItem(defaultImportModeStore)
-  const isBusyReference = useRef(false)
-  const [isImporting, setIsImporting] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
-  const [batchSummary, setBatchSummary] = useState<BatchSummary | null>(null)
-  const progress = useOperationProgress()
+  const fileInputReference = useRef<HTMLInputElement>(null);
+  const modeSelectId = useId();
+  const [mode, setMode] = useStorageItem(defaultImportModeStore);
+  const isBusyReference = useRef(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [batchSummary, setBatchSummary] = useState<BatchSummary | null>(null);
+  const progress = useOperationProgress();
 
-  const performImport = async ({
-    text,
-    mimeType,
-    fileName,
-    mode: importMode,
-  }: PendingImport) => {
-    const signal = progress.begin()
+  const performImport = async ({ text, mimeType, fileName, mode: importMode }: PendingImport) => {
+    const signal = progress.begin();
     try {
       const result = await runImport(text, mimeType, importMode, fileName, {
         skipDuplicates: await skipDuplicatesStore.getValue(),
         signal,
         onProgress: progress.report,
-      })
-      const notes = describeSkippedBookmarks(result)
+      });
+      const notes = describeSkippedBookmarks(result);
       toast.add({
-        type: 'success',
-        title: i18n.t('popup_importSuccessTitle'),
-        description: notes.length > 0 ? notes.join('. ') : undefined,
-      })
+        type: "success",
+        title: i18n.t("popup_importSuccessTitle"),
+        description: notes.length > 0 ? notes.join(". ") : undefined,
+      });
     } catch (error) {
-      reportImportError(error)
+      reportImportError(error);
     } finally {
-      progress.end()
+      progress.end();
     }
-  }
+  };
 
   const prepareImport = async (file: File): Promise<PendingImport | null> => {
-    const text = await file.text()
+    const text = await file.text();
     const plan = await planPopupImport({
       text,
       mimeType: file.type,
       fileName: file.name,
       mode,
       skipDuplicates: await skipDuplicatesStore.getValue(),
-    })
-    if (plan.kind === 'app') {
-      void browser.tabs.create({ url: getAppUrl(APP_ROUTES.import) })
-      return null
+    });
+    if (plan.kind === "app") {
+      void browser.tabs.create({ url: getAppUrl(APP_ROUTES.import) });
+      return null;
     }
-    if (plan.kind === 'all-duplicates') {
+    if (plan.kind === "all-duplicates") {
       toast.add({
-        title: i18n.t('import_nothingToImportTitle'),
-        description: i18n.t('import_allDuplicates'),
-      })
-      return null
+        title: i18n.t("import_nothingToImportTitle"),
+        description: i18n.t("import_allDuplicates"),
+      });
+      return null;
     }
-    return { text, mimeType: file.type, fileName: file.name, mode: plan.mode }
-  }
+    return { text, mimeType: file.type, fileName: file.name, mode: plan.mode };
+  };
 
   const prepareBatch = async (files: File[]): Promise<PendingBatch | null> => {
-    const shouldSkipDuplicates = await skipDuplicatesStore.getValue()
+    const shouldSkipDuplicates = await skipDuplicatesStore.getValue();
     const requests = await Promise.all(
       files.map(async (file) => ({
         text: await readFileTextOrEmpty(file),
@@ -211,23 +188,23 @@ export function ImportSection() {
         mode,
         skipDuplicates: shouldSkipDuplicates,
       })),
-    )
+    );
     const { plan, readableRequests, skippedFiles, bookmarkCount } =
-      await planPopupFileBatch(requests)
-    if (plan.kind === 'app') {
+      await planPopupFileBatch(requests);
+    if (plan.kind === "app") {
       toast.add({
-        title: i18n.t('popup_openingImportTitle'),
-        description: i18n.t('popup_openingImportDescription'),
-      })
-      void browser.tabs.create({ url: getAppUrl(APP_ROUTES.import) })
-      return null
+        title: i18n.t("popup_openingImportTitle"),
+        description: i18n.t("popup_openingImportDescription"),
+      });
+      void browser.tabs.create({ url: getAppUrl(APP_ROUTES.import) });
+      return null;
     }
-    if (plan.kind === 'all-duplicates') {
+    if (plan.kind === "all-duplicates") {
       toast.add({
-        title: i18n.t('import_nothingToImportTitle'),
-        description: i18n.t('import_allDuplicates'),
-      })
-      return null
+        title: i18n.t("import_nothingToImportTitle"),
+        description: i18n.t("import_allDuplicates"),
+      });
+      return null;
     }
     return {
       files: readableRequests.map(({ text, mimeType, fileName }) => ({
@@ -239,106 +216,102 @@ export function ImportSection() {
       skipDuplicates: shouldSkipDuplicates,
       bookmarkCount,
       skippedFiles,
-    }
-  }
+    };
+  };
 
   const performBatchImport = async (batch: PendingBatch) => {
     setBatchSummary({
       fileCount: batch.files.length,
       bookmarkCount: batch.bookmarkCount,
-    })
-    const signal = progress.begin()
+    });
+    const signal = progress.begin();
     try {
       const result = await runImportBatch(batch.files, batch.mode, {
         skipDuplicates: batch.skipDuplicates,
         signal,
         onProgress: progress.report,
-      })
-      const notes = describeSkippedBookmarks(result)
-      const skippedCount = batch.skippedFiles.length
+      });
+      const notes = describeSkippedBookmarks(result);
+      const skippedCount = batch.skippedFiles.length;
       if (skippedCount > 0) {
         toast.add({
-          type: 'warning',
-          title: i18n.t('popup_importSkippedFilesTitle', skippedCount, [
-            formatCount(skippedCount),
-          ]),
+          type: "warning",
+          title: i18n.t("popup_importSkippedFilesTitle", skippedCount, [formatCount(skippedCount)]),
           description: [
             ...describeSkippedFiles(batch.skippedFiles),
-            i18n.t('popup_importSkippedFilesResult', batch.files.length, [
+            i18n.t("popup_importSkippedFilesResult", batch.files.length, [
               formatCount(batch.files.length),
               formatCount(batch.bookmarkCount),
             ]),
-            ...(notes.length > 0 ? [`${notes.join('. ')}.`] : []),
-          ].join('\n'),
-        })
-        return
+            ...(notes.length > 0 ? [`${notes.join(". ")}.`] : []),
+          ].join("\n"),
+        });
+        return;
       }
       toast.add({
-        type: 'success',
-        title: i18n.t('popup_importSuccessTitle'),
-        description: notes.length > 0 ? notes.join('. ') : undefined,
-      })
+        type: "success",
+        title: i18n.t("popup_importSuccessTitle"),
+        description: notes.length > 0 ? notes.join(". ") : undefined,
+      });
     } catch (error) {
-      reportImportError(error)
+      reportImportError(error);
     } finally {
-      progress.end()
-      setBatchSummary(null)
+      progress.end();
+      setBatchSummary(null);
     }
-  }
+  };
 
   const importFiles = async (files: File[]) => {
-    const [file] = files
-    if (!file || isBusyReference.current) return
-    isBusyReference.current = true
-    setIsImporting(true)
+    const [file] = files;
+    if (!file || isBusyReference.current) return;
+    isBusyReference.current = true;
+    setIsImporting(true);
     try {
       try {
         if (files.length === 1) {
-          const prepared = await prepareImport(file)
-          if (prepared) await performImport(prepared)
+          const prepared = await prepareImport(file);
+          if (prepared) await performImport(prepared);
         } else {
-          const prepared = await prepareBatch(files)
-          if (prepared) await performBatchImport(prepared)
+          const prepared = await prepareBatch(files);
+          if (prepared) await performBatchImport(prepared);
         }
       } catch (error) {
         toast.add({
-          type: 'error',
-          title: i18n.t('popup_importFailedTitle'),
+          type: "error",
+          title: i18n.t("popup_importFailedTitle"),
           description: (error as Error).message,
-        })
+        });
       }
     } finally {
-      isBusyReference.current = false
-      setIsImporting(false)
+      isBusyReference.current = false;
+      setIsImporting(false);
     }
-  }
+  };
 
-  const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = [...(event.target.files ?? [])]
-    event.target.value = ''
-    await importFiles(files)
-  }
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = [...(event.target.files ?? [])];
+    event.target.value = "";
+    await importFiles(files);
+  };
 
   const handleDragOver = (event: DragEvent) => {
-    if (!hasDraggedFiles(event)) return
-    event.preventDefault()
-    if (!isImporting) setIsDragging(true)
-  }
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    if (!isImporting) setIsDragging(true);
+  };
 
   const handleDragLeave = (event: DragEvent) => {
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
-    setIsDragging(false)
-  }
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setIsDragging(false);
+  };
 
   const handleDrop = (event: DragEvent) => {
-    if (!hasDraggedFiles(event)) return
-    event.preventDefault()
-    setIsDragging(false)
-    if (isImporting) return
-    void importFiles([...event.dataTransfer.files])
-  }
+    if (!hasDraggedFiles(event)) return;
+    event.preventDefault();
+    setIsDragging(false);
+    if (isImporting) return;
+    void importFiles([...event.dataTransfer.files]);
+  };
 
   return (
     <section
@@ -353,10 +326,10 @@ export function ImportSection() {
           data-testid="popup-import-drop-overlay"
         >
           <UploadIcon className="size-4" aria-hidden />
-          {i18n.t('popup_dropFilesToImport')}
+          {i18n.t("popup_dropFilesToImport")}
         </div>
       )}
-      <div className={cn('flex flex-col gap-2', isDragging && 'invisible')}>
+      <div className={cn("flex flex-col gap-2", isDragging && "invisible")}>
         <input
           ref={fileInputReference}
           type="file"
@@ -367,9 +340,7 @@ export function ImportSection() {
         />
 
         <Field>
-          <FieldLabel htmlFor={modeSelectId}>
-            {i18n.t('defaultImportMode')}
-          </FieldLabel>
+          <FieldLabel htmlFor={modeSelectId}>{i18n.t("defaultImportMode")}</FieldLabel>
           <Select
             items={getImportModeItems()}
             value={mode}
@@ -380,27 +351,21 @@ export function ImportSection() {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="folder">
-                  {i18n.t('importModeFolder')}
-                </SelectItem>
-                <SelectItem value="restore-merge">
-                  {i18n.t('importModeRestoreMerge')}
-                </SelectItem>
+                <SelectItem value="folder">{i18n.t("importModeFolder")}</SelectItem>
+                <SelectItem value="restore-merge">{i18n.t("importModeRestoreMerge")}</SelectItem>
                 <SelectItem value="restore-replace">
-                  {i18n.t('importModeRestoreReplace')}
+                  {i18n.t("importModeRestoreReplace")}
                 </SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>
         </Field>
 
-        {mode === 'restore-replace' && (
+        {mode === "restore-replace" && (
           <Alert variant="destructive">
             <TriangleAlertIcon />
-            <AlertTitle>{i18n.t('popup_replaceAlertTitle')}</AlertTitle>
-            <AlertDescription>
-              {i18n.t('importModeRestoreReplaceWarning')}
-            </AlertDescription>
+            <AlertTitle>{i18n.t("popup_replaceAlertTitle")}</AlertTitle>
+            <AlertDescription>{i18n.t("importModeRestoreReplaceWarning")}</AlertDescription>
             <AlertDescription className="mt-2">
               <ReplaceSnapshotNote
                 onOpenSettings={() =>
@@ -420,7 +385,7 @@ export function ImportSection() {
             </ItemMedia>
             <ItemContent>
               <ItemTitle>
-                {i18n.t('popup_importBatchSummary', batchSummary.fileCount, [
+                {i18n.t("popup_importBatchSummary", batchSummary.fileCount, [
                   formatCount(batchSummary.fileCount),
                   formatCount(batchSummary.bookmarkCount),
                 ])}
@@ -440,15 +405,11 @@ export function ImportSection() {
           ) : (
             <UploadIcon data-icon="inline-start" />
           )}
-          {isImporting
-            ? i18n.t('popup_importing')
-            : i18n.t('popup_chooseFiles')}
+          {isImporting ? i18n.t("popup_importing") : i18n.t("popup_chooseFiles")}
         </Button>
 
         {isImporting && (
-          <p className="text-xs text-muted-foreground">
-            {i18n.t('popup_importBusyDropIgnored')}
-          </p>
+          <p className="text-xs text-muted-foreground">{i18n.t("popup_importBusyDropIgnored")}</p>
         )}
 
         {progress.state.isCardVisible && (
@@ -460,5 +421,5 @@ export function ImportSection() {
         )}
       </div>
     </section>
-  )
+  );
 }

@@ -3,17 +3,17 @@
  * translation tickets of the Guide spec localize it.
  */
 export const DOCS_UI = {
-  guide: 'Guide',
+  guide: "Guide",
   whatsNew: "What's new",
-  navLabel: 'Documentation',
-  editPage: 'Edit this page on GitHub',
-  opensInNewTab: 'opens in a new tab',
-} as const
+  navLabel: "Documentation",
+  editPage: "Edit this page on GitHub",
+  opensInNewTab: "opens in a new tab",
+} as const;
 
 /**
  * Site-relative English paths of the Guide's top-level pages.
  */
 export const DOCS_PATHS = {
-  guide: '/guide/',
-  whatsNew: '/changelog/',
-} as const
+  guide: "/guide/",
+  whatsNew: "/changelog/",
+} as const;

@@ -1,42 +1,37 @@
 ---
-import { Badge } from '@workspace/ui/components/badge'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@workspace/ui/components/card'
-import { ArrowRight } from 'lucide-react'
+import { Badge } from "@workspace/ui/components/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { ArrowRight } from "lucide-react";
 
-import braveLogo from '../assets/browsers/brave.svg'
-import chromeLogo from '../assets/browsers/chrome.svg'
-import edgeLogo from '../assets/browsers/edge.svg'
-import operaLogo from '../assets/browsers/opera.svg'
-import { getContent } from '../i18n/content'
-import { EXPORT_FORMATS } from '../i18n/landing'
-import type { Locale } from '../i18n/locales'
-import FolderTree from './FolderTree.astro'
+import braveLogo from "../assets/browsers/brave.svg";
+import chromeLogo from "../assets/browsers/chrome.svg";
+import edgeLogo from "../assets/browsers/edge.svg";
+import operaLogo from "../assets/browsers/opera.svg";
+import { getContent } from "../i18n/content";
+import { EXPORT_FORMATS } from "../i18n/landing";
+import type { Locale } from "../i18n/locales";
+import FolderTree from "./FolderTree.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { locale } = Astro.props
-const { stages } = getContent(locale).landing.hero
-const formats = EXPORT_FORMATS
+const { locale } = Astro.props;
+const { stages } = getContent(locale).landing.hero;
+const formats = EXPORT_FORMATS;
 
 const sourceBrowsers = [
-  { name: 'Chrome', logo: chromeLogo },
-  { name: 'Edge', logo: edgeLogo },
-  { name: 'Brave', logo: braveLogo },
-]
+  { name: "Chrome", logo: chromeLogo },
+  { name: "Edge", logo: edgeLogo },
+  { name: "Brave", logo: braveLogo },
+];
 const targetBrowsers = [
-  { name: 'Edge', logo: edgeLogo },
-  { name: 'Brave', logo: braveLogo },
-  { name: 'Opera', logo: operaLogo },
-]
+  { name: "Edge", logo: edgeLogo },
+  { name: "Brave", logo: braveLogo },
+  { name: "Opera", logo: operaLogo },
+];
 const ribbonPath =
-  'M20 8 L64 8 Q70 8 70 14 L70 68 Q70 78 61 72 L42 59 L23 72 Q14 78 14 68 L14 14 Q14 8 20 8 Z'
+  "M20 8 L64 8 Q70 8 70 14 L70 68 Q70 78 61 72 L42 59 L23 72 Q14 78 14 68 L14 14 Q14 8 20 8 Z";
 ---
 
 <div class="relative journey-boundary p-4 pt-8 md:p-6 md:pt-9">
@@ -46,10 +41,7 @@ const ribbonPath =
   >
     {stages.device}
   </p>
-  <div
-    class="flex hero-stage flex-col items-stretch gap-3 md:flex-row md:gap-4"
-    aria-hidden="true"
-  >
+  <div class="flex hero-stage flex-col items-stretch gap-3 md:flex-row md:gap-4" aria-hidden="true">
     <Card size="sm" className="min-w-0 flex-1">
       <CardHeader>
         <CardTitle className="break-words">{stages.browser}</CardTitle>
@@ -57,10 +49,7 @@ const ribbonPath =
       <CardContent>
         <div class="mb-3 hero-logos">
           {sourceBrowsers.map(({ name, logo }) => (
-            <span
-              class="flex items-center gap-2 text-sm font-medium"
-              translate="no"
-            >
+            <span class="flex items-center gap-2 text-sm font-medium" translate="no">
               <img src={logo.src} width="28" height="28" alt="" />
               {name}
             </span>
@@ -80,13 +69,7 @@ const ribbonPath =
         translate="no"
         class="absolute hero-file flex flex-col items-center gap-1 font-mono text-xs whitespace-nowrap text-foreground"
       >
-        <svg
-          viewBox="0 0 84 84"
-          width="56"
-          height="56"
-          aria-hidden="true"
-          focusable="false"
-        >
+        <svg viewBox="0 0 84 84" width="56" height="56" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient id="journey-ribbon" x1="0" y1="0" x2="1" y2="1">
               {/* eslint-disable-next-line shadcn/no-raw-colors -- brand ribbon artwork, an exact gradient with no theme token */}
@@ -111,10 +94,7 @@ const ribbonPath =
       <CardContent>
         <div class="mb-3 hero-logos">
           {targetBrowsers.map(({ name, logo }) => (
-            <span
-              class="flex items-center gap-2 text-sm font-medium"
-              translate="no"
-            >
+            <span class="flex items-center gap-2 text-sm font-medium" translate="no">
               <img src={logo.src} width="28" height="28" alt="" />
               {name}
             </span>

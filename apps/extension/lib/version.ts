@@ -9,12 +9,10 @@ export function isMinorOrMajorUpdate(
   previousVersion: string | undefined,
   currentVersion: string,
 ): boolean {
-  if (previousVersion === undefined) return false
-  const previousParts = previousVersion.split('.', 2)
-  const currentParts = currentVersion.split('.', 2)
-  return (
-    previousParts[0] !== currentParts[0] || previousParts[1] !== currentParts[1]
-  )
+  if (previousVersion === undefined) return false;
+  const previousParts = previousVersion.split(".", 2);
+  const currentParts = currentVersion.split(".", 2);
+  return previousParts[0] !== currentParts[0] || previousParts[1] !== currentParts[1];
 }
 
 /**
@@ -30,10 +28,7 @@ export function isWhatsNewUnseen(
   lastSeenVersion: string | null,
   installedVersion: string,
 ): boolean {
-  return (
-    lastSeenVersion === null ||
-    isMinorOrMajorUpdate(lastSeenVersion, installedVersion)
-  )
+  return lastSeenVersion === null || isMinorOrMajorUpdate(lastSeenVersion, installedVersion);
 }
 
 /**
@@ -44,11 +39,8 @@ export function isWhatsNewUnseen(
  * @param installedVersion Version in the extension manifest.
  * @returns `true` when the entry is on the installed major.minor line.
  */
-export function isChangelogEntryCurrent(
-  entryVersion: string,
-  installedVersion: string,
-): boolean {
-  return !isMinorOrMajorUpdate(entryVersion, installedVersion)
+export function isChangelogEntryCurrent(entryVersion: string, installedVersion: string): boolean {
+  return !isMinorOrMajorUpdate(entryVersion, installedVersion);
 }
 
 /**
@@ -65,5 +57,5 @@ export function getCurrentChangelogVersion(
 ): string | undefined {
   return entryVersions.find((entryVersion) =>
     isChangelogEntryCurrent(entryVersion, installedVersion),
-  )
+  );
 }

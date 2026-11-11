@@ -1,23 +1,19 @@
-import { countBookmarks } from '@/lib/count-bookmarks'
-import { createExportTicker, type ExportControl } from '@/lib/export-control'
-import {
-  isBookmarksBar,
-  isOtherBookmarks,
-  ROOT_FOLDER_IDS,
-} from '@/lib/root-folders'
-import type { ExtendedBookmarkTreeNode } from '@/lib/types'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { createExportTicker, type ExportControl } from "@/lib/export-control";
+import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
 /**
  * Options for the structural exporters (Markdown, OPML, XBEL), which keep the
  * folder tree and titles and ignore icon data.
  */
 export interface TreeExportOptions extends ExportControl {
-  selectedBookmarks: ExtendedBookmarkTreeNode[] | null
-  includeDateAdded: boolean
-  includeDateLastUsed: boolean
-  includeDateGroupModified: boolean
-  hideOtherBookmarks: boolean
-  hideParentFolder: boolean
+  selectedBookmarks: ExtendedBookmarkTreeNode[] | null;
+  includeDateAdded: boolean;
+  includeDateLastUsed: boolean;
+  includeDateGroupModified: boolean;
+  hideOtherBookmarks: boolean;
+  hideParentFolder: boolean;
 }
 
 /**
@@ -27,19 +23,19 @@ export interface TreeExportOptions extends ExportControl {
  */
 export type ExportNode =
   | {
-      kind: 'bookmark'
-      title: string
-      url: string
-      dateAdded?: number
-      dateLastUsed?: number
+      kind: "bookmark";
+      title: string;
+      url: string;
+      dateAdded?: number;
+      dateLastUsed?: number;
     }
   | {
-      kind: 'folder'
-      title: string
-      dateAdded?: number
-      dateGroupModified?: number
-      children: ExportNode[]
-    }
+      kind: "folder";
+      title: string;
+      dateAdded?: number;
+      dateGroupModified?: number;
+      children: ExportNode[];
+    };
 
 /**
  * Walks the bookmarks to export and builds the node tree the structural
@@ -50,60 +46,56 @@ export type ExportNode =
  * @returns The top-level nodes in tree order.
  * @throws {ExportCanceledError} When `options.signal` aborts.
  */
-export async function buildExportTree(
-  options: TreeExportOptions,
-): Promise<ExportNode[]> {
-  const rootNodes = await browser.bookmarks.getTree()
+export async function buildExportTree(options: TreeExportOptions): Promise<ExportNode[]> {
+  const rootNodes = await browser.bookmarks.getTree();
   const nodes = (options.selectedBookmarks ??
     rootNodes[0]?.children ??
-    []) as ExtendedBookmarkTreeNode[]
-  const ticker = createExportTicker(options, countBookmarks(nodes))
+    []) as ExtendedBookmarkTreeNode[];
+  const ticker = createExportTicker(options, countBookmarks(nodes));
 
   const convert = (list: ExtendedBookmarkTreeNode[]): ExportNode[] => {
-    const result: ExportNode[] = []
+    const result: ExportNode[] = [];
     for (const node of list) {
       if (node.url) {
-        ticker.tick()
+        ticker.tick();
         result.push({
-          kind: 'bookmark',
+          kind: "bookmark",
           title: node.title,
           url: node.url,
-          ...(options.includeDateAdded &&
-            node.dateAdded && { dateAdded: node.dateAdded }),
+          ...(options.includeDateAdded && node.dateAdded && { dateAdded: node.dateAdded }),
           ...(options.includeDateLastUsed &&
             node.dateLastUsed && { dateLastUsed: node.dateLastUsed }),
-        })
+        });
       } else if (node.children) {
-        const children = convert(node.children as ExtendedBookmarkTreeNode[])
+        const children = convert(node.children as ExtendedBookmarkTreeNode[]);
         const isHidden =
           (isOtherBookmarks(node) && options.hideOtherBookmarks) ||
           (options.hideParentFolder &&
             node.id !== ROOT_FOLDER_IDS.virtualRoot &&
             !isBookmarksBar(node) &&
-            !isOtherBookmarks(node))
+            !isOtherBookmarks(node));
         if (isHidden) {
-          result.push(...children)
+          result.push(...children);
         } else {
           result.push({
-            kind: 'folder',
+            kind: "folder",
             title: node.title,
-            ...(options.includeDateAdded &&
-              node.dateAdded && { dateAdded: node.dateAdded }),
+            ...(options.includeDateAdded && node.dateAdded && { dateAdded: node.dateAdded }),
             ...(options.includeDateGroupModified &&
               node.dateGroupModified && {
                 dateGroupModified: node.dateGroupModified,
               }),
             children,
-          })
+          });
         }
       }
     }
-    return result
-  }
+    return result;
+  };
 
-  const tree = convert(nodes)
-  ticker.finish()
-  return tree
+  const tree = convert(nodes);
+  ticker.finish();
+  return tree;
 }
 
 /**
@@ -115,10 +107,10 @@ export async function buildExportTree(
 export function escapeXml(text: string): string {
   return text
 
-    .replaceAll(/[\u{0}-\u{8}\u{B}\u{C}\u{E}-\u{1F}\u{FFFE}\u{FFFF}]/gu, '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;')
+    .replaceAll(/[\u{0}-\u{8}\u{B}\u{C}\u{E}-\u{1F}\u{FFFE}\u{FFFF}]/gu, "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }

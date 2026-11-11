@@ -1,126 +1,115 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 
-import {
-  assertSameKeys,
-  flattenKeys,
-  getContent,
-  loadAllContent,
-} from './content'
-import { LOCALES } from './locales'
+import { assertSameKeys, flattenKeys, getContent, loadAllContent } from "./content";
+import { LOCALES } from "./locales";
 
-const CJK_LOCALES = new Set(['ja', 'ko', 'zh_CN'])
+const CJK_LOCALES = new Set(["ja", "ko", "zh_CN"]);
 
 function visualWidth(text: string): number {
-  let width = 0
+  let width = 0;
   for (const character of text) {
-    width += /[\u{2E80}-\u{9FFF}\u{AC00}-\u{D7AF}\u{FF00}-\u{FFEF}]/u.test(
-      character,
-    )
-      ? 2
-      : 1
+    width += /[\u{2E80}-\u{9FFF}\u{AC00}-\u{D7AF}\u{FF00}-\u{FFEF}]/u.test(character) ? 2 : 1;
   }
-  return width
+  return width;
 }
 
-function flattenValues(node: unknown, prefix = ''): [string, string][] {
-  if (typeof node === 'string') return [[prefix, node]]
-  const entries: [string, string][] = []
+function flattenValues(node: unknown, prefix = ""): [string, string][] {
+  if (typeof node === "string") return [[prefix, node]];
+  const entries: [string, string][] = [];
   for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-    entries.push(...flattenValues(value, prefix ? `${prefix}.${key}` : key))
+    entries.push(...flattenValues(value, prefix ? `${prefix}.${key}` : key));
   }
-  return entries
+  return entries;
 }
 
-describe('content', () => {
-  it('flattens nested keys', () => {
-    expect(flattenKeys({ b: 'x', a: { c: 'y' } })).toEqual(['a.c', 'b'])
-  })
+describe("content", () => {
+  it("flattens nested keys", () => {
+    expect(flattenKeys({ b: "x", a: { c: "y" } })).toEqual(["a.c", "b"]);
+  });
 
-  it('fails on a missing key', () => {
+  it("fails on a missing key", () => {
     expect(() =>
-      assertSameKeys({ meta: { title: 'a', description: 'b' } }, 'es', {
-        meta: { title: 'a' },
+      assertSameKeys({ meta: { title: "a", description: "b" } }, "es", {
+        meta: { title: "a" },
       }),
-    ).toThrow(/missing \[meta\.description\]/)
-  })
+    ).toThrow(/missing \[meta\.description\]/);
+  });
 
-  it('fails on an unexpected key', () => {
-    expect(() => assertSameKeys({ a: 'x' }, 'es', { a: 'x', b: 'y' })).toThrow(
-      /unexpected \[b\]/,
-    )
-  })
+  it("fails on an unexpected key", () => {
+    expect(() => assertSameKeys({ a: "x" }, "es", { a: "x", b: "y" })).toThrow(/unexpected \[b\]/);
+  });
 
-  it('fails when a locale file is absent', () => {
-    expect(() => loadAllContent({})).toThrow(/Missing content file/)
-  })
+  it("fails when a locale file is absent", () => {
+    expect(() => loadAllContent({})).toThrow(/Missing content file/);
+  });
 
-  it('has complete content for every locale', () => {
-    expect(
-      Object.keys(loadAllContent()).toSorted((a, b) => a.localeCompare(b)),
-    ).toEqual(LOCALES.toSorted((a, b) => a.localeCompare(b)))
-  })
+  it("has complete content for every locale", () => {
+    expect(Object.keys(loadAllContent()).toSorted((a, b) => a.localeCompare(b))).toEqual(
+      LOCALES.toSorted((a, b) => a.localeCompare(b)),
+    );
+  });
 
-  it('memoizes the bundled content', () => {
-    expect(loadAllContent()).toBe(loadAllContent())
-    expect(getContent('en')).toBe(getContent('en'))
-  })
+  it("memoizes the bundled content", () => {
+    expect(loadAllContent()).toBe(loadAllContent());
+    expect(getContent("en")).toBe(getContent("en"));
+  });
 
-  it('has no backtick in any content value of any locale', () => {
+  it("has no backtick in any content value of any locale", () => {
     for (const locale of LOCALES) {
       const offenders = flattenValues(getContent(locale))
-        .filter(([, value]) => value.includes('`'))
-        .map(([key]) => `${locale}:${key}`)
-      expect(offenders).toEqual([])
+        .filter(([, value]) => value.includes("`"))
+        .map(([key]) => `${locale}:${key}`);
+      expect(offenders).toEqual([]);
     }
-  })
+  });
 
-  it('has no leaked authoring note, TODO or straight double quote in any prose value', () => {
-    const forbidden = /Sources:|Context:|Product:|TODO|"/
+  it("has no leaked authoring note, TODO or straight double quote in any prose value", () => {
+    const forbidden = /Sources:|Context:|Product:|TODO|"/;
     for (const locale of LOCALES) {
       const offenders = flattenValues(getContent(locale))
         .filter(([, value]) => forbidden.test(value))
-        .map(([key]) => `${locale}:${key}`)
-      expect(offenders).toEqual([])
+        .map(([key]) => `${locale}:${key}`);
+      expect(offenders).toEqual([]);
     }
-  })
+  });
 
-  it('gives every locale its own non-empty OG image alt', () => {
-    const alts = LOCALES.map((locale) => getContent(locale).seo.ogImageAlt)
-    for (const alt of alts) expect(alt.trim().length).toBeGreaterThan(20)
-    expect(new Set(alts).size).toBe(LOCALES.length)
-  })
+  it("gives every locale its own non-empty OG image alt", () => {
+    const alts = LOCALES.map((locale) => getContent(locale).seo.ogImageAlt);
+    for (const alt of alts) expect(alt.trim().length).toBeGreaterThan(20);
+    expect(new Set(alts).size).toBe(LOCALES.length);
+  });
 
-  it('keeps every meta title keyword-first, Chrome-tagged, within 60 visual columns and ending with the brand', () => {
+  it("keeps every meta title keyword-first, Chrome-tagged, within 60 visual columns and ending with the brand", () => {
     for (const locale of LOCALES) {
-      const { title } = getContent(locale).meta
-      expect(title).toMatch(/ – .*Chrome.* \| Snug$/u)
-      expect(title.startsWith('Snug')).toBe(false)
-      expect(visualWidth(title)).toBeLessThanOrEqual(60)
+      const { title } = getContent(locale).meta;
+      expect(title).toMatch(/ – .*Chrome.* \| Snug$/u);
+      expect(title.startsWith("Snug")).toBe(false);
+      expect(visualWidth(title)).toBeLessThanOrEqual(60);
     }
-  })
+  });
 
-  it('keeps Latin-script meta descriptions between 140 and 160 characters', () => {
+  it("keeps Latin-script meta descriptions between 140 and 160 characters", () => {
     for (const locale of LOCALES) {
-      if (CJK_LOCALES.has(locale)) continue
-      const { description } = getContent(locale).meta
-      expect([...description].length).toBeGreaterThanOrEqual(140)
-      expect([...description].length).toBeLessThanOrEqual(160)
+      if (CJK_LOCALES.has(locale)) continue;
+      const { description } = getContent(locale).meta;
+      expect([...description].length).toBeGreaterThanOrEqual(140);
+      expect([...description].length).toBeLessThanOrEqual(160);
     }
-  })
+  });
 
-  it('names Chrome in every meta description', () => {
+  it("names Chrome in every meta description", () => {
     for (const locale of LOCALES) {
-      expect(getContent(locale).meta.description).toContain('Chrome')
+      expect(getContent(locale).meta.description).toContain("Chrome");
     }
-  })
+  });
 
-  it('uses the scheduled-backups wording in the Spanish description', () => {
-    const { description } = getContent('es').meta
-    expect(description).not.toContain('con horario')
-    expect(description).toContain('copias automáticas programadas')
-  })
+  it("uses the scheduled-backups wording in the Spanish description", () => {
+    const { description } = getContent("es").meta;
+    expect(description).not.toContain("con horario");
+    expect(description).toContain("copias automáticas programadas");
+  });
 
-  it('titles the privacy page with the same brand separator', () => {
-    expect(getContent('en').privacy.meta.title).toMatch(/ \| Snug$/u)
-  })
-})
+  it("titles the privacy page with the same brand separator", () => {
+    expect(getContent("en").privacy.meta.title).toMatch(/ \| Snug$/u);
+  });
+});

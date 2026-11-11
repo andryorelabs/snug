@@ -1,5 +1,5 @@
 ---
-import Search from '@astrojs/starlight/components/Search.astro'
+import Search from "@astrojs/starlight/components/Search.astro";
 ---
 
 <Search />
@@ -8,10 +8,10 @@ import Search from '@astrojs/starlight/components/Search.astro'
   import {
     installSearchTrustedTypesPolicy,
     type TrustedTypesFactory,
-  } from '../search-trusted-types'
+  } from "../search-trusted-types";
 
   installSearchTrustedTypesPolicy(
     (globalThis as { trustedTypes?: TrustedTypesFactory }).trustedTypes,
     globalThis.location.origin,
-  )
+  );
 </script>

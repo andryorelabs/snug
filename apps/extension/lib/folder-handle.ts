@@ -3,50 +3,48 @@
  * no handle is stored. Anything other than `granted` means a run cannot write
  * without a user gesture.
  */
-export type FolderAccess = PermissionState | 'missing'
+export type FolderAccess = PermissionState | "missing";
 
 /**
  * `queryPermission` is not part of the DOM typings yet.
  */
 interface PermissionAwareDirectoryHandle extends FileSystemDirectoryHandle {
-  queryPermission(descriptor: { mode: 'readwrite' }): Promise<PermissionState>
-  requestPermission(descriptor: { mode: 'readwrite' }): Promise<PermissionState>
+  queryPermission(descriptor: { mode: "readwrite" }): Promise<PermissionState>;
+  requestPermission(descriptor: { mode: "readwrite" }): Promise<PermissionState>;
 }
 
-const DATABASE_NAME = 'snug-custom-folder'
-const STORE_NAME = 'handles'
-const HANDLE_KEY = 'custom-folder'
+const DATABASE_NAME = "snug-custom-folder";
+const STORE_NAME = "handles";
+const HANDLE_KEY = "custom-folder";
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, 1)
+    const request = indexedDB.open(DATABASE_NAME, 1);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME)
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.addEventListener('error', () =>
-      reject(request.error ?? new Error('IndexedDB request failed')),
-    )
-  })
+      request.result.createObjectStore(STORE_NAME);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.addEventListener("error", () =>
+      reject(request.error ?? new Error("IndexedDB request failed")),
+    );
+  });
 }
 
 async function runRequest<T>(
   mode: IDBTransactionMode,
   operation: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
-  const database = await openDatabase()
+  const database = await openDatabase();
   try {
     return await new Promise<T>((resolve, reject) => {
-      const request = operation(
-        database.transaction(STORE_NAME, mode).objectStore(STORE_NAME),
-      )
-      request.onsuccess = () => resolve(request.result)
-      request.addEventListener('error', () =>
-        reject(request.error ?? new Error('IndexedDB request failed')),
-      )
-    })
+      const request = operation(database.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
+      request.onsuccess = () => resolve(request.result);
+      request.addEventListener("error", () =>
+        reject(request.error ?? new Error("IndexedDB request failed")),
+      );
+    });
   } finally {
-    database.close()
+    database.close();
   }
 }
 
@@ -56,10 +54,8 @@ async function runRequest<T>(
  * @param handle The handle returned by `showDirectoryPicker`.
  * @returns Resolves once the handle is persisted.
  */
-export async function saveFolderHandle(
-  handle: FileSystemDirectoryHandle,
-): Promise<void> {
-  await runRequest('readwrite', (store) => store.put(handle, HANDLE_KEY))
+export async function saveFolderHandle(handle: FileSystemDirectoryHandle): Promise<void> {
+  await runRequest("readwrite", (store) => store.put(handle, HANDLE_KEY));
 }
 
 /**
@@ -67,13 +63,10 @@ export async function saveFolderHandle(
  */
 export async function loadFolderHandle(): Promise<FileSystemDirectoryHandle | null> {
   const handle = await runRequest<FileSystemDirectoryHandle | undefined>(
-    'readonly',
-    (store) =>
-      store.get(HANDLE_KEY) as IDBRequest<
-        FileSystemDirectoryHandle | undefined
-      >,
-  )
-  return handle ?? null
+    "readonly",
+    (store) => store.get(HANDLE_KEY) as IDBRequest<FileSystemDirectoryHandle | undefined>,
+  );
+  return handle ?? null;
 }
 
 /**
@@ -81,7 +74,7 @@ export async function loadFolderHandle(): Promise<FileSystemDirectoryHandle | nu
  * @returns Resolves once the handle is gone.
  */
 export async function clearFolderHandle(): Promise<void> {
-  await runRequest('readwrite', (store) => store.delete(HANDLE_KEY))
+  await runRequest("readwrite", (store) => store.delete(HANDLE_KEY));
 }
 
 /**
@@ -94,8 +87,8 @@ export async function queryFolderAccess(
   handle: FileSystemDirectoryHandle,
 ): Promise<PermissionState> {
   return (handle as PermissionAwareDirectoryHandle).queryPermission({
-    mode: 'readwrite',
-  })
+    mode: "readwrite",
+  });
 }
 
 /**
@@ -108,8 +101,8 @@ export async function requestFolderAccess(
   handle: FileSystemDirectoryHandle,
 ): Promise<PermissionState> {
   return (handle as PermissionAwareDirectoryHandle).requestPermission({
-    mode: 'readwrite',
-  })
+    mode: "readwrite",
+  });
 }
 
 /**
@@ -117,17 +110,15 @@ export async function requestFolderAccess(
  * @returns The stored folder's access, or `missing` when no handle is stored.
  */
 export async function queryStoredFolderAccess(): Promise<FolderAccess> {
-  const handle = await loadFolderHandle()
-  return handle ? queryFolderAccess(handle) : 'missing'
+  const handle = await loadFolderHandle();
+  return handle ? queryFolderAccess(handle) : "missing";
 }
 
 /**
  * `showDirectoryPicker` is not part of the DOM typings yet.
  */
 interface DirectoryPickerWindow {
-  showDirectoryPicker?: (options: {
-    mode: 'readwrite'
-  }) => Promise<FileSystemDirectoryHandle>
+  showDirectoryPicker?: (options: { mode: "readwrite" }) => Promise<FileSystemDirectoryHandle>;
 }
 
 /**
@@ -135,10 +126,7 @@ interface DirectoryPickerWindow {
  *   folder can be chosen at all.
  */
 export function canPickFolder(): boolean {
-  return (
-    typeof (globalThis as DirectoryPickerWindow).showDirectoryPicker ===
-    'function'
-  )
+  return typeof (globalThis as DirectoryPickerWindow).showDirectoryPicker === "function";
 }
 
 /**
@@ -148,7 +136,7 @@ export function canPickFolder(): boolean {
  * @throws {DOMException} `AbortError` when the user dismisses the picker.
  */
 export async function pickFolder(): Promise<FileSystemDirectoryHandle> {
-  const picker = (globalThis as DirectoryPickerWindow).showDirectoryPicker
-  if (!picker) throw new Error('showDirectoryPicker is not available')
-  return picker.call(globalThis, { mode: 'readwrite' })
+  const picker = (globalThis as DirectoryPickerWindow).showDirectoryPicker;
+  if (!picker) throw new Error("showDirectoryPicker is not available");
+  return picker.call(globalThis, { mode: "readwrite" });
 }

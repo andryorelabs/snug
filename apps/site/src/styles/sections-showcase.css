@@ -1,58 +1,58 @@
 @layer components {
-  [data-section='interface'] [data-showcase-panel] > h2 {
+  [data-section="interface"] [data-showcase-panel] > h2 {
     margin-bottom: 2.5rem;
   }
 
-  [data-section='interface'] [data-showcase-body] {
+  [data-section="interface"] [data-showcase-body] {
     display: grid;
     gap: 1.5rem;
   }
 
-  [data-section='interface'] [data-showcase-steps] {
+  [data-section="interface"] [data-showcase-steps] {
     counter-reset: showcase-step;
   }
 
-  [data-section='interface'] [data-showcase-steps] > li + li {
+  [data-section="interface"] [data-showcase-steps] > li + li {
     margin-top: 1.5rem;
   }
 
-  [data-section='interface'] [data-step] {
+  [data-section="interface"] [data-step] {
     counter-increment: showcase-step;
     padding-left: 16px;
     border-left: 2px solid var(--border);
   }
 
-  [data-section='interface'] [data-step] h3::before {
-    content: counter(showcase-step) '. ';
+  [data-section="interface"] [data-step] h3::before {
+    content: counter(showcase-step) ". ";
   }
 
-  [data-section='interface'] [data-showcase-stage] {
+  [data-section="interface"] [data-showcase-stage] {
     display: grid;
     order: -1;
   }
 
-  [data-section='interface'] [data-shot] {
+  [data-section="interface"] [data-shot] {
     grid-area: 1 / 1;
   }
 
-  [data-section='interface'] [data-shot] img {
+  [data-section="interface"] [data-shot] img {
     width: 100%;
     height: auto;
   }
 
-  [data-section='interface'] [data-shot]:not(:first-child) {
+  [data-section="interface"] [data-shot]:not(:first-child) {
     visibility: hidden;
     opacity: 0;
   }
 
   @media (min-width: 768px) {
-    [data-section='interface'] [data-showcase-body] {
+    [data-section="interface"] [data-showcase-body] {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
       gap: 3rem;
       align-items: start;
     }
 
-    [data-section='interface'] [data-showcase-stage] {
+    [data-section="interface"] [data-showcase-stage] {
       order: 0;
     }
   }
@@ -113,7 +113,7 @@
 
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-      [data-section='interface'] [data-showcase] {
+      [data-section="interface"] [data-showcase] {
         --pin-top: 4.5rem;
         --pin-dock: 6rem;
         --pin-step: 75svh;
@@ -126,7 +126,7 @@
         view-timeline: --showcase block;
       }
 
-      [data-section='interface'] [data-showcase-panel] {
+      [data-section="interface"] [data-showcase-panel] {
         position: sticky;
         top: var(--pin-top);
         display: flex;
@@ -136,51 +136,51 @@
         padding-bottom: var(--pin-dock);
       }
 
-      [data-section='interface'] [data-showcase-panel] > h2 {
+      [data-section="interface"] [data-showcase-panel] > h2 {
         margin-bottom: 0;
       }
 
-      [data-section='interface'] [data-showcase-body] {
+      [data-section="interface"] [data-showcase-body] {
         flex: 1;
         min-height: 0;
         grid-template-rows: minmax(0, 1fr) auto;
         align-items: stretch;
       }
 
-      [data-section='interface'] [data-showcase-steps] {
+      [data-section="interface"] [data-showcase-steps] {
         display: grid;
       }
 
-      [data-section='interface'] [data-showcase-steps] > li + li {
+      [data-section="interface"] [data-showcase-steps] > li + li {
         margin-top: 0;
       }
 
-      [data-section='interface'] [data-step] {
+      [data-section="interface"] [data-step] {
         grid-area: 1 / 1;
         border-left-color: var(--primary);
         visibility: visible;
       }
 
-      [data-section='interface'] [data-showcase-stage] {
+      [data-section="interface"] [data-showcase-stage] {
         container-type: size;
         grid-template: minmax(0, 1fr) / minmax(0, 1fr);
         min-height: 0;
       }
 
-      [data-section='interface'] [data-shot] {
+      [data-section="interface"] [data-shot] {
         display: grid;
         place-items: center;
         min-height: 0;
       }
 
-      [data-section='interface'] [data-shot] img {
+      [data-section="interface"] [data-shot] img {
         width: min(100cqw, calc(100cqh * 4 / 3));
         aspect-ratio: 4 / 3;
       }
 
-      [data-section='interface'] [data-shot],
-      [data-section='interface'] [data-shot]:not(:first-child),
-      [data-section='interface'] [data-step] {
+      [data-section="interface"] [data-shot],
+      [data-section="interface"] [data-shot]:not(:first-child),
+      [data-section="interface"] [data-step] {
         visibility: visible;
         animation-timeline: --showcase;
         animation-duration: 1ms;
@@ -188,80 +188,78 @@
         animation-fill-mode: both, forwards;
       }
 
-      [data-section='interface'] [data-shot='export'],
-      [data-section='interface'] [data-step='export'] {
+      [data-section="interface"] [data-shot="export"],
+      [data-section="interface"] [data-step="export"] {
         animation-name: showcase-shot-out;
         animation-range: cover var(--switch-1) cover calc(var(--switch-1) + 1px);
       }
-      [data-section='interface'] [data-shot='import'],
-      [data-section='interface'] [data-step='import'] {
+      [data-section="interface"] [data-shot="import"],
+      [data-section="interface"] [data-step="import"] {
         animation-name: showcase-shot-in, showcase-shot-out;
         animation-range:
           cover var(--switch-1) cover calc(var(--switch-1) + 1px),
           cover var(--switch-2) cover calc(var(--switch-2) + 1px);
       }
-      [data-section='interface'] [data-shot='autoExport'],
-      [data-section='interface'] [data-step='autoExport'] {
+      [data-section="interface"] [data-shot="autoExport"],
+      [data-section="interface"] [data-step="autoExport"] {
         animation-name: showcase-shot-in, showcase-shot-out;
         animation-range:
           cover var(--switch-2) cover calc(var(--switch-2) + 1px),
           cover var(--switch-3) cover calc(var(--switch-3) + 1px);
       }
-      [data-section='interface'] [data-shot='popup'],
-      [data-section='interface'] [data-step='popup'] {
+      [data-section="interface"] [data-shot="popup"],
+      [data-section="interface"] [data-step="popup"] {
         animation-name: showcase-shot-in;
         animation-range: cover var(--switch-3) cover calc(var(--switch-3) + 1px);
       }
 
       @media (min-width: 768px) {
-        [data-section='interface'] [data-showcase] {
+        [data-section="interface"] [data-showcase] {
           --pin-top: 6rem;
         }
 
-        [data-section='interface'] [data-showcase-body] {
+        [data-section="interface"] [data-showcase-body] {
           grid-template-rows: minmax(0, 1fr);
         }
 
-        [data-section='interface'] [data-showcase-steps] {
+        [data-section="interface"] [data-showcase-steps] {
           display: block;
           align-self: center;
         }
 
-        [data-section='interface'] [data-showcase-steps] > li + li {
+        [data-section="interface"] [data-showcase-steps] > li + li {
           margin-top: 1.75rem;
         }
 
-        [data-section='interface'] [data-step] {
+        [data-section="interface"] [data-step] {
           border-left-color: var(--border);
           animation-timing-function: var(--ease-out-strong);
           animation-fill-mode: both, forwards;
         }
 
-        [data-section='interface'] [data-step='export'] {
+        [data-section="interface"] [data-step="export"] {
           border-left-color: var(--primary);
           animation-name: showcase-step-out;
-          animation-range: cover var(--switch-1) cover
-            calc(var(--switch-1) + var(--fade));
+          animation-range: cover var(--switch-1) cover calc(var(--switch-1) + var(--fade));
         }
-        [data-section='interface'] [data-step='import'] {
+        [data-section="interface"] [data-step="import"] {
           animation-name: showcase-step-in, showcase-step-out;
           animation-range:
             cover var(--switch-1) cover calc(var(--switch-1) + var(--fade)),
             cover var(--switch-2) cover calc(var(--switch-2) + var(--fade));
         }
-        [data-section='interface'] [data-step='autoExport'] {
+        [data-section="interface"] [data-step="autoExport"] {
           animation-name: showcase-step-in, showcase-step-out;
           animation-range:
             cover var(--switch-2) cover calc(var(--switch-2) + var(--fade)),
             cover var(--switch-3) cover calc(var(--switch-3) + var(--fade));
         }
-        [data-section='interface'] [data-step='popup'] {
+        [data-section="interface"] [data-step="popup"] {
           animation-name: showcase-step-in;
-          animation-range: cover var(--switch-3) cover
-            calc(var(--switch-3) + var(--fade));
+          animation-range: cover var(--switch-3) cover calc(var(--switch-3) + var(--fade));
         }
 
-        [data-section='interface'] [data-step] h3 {
+        [data-section="interface"] [data-step] h3 {
           opacity: 0.6;
           animation-timeline: --showcase;
           animation-duration: 1ms;
@@ -269,28 +267,26 @@
           animation-fill-mode: both, forwards;
         }
 
-        [data-section='interface'] [data-step='export'] h3 {
+        [data-section="interface"] [data-step="export"] h3 {
           opacity: 1;
           animation-name: showcase-title-out;
-          animation-range: cover var(--switch-1) cover
-            calc(var(--switch-1) + var(--fade));
+          animation-range: cover var(--switch-1) cover calc(var(--switch-1) + var(--fade));
         }
-        [data-section='interface'] [data-step='import'] h3 {
+        [data-section="interface"] [data-step="import"] h3 {
           animation-name: showcase-title-in, showcase-title-out;
           animation-range:
             cover var(--switch-1) cover calc(var(--switch-1) + var(--fade)),
             cover var(--switch-2) cover calc(var(--switch-2) + var(--fade));
         }
-        [data-section='interface'] [data-step='autoExport'] h3 {
+        [data-section="interface"] [data-step="autoExport"] h3 {
           animation-name: showcase-title-in, showcase-title-out;
           animation-range:
             cover var(--switch-2) cover calc(var(--switch-2) + var(--fade)),
             cover var(--switch-3) cover calc(var(--switch-3) + var(--fade));
         }
-        [data-section='interface'] [data-step='popup'] h3 {
+        [data-section="interface"] [data-step="popup"] h3 {
           animation-name: showcase-title-in;
-          animation-range: cover var(--switch-3) cover
-            calc(var(--switch-3) + var(--fade));
+          animation-range: cover var(--switch-3) cover calc(var(--switch-3) + var(--fade));
         }
       }
     }

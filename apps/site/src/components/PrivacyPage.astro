@@ -1,28 +1,24 @@
 ---
-import { Separator } from '@workspace/ui/components/separator'
+import { Separator } from "@workspace/ui/components/separator";
 
-import { getContent } from '../i18n/content'
-import { DEFAULT_LOCALE, localePath, type Locale } from '../i18n/locales'
-import {
-  ENGLISH_PRIVACY_PATH,
-  PRIVACY_PAGE_LOCALES,
-  privacyPath,
-} from '../i18n/privacy'
-import Layout from '../layouts/Layout.astro'
-import TextLink from './TextLink.astro'
+import { getContent } from "../i18n/content";
+import { DEFAULT_LOCALE, localePath, type Locale } from "../i18n/locales";
+import { ENGLISH_PRIVACY_PATH, PRIVACY_PAGE_LOCALES, privacyPath } from "../i18n/privacy";
+import Layout from "../layouts/Layout.astro";
+import TextLink from "./TextLink.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { locale } = Astro.props
-const { privacy } = getContent(locale)
-const isTranslation = locale !== DEFAULT_LOCALE
+const { locale } = Astro.props;
+const { privacy } = getContent(locale);
+const isTranslation = locale !== DEFAULT_LOCALE;
 const page = {
   meta: privacy.meta,
   path: (code: Locale) => privacyPath(code),
   alternateLocales: PRIVACY_PAGE_LOCALES,
-}
+};
 ---
 
 <Layout locale={locale} page={page}>
@@ -35,11 +31,8 @@ const page = {
         {privacy.homeLink}
       </TextLink>
       {isTranslation && (
-        <p
-          data-section="translation-notice"
-          class="mt-6 max-w-2xl text-sm text-muted-foreground"
-        >
-          {privacy.notice.body}{' '}
+        <p data-section="translation-notice" class="mt-6 max-w-2xl text-sm text-muted-foreground">
+          {privacy.notice.body}{" "}
           <TextLink
             href={ENGLISH_PRIVACY_PATH}
             class="min-h-0 text-foreground"
@@ -63,9 +56,7 @@ const page = {
           {privacy.website.heading}
         </h2>
         <p class="mt-4 leading-prose">{privacy.website.body}</p>
-        <h3 class="mt-6 font-heading text-lg font-medium">
-          {privacy.website.collectedHeading}
-        </h3>
+        <h3 class="mt-6 font-heading text-lg font-medium">{privacy.website.collectedHeading}</h3>
         <ul class="mt-2 list-disc space-y-1 pl-6 leading-prose">
           {Object.values(privacy.website.collected).map((item) => (
             <li>{item}</li>

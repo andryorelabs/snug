@@ -1,41 +1,36 @@
-import type { Browser } from '@wxt-dev/browser'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fakeBrowser } from 'wxt/testing/fake-browser'
+import type { Browser } from "@wxt-dev/browser";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fakeBrowser } from "wxt/testing/fake-browser";
 
-import { APP_ROUTES, getAppUrl } from '@/lib/app-url'
-import type * as AutoExport from '@/lib/auto-export'
-import { ALARM_NAME, RUN_MANUAL_EXPORT_MESSAGE_TYPE } from '@/lib/auto-export'
-import {
-  autoExportConfigStore,
-  autoExportNextRunStore,
-  lastSeenVersionStore,
-} from '@/lib/storage'
-import { resetFakeI18n } from '@/lib/testing/fake-i18n'
-import type { AutoExportConfig } from '@/lib/types'
+import { APP_ROUTES, getAppUrl } from "@/lib/app-url";
+import type * as AutoExport from "@/lib/auto-export";
+import { ALARM_NAME, RUN_MANUAL_EXPORT_MESSAGE_TYPE } from "@/lib/auto-export";
+import { autoExportConfigStore, autoExportNextRunStore, lastSeenVersionStore } from "@/lib/storage";
+import { resetFakeI18n } from "@/lib/testing/fake-i18n";
+import type { AutoExportConfig } from "@/lib/types";
 
-import background from '../background'
+import background from "../background";
 
-vi.mock('@/lib/auto-export', async () => {
-  const actual = await vi.importActual<typeof AutoExport>('@/lib/auto-export')
+vi.mock("@/lib/auto-export", async () => {
+  const actual = await vi.importActual<typeof AutoExport>("@/lib/auto-export");
   return {
     ...actual,
     syncAlarm: vi.fn(),
     runAutoExport: vi.fn(),
-  }
-})
+  };
+});
 
-vi.mock('@/lib/uninstall-url', () => ({
+vi.mock("@/lib/uninstall-url", () => ({
   registerUninstallUrl: vi.fn(async () => {}),
-}))
+}));
 
-vi.mock('@/lib/folder-access-startup', () => ({
+vi.mock("@/lib/folder-access-startup", () => ({
   checkFolderAccessAtStartup: vi.fn(async () => {}),
-}))
+}));
 
-const { syncAlarm, runAutoExport } = await import('@/lib/auto-export')
-const { registerUninstallUrl } = await import('@/lib/uninstall-url')
-const { checkFolderAccessAtStartup } =
-  await import('@/lib/folder-access-startup')
+const { syncAlarm, runAutoExport } = await import("@/lib/auto-export");
+const { registerUninstallUrl } = await import("@/lib/uninstall-url");
+const { checkFolderAccessAtStartup } = await import("@/lib/folder-access-startup");
 
 /**
  * `fakeBrowser`'s `runtime.onMessage` throws "not implemented" on
@@ -48,26 +43,26 @@ const { checkFolderAccessAtStartup } =
  * @returns A `trigger` helper that mimics the sender side of `sendMessage`.
  */
 function mockRuntimeOnMessage(): {
-  trigger: (message: unknown) => Promise<unknown>
+  trigger: (message: unknown) => Promise<unknown>;
 } {
   type OnMessageListener = (
     message: unknown,
     sender: Browser.runtime.MessageSender,
     sendResponse: (response?: unknown) => void,
-  ) => boolean | undefined
+  ) => boolean | undefined;
 
-  let listener: OnMessageListener | undefined
+  let listener: OnMessageListener | undefined;
   browser.runtime.onMessage.addListener = vi.fn((l: unknown) => {
-    listener = l as OnMessageListener
-  })
+    listener = l as OnMessageListener;
+  });
 
   return {
     trigger: (message: unknown) =>
       new Promise((resolve) => {
-        const handled = listener?.(message, {}, resolve)
-        if (!handled) resolve(undefined)
+        const handled = listener?.(message, {}, resolve);
+        if (!handled) resolve(undefined);
       }),
-  }
+  };
 }
 
 /**
@@ -82,36 +77,34 @@ function mockRuntimeOnMessage(): {
  * @returns The settled results of every registered `onInstalled` listener.
  */
 function triggerOnInstalled(
-  reason: 'install' | 'update' | 'chrome_update' | 'shared_module_update',
+  reason: "install" | "update" | "chrome_update" | "shared_module_update",
   previousVersion?: string,
 ): Promise<unknown> {
   return fakeBrowser.runtime.onInstalled.trigger({
     reason,
     previousVersion,
     temporary: false,
-  } as unknown as Parameters<typeof fakeBrowser.runtime.onInstalled.trigger>[0])
+  } as unknown as Parameters<typeof fakeBrowser.runtime.onInstalled.trigger>[0]);
 }
 
-function baseConfig(
-  overrides: Partial<AutoExportConfig> = {},
-): AutoExportConfig {
+function baseConfig(overrides: Partial<AutoExportConfig> = {}): AutoExportConfig {
   return {
     enabled: true,
-    interval: '1d',
-    preferredTime: '00:00',
+    interval: "1d",
+    preferredTime: "00:00",
     dayOfWeek: 1,
-    path: 'bookmarks-backup/',
-    formats: ['html'],
+    path: "bookmarks-backup/",
+    formats: ["html"],
     keepLast: 10,
-    destination: 'downloads',
+    destination: "downloads",
     folderName: null,
     ...overrides,
-  }
+  };
 }
 
 const onMessageReference: {
-  current?: ReturnType<typeof mockRuntimeOnMessage>
-} = {}
+  current?: ReturnType<typeof mockRuntimeOnMessage>;
+} = {};
 
 /**
  * Dispatches `message` through the listener `background.ts` registered in
@@ -121,353 +114,341 @@ const onMessageReference: {
  */
 function triggerMessage(message: unknown): Promise<unknown> {
   if (!onMessageReference.current) {
-    throw new Error('onMessage mock not installed')
+    throw new Error("onMessage mock not installed");
   }
-  return onMessageReference.current.trigger(message)
+  return onMessageReference.current.trigger(message);
 }
 
 beforeEach(() => {
-  fakeBrowser.reset()
-  resetFakeI18n()
-  vi.clearAllMocks()
-  onMessageReference.current = mockRuntimeOnMessage()
-  background.main?.()
-})
+  fakeBrowser.reset();
+  resetFakeI18n();
+  vi.clearAllMocks();
+  onMessageReference.current = mockRuntimeOnMessage();
+  background.main?.();
+});
 
-describe('onInstalled', () => {
-  it('opens the App on the welcome route and syncs the alarm on install', async () => {
+describe("onInstalled", () => {
+  it("opens the App on the welcome route and syncs the alarm on install", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '1.7.0',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "1.7.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('install')
+    await triggerOnInstalled("install");
 
     await vi.waitFor(async () => {
-      const tabs = await fakeBrowser.tabs.query({})
-      expect(tabs.map((tab) => tab.url)).toContain(
-        getAppUrl(APP_ROUTES.welcome),
-      )
-    })
+      const tabs = await fakeBrowser.tabs.query({});
+      expect(tabs.map((tab) => tab.url)).toContain(getAppUrl(APP_ROUTES.welcome));
+    });
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('install')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("install");
+    });
+  });
 
-  it('marks the installed version as seen on install so no unseen dot shows', async () => {
+  it("marks the installed version as seen on install so no unseen dot shows", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '1.7.0',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "1.7.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('install')
+    await triggerOnInstalled("install");
 
     await vi.waitFor(async () => {
-      expect(await lastSeenVersionStore.getValue()).toBe('1.7.0')
-    })
-  })
+      expect(await lastSeenVersionStore.getValue()).toBe("1.7.0");
+    });
+  });
 
-  it('leaves the last seen version untouched on update so the dot shows', async () => {
+  it("leaves the last seen version untouched on update so the dot shows", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '1.8.0',
-    }) as typeof fakeBrowser.runtime.getManifest
-    await lastSeenVersionStore.setValue('1.7.0')
+      version: "1.8.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
+    await lastSeenVersionStore.setValue("1.7.0");
 
-    await triggerOnInstalled('update', '1.7.0')
+    await triggerOnInstalled("update", "1.7.0");
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
-    expect(await lastSeenVersionStore.getValue()).toBe('1.7.0')
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
+    expect(await lastSeenVersionStore.getValue()).toBe("1.7.0");
+  });
 
-  it('opens whats-new and syncs the alarm on a major update (1.7.0 to 2.0.0)', async () => {
+  it("opens whats-new and syncs the alarm on a major update (1.7.0 to 2.0.0)", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '2.0.0',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "2.0.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('update', '1.7.0')
+    await triggerOnInstalled("update", "1.7.0");
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
     await vi.waitFor(async () => {
-      const tabs = await fakeBrowser.tabs.query({})
-      expect(tabs.map((tab) => tab.url)).toContain(
-        getAppUrl(APP_ROUTES.whatsNew),
-      )
-    })
-  })
+      const tabs = await fakeBrowser.tabs.query({});
+      expect(tabs.map((tab) => tab.url)).toContain(getAppUrl(APP_ROUTES.whatsNew));
+    });
+  });
 
-  it('opens whats-new on a minor update (2.0.x to 2.1.0)', async () => {
+  it("opens whats-new on a minor update (2.0.x to 2.1.0)", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '2.1.0',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "2.1.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('update', '2.0.3')
+    await triggerOnInstalled("update", "2.0.3");
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
     await vi.waitFor(async () => {
-      const tabs = await fakeBrowser.tabs.query({})
-      expect(tabs.map((tab) => tab.url)).toContain(
-        getAppUrl(APP_ROUTES.whatsNew),
-      )
-    })
-  })
+      const tabs = await fakeBrowser.tabs.query({});
+      expect(tabs.map((tab) => tab.url)).toContain(getAppUrl(APP_ROUTES.whatsNew));
+    });
+  });
 
-  it('opens no whats-new but syncs the alarm on a patch update (2.0.0 to 2.0.1)', async () => {
+  it("opens no whats-new but syncs the alarm on a patch update (2.0.0 to 2.0.1)", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '2.0.1',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "2.0.1",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('update', '2.0.0')
+    await triggerOnInstalled("update", "2.0.0");
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
-    const tabs = await fakeBrowser.tabs.query({})
-    expect(tabs.map((tab) => tab.url)).not.toContain(
-      getAppUrl(APP_ROUTES.whatsNew),
-    )
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
+    const tabs = await fakeBrowser.tabs.query({});
+    expect(tabs.map((tab) => tab.url)).not.toContain(getAppUrl(APP_ROUTES.whatsNew));
+  });
 
-  it('opens no whats-new when previousVersion is missing', async () => {
+  it("opens no whats-new when previousVersion is missing", async () => {
     fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
-      version: '2.0.0',
-    }) as typeof fakeBrowser.runtime.getManifest
+      version: "2.0.0",
+    }) as typeof fakeBrowser.runtime.getManifest;
 
-    await triggerOnInstalled('update')
-
-    await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
-    const tabs = await fakeBrowser.tabs.query({})
-    expect(tabs.map((tab) => tab.url)).not.toContain(
-      getAppUrl(APP_ROUTES.whatsNew),
-    )
-  })
-
-  it('opens no tab but syncs the alarm on chrome_update', async () => {
-    const tabsBefore = await fakeBrowser.tabs.query({})
-
-    await triggerOnInstalled('chrome_update')
-
-    const tabs = await fakeBrowser.tabs.query({})
-    expect(tabs).toHaveLength(tabsBefore.length)
-    await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
-  })
-
-  it('opens no tab but syncs the alarm on shared_module_update', async () => {
-    const tabsBefore = await fakeBrowser.tabs.query({})
-
-    await triggerOnInstalled('shared_module_update')
-
-    const tabs = await fakeBrowser.tabs.query({})
-    expect(tabs).toHaveLength(tabsBefore.length)
-    await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('update')
-    })
-  })
-
-  it('logs a syncAlarm error instead of throwing', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new Error('sync failed')
-    vi.mocked(syncAlarm).mockRejectedValueOnce(error)
-
-    await expect(triggerOnInstalled('install')).resolves.not.toThrow()
+    await triggerOnInstalled("update");
 
     await vi.waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith(error)
-    })
-  })
-})
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
+    const tabs = await fakeBrowser.tabs.query({});
+    expect(tabs.map((tab) => tab.url)).not.toContain(getAppUrl(APP_ROUTES.whatsNew));
+  });
 
-describe('onStartup', () => {
+  it("opens no tab but syncs the alarm on chrome_update", async () => {
+    const tabsBefore = await fakeBrowser.tabs.query({});
+
+    await triggerOnInstalled("chrome_update");
+
+    const tabs = await fakeBrowser.tabs.query({});
+    expect(tabs).toHaveLength(tabsBefore.length);
+    await vi.waitFor(() => {
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
+  });
+
+  it("opens no tab but syncs the alarm on shared_module_update", async () => {
+    const tabsBefore = await fakeBrowser.tabs.query({});
+
+    await triggerOnInstalled("shared_module_update");
+
+    const tabs = await fakeBrowser.tabs.query({});
+    expect(tabs).toHaveLength(tabsBefore.length);
+    await vi.waitFor(() => {
+      expect(syncAlarm).toHaveBeenCalledWith("update");
+    });
+  });
+
+  it("logs a syncAlarm error instead of throwing", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("sync failed");
+    vi.mocked(syncAlarm).mockRejectedValueOnce(error);
+
+    await expect(triggerOnInstalled("install")).resolves.not.toThrow();
+
+    await vi.waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(error);
+    });
+  });
+});
+
+describe("onStartup", () => {
   it('calls syncAlarm with "startup"', async () => {
-    await fakeBrowser.runtime.onStartup.trigger()
+    await fakeBrowser.runtime.onStartup.trigger();
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('startup')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("startup");
+    });
+  });
 
-  it('runs the Folder access startup check', async () => {
-    await fakeBrowser.runtime.onStartup.trigger()
-
-    await vi.waitFor(() => {
-      expect(checkFolderAccessAtStartup).toHaveBeenCalled()
-    })
-  })
-
-  it('catches and logs a syncAlarm error instead of throwing', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new Error('sync failed')
-    vi.mocked(syncAlarm).mockRejectedValueOnce(error)
-
-    await expect(fakeBrowser.runtime.onStartup.trigger()).resolves.not.toThrow()
+  it("runs the Folder access startup check", async () => {
+    await fakeBrowser.runtime.onStartup.trigger();
 
     await vi.waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith(error)
-    })
-  })
-})
+      expect(checkFolderAccessAtStartup).toHaveBeenCalled();
+    });
+  });
 
-describe('autoExportConfigStore.watch', () => {
+  it("catches and logs a syncAlarm error instead of throwing", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("sync failed");
+    vi.mocked(syncAlarm).mockRejectedValueOnce(error);
+
+    await expect(fakeBrowser.runtime.onStartup.trigger()).resolves.not.toThrow();
+
+    await vi.waitFor(() => {
+      expect(consoleError).toHaveBeenCalledWith(error);
+    });
+  });
+});
+
+describe("autoExportConfigStore.watch", () => {
   it('calls syncAlarm with "config-change" when enabled changes', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ enabled: false }))
-    vi.clearAllMocks()
+    await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ enabled: true }))
+    await autoExportConfigStore.setValue(baseConfig({ enabled: true }));
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('config-change')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("config-change");
+    });
+  });
 
   it('calls syncAlarm with "config-change" when interval changes', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ interval: '1d' }))
-    vi.clearAllMocks()
+    await autoExportConfigStore.setValue(baseConfig({ interval: "1d" }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ interval: '3d' }))
+    await autoExportConfigStore.setValue(baseConfig({ interval: "3d" }));
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('config-change')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("config-change");
+    });
+  });
 
   it('calls syncAlarm with "config-change" when preferredTime changes', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ preferredTime: '00:00' }))
-    vi.clearAllMocks()
+    await autoExportConfigStore.setValue(baseConfig({ preferredTime: "00:00" }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ preferredTime: '10:00' }))
+    await autoExportConfigStore.setValue(baseConfig({ preferredTime: "10:00" }));
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('config-change')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("config-change");
+    });
+  });
 
   it('calls syncAlarm with "config-change" when formats goes from empty to non-empty', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ formats: [] }))
-    vi.clearAllMocks()
+    await autoExportConfigStore.setValue(baseConfig({ formats: [] }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ formats: ['html'] }))
+    await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('config-change')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("config-change");
+    });
+  });
 
   it('calls syncAlarm with "config-change" when formats goes from non-empty to empty', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ formats: ['html'] }))
-    vi.clearAllMocks()
+    await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ formats: [] }))
+    await autoExportConfigStore.setValue(baseConfig({ formats: [] }));
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('config-change')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("config-change");
+    });
+  });
 
-  it('does not call syncAlarm when only path changes', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ path: 'a/' }))
-    vi.clearAllMocks()
+  it("does not call syncAlarm when only path changes", async () => {
+    await autoExportConfigStore.setValue(baseConfig({ path: "a/" }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ path: 'b/' }))
+    await autoExportConfigStore.setValue(baseConfig({ path: "b/" }));
 
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    expect(syncAlarm).not.toHaveBeenCalled()
-  })
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(syncAlarm).not.toHaveBeenCalled();
+  });
 
-  it('does not call syncAlarm when formats changes but stays non-empty', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ formats: ['html'] }))
-    vi.clearAllMocks()
+  it("does not call syncAlarm when formats changes but stays non-empty", async () => {
+    await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(
-      baseConfig({ formats: ['html', 'json'] }),
-    )
+    await autoExportConfigStore.setValue(baseConfig({ formats: ["html", "json"] }));
 
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    expect(syncAlarm).not.toHaveBeenCalled()
-  })
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(syncAlarm).not.toHaveBeenCalled();
+  });
 
-  it('catches and logs a syncAlarm error instead of throwing', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new Error('sync failed')
-    await autoExportConfigStore.setValue(baseConfig({ enabled: false }))
-    vi.clearAllMocks()
-    vi.mocked(syncAlarm).mockRejectedValueOnce(error)
+  it("catches and logs a syncAlarm error instead of throwing", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("sync failed");
+    await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
+    vi.clearAllMocks();
+    vi.mocked(syncAlarm).mockRejectedValueOnce(error);
 
     await expect(
       autoExportConfigStore.setValue(baseConfig({ enabled: true })),
-    ).resolves.not.toThrow()
+    ).resolves.not.toThrow();
 
     await vi.waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith(error)
-    })
-  })
-})
+      expect(consoleError).toHaveBeenCalledWith(error);
+    });
+  });
+});
 
-describe('alarms.onAlarm', () => {
+describe("alarms.onAlarm", () => {
   it('calls runAutoExport with "scheduled" when the alarm fires at the stored next run', async () => {
-    const nextRun = Date.now()
-    await autoExportNextRunStore.setValue(nextRun)
+    const nextRun = Date.now();
+    await autoExportNextRunStore.setValue(nextRun);
 
     await fakeBrowser.alarms.onAlarm.trigger({
       name: ALARM_NAME,
       scheduledTime: nextRun,
       persistAcrossSessions: false,
-    })
+    });
 
     await vi.waitFor(() => {
-      expect(runAutoExport).toHaveBeenCalledWith('scheduled')
-    })
-  })
+      expect(runAutoExport).toHaveBeenCalledWith("scheduled");
+    });
+  });
 
   it('calls runAutoExport with "catch-up" when the alarm fires well after the stored next run', async () => {
-    const storedNextRun = Date.now() - 60 * 60 * 1000
-    await autoExportNextRunStore.setValue(storedNextRun)
+    const storedNextRun = Date.now() - 60 * 60 * 1000;
+    await autoExportNextRunStore.setValue(storedNextRun);
 
     await fakeBrowser.alarms.onAlarm.trigger({
       name: ALARM_NAME,
       scheduledTime: storedNextRun + 60_000,
       persistAcrossSessions: false,
-    })
+    });
 
     await vi.waitFor(() => {
-      expect(runAutoExport).toHaveBeenCalledWith('catch-up')
-    })
-  })
+      expect(runAutoExport).toHaveBeenCalledWith("catch-up");
+    });
+  });
 
   it('calls runAutoExport with "scheduled" when no next run is stored', async () => {
-    await autoExportNextRunStore.setValue(null)
+    await autoExportNextRunStore.setValue(null);
 
     await fakeBrowser.alarms.onAlarm.trigger({
       name: ALARM_NAME,
       scheduledTime: Date.now(),
       persistAcrossSessions: false,
-    })
+    });
 
     await vi.waitFor(() => {
-      expect(runAutoExport).toHaveBeenCalledWith('scheduled')
-    })
-  })
+      expect(runAutoExport).toHaveBeenCalledWith("scheduled");
+    });
+  });
 
-  it('ignores an alarm with a different name', async () => {
+  it("ignores an alarm with a different name", async () => {
     await fakeBrowser.alarms.onAlarm.trigger({
-      name: 'some-other-alarm',
+      name: "some-other-alarm",
       scheduledTime: Date.now(),
       persistAcrossSessions: false,
-    })
+    });
 
-    expect(runAutoExport).not.toHaveBeenCalled()
-  })
+    expect(runAutoExport).not.toHaveBeenCalled();
+  });
 
-  it('catches and logs a runAutoExport error instead of throwing', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    const error = new Error('run failed')
-    vi.mocked(runAutoExport).mockRejectedValueOnce(error)
+  it("catches and logs a runAutoExport error instead of throwing", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const error = new Error("run failed");
+    vi.mocked(runAutoExport).mockRejectedValueOnce(error);
 
     await expect(
       fakeBrowser.alarms.onAlarm.trigger({
@@ -475,182 +456,182 @@ describe('alarms.onAlarm', () => {
         scheduledTime: Date.now(),
         persistAcrossSessions: false,
       }),
-    ).resolves.not.toThrow()
+    ).resolves.not.toThrow();
 
     await vi.waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith(error)
-    })
-  })
-})
+      expect(consoleError).toHaveBeenCalledWith(error);
+    });
+  });
+});
 
 describe('runtime.onMessage — "Export now"', () => {
   it("runs a manual export with the message's on-screen formats/path and replies { ok: true }", async () => {
-    vi.mocked(runAutoExport).mockResolvedValueOnce(undefined)
+    vi.mocked(runAutoExport).mockResolvedValueOnce(undefined);
 
     const response = await triggerMessage({
       type: RUN_MANUAL_EXPORT_MESSAGE_TYPE,
-      formats: ['html', 'json'],
-      path: 'on-screen/',
-    })
+      formats: ["html", "json"],
+      path: "on-screen/",
+    });
 
-    expect(runAutoExport).toHaveBeenCalledWith('manual', {
-      formats: ['html', 'json'],
-      path: 'on-screen/',
-    })
-    expect(response).toEqual({ ok: true })
-  })
+    expect(runAutoExport).toHaveBeenCalledWith("manual", {
+      formats: ["html", "json"],
+      path: "on-screen/",
+    });
+    expect(response).toEqual({ ok: true });
+  });
 
-  it('replies { ok: false, error } when the manual export fails', async () => {
-    vi.mocked(runAutoExport).mockRejectedValueOnce(new Error('disk full'))
+  it("replies { ok: false, error } when the manual export fails", async () => {
+    vi.mocked(runAutoExport).mockRejectedValueOnce(new Error("disk full"));
 
     const response = await triggerMessage({
       type: RUN_MANUAL_EXPORT_MESSAGE_TYPE,
-      formats: ['html'],
-      path: '',
-    })
+      formats: ["html"],
+      path: "",
+    });
 
-    expect(response).toEqual({ ok: false, error: 'disk full' })
-  })
+    expect(response).toEqual({ ok: false, error: "disk full" });
+  });
 
-  it('does not touch autoExportNextRunStore or the alarm for a manual export', async () => {
-    await autoExportNextRunStore.setValue(null)
-    vi.mocked(runAutoExport).mockResolvedValueOnce(undefined)
+  it("does not touch autoExportNextRunStore or the alarm for a manual export", async () => {
+    await autoExportNextRunStore.setValue(null);
+    vi.mocked(runAutoExport).mockResolvedValueOnce(undefined);
 
     await triggerMessage({
       type: RUN_MANUAL_EXPORT_MESSAGE_TYPE,
-      formats: ['html'],
-      path: '',
-    })
+      formats: ["html"],
+      path: "",
+    });
 
-    expect(await autoExportNextRunStore.getValue()).toBeNull()
-    expect(await browser.alarms.get(ALARM_NAME)).toBeUndefined()
-    expect(syncAlarm).not.toHaveBeenCalled()
-  })
+    expect(await autoExportNextRunStore.getValue()).toBeNull();
+    expect(await browser.alarms.get(ALARM_NAME)).toBeUndefined();
+    expect(syncAlarm).not.toHaveBeenCalled();
+  });
 
-  it('ignores a message with a different type', async () => {
-    const response = await triggerMessage({ type: 'some-other-message' })
+  it("ignores a message with a different type", async () => {
+    const response = await triggerMessage({ type: "some-other-message" });
 
-    expect(runAutoExport).not.toHaveBeenCalled()
-    expect(response).toBeUndefined()
-  })
-})
+    expect(runAutoExport).not.toHaveBeenCalled();
+    expect(response).toBeUndefined();
+  });
+});
 
-describe('self-healing alarm', () => {
-  it('re-arms the alarm on start when auto-export is enabled and no alarm exists', async () => {
-    await autoExportConfigStore.setValue(baseConfig())
-    await fakeBrowser.alarms.clearAll()
+describe("self-healing alarm", () => {
+  it("re-arms the alarm on start when auto-export is enabled and no alarm exists", async () => {
+    await autoExportConfigStore.setValue(baseConfig());
+    await fakeBrowser.alarms.clearAll();
 
-    background.main?.()
+    background.main?.();
 
     await vi.waitFor(() => {
-      expect(syncAlarm).toHaveBeenCalledWith('startup')
-    })
-  })
+      expect(syncAlarm).toHaveBeenCalledWith("startup");
+    });
+  });
 
-  it('does not re-arm when an alarm already exists', async () => {
-    await autoExportConfigStore.setValue(baseConfig())
-    await browser.alarms.create(ALARM_NAME, { when: Date.now() + 60_000 })
-    vi.mocked(syncAlarm).mockClear()
+  it("does not re-arm when an alarm already exists", async () => {
+    await autoExportConfigStore.setValue(baseConfig());
+    await browser.alarms.create(ALARM_NAME, { when: Date.now() + 60_000 });
+    vi.mocked(syncAlarm).mockClear();
 
-    background.main?.()
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    background.main?.();
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(syncAlarm).not.toHaveBeenCalled()
-  })
+    expect(syncAlarm).not.toHaveBeenCalled();
+  });
 
-  it('does not re-arm when auto-export is disabled', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ enabled: false }))
-    vi.mocked(syncAlarm).mockClear()
+  it("does not re-arm when auto-export is disabled", async () => {
+    await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
+    vi.mocked(syncAlarm).mockClear();
 
-    background.main?.()
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    background.main?.();
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(syncAlarm).not.toHaveBeenCalled()
-  })
-})
+    expect(syncAlarm).not.toHaveBeenCalled();
+  });
+});
 
 function mockPermissions(options: { hasNotificationAccess: boolean }) {
-  const addedListeners: ((changed: { permissions?: string[] }) => void)[] = []
+  const addedListeners: ((changed: { permissions?: string[] }) => void)[] = [];
   browser.permissions = {
     contains: vi.fn(async () => options.hasNotificationAccess),
     onAdded: {
       addListener: (listener: (typeof addedListeners)[number]) => {
-        addedListeners.push(listener)
+        addedListeners.push(listener);
       },
       removeListener: vi.fn(),
     },
     onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
-  } as unknown as typeof browser.permissions
-  return addedListeners
+  } as unknown as typeof browser.permissions;
+  return addedListeners;
 }
 
 function mockNotifications() {
-  const addListener = vi.fn()
+  const addListener = vi.fn();
   browser.notifications = {
     onClicked: { addListener },
-  } as unknown as typeof browser.notifications
-  return addListener
+  } as unknown as typeof browser.notifications;
+  return addListener;
 }
 
-describe('Failure notification click listener', () => {
-  it('starts cleanly without Notification access and attaches after the grant', async () => {
-    browser.notifications = undefined as unknown as typeof browser.notifications
-    const addedListeners = mockPermissions({ hasNotificationAccess: false })
+describe("Failure notification click listener", () => {
+  it("starts cleanly without Notification access and attaches after the grant", async () => {
+    browser.notifications = undefined as unknown as typeof browser.notifications;
+    const addedListeners = mockPermissions({ hasNotificationAccess: false });
 
-    expect(() => background.main?.()).not.toThrow()
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(() => background.main?.()).not.toThrow();
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
-    const addListener = mockNotifications()
+    const addListener = mockNotifications();
     for (const listener of addedListeners) {
-      listener({ permissions: ['notifications'] })
+      listener({ permissions: ["notifications"] });
     }
 
-    expect(addListener).toHaveBeenCalledTimes(1)
-  })
+    expect(addListener).toHaveBeenCalledTimes(1);
+  });
 
-  it('attaches synchronously at start when Notification access is already granted', () => {
-    const addListener = mockNotifications()
-    mockPermissions({ hasNotificationAccess: true })
+  it("attaches synchronously at start when Notification access is already granted", () => {
+    const addListener = mockNotifications();
+    mockPermissions({ hasNotificationAccess: true });
 
-    background.main?.()
+    background.main?.();
 
-    expect(addListener).toHaveBeenCalledTimes(1)
-  })
-})
+    expect(addListener).toHaveBeenCalledTimes(1);
+  });
+});
 
-describe('uninstall URL registration', () => {
-  it('registers at worker start', () => {
-    expect(registerUninstallUrl).toHaveBeenCalledOnce()
-  })
+describe("uninstall URL registration", () => {
+  it("registers at worker start", () => {
+    expect(registerUninstallUrl).toHaveBeenCalledOnce();
+  });
 
-  it('registers again on every onInstalled reason', async () => {
-    vi.clearAllMocks()
+  it("registers again on every onInstalled reason", async () => {
+    vi.clearAllMocks();
 
-    await triggerOnInstalled('update', '1.0.0')
-
-    await vi.waitFor(() => {
-      expect(registerUninstallUrl).toHaveBeenCalledOnce()
-    })
-  })
-
-  it('registers when a scheduling-relevant config change lands', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ enabled: false }))
-    vi.clearAllMocks()
-
-    await autoExportConfigStore.setValue(baseConfig({ enabled: true }))
+    await triggerOnInstalled("update", "1.0.0");
 
     await vi.waitFor(() => {
-      expect(registerUninstallUrl).toHaveBeenCalledOnce()
-    })
-  })
+      expect(registerUninstallUrl).toHaveBeenCalledOnce();
+    });
+  });
 
-  it('does not register when only an irrelevant config field changes', async () => {
-    await autoExportConfigStore.setValue(baseConfig({ path: 'a/' }))
-    vi.clearAllMocks()
+  it("registers when a scheduling-relevant config change lands", async () => {
+    await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
+    vi.clearAllMocks();
 
-    await autoExportConfigStore.setValue(baseConfig({ path: 'b/' }))
+    await autoExportConfigStore.setValue(baseConfig({ enabled: true }));
 
-    await new Promise((resolve) => setTimeout(resolve, 10))
-    expect(registerUninstallUrl).not.toHaveBeenCalled()
-  })
-})
+    await vi.waitFor(() => {
+      expect(registerUninstallUrl).toHaveBeenCalledOnce();
+    });
+  });
+
+  it("does not register when only an irrelevant config field changes", async () => {
+    await autoExportConfigStore.setValue(baseConfig({ path: "a/" }));
+    vi.clearAllMocks();
+
+    await autoExportConfigStore.setValue(baseConfig({ path: "b/" }));
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(registerUninstallUrl).not.toHaveBeenCalled();
+  });
+});

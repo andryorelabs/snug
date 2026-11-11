@@ -1,16 +1,14 @@
 ---
-import Header from '../../components/Header.astro'
-import { DOCS_PATHS } from '../../i18n/docs-ui'
-import { localePath } from '../../i18n/locales'
-import { documentationLanguageHref } from '../language-links'
-import { resolveDocumentationLocale } from '../locale'
-import DocumentationSearch from './DocumentationSearch.astro'
+import Header from "../../components/Header.astro";
+import { DOCS_PATHS } from "../../i18n/docs-ui";
+import { localePath } from "../../i18n/locales";
+import { documentationLanguageHref } from "../language-links";
+import { resolveDocumentationLocale } from "../locale";
+import DocumentationSearch from "./DocumentationSearch.astro";
 
-const { head, lang } = Astro.locals.starlightRoute
-const locale = resolveDocumentationLocale(lang)
-const pageHref = documentationLanguageHref(head, (code) =>
-  localePath(code, DOCS_PATHS.guide),
-)
+const { head, lang } = Astro.locals.starlightRoute;
+const locale = resolveDocumentationLocale(lang);
+const pageHref = documentationLanguageHref(head, (code) => localePath(code, DOCS_PATHS.guide));
 ---
 
 <Header as="div" locale={locale} skipLink={false} pageHref={pageHref}>

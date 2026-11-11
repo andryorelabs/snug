@@ -1,4 +1,4 @@
-import { APP_ROUTES, getAppUrl } from './app-url'
+import { APP_ROUTES, getAppUrl } from "./app-url";
 
 /**
  * Resolves where a legacy v1 page URL should land in the App. The v1 deep
@@ -10,9 +10,8 @@ import { APP_ROUTES, getAppUrl } from './app-url'
  * @returns The extension-internal App URL to navigate to.
  */
 export function getLegacyRedirectUrl(route: string, search: string): string {
-  const isAutoExportDeepLink =
-    new URLSearchParams(search).get('settings') === 'auto-export'
-  return getAppUrl(isAutoExportDeepLink ? APP_ROUTES.autoExport : route)
+  const isAutoExportDeepLink = new URLSearchParams(search).get("settings") === "auto-export";
+  return getAppUrl(isAutoExportDeepLink ? APP_ROUTES.autoExport : route);
 }
 
 /**
@@ -21,5 +20,5 @@ export function getLegacyRedirectUrl(route: string, search: string): string {
  * @param route The App route that replaces the legacy page.
  */
 export function redirectToApp(route: string): void {
-  location.replace(getLegacyRedirectUrl(route, location.search))
+  location.replace(getLegacyRedirectUrl(route, location.search));
 }

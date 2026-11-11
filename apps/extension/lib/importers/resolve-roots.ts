@@ -1,7 +1,7 @@
-import type { Browser } from '@wxt-dev/browser'
+import type { Browser } from "@wxt-dev/browser";
 
-import { ROOT_FOLDER_IDS } from '@/lib/root-folders'
-import type { ParsedBookmark } from '@/lib/types'
+import { ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import type { ParsedBookmark } from "@/lib/types";
 
 /**
  * The three fixed top-level roots a restore-mode import writes into,
@@ -11,19 +11,18 @@ import type { ParsedBookmark } from '@/lib/types'
  * treat it as a structural failure.
  */
 export interface ResolvedImportRoots {
-  bookmarksBarId: string | undefined
-  otherBookmarksId: string | undefined
-  mobileId: string | undefined
+  bookmarksBarId: string | undefined;
+  otherBookmarksId: string | undefined;
+  mobileId: string | undefined;
 }
 
 /**
  * A single node of `browser.bookmarks.getTree()`'s root's `children` — the
  * minimal shape {@link resolveImportRoots} needs from it.
  */
-export type RootChildNode = Pick<
-  Browser.bookmarks.BookmarkTreeNode,
-  'id' | 'folderType'
-> & { syncing?: boolean }
+export type RootChildNode = Pick<Browser.bookmarks.BookmarkTreeNode, "id" | "folderType"> & {
+  syncing?: boolean;
+};
 
 /**
  * The current browser's own root titles, resolved by
@@ -33,19 +32,16 @@ export type RootChildNode = Pick<
  * that case (see `lib/importers/import-html.ts`).
  */
 export interface ResolvedImportRootTitles {
-  bookmarksBarTitle: string | undefined
-  otherBookmarksTitle: string | undefined
-  mobileTitle: string | undefined
+  bookmarksBarTitle: string | undefined;
+  otherBookmarksTitle: string | undefined;
+  mobileTitle: string | undefined;
 }
 
 /**
  * A single node of `browser.bookmarks.getTree()`'s root's `children` — the
  * minimal shape {@link resolveImportRootTitles} needs from it.
  */
-export type RootTitleNode = Pick<
-  Browser.bookmarks.BookmarkTreeNode,
-  'id' | 'folderType' | 'title'
->
+export type RootTitleNode = Pick<Browser.bookmarks.BookmarkTreeNode, "id" | "folderType" | "title">;
 
 /**
  * Resolves one root node from `rootChildren` by, in order: its
@@ -73,28 +69,27 @@ function resolveRoot<T extends RootChildNode>(
   fallbackId: string,
   fallbackPosition: number,
 ): T | undefined {
-  const sameType = rootChildren.filter((node) => node.folderType === folderType)
-  const preferred =
-    sameType.find((node) => node.syncing === true) ?? sameType[0]
+  const sameType = rootChildren.filter((node) => node.folderType === folderType);
+  const preferred = sameType.find((node) => node.syncing === true) ?? sameType[0];
   return (
     preferred ??
     rootChildren.find((node) => node.id === fallbackId) ??
     rootChildren.at(fallbackPosition)
-  )
+  );
 }
 
-const ROOT_FOLDER_TYPES = ['bookmarks-bar', 'other', 'mobile'] as const
+const ROOT_FOLDER_TYPES = ["bookmarks-bar", "other", "mobile"] as const;
 
 /**
  * The browser-assigned `folderType` of one of the three roots an import can
  * write into.
  */
-export type RootFolderType = (typeof ROOT_FOLDER_TYPES)[number]
+export type RootFolderType = (typeof ROOT_FOLDER_TYPES)[number];
 
 function rootFolderTypeOf(node: ParsedBookmark): RootFolderType | undefined {
-  if (node.isBookmarksBar) return 'bookmarks-bar'
-  if (node.isOtherBookmarks) return 'other'
-  return node.isMobileBookmarks ? 'mobile' : undefined
+  if (node.isBookmarksBar) return "bookmarks-bar";
+  if (node.isOtherBookmarks) return "other";
+  return node.isMobileBookmarks ? "mobile" : undefined;
 }
 
 /**
@@ -106,14 +101,11 @@ function rootFolderTypeOf(node: ParsedBookmark): RootFolderType | undefined {
  */
 export function findSplitRootTypes(parsed: ParsedBookmark[]): RootFolderType[] {
   return ROOT_FOLDER_TYPES.filter((folderType) => {
-    const ofType = parsed.filter(
-      (node) => rootFolderTypeOf(node) === folderType,
-    )
+    const ofType = parsed.filter((node) => rootFolderTypeOf(node) === folderType);
     return (
-      ofType.some((node) => node.syncing === true) &&
-      ofType.some((node) => node.syncing !== true)
-    )
-  })
+      ofType.some((node) => node.syncing === true) && ofType.some((node) => node.syncing !== true)
+    );
+  });
 }
 
 /**
@@ -130,19 +122,19 @@ export function resolveSplitRootTargets<T extends RootChildNode>(
   parsed: ParsedBookmark[],
   rootChildren: T[],
 ): Map<ParsedBookmark, string> {
-  const targets = new Map<ParsedBookmark, string>()
-  const splitTypes = new Set<RootFolderType>(findSplitRootTypes(parsed))
+  const targets = new Map<ParsedBookmark, string>();
+  const splitTypes = new Set<RootFolderType>(findSplitRootTypes(parsed));
   for (const node of parsed) {
-    const folderType = rootFolderTypeOf(node)
-    if (!folderType || !splitTypes.has(folderType)) continue
+    const folderType = rootFolderTypeOf(node);
+    if (!folderType || !splitTypes.has(folderType)) continue;
     const live = rootChildren.find(
       (candidate) =>
         candidate.folderType === folderType &&
         (candidate.syncing === true) === (node.syncing === true),
-    )
-    if (live) targets.set(node, live.id)
+    );
+    if (live) targets.set(node, live.id);
   }
-  return targets
+  return targets;
 }
 
 /**
@@ -159,28 +151,18 @@ export function resolveImportRoots<T extends RootChildNode>(
 ): ResolvedImportRoots {
   const bookmarksBarNode = resolveRoot(
     rootChildren,
-    'bookmarks-bar',
+    "bookmarks-bar",
     ROOT_FOLDER_IDS.bookmarksBar,
     0,
-  )
-  const otherBookmarksNode = resolveRoot(
-    rootChildren,
-    'other',
-    ROOT_FOLDER_IDS.otherBookmarks,
-    1,
-  )
-  const mobileNode = resolveRoot(
-    rootChildren,
-    'mobile',
-    ROOT_FOLDER_IDS.mobileBookmarks,
-    2,
-  )
+  );
+  const otherBookmarksNode = resolveRoot(rootChildren, "other", ROOT_FOLDER_IDS.otherBookmarks, 1);
+  const mobileNode = resolveRoot(rootChildren, "mobile", ROOT_FOLDER_IDS.mobileBookmarks, 2);
 
   return {
     bookmarksBarId: bookmarksBarNode?.id,
     otherBookmarksId: otherBookmarksNode?.id,
     mobileId: mobileNode?.id,
-  }
+  };
 }
 
 /**
@@ -199,28 +181,18 @@ export function resolveImportRootTitles<T extends RootTitleNode>(
 ): ResolvedImportRootTitles {
   const bookmarksBarNode = resolveRoot(
     rootChildren,
-    'bookmarks-bar',
+    "bookmarks-bar",
     ROOT_FOLDER_IDS.bookmarksBar,
     0,
-  )
-  const otherBookmarksNode = resolveRoot(
-    rootChildren,
-    'other',
-    ROOT_FOLDER_IDS.otherBookmarks,
-    1,
-  )
-  const mobileNode = resolveRoot(
-    rootChildren,
-    'mobile',
-    ROOT_FOLDER_IDS.mobileBookmarks,
-    2,
-  )
+  );
+  const otherBookmarksNode = resolveRoot(rootChildren, "other", ROOT_FOLDER_IDS.otherBookmarks, 1);
+  const mobileNode = resolveRoot(rootChildren, "mobile", ROOT_FOLDER_IDS.mobileBookmarks, 2);
 
   return {
     bookmarksBarTitle: bookmarksBarNode?.title,
     otherBookmarksTitle: otherBookmarksNode?.title,
     mobileTitle: mobileNode?.title,
-  }
+  };
 }
 
 /**
@@ -230,6 +202,6 @@ export function resolveImportRootTitles<T extends RootTitleNode>(
  * @returns The current browser's root titles.
  */
 export async function loadLiveRootTitles(): Promise<ResolvedImportRootTitles> {
-  const tree = await browser.bookmarks.getTree()
-  return resolveImportRootTitles(tree[0]?.children ?? [])
+  const tree = await browser.bookmarks.getTree();
+  return resolveImportRootTitles(tree[0]?.children ?? []);
 }

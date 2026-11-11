@@ -1,36 +1,29 @@
-import { Menu as MenuPrimitive } from '@base-ui/react/menu'
-import { cn } from 'cn'
-import { CheckIcon, ChevronRightIcon } from 'lucide-react'
-import type * as React from 'react'
+import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { cn } from "cn";
+import { CheckIcon, ChevronRightIcon } from "lucide-react";
+import type * as React from "react";
 
 function DropdownMenu({ ...properties }: MenuPrimitive.Root.Props) {
-  return <MenuPrimitive.Root data-slot="dropdown-menu" {...properties} />
+  return <MenuPrimitive.Root data-slot="dropdown-menu" {...properties} />;
 }
 
 function DropdownMenuPortal({ ...properties }: MenuPrimitive.Portal.Props) {
-  return (
-    <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...properties} />
-  )
+  return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...properties} />;
 }
 
 function DropdownMenuTrigger({ ...properties }: MenuPrimitive.Trigger.Props) {
-  return (
-    <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...properties} />
-  )
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...properties} />;
 }
 
 function DropdownMenuContent({
-  align = 'start',
+  align = "start",
   alignOffset = 0,
-  side = 'bottom',
+  side = "bottom",
   sideOffset = 4,
   className,
   ...properties
 }: MenuPrimitive.Popup.Props &
-  Pick<
-    MenuPrimitive.Positioner.Props,
-    'align' | 'alignOffset' | 'side' | 'sideOffset'
-  >) {
+  Pick<MenuPrimitive.Positioner.Props, "align" | "alignOffset" | "side" | "sideOffset">) {
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
@@ -43,18 +36,18 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            'z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 ease-out-strong outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 motion-reduce:data-[side=bottom]:slide-in-from-top-0 motion-reduce:data-[side=inline-end]:slide-in-from-left-0 motion-reduce:data-[side=inline-start]:slide-in-from-right-0 motion-reduce:data-[side=left]:slide-in-from-right-0 motion-reduce:data-[side=right]:slide-in-from-left-0 motion-reduce:data-[side=top]:slide-in-from-bottom-0 data-open:animate-in data-open:duration-150 data-open:fade-in-0 data-open:zoom-in-95 motion-reduce:data-open:zoom-in-100 data-closed:animate-out data-closed:overflow-hidden data-closed:duration-100 data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:data-closed:zoom-out-100',
+            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 ease-out-strong outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 motion-reduce:data-[side=bottom]:slide-in-from-top-0 motion-reduce:data-[side=inline-end]:slide-in-from-left-0 motion-reduce:data-[side=inline-start]:slide-in-from-right-0 motion-reduce:data-[side=left]:slide-in-from-right-0 motion-reduce:data-[side=right]:slide-in-from-left-0 motion-reduce:data-[side=top]:slide-in-from-bottom-0 data-open:animate-in data-open:duration-150 data-open:fade-in-0 data-open:zoom-in-95 motion-reduce:data-open:zoom-in-100 data-closed:animate-out data-closed:overflow-hidden data-closed:duration-100 data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:data-closed:zoom-out-100",
             className,
           )}
           {...properties}
         />
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
-  )
+  );
 }
 
 function DropdownMenuGroup({ ...properties }: MenuPrimitive.Group.Props) {
-  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...properties} />
+  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...properties} />;
 }
 
 function DropdownMenuLabel({
@@ -62,29 +55,29 @@ function DropdownMenuLabel({
   inset,
   ...properties
 }: MenuPrimitive.GroupLabel.Props & {
-  inset?: boolean
+  inset?: boolean;
 }) {
   return (
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        'px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7',
+        "px-1.5 py-1 text-xs font-medium text-muted-foreground data-inset:pl-7",
         className,
       )}
       {...properties}
     />
-  )
+  );
 }
 
 function DropdownMenuItem({
   className,
   inset,
-  variant = 'default',
+  variant = "default",
   ...properties
 }: MenuPrimitive.Item.Props & {
-  inset?: boolean
-  variant?: 'default' | 'destructive'
+  inset?: boolean;
+  variant?: "default" | "destructive";
 }) {
   return (
     <MenuPrimitive.Item
@@ -97,13 +90,11 @@ function DropdownMenuItem({
       )}
       {...properties}
     />
-  )
+  );
 }
 
 function DropdownMenuSub({ ...properties }: MenuPrimitive.SubmenuRoot.Props) {
-  return (
-    <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...properties} />
-  )
+  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...properties} />;
 }
 
 function DropdownMenuSubTrigger({
@@ -112,7 +103,7 @@ function DropdownMenuSubTrigger({
   children,
   ...properties
 }: MenuPrimitive.SubmenuTrigger.Props & {
-  inset?: boolean
+  inset?: boolean;
 }) {
   return (
     <MenuPrimitive.SubmenuTrigger
@@ -127,13 +118,13 @@ function DropdownMenuSubTrigger({
       {children}
       <ChevronRightIcon className="ml-auto" />
     </MenuPrimitive.SubmenuTrigger>
-  )
+  );
 }
 
 function DropdownMenuSubContent({
-  align = 'start',
+  align = "start",
   alignOffset = -3,
-  side = 'right',
+  side = "right",
   sideOffset = 0,
   className,
   ...properties
@@ -142,7 +133,7 @@ function DropdownMenuSubContent({
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        'w-auto min-w-[96px] rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 ease-out-strong data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 motion-reduce:data-[side=bottom]:slide-in-from-top-0 motion-reduce:data-[side=left]:slide-in-from-right-0 motion-reduce:data-[side=right]:slide-in-from-left-0 motion-reduce:data-[side=top]:slide-in-from-bottom-0 data-open:animate-in data-open:duration-150 data-open:fade-in-0 data-open:zoom-in-95 motion-reduce:data-open:zoom-in-100 data-closed:animate-out data-closed:duration-100 data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:data-closed:zoom-out-100',
+        "w-auto min-w-[96px] rounded-lg bg-popover p-1 text-popover-foreground shadow-lg ring-1 ring-foreground/10 ease-out-strong data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 motion-reduce:data-[side=bottom]:slide-in-from-top-0 motion-reduce:data-[side=left]:slide-in-from-right-0 motion-reduce:data-[side=right]:slide-in-from-left-0 motion-reduce:data-[side=top]:slide-in-from-bottom-0 data-open:animate-in data-open:duration-150 data-open:fade-in-0 data-open:zoom-in-95 motion-reduce:data-open:zoom-in-100 data-closed:animate-out data-closed:duration-100 data-closed:fade-out-0 data-closed:zoom-out-95 motion-reduce:data-closed:zoom-out-100",
         className,
       )}
       align={align}
@@ -151,7 +142,7 @@ function DropdownMenuSubContent({
       sideOffset={sideOffset}
       {...properties}
     />
-  )
+  );
 }
 
 function DropdownMenuCheckboxItem({
@@ -161,7 +152,7 @@ function DropdownMenuCheckboxItem({
   inset,
   ...properties
 }: MenuPrimitive.CheckboxItem.Props & {
-  inset?: boolean
+  inset?: boolean;
 }) {
   return (
     <MenuPrimitive.CheckboxItem
@@ -184,18 +175,11 @@ function DropdownMenuCheckboxItem({
       </span>
       {children}
     </MenuPrimitive.CheckboxItem>
-  )
+  );
 }
 
-function DropdownMenuRadioGroup({
-  ...properties
-}: MenuPrimitive.RadioGroup.Props) {
-  return (
-    <MenuPrimitive.RadioGroup
-      data-slot="dropdown-menu-radio-group"
-      {...properties}
-    />
-  )
+function DropdownMenuRadioGroup({ ...properties }: MenuPrimitive.RadioGroup.Props) {
+  return <MenuPrimitive.RadioGroup data-slot="dropdown-menu-radio-group" {...properties} />;
 }
 
 function DropdownMenuRadioItem({
@@ -204,7 +188,7 @@ function DropdownMenuRadioItem({
   inset,
   ...properties
 }: MenuPrimitive.RadioItem.Props & {
-  inset?: boolean
+  inset?: boolean;
 }) {
   return (
     <MenuPrimitive.RadioItem
@@ -226,36 +210,30 @@ function DropdownMenuRadioItem({
       </span>
       {children}
     </MenuPrimitive.RadioItem>
-  )
+  );
 }
 
-function DropdownMenuSeparator({
-  className,
-  ...properties
-}: MenuPrimitive.Separator.Props) {
+function DropdownMenuSeparator({ className, ...properties }: MenuPrimitive.Separator.Props) {
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      className={cn("-mx-1 my-1 h-px bg-border", className)}
       {...properties}
     />
-  )
+  );
 }
 
-function DropdownMenuShortcut({
-  className,
-  ...properties
-}: React.ComponentProps<'span'>) {
+function DropdownMenuShortcut({ className, ...properties }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="dropdown-menu-shortcut"
       className={cn(
-        'ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground',
+        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
         className,
       )}
       {...properties}
     />
-  )
+  );
 }
 
 export {
@@ -274,4 +252,4 @@ export {
   DropdownMenuSub,
   DropdownMenuSubTrigger,
   DropdownMenuSubContent,
-}
+};

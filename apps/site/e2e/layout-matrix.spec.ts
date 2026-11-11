@@ -1,23 +1,23 @@
-import { localePath, LOCALES } from '../src/i18n/locales'
-import { expect, test } from './fixtures'
+import { localePath, LOCALES } from "../src/i18n/locales";
+import { expect, test } from "./fixtures";
 import {
   expectNoElementOverflow,
   hydrateHeaderIsland,
   MIN_TOUCH_TARGET,
   setViewportOrSkip,
-} from './layout-helpers'
+} from "./layout-helpers";
 
-const PATHS = LOCALES.map((locale) => localePath(locale))
-const SWEEP_WIDTHS = [320, 768]
-const SCHEMES = ['light', 'dark'] as const
-const TOUCH_LAYOUT_MAX_WIDTH = 1024
+const PATHS = LOCALES.map((locale) => localePath(locale));
+const SWEEP_WIDTHS = [320, 768];
+const SCHEMES = ["light", "dark"] as const;
+const TOUCH_LAYOUT_MAX_WIDTH = 1024;
 
 const TOUCH_TARGETS = {
-  'install buttons': '[data-install]',
-  'FAQ triggers': '[data-section="faq"] button',
-  'footer links': 'footer a',
-  'header menus': 'header button',
-}
+  "install buttons": "[data-install]",
+  "FAQ triggers": '[data-section="faq"] button',
+  "footer links": "footer a",
+  "header menus": "header button",
+};
 
 for (const colorScheme of SCHEMES) {
   for (const width of SWEEP_WIDTHS) {
@@ -25,77 +25,67 @@ for (const colorScheme of SCHEMES) {
       test(`${path} clips no heading, button, card or badge at ${width}px in ${colorScheme}`, async ({
         page,
       }) => {
-        await page.emulateMedia({ colorScheme })
-        await setViewportOrSkip(page, { width, height: 900 })
-        await page.goto(path)
-        await expect(page.locator('h1')).toBeVisible()
-        await expectNoElementOverflow(page)
-      })
+        await page.emulateMedia({ colorScheme });
+        await setViewportOrSkip(page, { width, height: 900 });
+        await page.goto(path);
+        await expect(page.locator("h1")).toBeVisible();
+        await expectNoElementOverflow(page);
+      });
     }
   }
 }
 
-test.describe('breakpoint at 767 vs 768', () => {
-  test('interface showcase stays inside the viewport at 767 and 768', async ({
-    page,
-  }) => {
+test.describe("breakpoint at 767 vs 768", () => {
+  test("interface showcase stays inside the viewport at 767 and 768", async ({ page }) => {
     const overflow = () =>
       page
         .locator('[data-section="interface"]')
         .evaluate(
-          (section) =>
-            section.scrollWidth -
-            globalThis.document.documentElement.clientWidth,
-        )
-    await setViewportOrSkip(page, { width: 767, height: 900 })
-    await page.goto('/')
-    expect(await overflow()).toBeLessThanOrEqual(0)
-    await setViewportOrSkip(page, { width: 768, height: 900 })
-    expect(await overflow()).toBeLessThanOrEqual(0)
-  })
+          (section) => section.scrollWidth - globalThis.document.documentElement.clientWidth,
+        );
+    await setViewportOrSkip(page, { width: 767, height: 900 });
+    await page.goto("/");
+    expect(await overflow()).toBeLessThanOrEqual(0);
+    await setViewportOrSkip(page, { width: 768, height: 900 });
+    expect(await overflow()).toBeLessThanOrEqual(0);
+  });
 
-  test('hero journey stacks at 767 and runs in a row at 768', async ({
-    page,
-  }) => {
+  test("hero journey stacks at 767 and runs in a row at 768", async ({ page }) => {
     const direction = () =>
       page
         .locator('[data-section="how"] .journey-boundary > .hero-stage')
-        .evaluate((flex) => getComputedStyle(flex).flexDirection)
-    await setViewportOrSkip(page, { width: 767, height: 900 })
-    await page.goto('/')
-    expect(await direction()).toBe('column')
-    await setViewportOrSkip(page, { width: 768, height: 900 })
-    expect(await direction()).toBe('row')
-  })
-})
+        .evaluate((flex) => getComputedStyle(flex).flexDirection);
+    await setViewportOrSkip(page, { width: 767, height: 900 });
+    await page.goto("/");
+    expect(await direction()).toBe("column");
+    await setViewportOrSkip(page, { width: 768, height: 900 });
+    expect(await direction()).toBe("row");
+  });
+});
 
-test.describe('touch targets', () => {
+test.describe("touch targets", () => {
   test.beforeEach(({ viewport }) => {
     test.skip(
       !viewport || viewport.width > TOUCH_LAYOUT_MAX_WIDTH,
-      'touch target sizing applies to touch-sized viewports',
-    )
-  })
+      "touch target sizing applies to touch-sized viewports",
+    );
+  });
 
   for (const [label, selector] of Object.entries(TOUCH_TARGETS)) {
     test(`${label} are at least 44px tall and wide`, async ({ page }) => {
-      await page.goto('/')
-      await hydrateHeaderIsland(page)
-      const targets = page.locator(selector)
-      const count = await targets.count()
-      expect(count).toBeGreaterThan(0)
+      await page.goto("/");
+      await hydrateHeaderIsland(page);
+      const targets = page.locator(selector);
+      const count = await targets.count();
+      expect(count).toBeGreaterThan(0);
       for (let index = 0; index < count; index++) {
-        const target = targets.nth(index)
-        await target.scrollIntoViewIfNeeded()
-        const box = await target.boundingBox()
-        expect(box, `${label} #${index} has a box`).not.toBeNull()
-        expect(box!.height, `${label} #${index} height`).toBeGreaterThanOrEqual(
-          MIN_TOUCH_TARGET,
-        )
-        expect(box!.width, `${label} #${index} width`).toBeGreaterThanOrEqual(
-          MIN_TOUCH_TARGET,
-        )
+        const target = targets.nth(index);
+        await target.scrollIntoViewIfNeeded();
+        const box = await target.boundingBox();
+        expect(box, `${label} #${index} has a box`).not.toBeNull();
+        expect(box!.height, `${label} #${index} height`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+        expect(box!.width, `${label} #${index} width`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
       }
-    })
+    });
   }
-})
+});

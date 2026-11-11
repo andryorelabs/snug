@@ -1,9 +1,9 @@
 ---
-import { getContent } from '../../i18n/content'
-import { resolveDocumentationLocale } from '../locale'
+import { getContent } from "../../i18n/content";
+import { resolveDocumentationLocale } from "../locale";
 
-const locale = resolveDocumentationLocale(Astro.locals.starlightRoute.lang)
-const { closeLabel } = getContent(locale).docsSidebar
+const locale = resolveDocumentationLocale(Astro.locals.starlightRoute.lang);
+const { closeLabel } = getContent(locale).docsSidebar;
 ---
 
 <button

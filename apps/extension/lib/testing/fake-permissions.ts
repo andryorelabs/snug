@@ -1,4 +1,4 @@
-import { beforeEach, vi } from 'vitest'
+import { beforeEach, vi } from "vitest";
 
 /**
  * Gives every test file a `browser.permissions` where all optional
@@ -11,5 +11,5 @@ beforeEach(() => {
     request: vi.fn(async () => true),
     onAdded: { addListener: vi.fn(), removeListener: vi.fn() },
     onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
-  } as unknown as typeof browser.permissions
-})
+  } as unknown as typeof browser.permissions;
+});

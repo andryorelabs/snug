@@ -1,20 +1,14 @@
-import { youtubeWatchUrl } from '../i18n/landing'
-import {
-  languageTag,
-  type Locale,
-  localePath,
-  ogImagePath,
-  SITE_ORIGIN,
-} from '../i18n/locales'
-import { STORE_FACTS } from './store-facts'
+import { youtubeWatchUrl } from "../i18n/landing";
+import { languageTag, type Locale, localePath, ogImagePath, SITE_ORIGIN } from "../i18n/locales";
+import { STORE_FACTS } from "./store-facts";
 
 /**
  * Locale-specific page facts that feed the `WebPage` and `VideoObject` nodes.
  */
 export interface StructuredDataPage {
-  title: string
-  videoId: string
-  videoDescription: string
+  title: string;
+  videoId: string;
+  videoDescription: string;
 }
 
 /**
@@ -35,36 +29,36 @@ export function buildStructuredData(
   featureList: readonly string[],
   page: StructuredDataPage,
 ) {
-  const pageUrl = `${SITE_ORIGIN}${localePath(locale)}`
-  const authorId = `${SITE_ORIGIN}/#author`
-  const websiteId = `${SITE_ORIGIN}/#website`
-  const softwareId = `${SITE_ORIGIN}/#software`
-  const videoId = `${pageUrl}#video`
-  const installUrl = `${SITE_ORIGIN}/install`
-  const language = languageTag(locale)
+  const pageUrl = `${SITE_ORIGIN}${localePath(locale)}`;
+  const authorId = `${SITE_ORIGIN}/#author`;
+  const websiteId = `${SITE_ORIGIN}/#website`;
+  const softwareId = `${SITE_ORIGIN}/#software`;
+  const videoId = `${pageUrl}#video`;
+  const installUrl = `${SITE_ORIGIN}/install`;
+  const language = languageTag(locale);
   return {
-    '@context': 'https://schema.org',
-    '@graph': [
+    "@context": "https://schema.org",
+    "@graph": [
       {
-        '@type': 'WebSite',
-        '@id': websiteId,
+        "@type": "WebSite",
+        "@id": websiteId,
         name: STORE_FACTS.name,
         url: `${SITE_ORIGIN}/`,
       },
       {
-        '@type': 'WebPage',
-        '@id': `${pageUrl}#webpage`,
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
         url: pageUrl,
         name: page.title,
         description,
         inLanguage: language,
-        isPartOf: { '@id': websiteId },
-        about: { '@id': softwareId },
-        video: { '@id': videoId },
+        isPartOf: { "@id": websiteId },
+        about: { "@id": softwareId },
+        video: { "@id": videoId },
       },
       {
-        '@type': 'VideoObject',
-        '@id': videoId,
+        "@type": "VideoObject",
+        "@id": videoId,
         name: page.title,
         description: page.videoDescription,
         thumbnailUrl: `https://i.ytimg.com/vi/${page.videoId}/maxresdefault.jpg`,
@@ -74,8 +68,8 @@ export function buildStructuredData(
         inLanguage: language,
       },
       {
-        '@type': 'SoftwareApplication',
-        '@id': softwareId,
+        "@type": "SoftwareApplication",
+        "@id": softwareId,
         name: STORE_FACTS.name,
         description,
         url: `${SITE_ORIGIN}/`,
@@ -88,38 +82,38 @@ export function buildStructuredData(
         installUrl,
         featureList,
         screenshot: `${SITE_ORIGIN}${ogImagePath(locale)}`,
-        author: { '@id': authorId },
+        author: { "@id": authorId },
         license: STORE_FACTS.license,
         isAccessibleForFree: true,
         offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'USD',
-          availability: 'https://schema.org/InStock',
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
         },
         interactionStatistic: {
-          '@type': 'InteractionCounter',
-          interactionType: 'https://schema.org/InstallAction',
+          "@type": "InteractionCounter",
+          interactionType: "https://schema.org/InstallAction",
           userInteractionCount: STORE_FACTS.userCount,
         },
       },
       {
-        '@type': 'Person',
-        '@id': authorId,
+        "@type": "Person",
+        "@id": authorId,
         name: STORE_FACTS.author.name,
         url: STORE_FACTS.author.url,
         sameAs: [STORE_FACTS.author.url],
       },
     ],
-  }
+  };
 }
 
 /**
  * One step of a comparison page's breadcrumb trail.
  */
 interface ComparisonBreadcrumb {
-  name: string
-  path: string
+  name: string;
+  path: string;
 }
 
 /**
@@ -127,18 +121,18 @@ interface ComparisonBreadcrumb {
  * `BreadcrumbList` nodes.
  */
 export interface ComparisonStructuredDataPage {
-  title: string
-  description: string
-  path: string
-  breadcrumbs: readonly ComparisonBreadcrumb[]
+  title: string;
+  description: string;
+  path: string;
+  breadcrumbs: readonly ComparisonBreadcrumb[];
   /**
    * Drops the `about` link to the shared `SoftwareApplication`.
    */
-  omitAbout?: boolean
+  omitAbout?: boolean;
   /**
    * `YYYY-MM-DD` date of the last commit behind the page, when known.
    */
-  dateModified?: string | undefined
+  dateModified?: string | undefined;
 }
 
 /**
@@ -150,48 +144,45 @@ export interface ComparisonStructuredDataPage {
  * @param page - The page's title, description, path and breadcrumb trail.
  * @returns A JSON-LD object ready to serialize.
  */
-export function buildComparisonStructuredData(
-  locale: Locale,
-  page: ComparisonStructuredDataPage,
-) {
-  const pageUrl = `${SITE_ORIGIN}${page.path}`
+export function buildComparisonStructuredData(locale: Locale, page: ComparisonStructuredDataPage) {
+  const pageUrl = `${SITE_ORIGIN}${page.path}`;
   return {
-    '@context': 'https://schema.org',
-    '@graph': [
+    "@context": "https://schema.org",
+    "@graph": [
       {
-        '@type': 'WebPage',
-        '@id': `${pageUrl}#webpage`,
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
         url: pageUrl,
         name: page.title,
         description: page.description,
         inLanguage: languageTag(locale),
-        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
         ...(!page.omitAbout && {
-          about: { '@id': `${SITE_ORIGIN}/#software` },
+          about: { "@id": `${SITE_ORIGIN}/#software` },
         }),
         ...(page.dateModified && { dateModified: page.dateModified }),
-        breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+        breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
       },
       {
-        '@type': 'BreadcrumbList',
-        '@id': `${pageUrl}#breadcrumb`,
+        "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
         itemListElement: page.breadcrumbs.map((crumb, index) => ({
-          '@type': 'ListItem',
+          "@type": "ListItem",
           position: index + 1,
           name: crumb.name,
           item: `${SITE_ORIGIN}${crumb.path}`,
         })),
       },
     ],
-  }
+  };
 }
 
 /**
  * One page listed on the How-to index.
  */
 interface HowToIndexItem {
-  name: string
-  path: string
+  name: string;
+  path: string;
 }
 
 /**
@@ -199,7 +190,7 @@ interface HowToIndexItem {
  * `BreadcrumbList` nodes.
  */
 export interface HowToIndexStructuredDataPage extends ComparisonStructuredDataPage {
-  items: readonly HowToIndexItem[]
+  items: readonly HowToIndexItem[];
 }
 
 /**
@@ -211,49 +202,46 @@ export interface HowToIndexStructuredDataPage extends ComparisonStructuredDataPa
  * listed pages.
  * @returns A JSON-LD object ready to serialize.
  */
-export function buildHowToIndexStructuredData(
-  locale: Locale,
-  page: HowToIndexStructuredDataPage,
-) {
-  const pageUrl = `${SITE_ORIGIN}${page.path}`
+export function buildHowToIndexStructuredData(locale: Locale, page: HowToIndexStructuredDataPage) {
+  const pageUrl = `${SITE_ORIGIN}${page.path}`;
   return {
-    '@context': 'https://schema.org',
-    '@graph': [
+    "@context": "https://schema.org",
+    "@graph": [
       {
-        '@type': 'CollectionPage',
-        '@id': `${pageUrl}#webpage`,
+        "@type": "CollectionPage",
+        "@id": `${pageUrl}#webpage`,
         url: pageUrl,
         name: page.title,
         description: page.description,
         inLanguage: languageTag(locale),
-        isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+        isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
         ...(page.dateModified && { dateModified: page.dateModified }),
-        breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
-        mainEntity: { '@id': `${pageUrl}#list` },
+        breadcrumb: { "@id": `${pageUrl}#breadcrumb` },
+        mainEntity: { "@id": `${pageUrl}#list` },
       },
       {
-        '@type': 'ItemList',
-        '@id': `${pageUrl}#list`,
+        "@type": "ItemList",
+        "@id": `${pageUrl}#list`,
         numberOfItems: page.items.length,
         itemListElement: page.items.map((item, index) => ({
-          '@type': 'ListItem',
+          "@type": "ListItem",
           position: index + 1,
           name: item.name,
           url: `${SITE_ORIGIN}${item.path}`,
         })),
       },
       {
-        '@type': 'BreadcrumbList',
-        '@id': `${pageUrl}#breadcrumb`,
+        "@type": "BreadcrumbList",
+        "@id": `${pageUrl}#breadcrumb`,
         itemListElement: page.breadcrumbs.map((crumb, index) => ({
-          '@type': 'ListItem',
+          "@type": "ListItem",
           position: index + 1,
           name: crumb.name,
           item: `${SITE_ORIGIN}${crumb.path}`,
         })),
       },
     ],
-  }
+  };
 }
 
 /**
@@ -264,7 +252,7 @@ export interface HowToStructuredDataPage extends ComparisonStructuredDataPage {
    * Whether the page has a With Snug section, which is what makes it `about`
    * the shared `SoftwareApplication`.
    */
-  hasSnugSection: boolean
+  hasSnugSection: boolean;
 }
 
 /**
@@ -277,12 +265,9 @@ export interface HowToStructuredDataPage extends ComparisonStructuredDataPage {
  * whether it has a Snug section.
  * @returns A JSON-LD object ready to serialize.
  */
-export function buildHowToStructuredData(
-  locale: Locale,
-  page: HowToStructuredDataPage,
-) {
+export function buildHowToStructuredData(locale: Locale, page: HowToStructuredDataPage) {
   return buildComparisonStructuredData(locale, {
     ...page,
     omitAbout: !page.hasSnugSection,
-  })
+  });
 }

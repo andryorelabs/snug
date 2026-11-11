@@ -1,8 +1,8 @@
-export const FPS = 30
-export const WIDTH = 1920
-export const HEIGHT = 1080
-export const TOTAL_FRAMES = 900
-export const TRANSITION_FRAMES = 12
+export const FPS = 30;
+export const WIDTH = 1920;
+export const HEIGHT = 1080;
+export const TOTAL_FRAMES = 900;
+export const TRANSITION_FRAMES = 12;
 
 /**
  * Visible frame range of each scene in the final cut (start inclusive, end
@@ -16,9 +16,8 @@ export const SCENE_RANGES = {
   autoExport: { from: 540, to: 705 },
   local: { from: 705, to: 795 },
   cta: { from: 795, to: 900 },
-} as const
+} as const;
 
-export type SceneId = keyof typeof SCENE_RANGES
+export type SceneId = keyof typeof SCENE_RANGES;
 
-export const sceneLength = (id: SceneId): number =>
-  SCENE_RANGES[id].to - SCENE_RANGES[id].from
+export const sceneLength = (id: SceneId): number => SCENE_RANGES[id].to - SCENE_RANGES[id].from;

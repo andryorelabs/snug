@@ -1,34 +1,28 @@
-import { type ReactNode, useEffect, useState } from 'react'
-import { cancelRender, continueRender, delayRender } from 'remotion'
+import { type ReactNode, useEffect, useState } from "react";
+import { cancelRender, continueRender, delayRender } from "remotion";
 
-import type { Locale } from './copy'
-import { loadFontsFor } from './fonts'
+import type { Locale } from "./copy";
+import { loadFontsFor } from "./fonts";
 
 /**
  * Holds the first paint until the locale's fonts are loaded.
  */
-export const FontGate = ({
-  locale,
-  children,
-}: {
-  locale: Locale
-  children: ReactNode
-}) => {
-  const [handle] = useState(() => delayRender(`Loading fonts for ${locale}`))
-  const [ready, setReady] = useState(false)
+export const FontGate = ({ locale, children }: { locale: Locale; children: ReactNode }) => {
+  const [handle] = useState(() => delayRender(`Loading fonts for ${locale}`));
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const load = async () => {
       try {
-        await loadFontsFor(locale)
-        setReady(true)
-        continueRender(handle)
+        await loadFontsFor(locale);
+        setReady(true);
+        continueRender(handle);
       } catch (error: unknown) {
-        cancelRender(error)
+        cancelRender(error);
       }
-    }
-    void load()
-  }, [locale, handle])
+    };
+    void load();
+  }, [locale, handle]);
 
-  return ready ? <>{children}</> : null
-}
+  return ready ? <>{children}</> : null;
+};

@@ -1,12 +1,12 @@
-import { normalizeUrl } from './duplicates'
-import { isAllowedBookmarkUrl } from './importers/url-validation'
-import type { ImportMode, ParsedBookmark } from './types'
+import { normalizeUrl } from "./duplicates";
+import { isAllowedBookmarkUrl } from "./importers/url-validation";
+import type { ImportMode, ParsedBookmark } from "./types";
 
 interface ExistingNode {
-  id?: string
-  title?: string
-  url?: string
-  children?: ExistingNode[]
+  id?: string;
+  title?: string;
+  url?: string;
+  children?: ExistingNode[];
 }
 
 /**
@@ -16,15 +16,15 @@ interface ExistingNode {
  * @returns The set of normalized URLs already present.
  */
 export function collectExistingUrls(nodes: ExistingNode[]): Set<string> {
-  const urls = new Set<string>()
+  const urls = new Set<string>();
   const visit = (level: ExistingNode[]): void => {
     for (const node of level) {
-      if (node.url !== undefined) urls.add(normalizeUrl(node.url))
-      if (node.children) visit(node.children)
+      if (node.url !== undefined) urls.add(normalizeUrl(node.url));
+      if (node.children) visit(node.children);
     }
-  }
-  visit(nodes)
-  return urls
+  };
+  visit(nodes);
+  return urls;
 }
 
 /**
@@ -41,30 +41,30 @@ export function dropDuplicateBookmarks(
   nodes: ParsedBookmark[],
   existingUrls: ReadonlySet<string>,
 ): { nodes: ParsedBookmark[]; skippedDuplicates: number } {
-  const seen = new Set(existingUrls)
-  let skippedDuplicates = 0
+  const seen = new Set(existingUrls);
+  let skippedDuplicates = 0;
 
   const filter = (level: ParsedBookmark[]): ParsedBookmark[] => {
-    const kept: ParsedBookmark[] = []
+    const kept: ParsedBookmark[] = [];
     for (const node of level) {
       if (isAllowedBookmarkUrl(node.url)) {
-        const key = normalizeUrl(node.url)
+        const key = normalizeUrl(node.url);
         if (seen.has(key)) {
-          skippedDuplicates++
-          continue
+          skippedDuplicates++;
+          continue;
         }
-        seen.add(key)
-        kept.push(node)
+        seen.add(key);
+        kept.push(node);
       } else if (node.children) {
-        kept.push({ ...node, children: filter(node.children) })
+        kept.push({ ...node, children: filter(node.children) });
       } else {
-        kept.push(node)
+        kept.push(node);
       }
     }
-    return kept
-  }
+    return kept;
+  };
 
-  return { nodes: filter(nodes), skippedDuplicates }
+  return { nodes: filter(nodes), skippedDuplicates };
 }
 
 /**
@@ -82,7 +82,7 @@ export function applySkipDuplicates(
   mode: ImportMode,
   isEnabled: boolean,
 ): { nodes: ParsedBookmark[]; skippedDuplicates: number } {
-  return !isEnabled || mode === 'restore-replace'
+  return !isEnabled || mode === "restore-replace"
     ? { nodes: parsed, skippedDuplicates: 0 }
-    : dropDuplicateBookmarks(parsed, collectExistingUrls(liveTree))
+    : dropDuplicateBookmarks(parsed, collectExistingUrls(liveTree));
 }

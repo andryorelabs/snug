@@ -1,26 +1,20 @@
-import { i18n } from '#i18n'
-import type { Browser } from '@wxt-dev/browser'
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react'
+import { i18n } from "#i18n";
+import type { Browser } from "@wxt-dev/browser";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
-import { collectBookmarkIds } from '@/lib/bookmark-tree-nodes'
-import { autoExpandFoldersStore } from '@/lib/storage'
+import { collectBookmarkIds } from "@/lib/bookmark-tree-nodes";
+import { autoExpandFoldersStore } from "@/lib/storage";
 import type {
   BookmarkNode,
   BookmarkTreeProperties,
   BookmarkTreeViewHandle,
   ExtendedBookmarkTreeNode,
-} from '@/lib/types'
-import { useStorageItem } from '@/lib/use-storage-item'
+} from "@/lib/types";
+import { useStorageItem } from "@/lib/use-storage-item";
 
-import { BookmarkTreeView } from './bookmark-tree-view'
+import { BookmarkTreeView } from "./bookmark-tree-view";
 
-const BOOKMARK_CHANGE_DEBOUNCE_MS = 150
+const BOOKMARK_CHANGE_DEBOUNCE_MS = 150;
 
 /**
  * The Export page's live bookmark tree: loads the browser's bookmarks into
@@ -42,46 +36,45 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
     emptyState,
     noBookmarksState,
     errorState,
-  } = properties
-  const [nodes, setNodes] = useState<BookmarkNode[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasLoadError, setHasLoadError] = useState(false)
-  const [autoExpandToken, setAutoExpandToken] = useState(0)
-  const viewReference = useRef<BookmarkTreeViewHandle>(null)
+  } = properties;
+  const [nodes, setNodes] = useState<BookmarkNode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
+  const [autoExpandToken, setAutoExpandToken] = useState(0);
+  const viewReference = useRef<BookmarkTreeViewHandle>(null);
 
-  const [autoExpandFolders] = useStorageItem(autoExpandFoldersStore)
+  const [autoExpandFolders] = useStorageItem(autoExpandFoldersStore);
 
   const loadBookmarks = useCallback(
     async (options: { shouldKeepExpansion?: boolean } = {}) => {
       try {
-        const tree = await fetchFullTree()
-        const rootNode = tree[0]
-        const withParentId = addParentIds(rootNode?.children ?? [])
-        setNodes(withParentId)
-        setHasLoadError(false)
-        setIsLoading(false)
+        const tree = await fetchFullTree();
+        const rootNode = tree[0];
+        const withParentId = addParentIds(rootNode?.children ?? []);
+        setNodes(withParentId);
+        setHasLoadError(false);
+        setIsLoading(false);
 
-        if (!autoExpandFolders || options.shouldKeepExpansion) return
+        if (!autoExpandFolders || options.shouldKeepExpansion) return;
 
-        setAutoExpandToken((token) => token + 1)
+        setAutoExpandToken((token) => token + 1);
       } catch {
-        setHasLoadError(true)
-        setIsLoading(false)
+        setHasLoadError(true);
+        setIsLoading(false);
       }
     },
     [autoExpandFolders],
-  )
+  );
 
   useImperativeHandle(reference, () => ({
     selectAll: () => viewReference.current?.selectAll(),
     deselectAll: () => viewReference.current?.deselectAll(),
-    areAllVisibleSelected: () =>
-      viewReference.current?.areAllVisibleSelected() ?? false,
+    areAllVisibleSelected: () => viewReference.current?.areAllVisibleSelected() ?? false,
     expandAll: () => viewReference.current?.expandAll(),
     collapseAll: () => viewReference.current?.collapseAll(),
     refresh: async () => {
-      await loadBookmarks()
-      viewReference.current?.clearSelection()
+      await loadBookmarks();
+      viewReference.current?.clearSelection();
     },
     /**
      * Re-fetches the live bookmark tree — rather than reusing the `nodes`
@@ -91,18 +84,18 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
      * @returns The selected bookmarks, pruned to the minimal containing folders.
      */
     getSelectedBookmarks: async () => {
-      const tree = await fetchFullTree()
-      const checkedIds = new Set(viewReference.current?.getCheckedIds())
-      return pruneTree(tree, checkedIds)
+      const tree = await fetchFullTree();
+      const checkedIds = new Set(viewReference.current?.getCheckedIds());
+      return pruneTree(tree, checkedIds);
     },
-  }))
+  }));
 
   useEffect(() => {
     const load = async () => {
-      await loadBookmarks()
-    }
-    void load()
-  }, [loadBookmarks])
+      await loadBookmarks();
+    };
+    void load();
+  }, [loadBookmarks]);
 
   /**
    * Reloads the tree (keeping the user's expansion) whenever the browser
@@ -110,37 +103,37 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
    * import into a single reload.
    */
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const scheduleReload = () => {
-      clearTimeout(timer)
+      clearTimeout(timer);
       timer = setTimeout(() => {
-        void loadBookmarks({ shouldKeepExpansion: true })
-      }, BOOKMARK_CHANGE_DEBOUNCE_MS)
-    }
+        void loadBookmarks({ shouldKeepExpansion: true });
+      }, BOOKMARK_CHANGE_DEBOUNCE_MS);
+    };
     const events = [
       browser.bookmarks.onCreated,
       browser.bookmarks.onRemoved,
       browser.bookmarks.onChanged,
       browser.bookmarks.onMoved,
-    ]
-    for (const event of events) event.addListener(scheduleReload)
+    ];
+    for (const event of events) event.addListener(scheduleReload);
     return () => {
-      clearTimeout(timer)
-      for (const event of events) event.removeListener(scheduleReload)
-    }
-  }, [loadBookmarks])
+      clearTimeout(timer);
+      for (const event of events) event.removeListener(scheduleReload);
+    };
+  }, [loadBookmarks]);
 
   function handleRetry() {
-    setHasLoadError(false)
-    setIsLoading(true)
-    void loadBookmarks()
+    setHasLoadError(false);
+    setIsLoading(true);
+    void loadBookmarks();
   }
 
   function resolvePlaceholder() {
-    if (hasLoadError && errorState) return errorState(handleRetry)
-    if (isLoading && loadingState) return loadingState
-    const hasNoBookmarks = !isLoading && collectBookmarkIds(nodes).length === 0
-    return hasNoBookmarks ? noBookmarksState : null
+    if (hasLoadError && errorState) return errorState(handleRetry);
+    if (isLoading && loadingState) return loadingState;
+    const hasNoBookmarks = !isLoading && collectBookmarkIds(nodes).length === 0;
+    return hasNoBookmarks ? noBookmarksState : null;
   }
 
   return (
@@ -148,7 +141,7 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
       ref={viewReference}
       nodes={nodes}
       searchTerm={searchTerm}
-      ariaLabel={i18n.t('exportPage_treeLabel')}
+      ariaLabel={i18n.t("exportPage_treeLabel")}
       autoExpandToken={autoExpandToken}
       onSelectionChange={onSelectionChange}
       onTotalChange={onTotalChange}
@@ -156,7 +149,7 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
       placeholder={resolvePlaceholder()}
       emptyState={emptyState}
     />
-  )
+  );
 }
 
 /**
@@ -180,11 +173,11 @@ function addParentIds(
       parentId: parentId ?? node.parentId,
     }),
     ...(node.children && { children: addParentIds(node.children, node.id) }),
-  }))
+  }));
 }
 
 async function fetchFullTree(): Promise<Browser.bookmarks.BookmarkTreeNode[]> {
-  return browser.bookmarks.getTree()
+  return browser.bookmarks.getTree();
 }
 
 /**
@@ -199,27 +192,25 @@ function pruneTree(
   tree: Browser.bookmarks.BookmarkTreeNode[],
   checkedIds: ReadonlySet<string>,
 ): ExtendedBookmarkTreeNode[] {
-  function prune(
-    nodes: Browser.bookmarks.BookmarkTreeNode[],
-  ): ExtendedBookmarkTreeNode[] {
-    const result: ExtendedBookmarkTreeNode[] = []
+  function prune(nodes: Browser.bookmarks.BookmarkTreeNode[]): ExtendedBookmarkTreeNode[] {
+    const result: ExtendedBookmarkTreeNode[] = [];
     for (const node of nodes) {
       if (node.url) {
         if (checkedIds.has(node.id)) {
-          result.push(node as ExtendedBookmarkTreeNode)
+          result.push(node as ExtendedBookmarkTreeNode);
         }
       } else if (node.children) {
-        const prunedChildren = prune(node.children)
+        const prunedChildren = prune(node.children);
         if (prunedChildren.length > 0) {
           result.push({
             ...(node as ExtendedBookmarkTreeNode),
             children: prunedChildren,
-          })
+          });
         }
       }
     }
-    return result
+    return result;
   }
 
-  return prune(tree[0]?.children ?? [])
+  return prune(tree[0]?.children ?? []);
 }

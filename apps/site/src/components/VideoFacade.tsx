@@ -1,20 +1,20 @@
-import { buttonVariants } from '@workspace/ui/components/button'
-import { cn } from '@workspace/ui/lib/utils'
-import { type MouseEvent, useRef, useState } from 'react'
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
+import { type MouseEvent, useRef, useState } from "react";
 
-import { youtubeEmbedUrl, youtubeWatchUrl } from '../i18n/landing'
+import { youtubeEmbedUrl, youtubeWatchUrl } from "../i18n/landing";
 
 interface VideoFacadeProperties {
-  videoId: string
-  title: string
-  playLabel: string
-  labelSeparator: string
-  posterSrc: string
-  posterSrcSet: string
-  posterSizes: string
-  posterWidth: number
-  posterHeight: number
-  posterPriority?: boolean
+  videoId: string;
+  title: string;
+  playLabel: string;
+  labelSeparator: string;
+  posterSrc: string;
+  posterSrcSet: string;
+  posterSizes: string;
+  posterWidth: number;
+  posterHeight: number;
+  posterPriority?: boolean;
 }
 
 /**
@@ -47,16 +47,16 @@ export default function VideoFacade({
   posterHeight,
   posterPriority = false,
 }: VideoFacadeProperties) {
-  const [active, setActive] = useState(false)
-  const frameReference = useRef<HTMLIFrameElement>(null)
+  const [active, setActive] = useState(false);
+  const frameReference = useRef<HTMLIFrameElement>(null);
 
   function activate(event: MouseEvent<HTMLAnchorElement>) {
     const shouldOpenNatively =
-      event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey
-    if (shouldOpenNatively) return
-    event.preventDefault()
-    setActive(true)
-    requestAnimationFrame(() => frameReference.current?.focus())
+      event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey;
+    if (shouldOpenNatively) return;
+    event.preventDefault();
+    setActive(true);
+    requestAnimationFrame(() => frameReference.current?.focus());
   }
 
   if (active) {
@@ -71,7 +71,7 @@ export default function VideoFacade({
         referrerPolicy="strict-origin-when-cross-origin"
         className="aspect-video w-full rounded-2xl border border-border"
       />
-    )
+    );
   }
 
   return (
@@ -89,8 +89,8 @@ export default function VideoFacade({
         alt=""
         width={posterWidth}
         height={posterHeight}
-        loading={posterPriority ? 'eager' : 'lazy'}
-        fetchPriority={posterPriority ? 'high' : undefined}
+        loading={posterPriority ? "eager" : "lazy"}
+        fetchPriority={posterPriority ? "high" : undefined}
         decoding="async"
         className="h-full w-full object-cover"
       />
@@ -102,8 +102,8 @@ export default function VideoFacade({
         <span
           aria-hidden="true"
           className={cn(
-            buttonVariants({ size: 'icon-lg' }),
-            'size-16 rounded-full motion-safe:duration-150 motion-safe:group-hover:scale-105 motion-safe:group-active:scale-95',
+            buttonVariants({ size: "icon-lg" }),
+            "size-16 rounded-full motion-safe:duration-150 motion-safe:group-hover:scale-105 motion-safe:group-active:scale-95",
           )}
         >
           <svg
@@ -116,5 +116,5 @@ export default function VideoFacade({
         </span>
       </span>
     </a>
-  )
+  );
 }

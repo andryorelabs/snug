@@ -1,24 +1,24 @@
-import { getContent } from './content'
-import { LANDING_FAQ_KEYS } from './faq-keys'
-import { type Locale, localePath } from './locales'
+import { getContent } from "./content";
+import { LANDING_FAQ_KEYS } from "./faq-keys";
+import { type Locale, localePath } from "./locales";
 
 /**
  * One landing FAQ entry.
  */
 interface LandingFaqEntry {
-  id: (typeof LANDING_FAQ_KEYS)[number]
-  question: string
-  answer: string
+  id: (typeof LANDING_FAQ_KEYS)[number];
+  question: string;
+  answer: string;
 }
 
 /**
  * Copy of the landing FAQ section for one locale.
  */
 export interface LandingFaqCopy {
-  heading: string
-  more: string
-  moreHref: string
-  entries: LandingFaqEntry[]
+  heading: string;
+  more: string;
+  moreHref: string;
+  entries: LandingFaqEntry[];
 }
 
 /**
@@ -28,14 +28,14 @@ export interface LandingFaqCopy {
  * @returns Heading, "More questions" label and target, and the six entries.
  */
 export function getLandingFaqCopy(locale: Locale): LandingFaqCopy {
-  const content = getContent(locale)
+  const content = getContent(locale);
   return {
     heading: content.landing.faq.heading,
     more: content.landing.faq.more,
-    moreHref: localePath(locale, '/guide/faq/'),
+    moreHref: localePath(locale, "/guide/faq/"),
     entries: LANDING_FAQ_KEYS.map((id) => ({
       id,
       ...content.faq.items[id],
     })),
-  }
+  };
 }

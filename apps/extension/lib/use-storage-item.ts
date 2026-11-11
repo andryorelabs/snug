@@ -1,5 +1,5 @@
-import type { WxtStorageItem } from '#imports'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import type { WxtStorageItem } from "#imports";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Subscribes a component to a WXT storage item, mirroring it as React state.
@@ -21,46 +21,46 @@ export function useStorageItem<T>(
   item: WxtStorageItem<T, Record<string, unknown>>,
   initialValue?: T,
 ): [T, (value: T) => Promise<void>, boolean, Error | undefined] {
-  const [value, setValue] = useState<T>(initialValue ?? item.fallback)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadError, setLoadError] = useState<Error | undefined>()
-  const latestValue = useRef(value)
+  const [value, setValue] = useState<T>(initialValue ?? item.fallback);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<Error | undefined>();
+  const latestValue = useRef(value);
 
   const applyValue = useCallback((nextValue: T) => {
-    latestValue.current = nextValue
-    setValue(nextValue)
-  }, [])
+    latestValue.current = nextValue;
+    setValue(nextValue);
+  }, []);
 
   const setItemValue = useCallback(
     async (nextValue: T) => {
-      const previousValue = latestValue.current
-      applyValue(nextValue)
+      const previousValue = latestValue.current;
+      applyValue(nextValue);
       try {
-        await item.setValue(nextValue)
+        await item.setValue(nextValue);
       } catch (error) {
-        if (latestValue.current === nextValue) applyValue(previousValue)
-        throw error
+        if (latestValue.current === nextValue) applyValue(previousValue);
+        throw error;
       }
     },
     [item, applyValue],
-  )
+  );
 
   useEffect(() => {
     const loadValue = async () => {
       try {
-        applyValue(await item.getValue())
+        applyValue(await item.getValue());
       } catch (error) {
-        setLoadError(error instanceof Error ? error : new Error(String(error)))
+        setLoadError(error instanceof Error ? error : new Error(String(error)));
       }
-      setIsLoaded(true)
-    }
-    void loadValue()
+      setIsLoaded(true);
+    };
+    void loadValue();
 
     const unwatch = item.watch((newValue) => {
-      applyValue(newValue ?? item.fallback)
-    })
-    return unwatch
-  }, [item, applyValue])
+      applyValue(newValue ?? item.fallback);
+    });
+    return unwatch;
+  }, [item, applyValue]);
 
-  return [value, setItemValue, isLoaded, loadError]
+  return [value, setItemValue, isLoaded, loadError];
 }

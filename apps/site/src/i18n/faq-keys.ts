@@ -4,10 +4,10 @@
  * read it.
  */
 export const LANDING_FAQ_KEYS = [
-  'network',
-  'account',
-  'sync',
-  'overwrite',
-  'builtin',
-  'cost',
-] as const
+  "network",
+  "account",
+  "sync",
+  "overwrite",
+  "builtin",
+  "cost",
+] as const;

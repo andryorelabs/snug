@@ -1,31 +1,22 @@
-import { countBookmarks } from '@/lib/count-bookmarks'
-import {
-  createExportTicker,
-  type ExportControl,
-  type ExportTicker,
-} from '@/lib/export-control'
-import { getFaviconBase64 } from '@/lib/favicon'
-import {
-  isBookmarksBar,
-  isOtherBookmarks,
-  ROOT_FOLDER_IDS,
-} from '@/lib/root-folders'
-import { millisecondsToSeconds } from '@/lib/timestamps'
-import type { ExtendedBookmarkTreeNode } from '@/lib/types'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { createExportTicker, type ExportControl, type ExportTicker } from "@/lib/export-control";
+import { getFaviconBase64 } from "@/lib/favicon";
+import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { millisecondsToSeconds } from "@/lib/timestamps";
+import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
-type HtmlNodeOptions = Omit<
-  ExportHTMLOptions,
-  'selectedBookmarks' | keyof ExportControl
-> & { ticker: ExportTicker }
+type HtmlNodeOptions = Omit<ExportHTMLOptions, "selectedBookmarks" | keyof ExportControl> & {
+  ticker: ExportTicker;
+};
 
 interface ExportHTMLOptions extends ExportControl {
-  selectedBookmarks: ExtendedBookmarkTreeNode[] | null
-  includeIconData: boolean
-  includeDateAdded: boolean
-  includeDateLastUsed: boolean
-  includeDateGroupModified: boolean
-  hideOtherBookmarks: boolean
-  hideParentFolder: boolean
+  selectedBookmarks: ExtendedBookmarkTreeNode[] | null;
+  includeIconData: boolean;
+  includeDateAdded: boolean;
+  includeDateLastUsed: boolean;
+  includeDateGroupModified: boolean;
+  hideOtherBookmarks: boolean;
+  hideParentFolder: boolean;
 }
 
 /**
@@ -37,9 +28,7 @@ interface ExportHTMLOptions extends ExportControl {
  * @param options Which bookmarks to export and which optional attributes to include.
  * @returns The Netscape-format bookmarks HTML text.
  */
-export async function exportToHTML(
-  options: ExportHTMLOptions,
-): Promise<string> {
+export async function exportToHTML(options: ExportHTMLOptions): Promise<string> {
   const {
     selectedBookmarks,
     includeIconData,
@@ -48,43 +37,38 @@ export async function exportToHTML(
     includeDateGroupModified,
     hideOtherBookmarks,
     hideParentFolder,
-  } = options
+  } = options;
 
-  const rootNodes = await browser.bookmarks.getTree()
-  const rootNode = rootNodes[0]
-  const nodesToExport = selectedBookmarks ?? rootNode?.children ?? []
+  const rootNodes = await browser.bookmarks.getTree();
+  const rootNode = rootNodes[0];
+  const nodesToExport = selectedBookmarks ?? rootNode?.children ?? [];
 
   const lines: string[] = [
-    '<!DOCTYPE NETSCAPE-Bookmark-file-1>',
-    '<!-- This is an automatically generated file.',
-    '     It will be read and overwritten.',
-    '     DO NOT EDIT! -->',
+    "<!DOCTYPE NETSCAPE-Bookmark-file-1>",
+    "<!-- This is an automatically generated file.",
+    "     It will be read and overwritten.",
+    "     DO NOT EDIT! -->",
     '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">',
-    '<TITLE>Bookmarks</TITLE>',
-    '<H1>Bookmarks</H1>',
-    '<DL><p>',
-  ]
+    "<TITLE>Bookmarks</TITLE>",
+    "<H1>Bookmarks</H1>",
+    "<DL><p>",
+  ];
 
-  const ticker = createExportTicker(options, countBookmarks(nodesToExport))
-  await generateHtmlContent(
-    lines,
-    nodesToExport as ExtendedBookmarkTreeNode[],
-    1,
-    {
-      ticker,
-      includeIconData,
-      includeDateAdded,
-      includeDateLastUsed,
-      includeDateGroupModified,
-      hideOtherBookmarks,
-      hideParentFolder,
-    },
-  )
+  const ticker = createExportTicker(options, countBookmarks(nodesToExport));
+  await generateHtmlContent(lines, nodesToExport as ExtendedBookmarkTreeNode[], 1, {
+    ticker,
+    includeIconData,
+    includeDateAdded,
+    includeDateLastUsed,
+    includeDateGroupModified,
+    hideOtherBookmarks,
+    hideParentFolder,
+  });
 
-  ticker.finish()
-  lines.push('</DL><p>')
+  ticker.finish();
+  lines.push("</DL><p>");
 
-  return lines.join('\n')
+  return lines.join("\n");
 }
 
 /**
@@ -104,19 +88,18 @@ async function generateHtmlContent(
   level: number,
   options: HtmlNodeOptions,
 ): Promise<void> {
-  const indent = ' '.repeat(4).repeat(level)
+  const indent = " ".repeat(4).repeat(level);
 
   for (const node of nodes) {
     if (node.url) {
-      await appendBookmarkLine(lines, node, indent, options)
+      await appendBookmarkLine(lines, node, indent, options);
     } else if (node.children) {
-      const isOtherBookmarksHidden =
-        isOtherBookmarks(node) && options.hideOtherBookmarks
+      const isOtherBookmarksHidden = isOtherBookmarks(node) && options.hideOtherBookmarks;
       const isParentFolderHidden =
         options.hideParentFolder &&
         node.id !== ROOT_FOLDER_IDS.virtualRoot &&
         !isBookmarksBar(node) &&
-        !isOtherBookmarks(node)
+        !isOtherBookmarks(node);
 
       if (isOtherBookmarksHidden || isParentFolderHidden) {
         await generateHtmlContent(
@@ -124,9 +107,9 @@ async function generateHtmlContent(
           node.children as ExtendedBookmarkTreeNode[],
           level,
           options,
-        )
+        );
       } else {
-        await appendFolderLines(lines, node, level, indent, options)
+        await appendFolderLines(lines, node, level, indent, options);
       }
     }
   }
@@ -146,29 +129,29 @@ async function appendBookmarkLine(
   indent: string,
   options: Pick<
     ExportHTMLOptions,
-    'includeIconData' | 'includeDateAdded' | 'includeDateLastUsed'
+    "includeIconData" | "includeDateAdded" | "includeDateLastUsed"
   > & { ticker: ExportTicker },
 ): Promise<void> {
-  options.ticker.tick()
-  let attributes = `HREF="${escapeUrl(node.url!)}"`
+  options.ticker.tick();
+  let attributes = `HREF="${escapeUrl(node.url!)}"`;
 
   if (options.includeDateAdded && node.dateAdded) {
-    attributes += ` ADD_DATE="${millisecondsToSeconds(node.dateAdded)}"`
+    attributes += ` ADD_DATE="${millisecondsToSeconds(node.dateAdded)}"`;
   }
 
   if (options.includeDateLastUsed && node.dateLastUsed) {
-    attributes += ` LAST_USED="${millisecondsToSeconds(node.dateLastUsed)}"`
+    attributes += ` LAST_USED="${millisecondsToSeconds(node.dateLastUsed)}"`;
   }
 
   if (options.includeIconData) {
-    const iconData = await getFaviconBase64(node.url!)
+    const iconData = await getFaviconBase64(node.url!);
     if (iconData) {
-      attributes += ` ICON="${iconData}"`
+      attributes += ` ICON="${iconData}"`;
     }
   }
 
-  const title = escapeTitle(node.title)
-  lines.push(`${indent}<DT><A ${attributes}>${title}</A>`)
+  const title = escapeTitle(node.title);
+  lines.push(`${indent}<DT><A ${attributes}>${title}</A>`);
 }
 
 /**
@@ -188,22 +171,22 @@ async function appendFolderLines(
   indent: string,
   options: HtmlNodeOptions,
 ): Promise<void> {
-  let attributes = ''
+  let attributes = "";
 
   if (options.includeDateAdded && node.dateAdded) {
-    attributes += ` ADD_DATE="${millisecondsToSeconds(node.dateAdded)}"`
+    attributes += ` ADD_DATE="${millisecondsToSeconds(node.dateAdded)}"`;
   }
 
   if (options.includeDateGroupModified && node.dateGroupModified) {
-    attributes += ` LAST_MODIFIED="${millisecondsToSeconds(node.dateGroupModified)}"`
+    attributes += ` LAST_MODIFIED="${millisecondsToSeconds(node.dateGroupModified)}"`;
   }
 
   if (isBookmarksBar(node)) {
-    attributes += ' PERSONAL_TOOLBAR_FOLDER="true"'
+    attributes += ' PERSONAL_TOOLBAR_FOLDER="true"';
   }
 
-  const title = escapeTitle(node.title)
-  lines.push(`${indent}<DT><H3${attributes}>${title}</H3>`, `${indent}<DL><p>`)
+  const title = escapeTitle(node.title);
+  lines.push(`${indent}<DT><H3${attributes}>${title}</H3>`, `${indent}<DL><p>`);
 
   if (node.children) {
     await generateHtmlContent(
@@ -211,10 +194,10 @@ async function appendFolderLines(
       node.children as ExtendedBookmarkTreeNode[],
       level + 1,
       options,
-    )
+    );
   }
 
-  lines.push(`${indent}</DL><p>`)
+  lines.push(`${indent}</DL><p>`);
 }
 
 /**
@@ -226,11 +209,11 @@ async function appendFolderLines(
  */
 function escapeTitle(string_: string): string {
   return string_
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 /**
@@ -242,9 +225,9 @@ function escapeTitle(string_: string): string {
  */
 function escapeUrl(url: string): string {
   return url
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }

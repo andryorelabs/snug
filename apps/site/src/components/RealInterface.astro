@@ -1,40 +1,39 @@
 ---
-import type { ImageMetadata } from 'astro'
-import { Image } from 'astro:assets'
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
 
-import { getContent } from '../i18n/content'
-import { getLandingCopy, SHOT_KEYS } from '../i18n/landing'
-import type { Locale } from '../i18n/locales'
-import Section from './Section.astro'
-import SectionHeading from './SectionHeading.astro'
+import { getContent } from "../i18n/content";
+import { getLandingCopy, SHOT_KEYS } from "../i18n/landing";
+import type { Locale } from "../i18n/locales";
+import Section from "./Section.astro";
+import SectionHeading from "./SectionHeading.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
 const SHOT_FILES = {
-  export: '01-export',
-  import: '02-import',
-  autoExport: '03-auto-export',
-  popup: '04-popup',
-} as const
+  export: "01-export",
+  import: "02-import",
+  autoExport: "03-auto-export",
+  popup: "04-popup",
+} as const;
 
 const SIZES =
-  '(min-width: 768px) calc((min(100vw, 77.5rem) - 10rem) * 0.615385), calc(100vw - 32px)'
+  "(min-width: 768px) calc((min(100vw, 77.5rem) - 10rem) * 0.615385), calc(100vw - 32px)";
 
 const THEMES = [
-  { theme: 'light', directory: 'light/', visibility: 'block dark:hidden' },
-  { theme: 'dark', directory: '', visibility: 'hidden dark:block' },
-] as const
+  { theme: "light", directory: "light/", visibility: "block dark:hidden" },
+  { theme: "dark", directory: "", visibility: "hidden dark:block" },
+] as const;
 
-const screenshots = import.meta.glob<{ default: ImageMetadata }>(
-  '../assets/screenshots/**/*.png',
-  { eager: true },
-)
+const screenshots = import.meta.glob<{ default: ImageMetadata }>("../assets/screenshots/**/*.png", {
+  eager: true,
+});
 
-const { locale } = Astro.props
-const copy = getLandingCopy(locale).interface
-const { showcase } = getContent(locale).landing
+const { locale } = Astro.props;
+const copy = getLandingCopy(locale).interface;
+const { showcase } = getContent(locale).landing;
 ---
 
 <Section section="interface" labelledBy="interface-heading">
@@ -48,12 +47,8 @@ const { showcase } = getContent(locale).landing
           {SHOT_KEYS.map((key) => (
             <li data-step={key}>
               <div class="scroll-reveal">
-                <h3 class="text-lg font-semibold text-foreground">
-                  {showcase.tabs[key]}
-                </h3>
-                <p class="mt-1 text-base leading-body text-muted-foreground">
-                  {copy.shots[key]}
-                </p>
+                <h3 class="text-lg font-semibold text-foreground">{showcase.tabs[key]}</h3>
+                <p class="mt-1 text-base leading-body text-muted-foreground">{copy.shots[key]}</p>
               </div>
             </li>
           ))}

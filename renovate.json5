@@ -1,78 +1,78 @@
 {
-  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
-    'config:best-practices',
-    ':dependencyDashboard',
-    ':semanticCommits',
-    ':semanticCommitTypeAll(chore)',
-    'helpers:pinGitHubActionDigests',
-    'group:monorepos',
-    'group:recommended',
-    ':preserveSemverRanges',
+    "config:best-practices",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    "helpers:pinGitHubActionDigests",
+    "group:monorepos",
+    "group:recommended",
+    ":preserveSemverRanges",
   ],
 
-  timezone: 'UTC',
-  schedule: ['before 12pm on monday'],
+  timezone: "UTC",
+  schedule: ["before 12pm on monday"],
 
   // Rate limits — low noise for solo dev
   prConcurrentLimit: 3,
   prHourlyLimit: 2,
   branchConcurrentLimit: 5,
 
-  rangeStrategy: 'bump',
+  rangeStrategy: "bump",
   // Main requires the PR branch to be up to date before merging
   // (strict_required_status_checks_policy in the main branch ruleset),
   // so automerge branches must be kept current, not just conflict-free
-  rebaseWhen: 'behind-base-branch',
+  rebaseWhen: "behind-base-branch",
 
   // Wait 3 days before opening a PR — guards against supply-chain attacks on freshly published versions
-  minimumReleaseAge: '3 days',
+  minimumReleaseAge: "3 days",
 
-  labels: ['dependencies'],
+  labels: ["dependencies"],
 
   // Vulnerability sources: OSV and Dependabot alerts. Renovate stays the only
   // version updater (docs/adr/0001-public-repo-security-posture.md)
   osvVulnerabilityAlerts: true,
   vulnerabilityAlerts: {
     enabled: true,
-    labels: ['Priority: Critical', 'Type: Security'],
-    assignees: ['AndryOre'],
+    labels: ["Priority: Critical", "Type: Security"],
+    assignees: ["AndryOre"],
   },
 
   // Lockfile refresh — covers the bun workspaces and the root catalog
   lockFileMaintenance: {
     enabled: true,
-    schedule: ['before 12pm on monday'],
+    schedule: ["before 12pm on monday"],
     automerge: true,
-    automergeType: 'pr',
+    automergeType: "pr",
   },
 
   customManagers: [
     // Bumping ACTIONLINT_VERSION leaves ACTIONLINT_SHA256 stale: the Renovate PR
     // fails lint-workflows until the checksum is updated by hand
     {
-      customType: 'regex',
-      managerFilePatterns: ['/^\\.github/workflows/lint-workflows\\.yml$/'],
-      matchStrings: ['ACTIONLINT_VERSION: (?<currentValue>\\d+\\.\\d+\\.\\d+)'],
-      datasourceTemplate: 'github-releases',
-      depNameTemplate: 'rhysd/actionlint',
-      extractVersionTemplate: '^v(?<version>.+)$',
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/lint-workflows\\.yml$/"],
+      matchStrings: ["ACTIONLINT_VERSION: (?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      datasourceTemplate: "github-releases",
+      depNameTemplate: "rhysd/actionlint",
+      extractVersionTemplate: "^v(?<version>.+)$",
     },
     {
-      customType: 'regex',
-      managerFilePatterns: ['/^\\.github/workflows/lint-workflows\\.yml$/'],
+      customType: "regex",
+      managerFilePatterns: ["/^\\.github/workflows/lint-workflows\\.yml$/"],
       matchStrings: [
-        'zizmorcore/zizmor-action@[^\\n]+\\n\\s+with:\\n\\s+version: (?<currentValue>v\\d+\\.\\d+\\.\\d+)',
+        "zizmorcore/zizmor-action@[^\\n]+\\n\\s+with:\\n\\s+version: (?<currentValue>v\\d+\\.\\d+\\.\\d+)",
       ],
-      datasourceTemplate: 'github-releases',
-      depNameTemplate: 'zizmorcore/zizmor',
+      datasourceTemplate: "github-releases",
+      depNameTemplate: "zizmorcore/zizmor",
     },
     {
-      customType: 'regex',
-      managerFilePatterns: ['/^apps/site/scripts/.+\\.sh$/'],
-      matchStrings: ['lighthouse@(?<currentValue>\\d+\\.\\d+\\.\\d+)'],
-      datasourceTemplate: 'npm',
-      depNameTemplate: 'lighthouse',
+      customType: "regex",
+      managerFilePatterns: ["/^apps/site/scripts/.+\\.sh$/"],
+      matchStrings: ["lighthouse@(?<currentValue>\\d+\\.\\d+\\.\\d+)"],
+      datasourceTemplate: "npm",
+      depNameTemplate: "lighthouse",
     },
   ],
 
@@ -81,62 +81,62 @@
   // react/tailwind come from the root catalog groups
   packageRules: [
     {
-      matchDepTypes: ['devDependencies'],
-      semanticCommitScope: 'deps-dev',
+      matchDepTypes: ["devDependencies"],
+      semanticCommitScope: "deps-dev",
     },
     {
-      matchDepTypes: ['dependencies'],
-      semanticCommitScope: 'deps',
+      matchDepTypes: ["dependencies"],
+      semanticCommitScope: "deps",
     },
 
     {
-      matchUpdateTypes: ['minor', 'patch'],
-      groupName: 'all non-major',
-      groupSlug: 'all-minor-patch',
+      matchUpdateTypes: ["minor", "patch"],
+      groupName: "all non-major",
+      groupSlug: "all-minor-patch",
     },
 
     // WXT framework bundle — keep these in sync
     {
-      groupName: 'wxt',
-      matchPackageNames: ['wxt', '@wxt-dev/**'],
+      groupName: "wxt",
+      matchPackageNames: ["wxt", "@wxt-dev/**"],
     },
     {
-      groupName: 'react',
-      matchPackageNames: ['react', 'react-dom', '@types/react*'],
+      groupName: "react",
+      matchPackageNames: ["react", "react-dom", "@types/react*"],
     },
     {
-      groupName: 'base ui + lucide',
-      matchPackageNames: ['@base-ui/react', 'lucide-react'],
+      groupName: "base ui + lucide",
+      matchPackageNames: ["@base-ui/react", "lucide-react"],
     },
     // Catalog entries without a group of their own below move together: Renovate
     // bumps the root catalog once for every workspace that references them
     {
-      groupName: 'workspace catalog',
-      matchFileNames: ['package.json'],
-      matchDepNames: ['cn', '@types/bun'],
+      groupName: "workspace catalog",
+      matchFileNames: ["package.json"],
+      matchDepNames: ["cn", "@types/bun"],
     },
     {
-      groupName: 'tailwindcss',
-      matchPackageNames: ['tailwindcss', '@tailwindcss/**'],
+      groupName: "tailwindcss",
+      matchPackageNames: ["tailwindcss", "@tailwindcss/**"],
     },
     {
-      groupName: 'vitest',
-      matchPackageNames: ['vitest', '@vitest/**'],
+      groupName: "vitest",
+      matchPackageNames: ["vitest", "@vitest/**"],
     },
     {
-      groupName: 'type definitions',
-      matchPackageNames: ['@types/**'],
+      groupName: "type definitions",
+      matchPackageNames: ["@types/**"],
     },
 
     {
-      groupName: 'github-actions',
-      matchManagers: ['github-actions'],
+      groupName: "github-actions",
+      matchManagers: ["github-actions"],
     },
 
     // Bun runtime is not managed via package.json engines — bump manually
     {
-      matchPackageNames: ['bun'],
-      matchManagers: ['npm'],
+      matchPackageNames: ["bun"],
+      matchManagers: ["npm"],
       enabled: false,
     },
 
@@ -144,26 +144,26 @@
     // are now enforced on main (AO-827, docs/adr/0001-public-repo-security-posture.md)
     // Uses 7-day release age (stricter than global 3-day) as extra supply-chain buffer
     {
-      matchDepTypes: ['devDependencies'],
-      matchUpdateTypes: ['patch', 'minor'],
+      matchDepTypes: ["devDependencies"],
+      matchUpdateTypes: ["patch", "minor"],
       automerge: true,
-      automergeType: 'pr',
-      minimumReleaseAge: '7 days',
+      automergeType: "pr",
+      minimumReleaseAge: "7 days",
     },
     {
-      matchManagers: ['github-actions'],
-      matchUpdateTypes: ['patch', 'minor', 'digest', 'pinDigest'],
+      matchManagers: ["github-actions"],
+      matchUpdateTypes: ["patch", "minor", "digest", "pinDigest"],
       automerge: true,
-      automergeType: 'pr',
-      minimumReleaseAge: '7 days',
+      automergeType: "pr",
+      minimumReleaseAge: "7 days",
     },
     // The Oxc toolchain moves in lockstep and is exact-pinned: lint, format and
     // typecheck results change between releases, so every bump is a reviewed PR.
     // Declared after the devDependencies automerge rule so it wins
     {
-      groupName: 'oxc',
-      matchDepNames: ['oxlint', 'oxlint-tsgolint', 'oxfmt', 'typescript7'],
-      rangeStrategy: 'pin',
+      groupName: "oxc",
+      matchDepNames: ["oxlint", "oxlint-tsgolint", "oxfmt", "typescript7"],
+      rangeStrategy: "pin",
       automerge: false,
     },
   ],

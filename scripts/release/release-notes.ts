@@ -1,7 +1,7 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
-import { ChangelogError, readSection } from './changelog'
+import { ChangelogError, readSection } from "./changelog";
 
 /**
  * Returns the release notes of a tag: the body of its CHANGELOG section.
@@ -13,19 +13,15 @@ import { ChangelogError, readSection } from './changelog'
  * @throws {ChangelogError} When the section for the tag is missing or empty.
  */
 export function releaseNotes(tag: string, changelog: string): string {
-  const version = tag.replace(/^v/, '')
-  const section = readSection(changelog, version)
-  if (section.status === 'missing') {
-    throw new ChangelogError(
-      `CHANGELOG.md has no "## [${version}]" section for the tag ${tag}`,
-    )
+  const version = tag.replace(/^v/, "");
+  const section = readSection(changelog, version);
+  if (section.status === "missing") {
+    throw new ChangelogError(`CHANGELOG.md has no "## [${version}]" section for the tag ${tag}`);
   }
-  if (section.status === 'empty') {
-    throw new ChangelogError(
-      `The "## [${version}]" section of CHANGELOG.md is empty`,
-    )
+  if (section.status === "empty") {
+    throw new ChangelogError(`The "## [${version}]" section of CHANGELOG.md is empty`);
   }
-  return section.body
+  return section.body;
 }
 
 /**
@@ -42,34 +38,30 @@ export function runReleaseNotes(
   readChangelog: () => string,
   output: { notes: (text: string) => void; error: (message: string) => void },
 ): number {
-  const [tag, ...extra] = commandArguments
+  const [tag, ...extra] = commandArguments;
   if (!tag || extra.length > 0) {
-    output.error('Usage: bun scripts/release/release-notes.ts <tag>')
-    return 1
+    output.error("Usage: bun scripts/release/release-notes.ts <tag>");
+    return 1;
   }
   try {
-    output.notes(releaseNotes(tag, readChangelog()))
-    return 0
+    output.notes(releaseNotes(tag, readChangelog()));
+    return 0;
   } catch (error) {
     if (error instanceof ChangelogError) {
-      output.error(`release-notes: ${error.message}`)
-      return 1
+      output.error(`release-notes: ${error.message}`);
+      return 1;
     }
-    throw error
+    throw error;
   }
 }
 
 if (import.meta.main) {
   process.exitCode = runReleaseNotes(
     process.argv.slice(2),
-    () =>
-      readFileSync(
-        path.resolve(import.meta.dirname, '../../CHANGELOG.md'),
-        'utf8',
-      ),
+    () => readFileSync(path.resolve(import.meta.dirname, "../../CHANGELOG.md"), "utf8"),
     {
       notes: (text) => console.log(text),
       error: (message) => console.error(message),
     },
-  )
+  );
 }

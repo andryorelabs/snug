@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a reproducible bug or unexpected behavior
-title: 'fix: '
-labels: ['Type: Bug', 'Status: Needs Info']
+title: "fix: "
+labels: ["Type: Bug", "Status: Needs Info"]
 
 body:
   - type: checkboxes
@@ -9,8 +9,7 @@ body:
     attributes:
       label: Pre-flight checklist
       options:
-        - label:
-            I have searched the existing issues and confirmed this hasn't been
+        - label: I have searched the existing issues and confirmed this hasn't been
             reported.
           required: true
 
@@ -32,9 +31,8 @@ body:
     id: where
     attributes:
       label: Where observed
-      description:
-        Chrome Web Store version, unpacked build, or local + commit SHA.
-      placeholder: 'e.g. Chrome Web Store v2.0.0 or local @ abc1234'
+      description: Chrome Web Store version, unpacked build, or local + commit SHA.
+      placeholder: "e.g. Chrome Web Store v2.0.0 or local @ abc1234"
 
   - type: textarea
     id: description
@@ -70,8 +68,7 @@ body:
     id: screenshots
     attributes:
       label: Screenshots / recording
-      description:
-        If applicable, add screenshots or a screen recording to help explain the
+      description: If applicable, add screenshots or a screen recording to help explain the
         problem.
 
   - type: textarea
@@ -88,6 +85,5 @@ body:
     id: context
     attributes:
       label: Additional context
-      description:
-        Any other context about the problem (console logs, related issues,
+      description: Any other context about the problem (console logs, related issues,
         etc.).

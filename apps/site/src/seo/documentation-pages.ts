@@ -1,18 +1,9 @@
-import { loadCatalog } from '../docs/catalog'
-import { markdownTwinPath } from '../docs/markdown-twin'
-import { PUBLISHED_SOURCES, publishedRoute } from '../docs/published'
-import {
-  DEFAULT_LOCALE,
-  hreflangAlternates,
-  LOCALES,
-  SITE_ORIGIN,
-} from '../i18n/locales'
-import type {
-  LlmsDocumentationPage,
-  LlmsFullSection,
-  SitemapEntry,
-} from './crawlers'
-import { lastCommitDate } from './last-modified'
+import { loadCatalog } from "../docs/catalog";
+import { markdownTwinPath } from "../docs/markdown-twin";
+import { PUBLISHED_SOURCES, publishedRoute } from "../docs/published";
+import { DEFAULT_LOCALE, hreflangAlternates, LOCALES, SITE_ORIGIN } from "../i18n/locales";
+import type { LlmsDocumentationPage, LlmsFullSection, SitemapEntry } from "./crawlers";
+import { lastCommitDate } from "./last-modified";
 
 /**
  * One sitemap entry per Guide page and What's new in every locale. Each locale
@@ -23,16 +14,14 @@ import { lastCommitDate } from './last-modified'
  */
 export function documentationSitemapEntries(): SitemapEntry[] {
   return PUBLISHED_SOURCES.flatMap((source) => {
-    const alternates = hreflangAlternates(
-      publishedRoute(source, DEFAULT_LOCALE),
-    )
-    const lastmod = lastCommitDate([`../../${source.sourcePath}`])
+    const alternates = hreflangAlternates(publishedRoute(source, DEFAULT_LOCALE));
+    const lastmod = lastCommitDate([`../../${source.sourcePath}`]);
     return LOCALES.map((locale) => ({
       loc: `${SITE_ORIGIN}${publishedRoute(source, locale)}`,
       ...(lastmod !== undefined && { lastmod }),
       alternates,
-    }))
-  })
+    }));
+  });
 }
 
 /**
@@ -41,13 +30,13 @@ export function documentationSitemapEntries(): SitemapEntry[] {
  * @returns The pages, in allowlist order.
  */
 export function documentationLlmsPages(): LlmsDocumentationPage[] {
-  const titles = new Map(loadCatalog().map((entry) => [entry.id, entry.title]))
+  const titles = new Map(loadCatalog().map((entry) => [entry.id, entry.title]));
   return PUBLISHED_SOURCES.map((source) => ({
     title: titles.get(source.id) ?? source.id,
     description: source.description,
     markdownUrl: `${SITE_ORIGIN}${markdownTwinPath(publishedRoute(source, DEFAULT_LOCALE))}`,
-    secondary: source.kind === 'changelog',
-  }))
+    secondary: source.kind === "changelog",
+  }));
 }
 
 /**
@@ -58,14 +47,14 @@ export function documentationLlmsPages(): LlmsDocumentationPage[] {
  * @returns The body with each heading one level deeper.
  */
 export function demoteHeadings(markdown: string): string {
-  let isFenced = false
+  let isFenced = false;
   return markdown
-    .split('\n')
+    .split("\n")
     .map((line) => {
-      if (/^\s*(```|~~~)/.test(line)) isFenced = !isFenced
-      return !isFenced && /^#{1,5}\s/.test(line) ? `#${line}` : line
+      if (/^\s*(```|~~~)/.test(line)) isFenced = !isFenced;
+      return !isFenced && /^#{1,5}\s/.test(line) ? `#${line}` : line;
     })
-    .join('\n')
+    .join("\n");
 }
 
 /**
@@ -75,16 +64,14 @@ export function demoteHeadings(markdown: string): string {
  * @returns One section per Guide page, in allowlist order.
  */
 export function guideLlmsFullSections(): LlmsFullSection[] {
-  const entries = new Map(loadCatalog().map((entry) => [entry.id, entry]))
-  return PUBLISHED_SOURCES.filter(({ kind }) => kind === 'markdown').flatMap(
-    (source) => {
-      const entry = entries.get(source.id)
-      if (!entry) return []
-      return {
-        title: entry.title,
-        url: `${SITE_ORIGIN}${publishedRoute(source, DEFAULT_LOCALE)}`,
-        body: demoteHeadings(entry.body),
-      }
-    },
-  )
+  const entries = new Map(loadCatalog().map((entry) => [entry.id, entry]));
+  return PUBLISHED_SOURCES.filter(({ kind }) => kind === "markdown").flatMap((source) => {
+    const entry = entries.get(source.id);
+    if (!entry) return [];
+    return {
+      title: entry.title,
+      url: `${SITE_ORIGIN}${publishedRoute(source, DEFAULT_LOCALE)}`,
+      body: demoteHeadings(entry.body),
+    };
+  });
 }

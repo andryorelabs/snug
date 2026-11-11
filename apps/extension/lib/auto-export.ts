@@ -1,21 +1,21 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { notifyAutoExportFailure } from '@/lib/auto-export-notification'
+import { notifyAutoExportFailure } from "@/lib/auto-export-notification";
 import {
   applyRetention,
   recordSavedDownload,
   recordSavedFolderFile,
-} from '@/lib/auto-export-retention'
-import { writeToCustomFolder } from '@/lib/custom-folder-writer'
-import { EXPORT_FORMAT_INFO, type ExportFormat } from '@/lib/export-formats'
-import { formatFilenameTemplate } from '@/lib/filename-template'
-import { loadFolderHandle, queryFolderAccess } from '@/lib/folder-handle'
-import { registerFolderIdentity } from '@/lib/folder-run-identity'
-import { downloadViaOffscreenDocument } from '@/lib/offscreen-download'
-import { sanitizePathSegment } from '@/lib/path-segment'
-import { hasDownloadsAccess } from '@/lib/permission-access'
-import { renderExport } from '@/lib/render-export'
-import { markReviewPromptEligible } from '@/lib/review-prompt'
+} from "@/lib/auto-export-retention";
+import { writeToCustomFolder } from "@/lib/custom-folder-writer";
+import { EXPORT_FORMAT_INFO, type ExportFormat } from "@/lib/export-formats";
+import { formatFilenameTemplate } from "@/lib/filename-template";
+import { loadFolderHandle, queryFolderAccess } from "@/lib/folder-handle";
+import { registerFolderIdentity } from "@/lib/folder-run-identity";
+import { downloadViaOffscreenDocument } from "@/lib/offscreen-download";
+import { sanitizePathSegment } from "@/lib/path-segment";
+import { hasDownloadsAccess } from "@/lib/permission-access";
+import { renderExport } from "@/lib/render-export";
+import { markReviewPromptEligible } from "@/lib/review-prompt";
 import {
   autoExportConfigStore,
   autoExportLastRunStore,
@@ -28,7 +28,7 @@ import {
   includeDateGroupModifiedStore,
   includeDateLastUsedStore,
   includeIconDataStore,
-} from '@/lib/storage'
+} from "@/lib/storage";
 import type {
   AutoExportErrorCode,
   AutoExportInterval,
@@ -36,12 +36,12 @@ import type {
   AutoExportTrigger,
   DayOfWeek,
   ExportDestination,
-} from '@/lib/types'
+} from "@/lib/types";
 
 /**
  * Name of the `browser.alarms` alarm that triggers {@link runAutoExport}.
  */
-export const ALARM_NAME = 'auto-export'
+export const ALARM_NAME = "auto-export";
 
 /**
  * `browser.runtime.sendMessage` type asking the background service worker to
@@ -49,17 +49,17 @@ export const ALARM_NAME = 'auto-export'
  * on-screen draft formats/path from the Auto-export page, regardless of
  * whether auto-export is enabled or what's currently persisted.
  */
-export const RUN_MANUAL_EXPORT_MESSAGE_TYPE = 'auto-export-run-manual'
+export const RUN_MANUAL_EXPORT_MESSAGE_TYPE = "auto-export-run-manual";
 
 /**
  * Sent by the Auto-export page's "Export now" button to the background
  * service worker.
  */
 export interface RunManualExportMessage {
-  type: typeof RUN_MANUAL_EXPORT_MESSAGE_TYPE
-  formats: ExportFormat[]
-  path: string
-  destination?: ExportDestination
+  type: typeof RUN_MANUAL_EXPORT_MESSAGE_TYPE;
+  formats: ExportFormat[];
+  path: string;
+  destination?: ExportDestination;
 }
 
 /**
@@ -67,8 +67,8 @@ export interface RunManualExportMessage {
  * export, or `ok: false` with the error message on failure.
  */
 export interface RunManualExportResponse {
-  ok: boolean
-  error?: string
+  ok: boolean;
+  error?: string;
 }
 
 /**
@@ -76,7 +76,7 @@ export interface RunManualExportResponse {
  * alarm. Kept short (not immediate) so a burst of startup work doesn't race
  * the export.
  */
-const CATCH_UP_DELAY_MS = 60_000
+const CATCH_UP_DELAY_MS = 60_000;
 
 /**
  * Badge background color for a failed scheduled/catch-up run — the
@@ -84,27 +84,27 @@ const CATCH_UP_DELAY_MS = 60_000
  * (`oklch(0.577 0.245 27.325)`), hardcoded because `chrome.action` takes a
  * literal color, not a CSS variable.
  */
-const FAILURE_BADGE_COLOR = '#DC2626'
+const FAILURE_BADGE_COLOR = "#DC2626";
 
 /**
  * How long an in-flight run marker is trusted before it is considered left
  * behind by a killed service worker.
  */
-const RUN_IN_FLIGHT_TTL_MS = 10 * 60_000
+const RUN_IN_FLIGHT_TTL_MS = 10 * 60_000;
 
 /**
  * Delay of the safety retry alarm armed before a run starts. Longer than
  * {@link RUN_IN_FLIGHT_TTL_MS} so that, if the run died, the marker is stale
  * by the time the retry fires.
  */
-const RETRY_DELAY_MS = RUN_IN_FLIGHT_TTL_MS + 60_000
+const RETRY_DELAY_MS = RUN_IN_FLIGHT_TTL_MS + 60_000;
 
-const HOUR_MS = 60 * 60 * 1000
+const HOUR_MS = 60 * 60 * 1000;
 
-const DAY_INTERVALS: Record<'1d' | '3d', number> = {
-  '1d': 1,
-  '3d': 3,
-}
+const DAY_INTERVALS: Record<"1d" | "3d", number> = {
+  "1d": 1,
+  "3d": 3,
+};
 
 /**
  * What caused a `syncAlarm` call, so it knows how to derive the next run:
@@ -115,11 +115,7 @@ const DAY_INTERVALS: Record<'1d' | '3d', number> = {
  *   its already-scheduled due time across a browser restart or extension
  *   update.
  */
-export type SyncAlarmTrigger =
-  | 'config-change'
-  | 'startup'
-  | 'install'
-  | 'update'
+export type SyncAlarmTrigger = "config-change" | "startup" | "install" | "update";
 
 /**
  * Pure computation of the next auto-export due time. `1h` and `12h` always
@@ -156,39 +152,39 @@ export function computeNextRun(
   isAnchoredToCompletedRun: boolean,
   dayOfWeek: DayOfWeek = 1,
 ): number {
-  if (interval === '1h') return from + HOUR_MS
-  if (interval === '12h') return from + 12 * HOUR_MS
+  if (interval === "1h") return from + HOUR_MS;
+  if (interval === "12h") return from + 12 * HOUR_MS;
 
-  const [hoursRaw, minutesRaw] = preferredTime.split(':').map(Number)
-  const hours = hoursRaw ?? 0
-  const minutes = minutesRaw ?? 0
+  const [hoursRaw, minutesRaw] = preferredTime.split(":").map(Number);
+  const hours = hoursRaw ?? 0;
+  const minutes = minutesRaw ?? 0;
 
-  if (interval === '7d') {
-    const next = new Date(from)
-    next.setHours(hours, minutes, 0, 0)
+  if (interval === "7d") {
+    const next = new Date(from);
+    next.setHours(hours, minutes, 0, 0);
     if (isAnchoredToCompletedRun || next.getTime() <= from) {
-      next.setDate(next.getDate() + 1)
+      next.setDate(next.getDate() + 1);
     }
     while (next.getDay() !== dayOfWeek) {
-      next.setDate(next.getDate() + 1)
+      next.setDate(next.getDate() + 1);
     }
-    next.setHours(hours, minutes, 0, 0)
-    return next.getTime()
+    next.setHours(hours, minutes, 0, 0);
+    return next.getTime();
   }
 
   if (isAnchoredToCompletedRun) {
-    const next = new Date(from)
-    next.setDate(next.getDate() + DAY_INTERVALS[interval])
-    next.setHours(hours, minutes, 0, 0)
-    return next.getTime()
+    const next = new Date(from);
+    next.setDate(next.getDate() + DAY_INTERVALS[interval]);
+    next.setHours(hours, minutes, 0, 0);
+    return next.getTime();
   }
 
-  const next = new Date(from)
-  next.setHours(hours, minutes, 0, 0)
+  const next = new Date(from);
+  next.setHours(hours, minutes, 0, 0);
   if (next.getTime() <= from) {
-    next.setDate(next.getDate() + 1)
+    next.setDate(next.getDate() + 1);
   }
-  return next.getTime()
+  return next.getTime();
 }
 
 /**
@@ -212,25 +208,25 @@ export function computeNextRunAfterDue(
   now: number,
   dayOfWeek: DayOfWeek = 1,
 ): number {
-  if (interval === '1h' || interval === '12h') {
-    return computeNextRun(interval, preferredTime, now, true, dayOfWeek)
+  if (interval === "1h" || interval === "12h") {
+    return computeNextRun(interval, preferredTime, now, true, dayOfWeek);
   }
 
-  const [hoursRaw, minutesRaw] = preferredTime.split(':').map(Number)
-  const hours = hoursRaw ?? 0
-  const minutes = minutesRaw ?? 0
-  const stepDays = interval === '7d' ? 1 : DAY_INTERVALS[interval]
-  const next = new Date(dueTime)
+  const [hoursRaw, minutesRaw] = preferredTime.split(":").map(Number);
+  const hours = hoursRaw ?? 0;
+  const minutes = minutesRaw ?? 0;
+  const stepDays = interval === "7d" ? 1 : DAY_INTERVALS[interval];
+  const next = new Date(dueTime);
 
   do {
-    next.setDate(next.getDate() + stepDays)
-    next.setHours(hours, minutes, 0, 0)
+    next.setDate(next.getDate() + stepDays);
+    next.setHours(hours, minutes, 0, 0);
   } while (
     next.getTime() <= now ||
     next.getTime() <= dueTime ||
-    (interval === '7d' && next.getDay() !== dayOfWeek)
-  )
-  return next.getTime()
+    (interval === "7d" && next.getDay() !== dayOfWeek)
+  );
+  return next.getTime();
 }
 
 /**
@@ -242,10 +238,9 @@ export function computeNextRunAfterDue(
  *   non-stale in-flight marker exists.
  */
 export async function getAutoExportInFlightRetryAt(): Promise<number | null> {
-  const startedAt = await autoExportRunInFlightStore.getValue()
-  const isInFlight =
-    startedAt !== null && Date.now() - startedAt < RUN_IN_FLIGHT_TTL_MS
-  return isInFlight ? startedAt + RETRY_DELAY_MS : null
+  const startedAt = await autoExportRunInFlightStore.getValue();
+  const isInFlight = startedAt !== null && Date.now() - startedAt < RUN_IN_FLIGHT_TTL_MS;
+  return isInFlight ? startedAt + RETRY_DELAY_MS : null;
 }
 
 /**
@@ -257,10 +252,10 @@ export async function getAutoExportInFlightRetryAt(): Promise<number | null> {
  * @returns Resolves once the alarm has been cleared and recreated.
  */
 async function armAlarm(when: number): Promise<void> {
-  await browser.alarms.clear(ALARM_NAME)
+  await browser.alarms.clear(ALARM_NAME);
   await browser.alarms.create(ALARM_NAME, {
     when: Math.max(when, Date.now() + 100),
-  })
+  });
 }
 
 /**
@@ -280,54 +275,42 @@ async function armAlarm(when: number): Promise<void> {
  * @returns Resolves once the alarm and next-run store reflect `trigger`.
  */
 export async function syncAlarm(trigger: SyncAlarmTrigger): Promise<void> {
-  const config = await autoExportConfigStore.getValue()
+  const config = await autoExportConfigStore.getValue();
 
   if (!config.enabled || config.formats.length === 0) {
-    await browser.alarms.clear(ALARM_NAME)
-    await autoExportNextRunStore.setValue(null)
-    return
+    await browser.alarms.clear(ALARM_NAME);
+    await autoExportNextRunStore.setValue(null);
+    return;
   }
 
-  const now = Date.now()
-  let nextRun: number
+  const now = Date.now();
+  let nextRun: number;
 
-  if (trigger === 'config-change') {
-    nextRun = computeNextRun(
-      config.interval,
-      config.preferredTime,
-      now,
-      false,
-      config.dayOfWeek,
-    )
-    await autoExportNextRunStore.setValue(nextRun)
+  if (trigger === "config-change") {
+    nextRun = computeNextRun(config.interval, config.preferredTime, now, false, config.dayOfWeek);
+    await autoExportNextRunStore.setValue(nextRun);
   } else {
-    const stored = await autoExportNextRunStore.getValue()
+    const stored = await autoExportNextRunStore.getValue();
     if (stored === null) {
-      nextRun = computeNextRun(
-        config.interval,
-        config.preferredTime,
-        now,
-        false,
-        config.dayOfWeek,
-      )
-      await autoExportNextRunStore.setValue(nextRun)
+      nextRun = computeNextRun(config.interval, config.preferredTime, now, false, config.dayOfWeek);
+      await autoExportNextRunStore.setValue(nextRun);
     } else {
-      nextRun = stored
+      nextRun = stored;
     }
   }
 
   if (nextRun <= now) {
-    if (trigger !== 'config-change') {
-      const retryAt = await getAutoExportInFlightRetryAt()
+    if (trigger !== "config-change") {
+      const retryAt = await getAutoExportInFlightRetryAt();
       if (retryAt !== null) {
-        await armAlarm(retryAt)
-        return
+        await armAlarm(retryAt);
+        return;
       }
     }
-    await armAlarm(now + CATCH_UP_DELAY_MS)
-    return
+    await armAlarm(now + CATCH_UP_DELAY_MS);
+    return;
   }
-  await armAlarm(nextRun)
+  await armAlarm(nextRun);
 }
 
 /**
@@ -343,11 +326,9 @@ export async function syncAlarm(trigger: SyncAlarmTrigger): Promise<void> {
 function sanitizePath(path: string): string {
   return path
     .split(/[/\\]/)
-    .map((segment) =>
-      sanitizePathSegment(segment.replaceAll(/[<>:"|?*\u{0}-\u{1F}]/gu, '')),
-    )
+    .map((segment) => sanitizePathSegment(segment.replaceAll(/[<>:"|?*\u{0}-\u{1F}]/gu, "")))
     .filter(Boolean)
-    .join('/')
+    .join("/");
 }
 
 /**
@@ -358,11 +339,9 @@ function sanitizePath(path: string): string {
  * @returns The normalized last run, or `null` if auto-export has never run.
  */
 export async function readAutoExportLastRun(): Promise<AutoExportLastRun | null> {
-  const value = await autoExportLastRunStore.getValue()
-  if (value === null) return null
-  return typeof value === 'number'
-    ? { at: value, ok: true, trigger: 'scheduled' }
-    : value
+  const value = await autoExportLastRunStore.getValue();
+  if (value === null) return null;
+  return typeof value === "number" ? { at: value, ok: true, trigger: "scheduled" } : value;
 }
 
 /**
@@ -371,7 +350,7 @@ export async function readAutoExportLastRun(): Promise<AutoExportLastRun | null>
  * @returns Resolves once the badge text is cleared.
  */
 export async function clearFailureBadge(): Promise<void> {
-  await browser.action.setBadgeText({ text: '' })
+  await browser.action.setBadgeText({ text: "" });
 }
 
 /**
@@ -381,8 +360,8 @@ export async function clearFailureBadge(): Promise<void> {
  * @returns Resolves once the badge text and color are set.
  */
 export async function setFailureBadge(): Promise<void> {
-  await browser.action.setBadgeText({ text: '!' })
-  await browser.action.setBadgeBackgroundColor({ color: FAILURE_BADGE_COLOR })
+  await browser.action.setBadgeText({ text: "!" });
+  await browser.action.setBadgeBackgroundColor({ color: FAILURE_BADGE_COLOR });
 }
 
 /**
@@ -391,18 +370,18 @@ export async function setFailureBadge(): Promise<void> {
  * failure that sends no Failure notification.
  */
 export class DownloadsAccessNeededError extends Error {
-  readonly code = 'downloads-access-needed' satisfies AutoExportErrorCode
+  readonly code = "downloads-access-needed" satisfies AutoExportErrorCode;
 
   constructor() {
-    super('downloads-access-needed')
-    this.name = 'DownloadsAccessNeededError'
+    super("downloads-access-needed");
+    this.name = "DownloadsAccessNeededError";
   }
 }
 
 /**
  * Retention default used when a stored config predates `keepLast`.
  */
-const DEFAULT_KEEP_LAST = 10
+const DEFAULT_KEEP_LAST = 10;
 
 /**
  * Downloads one export file via {@link downloadViaOffscreenDocument} and
@@ -421,12 +400,9 @@ async function saveDownload(
   filename: string,
   runAt: number,
 ): Promise<void> {
-  await downloadViaOffscreenDocument(
-    content,
-    mimeType,
-    filename,
-    (downloadId) => recordSavedDownload(downloadId, runAt),
-  )
+  await downloadViaOffscreenDocument(content, mimeType, filename, (downloadId) =>
+    recordSavedDownload(downloadId, runAt),
+  );
 }
 
 /**
@@ -441,11 +417,11 @@ async function saveDownload(
 async function requireGrantedFolder(
   configuredName: string | null,
 ): Promise<FileSystemDirectoryHandle> {
-  const handle = await loadFolderHandle()
-  const access = handle ? await queryFolderAccess(handle) : 'missing'
-  if (handle && access === 'granted') return handle
-  const folderName = handle?.name ?? configuredName ?? ''
-  throw new Error(i18n.t('autoExportFailure_folderAccessNeeded', [folderName]))
+  const handle = await loadFolderHandle();
+  const access = handle ? await queryFolderAccess(handle) : "missing";
+  if (handle && access === "granted") return handle;
+  const folderName = handle?.name ?? configuredName ?? "";
+  throw new Error(i18n.t("autoExportFailure_folderAccessNeeded", [folderName]));
 }
 
 /**
@@ -500,34 +476,34 @@ async function requireGrantedFolder(
 export async function runAutoExport(
   trigger: AutoExportTrigger,
   overrides?: {
-    formats: ExportFormat[]
-    path: string
-    destination?: ExportDestination
+    formats: ExportFormat[];
+    path: string;
+    destination?: ExportDestination;
   },
 ): Promise<void> {
-  const config = await autoExportConfigStore.getValue()
-  if (!overrides && (!config.enabled || config.formats.length === 0)) return
+  const config = await autoExportConfigStore.getValue();
+  if (!overrides && (!config.enabled || config.formats.length === 0)) return;
 
-  const formats = overrides?.formats ?? config.formats
-  const path = overrides?.path ?? config.path
+  const formats = overrides?.formats ?? config.formats;
+  const path = overrides?.path ?? config.path;
 
-  const destination = overrides?.destination ?? config.destination
-  const isFolderDestination = destination === 'folder'
-  const runAt = Date.now()
-  const isTrackedRun = trigger !== 'manual'
+  const destination = overrides?.destination ?? config.destination;
+  const isFolderDestination = destination === "folder";
+  const runAt = Date.now();
+  const isTrackedRun = trigger !== "manual";
   if (isTrackedRun) {
-    const retryAt = await getAutoExportInFlightRetryAt()
+    const retryAt = await getAutoExportInFlightRetryAt();
     if (retryAt !== null) {
-      await armAlarm(retryAt)
-      return
+      await armAlarm(retryAt);
+      return;
     }
-    await autoExportRunInFlightStore.setValue(Date.now())
-    await armAlarm(Date.now() + RETRY_DELAY_MS)
+    await autoExportRunInFlightStore.setValue(Date.now());
+    await armAlarm(Date.now() + RETRY_DELAY_MS);
   }
 
   try {
     if (!isFolderDestination && !(await hasDownloadsAccess())) {
-      throw new DownloadsAccessNeededError()
+      throw new DownloadsAccessNeededError();
     }
 
     const [
@@ -546,7 +522,7 @@ export async function runAutoExport(
       hideOtherBookmarksStore.getValue(),
       hideParentFolderStore.getValue(),
       exportFilenameTemplateStore.getValue(),
-    ])
+    ]);
 
     const baseOptions = {
       selectedBookmarks: null,
@@ -556,25 +532,19 @@ export async function runAutoExport(
       includeDateGroupModified,
       hideOtherBookmarks,
       hideParentFolder,
-    }
+    };
 
-    const baseName = formatFilenameTemplate(filenameTemplate)
-    const sanitized = sanitizePath(path)
-    const prefix = sanitized
-      ? `${sanitized}${sanitized.endsWith('/') ? '' : '/'}`
-      : ''
+    const baseName = formatFilenameTemplate(filenameTemplate);
+    const sanitized = sanitizePath(path);
+    const prefix = sanitized ? `${sanitized}${sanitized.endsWith("/") ? "" : "/"}` : "";
 
-    const folderHandle = isFolderDestination
-      ? await requireGrantedFolder(config.folderName)
-      : null
+    const folderHandle = isFolderDestination ? await requireGrantedFolder(config.folderName) : null;
 
-    const folderId = folderHandle
-      ? await registerFolderIdentity(folderHandle)
-      : null
+    const folderId = folderHandle ? await registerFolderIdentity(folderHandle) : null;
 
     const downloads = formats.map(async (format) => {
-      const { extension, mimeType } = EXPORT_FORMAT_INFO[format]
-      const content = await renderExport(format, baseOptions)
+      const { extension, mimeType } = EXPORT_FORMAT_INFO[format];
+      const content = await renderExport(format, baseOptions);
       if (folderHandle && folderId) {
         const writtenName = await writeToCustomFolder(
           folderHandle,
@@ -582,33 +552,28 @@ export async function runAutoExport(
           baseName,
           extension,
           content,
-        )
+        );
         await recordSavedFolderFile(
           folderId,
-          [...sanitized.split('/').filter(Boolean), writtenName].join('/'),
+          [...sanitized.split("/").filter(Boolean), writtenName].join("/"),
           runAt,
-        )
-        return
+        );
+        return;
       }
-      await saveDownload(
-        content,
-        mimeType,
-        `${prefix}${baseName}.${extension}`,
-        runAt,
-      )
-    })
+      await saveDownload(content, mimeType, `${prefix}${baseName}.${extension}`, runAt);
+    });
 
-    await Promise.all(downloads)
+    await Promise.all(downloads);
     await autoExportLastRunStore.setValue({
       at: Date.now(),
       ok: true,
       trigger,
-    })
-    await markReviewPromptEligible(Date.now())
-    await clearFailureBadge()
-    await applyRetention(config.keepLast ?? DEFAULT_KEEP_LAST)
+    });
+    await markReviewPromptEligible(Date.now());
+    await clearFailureBadge();
+    await applyRetention(config.keepLast ?? DEFAULT_KEEP_LAST);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
+    const message = error instanceof Error ? error.message : String(error);
     await autoExportLastRunStore.setValue({
       at: Date.now(),
       ok: false,
@@ -617,24 +582,24 @@ export async function runAutoExport(
         errorCode: error.code,
       }),
       trigger,
-    })
+    });
     if (!(error instanceof DownloadsAccessNeededError)) {
-      await notifyAutoExportFailure(message)
+      await notifyAutoExportFailure(message);
     }
     if (isTrackedRun) {
-      await setFailureBadge()
-      await rescheduleAfterRun()
-      await autoExportRunInFlightStore.setValue(null)
+      await setFailureBadge();
+      await rescheduleAfterRun();
+      await autoExportRunInFlightStore.setValue(null);
     }
-    throw error
+    throw error;
   }
 
   if (!isTrackedRun) {
-    return
+    return;
   }
 
-  await rescheduleAfterRun()
-  await autoExportRunInFlightStore.setValue(null)
+  await rescheduleAfterRun();
+  await autoExportRunInFlightStore.setValue(null);
 }
 
 /**
@@ -650,29 +615,23 @@ export async function runAutoExport(
  * @returns Resolves once the next-run store and alarm are updated.
  */
 async function rescheduleAfterRun(): Promise<void> {
-  const config = await autoExportConfigStore.getValue()
+  const config = await autoExportConfigStore.getValue();
   if (!config.enabled || config.formats.length === 0) {
-    await syncAlarm('config-change')
-    return
+    await syncAlarm("config-change");
+    return;
   }
-  const now = Date.now()
-  const dueTime = await autoExportNextRunStore.getValue()
+  const now = Date.now();
+  const dueTime = await autoExportNextRunStore.getValue();
   const nextRun =
     dueTime === null
-      ? computeNextRun(
-          config.interval,
-          config.preferredTime,
-          now,
-          true,
-          config.dayOfWeek,
-        )
+      ? computeNextRun(config.interval, config.preferredTime, now, true, config.dayOfWeek)
       : computeNextRunAfterDue(
           config.interval,
           config.preferredTime,
           dueTime,
           now,
           config.dayOfWeek,
-        )
-  await autoExportNextRunStore.setValue(nextRun)
-  await armAlarm(nextRun)
+        );
+  await autoExportNextRunStore.setValue(nextRun);
+  await armAlarm(nextRun);
 }

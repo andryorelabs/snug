@@ -1,4 +1,4 @@
-const cache: { text?: string; value?: unknown } = {}
+const cache: { text?: string; value?: unknown } = {};
 
 /**
  * Parses `text` as JSON, remembering the last successful parse so detection,
@@ -10,9 +10,9 @@ const cache: { text?: string; value?: unknown } = {}
  * @throws {SyntaxError} When `text` is not valid JSON.
  */
 export function parseJsonOnce(text: string): unknown {
-  if (cache.text === text) return cache.value
-  const value: unknown = JSON.parse(text)
-  cache.text = text
-  cache.value = value
-  return value
+  if (cache.text === text) return cache.value;
+  const value: unknown = JSON.parse(text);
+  cache.text = text;
+  cache.value = value;
+  return value;
 }

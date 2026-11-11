@@ -1,5 +1,5 @@
 @layer components {
-  [data-section='final'] [data-final-panel] {
+  [data-section="final"] [data-final-panel] {
     overflow: hidden;
     border: 1px solid var(--border);
     border-radius: 1.75rem;
@@ -7,7 +7,7 @@
   }
 
   @media (min-width: 48rem) {
-    [data-section='final'] [data-final-panel] {
+    [data-section="final"] [data-final-panel] {
       padding: 4rem 3.5rem;
     }
   }

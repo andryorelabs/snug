@@ -1,49 +1,48 @@
-import { AbsoluteFill } from 'remotion'
+import { AbsoluteFill } from "remotion";
 
-import { type Locale, VIDEO_COPY } from '../copy'
-import { FontGate } from '../FontGate'
-import { fontStackFor } from '../fonts'
-import type { SceneProps } from '../schema'
-import { theme } from '../theme'
-import { AppWindow, BlobMark } from '../ui'
+import { type Locale, VIDEO_COPY } from "../copy";
+import { FontGate } from "../FontGate";
+import { fontStackFor } from "../fonts";
+import type { SceneProps } from "../schema";
+import { theme } from "../theme";
+import { AppWindow, BlobMark } from "../ui";
 
-export const THUMBNAIL_SIZE = { width: 1280, height: 720 } as const
+export const THUMBNAIL_SIZE = { width: 1280, height: 720 } as const;
 
-const PADDING_X = 64
-const HOOK_WIDTH = 640
-const LATIN_HOOK_SIZE = 92
-const CJK_HOOK_SIZE = 88
-const JA_HOOK_SIZE = 80
-const RU_HOOK_SIZE = 80
-const WINDOW_SCALE = 0.64
-const WINDOW_LEFT = 740
-const WINDOW_TOP = 200
-const BLOB_SIZE = 76
-const WORDMARK_SIZE = 56
-const WORDMARK_TEXT = 'Snug'
+const PADDING_X = 64;
+const HOOK_WIDTH = 640;
+const LATIN_HOOK_SIZE = 92;
+const CJK_HOOK_SIZE = 88;
+const JA_HOOK_SIZE = 80;
+const RU_HOOK_SIZE = 80;
+const WINDOW_SCALE = 0.64;
+const WINDOW_LEFT = 740;
+const WINDOW_TOP = 200;
+const BLOB_SIZE = 76;
+const WORDMARK_SIZE = 56;
+const WORDMARK_TEXT = "Snug";
 
-const isCjk = (locale: Locale): boolean =>
-  ['ja', 'ko', 'zh_CN'].includes(locale)
+const isCjk = (locale: Locale): boolean => ["ja", "ko", "zh_CN"].includes(locale);
 
 /**
  * Hook font size for a locale. CJK glyphs are visually lighter per character
  * than Latin ones, so they get a slightly larger size.
  */
 export const hookSizeFor = (locale: Locale): number => {
-  if (locale === 'ja') return JA_HOOK_SIZE
-  if (locale === 'ru') return RU_HOOK_SIZE
-  return isCjk(locale) ? CJK_HOOK_SIZE : LATIN_HOOK_SIZE
-}
+  if (locale === "ja") return JA_HOOK_SIZE;
+  if (locale === "ru") return RU_HOOK_SIZE;
+  return isCjk(locale) ? CJK_HOOK_SIZE : LATIN_HOOK_SIZE;
+};
 
 /**
  * Hook split into display lines. Japanese breaks at the comma so no word is
  * cut mid-phrase, and Russian keeps the dash on the line it ends.
  */
 export const hookLinesFor = (locale: Locale): string[] => {
-  const hook = VIDEO_COPY[locale].hook
-  if (locale === 'ja') return hook.split(/(?<=、)/)
-  return [locale === 'ru' ? hook.replace(' — ', '\u{A0}— ') : hook]
-}
+  const hook = VIDEO_COPY[locale].hook;
+  if (locale === "ja") return hook.split(/(?<=、)/);
+  return [locale === "ru" ? hook.replace(" — ", "\u{A0}— ") : hook];
+};
 
 /**
  * 1280x720 YouTube thumbnail: BlobMark lockup and the localized promo hook on
@@ -51,34 +50,34 @@ export const hookLinesFor = (locale: Locale): string[] => {
  * the bottom-right 20% where YouTube overlays the duration badge.
  */
 export const Thumbnail = ({ locale }: SceneProps) => {
-  const fonts = fontStackFor(locale)
+  const fonts = fontStackFor(locale);
   return (
     <FontGate locale={locale}>
       <AbsoluteFill style={{ backgroundColor: theme.colors.ground }}>
         <AbsoluteFill
           style={{
             background:
-              'radial-gradient(ellipse 760px 560px at 74% 46%, rgba(255,162,48,0.38), rgba(255,162,48,0.1) 55%, transparent 80%)',
+              "radial-gradient(ellipse 760px 560px at 74% 46%, rgba(255,162,48,0.38), rgba(255,162,48,0.1) 55%, transparent 80%)",
           }}
         />
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: WINDOW_LEFT,
             top: WINDOW_TOP,
             transform: `scale(${WINDOW_SCALE})`,
-            transformOrigin: 'top left',
+            transformOrigin: "top left",
           }}
         >
           <AppWindow locale={locale} active="export" />
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: PADDING_X,
             top: 56,
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 20,
           }}
         >
@@ -89,7 +88,7 @@ export const Thumbnail = ({ locale }: SceneProps) => {
               fontWeight: 700,
               fontSize: WORDMARK_SIZE,
               color: theme.colors.text,
-              letterSpacing: '-0.02em',
+              letterSpacing: "-0.02em",
             }}
           >
             {WORDMARK_TEXT}
@@ -97,7 +96,7 @@ export const Thumbnail = ({ locale }: SceneProps) => {
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: PADDING_X,
             top: 190,
             width: HOOK_WIDTH,
@@ -105,10 +104,10 @@ export const Thumbnail = ({ locale }: SceneProps) => {
             fontWeight: 700,
             fontSize: hookSizeFor(locale),
             lineHeight: 1.08,
-            letterSpacing: '-0.02em',
+            letterSpacing: "-0.02em",
             color: theme.colors.text,
-            textWrap: 'balance',
-            wordBreak: 'keep-all',
+            textWrap: "balance",
+            wordBreak: "keep-all",
           }}
         >
           {hookLinesFor(locale).map((line) => (
@@ -117,17 +116,17 @@ export const Thumbnail = ({ locale }: SceneProps) => {
         </div>
       </AbsoluteFill>
     </FontGate>
-  )
-}
+  );
+};
 
-const POSTER_HOOK_SIZE = 60
-const POSTER_CJK_HOOK_SIZE = 58
-const POSTER_WINDOW_SCALE = 0.8
-const POSTER_WINDOW_LEFT = 32
-const POSTER_WINDOW_TOP = 210
-const CLEAR_ZONE_RADIUS = 192
-const CLEAR_ZONE_FEATHER = 28
-const CLEAR_ZONE_MASK = `radial-gradient(circle at 50% ${THUMBNAIL_SIZE.height / 2 - POSTER_WINDOW_TOP}px, transparent ${CLEAR_ZONE_RADIUS}px, #000 ${CLEAR_ZONE_RADIUS + CLEAR_ZONE_FEATHER}px)`
+const POSTER_HOOK_SIZE = 60;
+const POSTER_CJK_HOOK_SIZE = 58;
+const POSTER_WINDOW_SCALE = 0.8;
+const POSTER_WINDOW_LEFT = 32;
+const POSTER_WINDOW_TOP = 210;
+const CLEAR_ZONE_RADIUS = 192;
+const CLEAR_ZONE_FEATHER = 28;
+const CLEAR_ZONE_MASK = `radial-gradient(circle at 50% ${THUMBNAIL_SIZE.height / 2 - POSTER_WINDOW_TOP}px, transparent ${CLEAR_ZONE_RADIUS}px, #000 ${CLEAR_ZONE_RADIUS + CLEAR_ZONE_FEATHER}px)`;
 
 /**
  * 1280x720 landing-page video poster. The centre circle (about 30% of the
@@ -136,31 +135,31 @@ const CLEAR_ZONE_MASK = `radial-gradient(circle at 50% ${THUMBNAIL_SIZE.height /
  * clear zone.
  */
 export const LandingPoster = ({ locale }: SceneProps) => {
-  const fonts = fontStackFor(locale)
+  const fonts = fontStackFor(locale);
   return (
     <FontGate locale={locale}>
       <AbsoluteFill style={{ backgroundColor: theme.colors.ground }}>
         <AbsoluteFill
           style={{
             background:
-              'radial-gradient(ellipse 620px 420px at 86% 62%, rgba(255,162,48,0.3), rgba(255,162,48,0.08) 55%, transparent 80%)',
+              "radial-gradient(ellipse 620px 420px at 86% 62%, rgba(255,162,48,0.3), rgba(255,162,48,0.08) 55%, transparent 80%)",
           }}
         />
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: POSTER_WINDOW_LEFT,
             top: POSTER_WINDOW_TOP,
             width: THUMBNAIL_SIZE.width - POSTER_WINDOW_LEFT * 2,
             height: THUMBNAIL_SIZE.height - POSTER_WINDOW_TOP,
-            overflow: 'hidden',
+            overflow: "hidden",
             maskImage: CLEAR_ZONE_MASK,
           }}
         >
           <div
             style={{
               transform: `scale(${POSTER_WINDOW_SCALE})`,
-              transformOrigin: 'top left',
+              transformOrigin: "top left",
             }}
           >
             <AppWindow locale={locale} active="export" />
@@ -168,11 +167,11 @@ export const LandingPoster = ({ locale }: SceneProps) => {
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: PADDING_X,
             top: 36,
-            display: 'flex',
-            alignItems: 'center',
+            display: "flex",
+            alignItems: "center",
             gap: 14,
           }}
         >
@@ -183,7 +182,7 @@ export const LandingPoster = ({ locale }: SceneProps) => {
               fontWeight: 700,
               fontSize: 40,
               color: theme.colors.text,
-              letterSpacing: '-0.02em',
+              letterSpacing: "-0.02em",
             }}
           >
             {WORDMARK_TEXT}
@@ -191,7 +190,7 @@ export const LandingPoster = ({ locale }: SceneProps) => {
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: PADDING_X,
             top: 108,
             right: PADDING_X,
@@ -199,14 +198,14 @@ export const LandingPoster = ({ locale }: SceneProps) => {
             fontWeight: 700,
             fontSize: isCjk(locale) ? POSTER_CJK_HOOK_SIZE : POSTER_HOOK_SIZE,
             lineHeight: 1.1,
-            letterSpacing: '-0.02em',
+            letterSpacing: "-0.02em",
             color: theme.colors.text,
-            whiteSpace: 'nowrap',
+            whiteSpace: "nowrap",
           }}
         >
           {VIDEO_COPY[locale].hook}
         </div>
       </AbsoluteFill>
     </FontGate>
-  )
-}
+  );
+};

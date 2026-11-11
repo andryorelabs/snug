@@ -1,11 +1,10 @@
 ---
 title: Utilisation
 sourceHash: e1c70f0d3247c344
-description:
-  "Ouvrez l'application Snug, puis suivez les pages du guide pour exporter,
+description: "Ouvrez l'application Snug, puis suivez les pages du guide pour exporter,
   importer, trouver les doublons, régler les paramètres et planifier
   l'exportation."
-seoTitle: 'Utiliser Snug : exporter et importer vos favoris'
+seoTitle: "Utiliser Snug : exporter et importer vos favoris"
 ---
 
 ## Ouvrir l'application

@@ -30,13 +30,13 @@ import {
   readdirSync,
   renameSync,
   rmSync,
-} from 'node:fs'
-import { tmpdir } from 'node:os'
-import path from 'node:path'
+} from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 
-import { acquireLock, releaseLock, resolveLockDirectory } from './locks'
+import { acquireLock, releaseLock, resolveLockDirectory } from "./locks";
 
-export const LYCHEE_VERSION = 'v0.24.2'
+export const LYCHEE_VERSION = "v0.24.2";
 
 /**
  * The `lycheeverse/lychee-action` version this repo's workflow pins (the
@@ -50,16 +50,16 @@ export const LYCHEE_VERSION = 'v0.24.2'
  * updates {@link LYCHEE_VERSION} to match — otherwise `lint:docs` would keep
  * passing while silently linting with a different lychee version than CI.
  */
-export const EXPECTED_LYCHEE_ACTION_VERSION = 'v2.9.0'
+export const EXPECTED_LYCHEE_ACTION_VERSION = "v2.9.0";
 
 /**
  * Bounded wait for a sibling `/emet` worktree already downloading lychee.
  */
-const LYCHEE_LOCK_TIMEOUT_MS = 60_000
-const LYCHEE_LOCK_POLL_INTERVAL_MS = 500
+const LYCHEE_LOCK_TIMEOUT_MS = 60_000;
+const LYCHEE_LOCK_POLL_INTERVAL_MS = 500;
 
 export function buildLycheeLockRelativePath(version: string): string {
-  return `lychee-${version}.lock`
+  return `lychee-${version}.lock`;
 }
 
 /**
@@ -70,15 +70,15 @@ export function buildLycheeLockRelativePath(version: string): string {
  * unexpanded exactly like the workflow's quoting does.
  */
 export const LYCHEE_ARGS = [
-  '--offline',
-  '--include-fragments=anchor-only',
-  '--no-progress',
-  '*.md',
-  'docs/**/*.md',
-  '.github/*.md',
-  'apps/*/*.md',
-  'packages/*/*.md',
-] as const
+  "--offline",
+  "--include-fragments=anchor-only",
+  "--no-progress",
+  "*.md",
+  "docs/**/*.md",
+  ".github/*.md",
+  "apps/*/*.md",
+  "packages/*/*.md",
+] as const;
 
 /**
  * Lychee only publishes Linux release assets for these two architectures.
@@ -91,25 +91,25 @@ export const LYCHEE_ARGS = [
 export function resolveLycheeArch(
   arch: NodeJS.Architecture = process.arch,
   platform: NodeJS.Platform = process.platform,
-): 'aarch64' | 'x86_64' {
-  if (platform !== 'linux') {
+): "aarch64" | "x86_64" {
+  if (platform !== "linux") {
     throw new Error(
       `lint-docs: unsupported platform "${platform}" — lychee's prebuilt ` +
-        'release binaries are Linux-only. Install lychee manually (see ' +
-        'https://github.com/lycheeverse/lychee#installation).',
-    )
+        "release binaries are Linux-only. Install lychee manually (see " +
+        "https://github.com/lycheeverse/lychee#installation).",
+    );
   }
-  if (arch === 'arm64') return 'aarch64'
-  if (arch === 'x64') return 'x86_64'
+  if (arch === "arm64") return "aarch64";
+  if (arch === "x64") return "x86_64";
   throw new Error(
     `lint-docs: unsupported architecture "${arch}" — lychee only publishes ` +
-      'Linux release binaries for x64 (x86_64) and arm64 (aarch64). Install ' +
-      'lychee manually (see https://github.com/lycheeverse/lychee#installation).',
-  )
+      "Linux release binaries for x64 (x86_64) and arm64 (aarch64). Install " +
+      "lychee manually (see https://github.com/lycheeverse/lychee#installation).",
+  );
 }
 
 export function buildLycheeDownloadUrl(version: string, arch: string): string {
-  return `https://github.com/lycheeverse/lychee/releases/download/lychee-${version}/lychee-${arch}-unknown-linux-gnu.tar.gz`
+  return `https://github.com/lycheeverse/lychee/releases/download/lychee-${version}/lychee-${arch}-unknown-linux-gnu.tar.gz`;
 }
 
 /**
@@ -120,7 +120,7 @@ export function buildLycheeDownloadUrl(version: string, arch: string): string {
  * @returns The relative cache path for that version's binary.
  */
 export function buildLycheeCacheRelativePath(version: string): string {
-  return path.join('lychee', version, 'lychee')
+  return path.join("lychee", version, "lychee");
 }
 
 /**
@@ -134,19 +134,16 @@ export function buildLycheeCacheRelativePath(version: string): string {
  * @param maxDepth How many nested directory levels to descend into.
  * @returns The found binary's path, or `undefined` if none was found.
  */
-function findBinaryRecursively(
-  rootDirectory: string,
-  maxDepth: number,
-): string | undefined {
-  const entries = readdirSync(rootDirectory, { withFileTypes: true })
+function findBinaryRecursively(rootDirectory: string, maxDepth: number): string | undefined {
+  const entries = readdirSync(rootDirectory, { withFileTypes: true });
   for (const entry of entries) {
-    const entryPath = path.join(rootDirectory, entry.name)
-    if (entry.isFile() && entry.name === 'lychee') return entryPath
-    if (!entry.isDirectory() || maxDepth <= 0) continue
-    const found = findBinaryRecursively(entryPath, maxDepth - 1)
-    if (found) return found
+    const entryPath = path.join(rootDirectory, entry.name);
+    if (entry.isFile() && entry.name === "lychee") return entryPath;
+    if (!entry.isDirectory() || maxDepth <= 0) continue;
+    const found = findBinaryRecursively(entryPath, maxDepth - 1);
+    if (found) return found;
   }
-  return undefined
+  return undefined;
 }
 
 /**
@@ -165,63 +162,60 @@ function findBinaryRecursively(
  * @param destinationPath Where the extracted binary is moved to.
  * @returns Resolves once the binary is in place at `destinationPath`.
  */
-async function downloadLycheeBinary(
-  version: string,
-  destinationPath: string,
-): Promise<void> {
-  const arch = resolveLycheeArch()
-  const url = buildLycheeDownloadUrl(version, arch)
-  const manualInstallHint = `Install lychee ${version} manually (see https://github.com/lycheeverse/lychee#installation) and place the binary at ${destinationPath}, or check your network connection and retry.`
+async function downloadLycheeBinary(version: string, destinationPath: string): Promise<void> {
+  const arch = resolveLycheeArch();
+  const url = buildLycheeDownloadUrl(version, arch);
+  const manualInstallHint = `Install lychee ${version} manually (see https://github.com/lycheeverse/lychee#installation) and place the binary at ${destinationPath}, or check your network connection and retry.`;
 
-  let response: Response
+  let response: Response;
   try {
-    response = await fetch(url)
+    response = await fetch(url);
   } catch (error: unknown) {
     throw new Error(
       `lint-docs: failed to download lychee from ${url}: ${error instanceof Error ? error.message : String(error)}. ${manualInstallHint}`,
-    )
+    );
   }
   if (!response.ok) {
     throw new Error(
       `lint-docs: failed to download lychee from ${url} (HTTP ${response.status}). ${manualInstallHint}`,
-    )
+    );
   }
 
-  const workingDirectory = mkdtempSync(path.join(tmpdir(), 'lint-docs-lychee-'))
+  const workingDirectory = mkdtempSync(path.join(tmpdir(), "lint-docs-lychee-"));
   try {
-    const archivePath = path.join(workingDirectory, 'lychee.tar.gz')
-    await Bun.write(archivePath, response)
+    const archivePath = path.join(workingDirectory, "lychee.tar.gz");
+    await Bun.write(archivePath, response);
 
-    const extractedDirectory = path.join(workingDirectory, 'extracted')
-    mkdirSync(extractedDirectory)
+    const extractedDirectory = path.join(workingDirectory, "extracted");
+    mkdirSync(extractedDirectory);
     const tarProcess = Bun.spawn({
-      cmd: ['tar', '-xzf', archivePath, '-C', extractedDirectory],
-      stdio: ['ignore', 'ignore', 'pipe'],
-    })
+      cmd: ["tar", "-xzf", archivePath, "-C", extractedDirectory],
+      stdio: ["ignore", "ignore", "pipe"],
+    });
     const [tarExitCode, tarStderr] = await Promise.all([
       tarProcess.exited,
       new Response(tarProcess.stderr).text(),
-    ])
+    ]);
     if (tarExitCode !== 0) {
       throw new Error(
         `lint-docs: failed to extract the lychee archive downloaded from ${url} (tar exit ${tarExitCode}): ${tarStderr}. ${manualInstallHint}`,
-      )
+      );
     }
 
-    const extractedBinaryPath = findBinaryRecursively(extractedDirectory, 2)
+    const extractedBinaryPath = findBinaryRecursively(extractedDirectory, 2);
     if (!extractedBinaryPath) {
       throw new Error(
         `lint-docs: could not find a "lychee" binary inside the archive downloaded from ${url} — its layout may have changed. ${manualInstallHint}`,
-      )
+      );
     }
 
-    mkdirSync(path.dirname(destinationPath), { recursive: true })
-    const temporaryDestinationPath = `${destinationPath}.tmp-${process.pid}-${Date.now()}`
-    copyFileSync(extractedBinaryPath, temporaryDestinationPath)
-    chmodSync(temporaryDestinationPath, 0o755)
-    renameSync(temporaryDestinationPath, destinationPath)
+    mkdirSync(path.dirname(destinationPath), { recursive: true });
+    const temporaryDestinationPath = `${destinationPath}.tmp-${process.pid}-${Date.now()}`;
+    copyFileSync(extractedBinaryPath, temporaryDestinationPath);
+    chmodSync(temporaryDestinationPath, 0o755);
+    renameSync(temporaryDestinationPath, destinationPath);
   } finally {
-    rmSync(workingDirectory, { recursive: true, force: true })
+    rmSync(workingDirectory, { recursive: true, force: true });
   }
 }
 
@@ -238,14 +232,10 @@ async function downloadLycheeBinary(
  * @returns The cached binary's absolute path.
  */
 export async function ensureLycheeBinary(version: string): Promise<string> {
-  const binaryPath = await resolveLockDirectory(
-    buildLycheeCacheRelativePath(version),
-  )
-  if (existsSync(binaryPath)) return binaryPath
+  const binaryPath = await resolveLockDirectory(buildLycheeCacheRelativePath(version));
+  if (existsSync(binaryPath)) return binaryPath;
 
-  const lockDirectory = await resolveLockDirectory(
-    buildLycheeLockRelativePath(version),
-  )
+  const lockDirectory = await resolveLockDirectory(buildLycheeLockRelativePath(version));
   await acquireLock(
     lockDirectory,
     () => ({
@@ -257,28 +247,28 @@ export async function ensureLycheeBinary(version: string): Promise<string> {
       timeoutMs: LYCHEE_LOCK_TIMEOUT_MS,
       pollIntervalMs: LYCHEE_LOCK_POLL_INTERVAL_MS,
       maxAgeMs: LYCHEE_LOCK_TIMEOUT_MS,
-      logLabel: 'lint-docs',
+      logLabel: "lint-docs",
     },
-  )
+  );
   try {
-    if (existsSync(binaryPath)) return binaryPath
-    console.log(`lint-docs: lychee ${version} not cached, downloading...`)
-    await downloadLycheeBinary(version, binaryPath)
-    console.log(`lint-docs: cached lychee ${version} at ${binaryPath}.`)
-    return binaryPath
+    if (existsSync(binaryPath)) return binaryPath;
+    console.log(`lint-docs: lychee ${version} not cached, downloading...`);
+    await downloadLycheeBinary(version, binaryPath);
+    console.log(`lint-docs: cached lychee ${version} at ${binaryPath}.`);
+    return binaryPath;
   } finally {
-    releaseLock(lockDirectory)
+    releaseLock(lockDirectory);
   }
 }
 
 async function main(): Promise<void> {
-  const binaryPath = await ensureLycheeBinary(LYCHEE_VERSION)
-  const extraArguments = process.argv.slice(2)
+  const binaryPath = await ensureLycheeBinary(LYCHEE_VERSION);
+  const extraArguments = process.argv.slice(2);
   const child = Bun.spawn({
     cmd: [binaryPath, ...LYCHEE_ARGS, ...extraArguments],
-    stdio: ['inherit', 'inherit', 'inherit'],
-  })
-  process.exitCode = await child.exited
+    stdio: ["inherit", "inherit", "inherit"],
+  });
+  process.exitCode = await child.exited;
 }
 
 /**
@@ -289,9 +279,9 @@ async function main(): Promise<void> {
  */
 if (import.meta.main) {
   try {
-    await main()
+    await main();
   } catch (error: unknown) {
-    console.error(error instanceof Error ? error.message : error)
-    process.exitCode = 1
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
   }
 }

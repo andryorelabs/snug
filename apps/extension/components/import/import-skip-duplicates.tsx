@@ -1,20 +1,15 @@
-import { i18n } from '#i18n'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-} from '@workspace/ui/components/field'
-import { Switch } from '@workspace/ui/components/switch'
+import { i18n } from "#i18n";
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@workspace/ui/components/field";
+import { Switch } from "@workspace/ui/components/switch";
 
-import { formatCount } from '@/lib/format-count'
+import { formatCount } from "@/lib/format-count";
 
 interface ImportSkipDuplicatesProperties {
-  isChecked: boolean
-  onCheckedChange: (isChecked: boolean) => void
-  duplicateCount: number
-  fileDuplicateCount: number
-  disabled: boolean
+  isChecked: boolean;
+  onCheckedChange: (isChecked: boolean) => void;
+  duplicateCount: number;
+  fileDuplicateCount: number;
+  disabled: boolean;
 }
 
 /**
@@ -38,15 +33,11 @@ export function ImportSkipDuplicates({
   return (
     <Field orientation="horizontal">
       <FieldContent>
-        <FieldLabel htmlFor="import-skip-duplicates">
-          {i18n.t('import_skipDuplicates')}
-        </FieldLabel>
+        <FieldLabel htmlFor="import-skip-duplicates">{i18n.t("import_skipDuplicates")}</FieldLabel>
         <FieldDescription>
           {fileDuplicateCount > 0
-            ? i18n.t('import_skipDuplicatesFound', duplicateCount, [
-                formatCount(duplicateCount),
-              ])
-            : i18n.t('import_skipDuplicatesNone')}
+            ? i18n.t("import_skipDuplicatesFound", duplicateCount, [formatCount(duplicateCount)])
+            : i18n.t("import_skipDuplicatesNone")}
         </FieldDescription>
       </FieldContent>
       <Switch
@@ -56,5 +47,5 @@ export function ImportSkipDuplicates({
         disabled={disabled}
       />
     </Field>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page, test } from '@playwright/test'
+import { expect, type Locator, type Page, test } from "@playwright/test";
 
 /**
  * The header language trigger. It is matched by its slot instead of its role
@@ -9,9 +9,7 @@ import { expect, type Locator, type Page, test } from '@playwright/test'
  * @returns A locator for the single trigger button.
  */
 export function languageTrigger(page: Page): Locator {
-  return page.locator(
-    '[data-language-switcher] button[data-slot="popover-trigger"]',
-  )
+  return page.locator('[data-language-switcher] button[data-slot="popover-trigger"]');
 }
 
 /**
@@ -21,16 +19,16 @@ export function languageTrigger(page: Page): Locator {
  * @param page - A loaded page, used to read the browser identity.
  * @returns `Alt+Tab` for macOS WebKit, `Tab` otherwise.
  */
-export async function linkTabKey(page: Page): Promise<'Alt+Tab' | 'Tab'> {
+export async function linkTabKey(page: Page): Promise<"Alt+Tab" | "Tab"> {
   const isMacSafari = await page.evaluate(() => {
-    const { platform, userAgent } = globalThis.navigator
+    const { platform, userAgent } = globalThis.navigator;
     return (
-      platform.startsWith('Mac') &&
+      platform.startsWith("Mac") &&
       /Safari/.test(userAgent) &&
       !/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS/.test(userAgent)
-    )
-  })
-  return isMacSafari ? 'Alt+Tab' : 'Tab'
+    );
+  });
+  return isMacSafari ? "Alt+Tab" : "Tab";
 }
 
 /**
@@ -41,33 +39,31 @@ export async function linkTabKey(page: Page): Promise<'Alt+Tab' | 'Tab'> {
  * @param page - A page with the site header.
  */
 export async function hydrateHeaderIsland(page: Page): Promise<void> {
-  await languageTrigger(page).focus()
-  await expect(
-    page.locator('astro-island:has([data-language-switcher])'),
-  ).not.toHaveAttribute('ssr', '')
+  await languageTrigger(page).focus();
+  await expect(page.locator("astro-island:has([data-language-switcher])")).not.toHaveAttribute(
+    "ssr",
+    "",
+  );
   await expect
     .poll(() =>
       page.evaluate(() => {
-        const button = globalThis.document.querySelector(
-          '[data-language-switcher] button',
-        )
+        const button = globalThis.document.querySelector("[data-language-switcher] button");
         return (
-          button !== null &&
-          Object.keys(button).some((key) => key.startsWith('__reactProps$'))
-        )
+          button !== null && Object.keys(button).some((key) => key.startsWith("__reactProps$"))
+        );
       }),
     )
-    .toBe(true)
+    .toBe(true);
   await page.evaluate(
     () =>
       new Promise<void>((resolve) => {
         globalThis.requestAnimationFrame(() => {
           globalThis.requestAnimationFrame(() => {
-            resolve()
-          })
-        })
+            resolve();
+          });
+        });
       }),
-  )
+  );
 }
 
 /**
@@ -78,9 +74,9 @@ export async function hydrateHeaderIsland(page: Page): Promise<void> {
  * @param page - A page with the site header.
  */
 export async function openLanguageMenu(page: Page): Promise<void> {
-  await hydrateHeaderIsland(page)
-  await languageTrigger(page).click()
-  await expect(page.locator('[data-language-menu]')).toBeVisible()
+  await hydrateHeaderIsland(page);
+  await languageTrigger(page).click();
+  await expect(page.locator("[data-language-menu]")).toBeVisible();
   await page.evaluate(() =>
     Promise.all(
       globalThis.document
@@ -88,31 +84,31 @@ export async function openLanguageMenu(page: Page): Promise<void> {
         .filter(
           (a) =>
             a.timeline === globalThis.document.timeline &&
-            a.playState === 'running' &&
+            a.playState === "running" &&
             a.effect?.getComputedTiming().iterations !== Infinity,
         )
         .map((a) => a.finished),
     ),
-  )
+  );
 }
 
 const ELEMENT_SWEEP_SELECTOR = [
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'button',
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "button",
   '[data-slot="button"]',
   '[data-slot="card"]',
   '[data-slot="badge"]',
-].join(',')
+].join(",");
 
 /**
  * Minimum touch target edge in CSS px, less 0.5px of tolerance for the
  * sub-pixel rounding fractional device pixel ratios introduce (a 44px box
  * measures 43.99999 at DPR 2.625).
  */
-export const MIN_TOUCH_TARGET = 43.5
+export const MIN_TOUCH_TARGET = 43.5;
 
 /**
  * Asserts the page never scrolls horizontally (`scrollWidth <= innerWidth`).
@@ -122,8 +118,8 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
     scrollWidth: globalThis.document.documentElement.scrollWidth,
     innerWidth: globalThis.innerWidth,
-  }))
-  expect(scrollWidth).toBeLessThanOrEqual(innerWidth)
+  }));
+  expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
 }
 
 /**
@@ -134,21 +130,17 @@ export async function expectNoHorizontalOverflow(page: Page): Promise<void> {
  */
 export async function expectNoElementOverflow(page: Page): Promise<void> {
   const offenders = await page.evaluate((selector) => {
-    const found: string[] = []
+    const found: string[] = [];
     for (const element of globalThis.document.querySelectorAll(selector)) {
-      if (
-        element.clientWidth <= 1 ||
-        element.scrollWidth <= element.clientWidth
-      )
-        continue
-      const text = (element.textContent ?? '').trim().slice(0, 40)
+      if (element.clientWidth <= 1 || element.scrollWidth <= element.clientWidth) continue;
+      const text = (element.textContent ?? "").trim().slice(0, 40);
       found.push(
         `<${element.tagName.toLowerCase()}> "${text}" ${element.scrollWidth}>${element.clientWidth}`,
-      )
+      );
     }
-    return found
-  }, ELEMENT_SWEEP_SELECTOR)
-  expect(offenders).toEqual([])
+    return found;
+  }, ELEMENT_SWEEP_SELECTOR);
+  expect(offenders).toEqual([]);
 }
 
 /**
@@ -165,12 +157,12 @@ export async function setViewportOrSkip(
   page: Page,
   size: { width: number; height: number },
 ): Promise<void> {
-  await page.setViewportSize(size)
-  const appliedWidth = await page.evaluate(() => globalThis.innerWidth)
+  await page.setViewportSize(size);
+  const appliedWidth = await page.evaluate(() => globalThis.innerWidth);
   test.skip(
     appliedWidth !== size.width,
     `the device ignored the ${size.width}×${size.height} viewport`,
-  )
+  );
 }
 
 /**
@@ -179,7 +171,5 @@ export async function setViewportOrSkip(
  * @returns True when the device has a hovering, fine pointer.
  */
 export async function hasFinePointer(page: Page): Promise<boolean> {
-  return page.evaluate(
-    () => globalThis.matchMedia('(hover: hover) and (pointer: fine)').matches,
-  )
+  return page.evaluate(() => globalThis.matchMedia("(hover: hover) and (pointer: fine)").matches);
 }

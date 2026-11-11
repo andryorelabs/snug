@@ -1,40 +1,41 @@
-import { readdirSync, readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { parse } from 'yaml'
+import { readdirSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { parse } from "yaml";
 
 const DEFAULT_WORKFLOWS_DIRECTORY = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  '../.github/workflows',
-)
+  "../.github/workflows",
+);
 
 export interface WorkflowStep {
-  readonly id?: string
-  readonly name?: string
-  readonly if?: string
-  readonly 'continue-on-error'?: boolean
-  readonly uses?: string
-  readonly run?: string
-  readonly env?: Record<string, unknown>
-  readonly with?: Record<string, unknown>
+  readonly id?: string;
+  readonly name?: string;
+  readonly if?: string;
+  readonly "continue-on-error"?: boolean;
+  readonly uses?: string;
+  readonly run?: string;
+  readonly env?: Record<string, unknown>;
+  readonly with?: Record<string, unknown>;
 }
 
 export interface WorkflowJob {
-  readonly if?: string
-  readonly strategy?: { readonly matrix?: Record<string, unknown> }
-  readonly 'continue-on-error'?: boolean
-  readonly needs?: unknown
-  readonly 'timeout-minutes'?: unknown
-  readonly uses?: string
-  readonly permissions?: unknown
-  readonly steps?: readonly WorkflowStep[]
+  readonly if?: string;
+  readonly strategy?: { readonly matrix?: Record<string, unknown> };
+  readonly "continue-on-error"?: boolean;
+  readonly needs?: unknown;
+  readonly "timeout-minutes"?: unknown;
+  readonly uses?: string;
+  readonly permissions?: unknown;
+  readonly steps?: readonly WorkflowStep[];
 }
 
 export interface Workflow {
-  readonly on?: unknown
-  readonly concurrency?: unknown
-  readonly permissions?: unknown
-  readonly jobs?: Record<string, WorkflowJob>
+  readonly on?: unknown;
+  readonly concurrency?: unknown;
+  readonly permissions?: unknown;
+  readonly jobs?: Record<string, WorkflowJob>;
 }
 
 /**
@@ -42,12 +43,10 @@ export interface Workflow {
  * @param directory The workflows directory, defaulting to `.github/workflows`.
  * @returns The sorted workflow file names.
  */
-export function listWorkflowFiles(
-  directory: string = DEFAULT_WORKFLOWS_DIRECTORY,
-): string[] {
+export function listWorkflowFiles(directory: string = DEFAULT_WORKFLOWS_DIRECTORY): string[] {
   return readdirSync(directory)
     .filter((name) => /\.ya?ml$/.test(name))
-    .toSorted((first, second) => first.localeCompare(second))
+    .toSorted((first, second) => first.localeCompare(second));
 }
 
 /**
@@ -60,7 +59,7 @@ export function readWorkflowText(
   fileName: string,
   directory: string = DEFAULT_WORKFLOWS_DIRECTORY,
 ): string {
-  return readFileSync(path.join(directory, fileName), 'utf8')
+  return readFileSync(path.join(directory, fileName), "utf8");
 }
 
 /**
@@ -73,5 +72,5 @@ export function readWorkflow(
   fileName: string,
   directory: string = DEFAULT_WORKFLOWS_DIRECTORY,
 ): Workflow {
-  return parse(readWorkflowText(fileName, directory)) as Workflow
+  return parse(readWorkflowText(fileName, directory)) as Workflow;
 }

@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetFakeI18n } from '@/lib/testing/fake-i18n'
+import { resetFakeI18n } from "@/lib/testing/fake-i18n";
 
 import {
   CHROME_WEB_STORE_EXTENSION_ID,
@@ -18,165 +18,154 @@ import {
   PRODUCT_NAME,
   SITE_URL,
   TWITTER_URL,
-} from './brand'
+} from "./brand";
 
 const localeMessages = import.meta.glob<{
-  extensionName: { message: string }
-}>('../locales/*.json', { eager: true, import: 'default' })
+  extensionName: { message: string };
+}>("../locales/*.json", { eager: true, import: "default" });
 
-describe('PRODUCT_NAME', () => {
-  it('finds the locale files', () => {
-    expect(Object.keys(localeMessages).length).toBeGreaterThanOrEqual(2)
-  })
+describe("PRODUCT_NAME", () => {
+  it("finds the locale files", () => {
+    expect(Object.keys(localeMessages).length).toBeGreaterThanOrEqual(2);
+  });
 
-  it.each(Object.entries(localeMessages))(
-    'equals extensionName in %s',
-    (_path, messages) => {
-      expect(messages.extensionName.message).toBe(PRODUCT_NAME)
-    },
-  )
-})
+  it.each(Object.entries(localeMessages))("equals extensionName in %s", (_path, messages) => {
+    expect(messages.extensionName.message).toBe(PRODUCT_NAME);
+  });
+});
 
-describe('CHROME_WEB_STORE_URL', () => {
-  it('contains the extension ID', () => {
-    expect(CHROME_WEB_STORE_URL).toContain(CHROME_WEB_STORE_EXTENSION_ID)
-  })
+describe("CHROME_WEB_STORE_URL", () => {
+  it("contains the extension ID", () => {
+    expect(CHROME_WEB_STORE_URL).toContain(CHROME_WEB_STORE_EXTENSION_ID);
+  });
 
-  it('does not contain the store slug, so a listing rename cannot break it', () => {
-    expect(CHROME_WEB_STORE_URL).not.toContain('bookmark-importexport')
-  })
+  it("does not contain the store slug, so a listing rename cannot break it", () => {
+    expect(CHROME_WEB_STORE_URL).not.toContain("bookmark-importexport");
+  });
 
-  it('is the slugless detail URL form', () => {
+  it("is the slugless detail URL form", () => {
     expect(CHROME_WEB_STORE_URL).toBe(
       `https://chromewebstore.google.com/detail/${CHROME_WEB_STORE_EXTENSION_ID}`,
-    )
-  })
-})
+    );
+  });
+});
 
-describe('CHROME_WEB_STORE_REVIEWS_URL', () => {
-  it('is the listing reviews tab with no tracking parameters', () => {
+describe("CHROME_WEB_STORE_REVIEWS_URL", () => {
+  it("is the listing reviews tab with no tracking parameters", () => {
     expect(CHROME_WEB_STORE_REVIEWS_URL).toBe(
       `https://chromewebstore.google.com/detail/${CHROME_WEB_STORE_EXTENSION_ID}/reviews`,
-    )
-  })
-})
+    );
+  });
+});
 
-describe('EDGE_ADD_ONS_URL', () => {
-  it('is the Edge Add-ons detail URL for the extension ID', () => {
-    expect(EDGE_ADD_ONS_EXTENSION_ID).toBe('efknehclgcncocgochoibgiiagklcnho')
+describe("EDGE_ADD_ONS_URL", () => {
+  it("is the Edge Add-ons detail URL for the extension ID", () => {
+    expect(EDGE_ADD_ONS_EXTENSION_ID).toBe("efknehclgcncocgochoibgiiagklcnho");
     expect(EDGE_ADD_ONS_URL).toBe(
-      'https://microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho',
-    )
-  })
-})
+      "https://microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho",
+    );
+  });
+});
 
-describe('store URL helpers', () => {
+describe("store URL helpers", () => {
   afterEach(() => {
-    vi.unstubAllEnvs()
-  })
+    vi.unstubAllEnvs();
+  });
 
-  it.each(['chrome', 'firefox'])(
-    'return the Chrome Web Store URLs on %s',
-    (browser) => {
-      vi.stubEnv('BROWSER', browser)
-      expect(getStoreListingUrl()).toBe(CHROME_WEB_STORE_URL)
-      expect(getStoreReviewsUrl()).toBe(CHROME_WEB_STORE_REVIEWS_URL)
-    },
-  )
+  it.each(["chrome", "firefox"])("return the Chrome Web Store URLs on %s", (browser) => {
+    vi.stubEnv("BROWSER", browser);
+    expect(getStoreListingUrl()).toBe(CHROME_WEB_STORE_URL);
+    expect(getStoreReviewsUrl()).toBe(CHROME_WEB_STORE_REVIEWS_URL);
+  });
 
-  it('return the Edge Add-ons listing for both on edge', () => {
-    vi.stubEnv('BROWSER', 'edge')
-    expect(getStoreListingUrl()).toBe(EDGE_ADD_ONS_URL)
-    expect(getStoreReviewsUrl()).toBe(EDGE_ADD_ONS_URL)
-  })
-})
+  it("return the Edge Add-ons listing for both on edge", () => {
+    vi.stubEnv("BROWSER", "edge");
+    expect(getStoreListingUrl()).toBe(EDGE_ADD_ONS_URL);
+    expect(getStoreReviewsUrl()).toBe(EDGE_ADD_ONS_URL);
+  });
+});
 
-describe('GITHUB_URL', () => {
-  it('points at the project repository', () => {
-    expect(GITHUB_URL).toBe('https://github.com/andryorelabs/snug')
-  })
-})
+describe("GITHUB_URL", () => {
+  it("points at the project repository", () => {
+    expect(GITHUB_URL).toBe("https://github.com/andryorelabs/snug");
+  });
+});
 
-describe('TWITTER_URL', () => {
-  it('points at the project X profile', () => {
-    expect(TWITTER_URL).toBe('https://x.com/andryore')
-  })
-})
+describe("TWITTER_URL", () => {
+  it("points at the project X profile", () => {
+    expect(TWITTER_URL).toBe("https://x.com/andryore");
+  });
+});
 
 const SITE_LOCALE_PATHS: Record<string, string> = {
-  en: '/',
-  es: '/es/',
-  de: '/de/',
-  fr: '/fr/',
-  it: '/it/',
-  ja: '/ja/',
-  ko: '/ko/',
-  pt_BR: '/pt-br/',
-  ru: '/ru/',
-  zh_CN: '/zh-cn/',
-}
+  en: "/",
+  es: "/es/",
+  de: "/de/",
+  fr: "/fr/",
+  it: "/it/",
+  ja: "/ja/",
+  ko: "/ko/",
+  pt_BR: "/pt-br/",
+  ru: "/ru/",
+  zh_CN: "/zh-cn/",
+};
 
-describe('getSiteUrl', () => {
+describe("getSiteUrl", () => {
   beforeEach(() => {
-    resetFakeI18n()
-  })
+    resetFakeI18n();
+  });
 
-  it('is the site root for English', () => {
-    expect(getSiteUrl()).toBe(SITE_URL)
-  })
+  it("is the site root for English", () => {
+    expect(getSiteUrl()).toBe(SITE_URL);
+  });
 
-  it.each(Object.entries(SITE_LOCALE_PATHS))(
-    'appends the %s locale path',
-    (locale, path) => {
-      resetFakeI18n(locale)
-      expect(getSiteUrl()).toBe(`https://snug.andryore.dev${path}`)
-    },
-  )
-})
+  it.each(Object.entries(SITE_LOCALE_PATHS))("appends the %s locale path", (locale, path) => {
+    resetFakeI18n(locale);
+    expect(getSiteUrl()).toBe(`https://snug.andryore.dev${path}`);
+  });
+});
 
-describe('getSitePrivacyUrl', () => {
+describe("getSitePrivacyUrl", () => {
   beforeEach(() => {
-    resetFakeI18n()
-  })
+    resetFakeI18n();
+  });
 
-  it('is the English privacy page for English', () => {
-    expect(getSitePrivacyUrl()).toBe('https://snug.andryore.dev/privacy/')
-  })
+  it("is the English privacy page for English", () => {
+    expect(getSitePrivacyUrl()).toBe("https://snug.andryore.dev/privacy/");
+  });
 
-  it('is the localized privacy page for a non-English locale', () => {
-    resetFakeI18n('de')
-    expect(getSitePrivacyUrl()).toBe('https://snug.andryore.dev/de/privacy/')
-  })
-})
+  it("is the localized privacy page for a non-English locale", () => {
+    resetFakeI18n("de");
+    expect(getSitePrivacyUrl()).toBe("https://snug.andryore.dev/de/privacy/");
+  });
+});
 
-describe('getSiteGuideUrl', () => {
+describe("getSiteGuideUrl", () => {
   beforeEach(() => {
-    resetFakeI18n()
-  })
+    resetFakeI18n();
+  });
 
-  it('is the English guide page for English', () => {
-    expect(getSiteGuideUrl()).toBe('https://snug.andryore.dev/guide/')
-  })
+  it("is the English guide page for English", () => {
+    expect(getSiteGuideUrl()).toBe("https://snug.andryore.dev/guide/");
+  });
 
-  it('is the localized guide page for a non-English locale', () => {
-    resetFakeI18n('pt_BR')
-    expect(getSiteGuideUrl()).toBe('https://snug.andryore.dev/pt-br/guide/')
-  })
-})
+  it("is the localized guide page for a non-English locale", () => {
+    resetFakeI18n("pt_BR");
+    expect(getSiteGuideUrl()).toBe("https://snug.andryore.dev/pt-br/guide/");
+  });
+});
 
-describe('getSiteChangelogUrl', () => {
+describe("getSiteChangelogUrl", () => {
   beforeEach(() => {
-    resetFakeI18n()
-  })
+    resetFakeI18n();
+  });
 
-  it('is the English changelog page for English', () => {
-    expect(getSiteChangelogUrl()).toBe('https://snug.andryore.dev/changelog/')
-  })
+  it("is the English changelog page for English", () => {
+    expect(getSiteChangelogUrl()).toBe("https://snug.andryore.dev/changelog/");
+  });
 
-  it('is the localized changelog page for a non-English locale', () => {
-    resetFakeI18n('de')
-    expect(getSiteChangelogUrl()).toBe(
-      'https://snug.andryore.dev/de/changelog/',
-    )
-  })
-})
+  it("is the localized changelog page for a non-English locale", () => {
+    resetFakeI18n("de");
+    expect(getSiteChangelogUrl()).toBe("https://snug.andryore.dev/de/changelog/");
+  });
+});

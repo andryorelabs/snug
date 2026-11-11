@@ -2,9 +2,9 @@
  * The part of a Starlight head entry the SEO title swap reads and writes.
  */
 export interface HeadEntry {
-  tag: string
-  attrs?: Record<string, string | boolean | undefined> | undefined
-  content?: string | undefined
+  tag: string;
+  attrs?: Record<string, string | boolean | undefined> | undefined;
+  content?: string | undefined;
 }
 
 /**
@@ -21,22 +21,13 @@ export function applySeoTitle<Entry extends HeadEntry>(
   title: string,
   seoTitle: string | undefined,
 ): Entry[] {
-  return seoTitle
-    ? head.map((entry) => swapTitle(entry, title, seoTitle))
-    : [...head]
+  return seoTitle ? head.map((entry) => swapTitle(entry, title, seoTitle)) : [...head];
 }
 
-function swapTitle<Entry extends HeadEntry>(
-  entry: Entry,
-  title: string,
-  seoTitle: string,
-): Entry {
-  if (entry.tag === 'title' && entry.content?.startsWith(title)) {
-    return { ...entry, content: seoTitle + entry.content.slice(title.length) }
+function swapTitle<Entry extends HeadEntry>(entry: Entry, title: string, seoTitle: string): Entry {
+  if (entry.tag === "title" && entry.content?.startsWith(title)) {
+    return { ...entry, content: seoTitle + entry.content.slice(title.length) };
   }
-  const isOpenGraphTitle =
-    entry.tag === 'meta' && entry.attrs?.property === 'og:title'
-  return isOpenGraphTitle
-    ? { ...entry, attrs: { ...entry.attrs, content: seoTitle } }
-    : entry
+  const isOpenGraphTitle = entry.tag === "meta" && entry.attrs?.property === "og:title";
+  return isOpenGraphTitle ? { ...entry, attrs: { ...entry.attrs, content: seoTitle } } : entry;
 }

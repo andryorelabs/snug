@@ -1,12 +1,12 @@
-import { IMPORT_PROGRESS_BATCH_SIZE } from './import-control'
+import { IMPORT_PROGRESS_BATCH_SIZE } from "./import-control";
 
 /**
  * A progress event emitted while an export walks the bookmarks. `done` and
  * `total` count bookmarks (not folders).
  */
 export interface ExportProgress {
-  done: number
-  total: number
+  done: number;
+  total: number;
 }
 
 /**
@@ -15,8 +15,8 @@ export interface ExportProgress {
  * stops the export before any file is produced.
  */
 export interface ExportControl {
-  onProgress?: (progress: ExportProgress) => void
-  signal?: AbortSignal
+  onProgress?: (progress: ExportProgress) => void;
+  signal?: AbortSignal;
 }
 
 /**
@@ -24,8 +24,8 @@ export interface ExportControl {
  */
 export class ExportCanceledError extends Error {
   constructor() {
-    super('Export canceled')
-    this.name = 'ExportCanceledError'
+    super("Export canceled");
+    this.name = "ExportCanceledError";
   }
 }
 
@@ -34,8 +34,8 @@ export class ExportCanceledError extends Error {
  * reporting progress per batch.
  */
 export interface ExportTicker {
-  tick: () => void
-  finish: () => void
+  tick: () => void;
+  finish: () => void;
 }
 
 /**
@@ -44,21 +44,18 @@ export interface ExportTicker {
  * @param total How many bookmarks the export will visit.
  * @returns The ticker; `tick` throws {@link ExportCanceledError} once aborted.
  */
-export function createExportTicker(
-  control: ExportControl,
-  total: number,
-): ExportTicker {
-  let done = 0
-  const emit = (): void => control.onProgress?.({ done, total })
+export function createExportTicker(control: ExportControl, total: number): ExportTicker {
+  let done = 0;
+  const emit = (): void => control.onProgress?.({ done, total });
   return {
     tick() {
-      if (control.signal?.aborted) throw new ExportCanceledError()
-      done++
-      if (done % IMPORT_PROGRESS_BATCH_SIZE === 0) emit()
+      if (control.signal?.aborted) throw new ExportCanceledError();
+      done++;
+      if (done % IMPORT_PROGRESS_BATCH_SIZE === 0) emit();
     },
     finish() {
-      if (control.signal?.aborted) throw new ExportCanceledError()
-      emit()
+      if (control.signal?.aborted) throw new ExportCanceledError();
+      emit();
     },
-  }
+  };
 }

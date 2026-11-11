@@ -1,37 +1,34 @@
-import { BENTO_KEYS } from '../i18n/bento'
-import type { SiteContent } from '../i18n/content'
-import { fullHeadline, PROMO_VIDEO_IDS, youtubeWatchUrl } from '../i18n/landing'
-import { SITE_ORIGIN } from '../i18n/locales'
-import { REVIEWS } from '../i18n/proof'
-import { STORE_FACTS } from './store-facts'
+import { BENTO_KEYS } from "../i18n/bento";
+import type { SiteContent } from "../i18n/content";
+import { fullHeadline, PROMO_VIDEO_IDS, youtubeWatchUrl } from "../i18n/landing";
+import { SITE_ORIGIN } from "../i18n/locales";
+import { REVIEWS } from "../i18n/proof";
+import { STORE_FACTS } from "./store-facts";
 
 const SEARCH_AND_ANSWER_CRAWLERS = [
-  'Googlebot',
-  'Bingbot',
-  'OAI-SearchBot',
-  'ChatGPT-User',
-  'Claude-SearchBot',
-  'Claude-User',
-  'PerplexityBot',
-  'Perplexity-User',
-] as const
+  "Googlebot",
+  "Bingbot",
+  "OAI-SearchBot",
+  "ChatGPT-User",
+  "Claude-SearchBot",
+  "Claude-User",
+  "PerplexityBot",
+  "Perplexity-User",
+] as const;
 
 const TRAINING_CRAWLERS = [
-  'GPTBot',
-  'ClaudeBot',
-  'CCBot',
-  'Applebot-Extended',
-  'Bytespider',
-] as const
+  "GPTBot",
+  "ClaudeBot",
+  "CCBot",
+  "Applebot-Extended",
+  "Bytespider",
+] as const;
 
-const REDIRECT_ONLY_PATHS = ['/install', '/reviews'] as const
+const REDIRECT_ONLY_PATHS = ["/install", "/reviews"] as const;
 
 function group(agents: readonly string[], rule: string): string {
-  const rules = [
-    rule,
-    ...REDIRECT_ONLY_PATHS.map((path) => `Disallow: ${path}`),
-  ]
-  return `${agents.map((agent) => `User-agent: ${agent}`).join('\n')}\n${rules.join('\n')}\n`
+  const rules = [rule, ...REDIRECT_ONLY_PATHS.map((path) => `Disallow: ${path}`)];
+  return `${agents.map((agent) => `User-agent: ${agent}`).join("\n")}\n${rules.join("\n")}\n`;
 }
 
 /**
@@ -44,22 +41,22 @@ function group(agents: readonly string[], rule: string): string {
  */
 export function buildRobotsTxt(): string {
   return [
-    '# Search and answer crawlers: allowed.',
-    group(SEARCH_AND_ANSWER_CRAWLERS, 'Allow: /'),
-    '# Model-training crawlers: disallowed. The groups above are unaffected.',
-    group(TRAINING_CRAWLERS, 'Disallow: /'),
-    group(['*'], 'Allow: /'),
+    "# Search and answer crawlers: allowed.",
+    group(SEARCH_AND_ANSWER_CRAWLERS, "Allow: /"),
+    "# Model-training crawlers: disallowed. The groups above are unaffected.",
+    group(TRAINING_CRAWLERS, "Disallow: /"),
+    group(["*"], "Allow: /"),
     `Sitemap: ${SITE_ORIGIN}/sitemap.xml\n`,
-  ].join('\n')
+  ].join("\n");
 }
 
 /**
  * One localized landing page, as listed in `llms.txt`.
  */
 export interface LlmsLocalePage {
-  languageTag: string
-  title: string
-  url: string
+  languageTag: string;
+  title: string;
+  url: string;
 }
 
 /**
@@ -68,10 +65,10 @@ export interface LlmsLocalePage {
  * `## Optional`.
  */
 export interface LlmsDocumentationPage {
-  title: string
-  description: string
-  markdownUrl: string
-  secondary?: boolean
+  title: string;
+  description: string;
+  markdownUrl: string;
+  secondary?: boolean;
 }
 
 /**
@@ -79,24 +76,24 @@ export interface LlmsDocumentationPage {
  * `## <title> (<url>)` heading.
  */
 export interface LlmsFullSection {
-  title: string
-  url: string
-  body: string
+  title: string;
+  url: string;
+  body: string;
 }
 
 /**
  * One Alternatives or Comparison page, as listed in `llms.txt`.
  */
 export interface LlmsComparisonPage {
-  title: string
-  description: string
-  url: string
+  title: string;
+  description: string;
+  url: string;
 }
 
 /**
  * One How-to page, as listed in `llms.txt`.
  */
-export type LlmsHowToPage = LlmsComparisonPage
+export type LlmsHowToPage = LlmsComparisonPage;
 
 /**
  * The `llms.txt` body summarizing the product and linking the key pages.
@@ -115,44 +112,35 @@ export function buildLlmsTxt(
   howToPages: readonly LlmsHowToPage[] = [],
 ): string {
   const howToLines = howToPages
-    .map(
-      ({ title, description: summary, url }) =>
-        `- [${title}](${url}): ${summary}`,
-    )
-    .join('\n')
-  const howToSection = howToLines === '' ? '' : `## How-to\n\n${howToLines}\n\n`
+    .map(({ title, description: summary, url }) => `- [${title}](${url}): ${summary}`)
+    .join("\n");
+  const howToSection = howToLines === "" ? "" : `## How-to\n\n${howToLines}\n\n`;
   const comparisonLines = comparisonPages
-    .map(
-      ({ title, description: summary, url }) =>
-        `- [${title}](${url}): ${summary}`,
-    )
-    .join('\n')
+    .map(({ title, description: summary, url }) => `- [${title}](${url}): ${summary}`)
+    .join("\n");
   const comparisonSection =
-    comparisonLines === '' ? '' : `## Comparisons\n\n${comparisonLines}\n\n`
+    comparisonLines === "" ? "" : `## Comparisons\n\n${comparisonLines}\n\n`;
   const documentationLine = ({
     title,
     description: summary,
     markdownUrl,
-  }: LlmsDocumentationPage): string =>
-    `- [${title}](${markdownUrl}): ${summary}`
+  }: LlmsDocumentationPage): string => `- [${title}](${markdownUrl}): ${summary}`;
   const guideLines = documentationPages
     .filter(({ secondary }) => !secondary)
-    .map((page) => documentationLine(page))
+    .map((page) => documentationLine(page));
   const documentationSection =
     guideLines.length === 0
-      ? ''
-      : `## Guide\n\n${guideLines.join('\n')}\n\nThe Guide is translated: every page exists under \`/<locale>/\`, for example \`${SITE_ORIGIN}/es/guide/\`.\n\n`
+      ? ""
+      : `## Guide\n\n${guideLines.join("\n")}\n\nThe Guide is translated: every page exists under \`/<locale>/\`, for example \`${SITE_ORIGIN}/es/guide/\`.\n\n`;
   const optionalLines = [
     ...documentationPages
       .filter(({ secondary }) => secondary)
       .map((page) => documentationLine(page)),
     `- [Chrome Web Store reviews](${SITE_ORIGIN}/reviews): what users say about Snug`,
-  ].join('\n')
+  ].join("\n");
   const localeLines = localePages
-    .map(
-      ({ languageTag, title, url }) => `- [${title}](${url}): ${languageTag}`,
-    )
-    .join('\n')
+    .map(({ languageTag, title, url }) => `- [${title}](${url}): ${languageTag}`)
+    .join("\n");
   return `# Snug
 
 > ${description}
@@ -175,11 +163,11 @@ ${documentationSection}${comparisonSection}${howToSection}## Pages
 ## Optional
 
 ${optionalLines}
-`
+`;
 }
 
 function section(heading: string, ...blocks: string[]): string {
-  return [`## ${heading}`, ...blocks].join('\n\n')
+  return [`## ${heading}`, ...blocks].join("\n\n");
 }
 
 /**
@@ -193,26 +181,26 @@ export function buildLlmsFullTxt(
   content: SiteContent,
   extraSections: readonly LlmsFullSection[] = [],
 ): string {
-  const { landing } = content
+  const { landing } = content;
   const bentoCards = BENTO_KEYS.map((key) => {
-    const { title, body } = landing.bento[key]
-    return `### ${title}\n\n${body}`
-  })
+    const { title, body } = landing.bento[key];
+    return `### ${title}\n\n${body}`;
+  });
   const stats = Object.values(landing.stats)
     .map(({ label, value }) => `- ${label}: ${value}`)
-    .join('\n')
+    .join("\n");
   const faqItems = Object.values(content.faq.items).map(
     ({ question, answer }) => `### ${question}\n\n${answer}`,
-  )
+  );
   const reviewQuotes = REVIEWS.map(
     ({ quote, author, date }) => `> ${quote}\n>\n> ${author}, ${date}`,
-  )
+  );
   const sections = [
     `# Snug\n\n> ${content.meta.description}`,
     section(
-      fullHeadline(landing.hero, 'en'),
+      fullHeadline(landing.hero, "en"),
       landing.hero.subheadline,
-      Object.values(landing.hero.chips).join(', '),
+      Object.values(landing.hero.chips).join(", "),
       stats,
       ...bentoCards,
     ),
@@ -234,11 +222,9 @@ export function buildLlmsFullTxt(
       landing.closing.line,
       `[${landing.closing.button}](${SITE_ORIGIN}/install)`,
     ),
-    ...extraSections.map(
-      ({ title, url, body }) => `## ${title} (${url})\n\n${body.trim()}`,
-    ),
-  ]
-  return `${sections.join('\n\n')}\n`
+    ...extraSections.map(({ title, url, body }) => `## ${title} (${url})\n\n${body.trim()}`),
+  ];
+  return `${sections.join("\n\n")}\n`;
 }
 
 /**
@@ -246,22 +232,22 @@ export function buildLlmsFullTxt(
  * `alternates` when the page has no translations.
  */
 export interface SitemapEntry {
-  loc: string
-  lastmod?: string
-  alternates?: readonly { hreflang: string; href: string }[]
+  loc: string;
+  lastmod?: string;
+  alternates?: readonly { hreflang: string; href: string }[];
 }
 
 function lastmodLine(lastmod: string | undefined): string {
-  return lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : ''
+  return lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : "";
 }
 
-function alternateLines(alternates: SitemapEntry['alternates']): string {
+function alternateLines(alternates: SitemapEntry["alternates"]): string {
   return (alternates ?? [])
     .map(
       ({ hreflang, href }) =>
         `    <xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>\n`,
     )
-    .join('')
+    .join("");
 }
 
 /**
@@ -275,10 +261,10 @@ export function buildSitemapXml(entries: readonly SitemapEntry[]): string {
       ({ loc, lastmod, alternates }) =>
         `  <url>\n    <loc>${loc}</loc>\n${lastmodLine(lastmod)}${alternateLines(alternates)}  </url>`,
     )
-    .join('\n')
+    .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${allUrls}
 </urlset>
-`
+`;
 }

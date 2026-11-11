@@ -1,46 +1,43 @@
-import tailwindcss from '@tailwindcss/vite'
-import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'wxt'
+import { fileURLToPath } from "node:url";
 
-import { SITE_URL } from './lib/brand'
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "wxt";
+
+import { SITE_URL } from "./lib/brand";
 
 const REQUIRED_PERMISSIONS = [
-  'bookmarks',
-  'favicon',
-  'storage',
-  'alarms',
-  'offscreen',
-  'unlimitedStorage',
-]
+  "bookmarks",
+  "favicon",
+  "storage",
+  "alarms",
+  "offscreen",
+  "unlimitedStorage",
+];
 
-const OPTIONAL_PERMISSIONS = ['downloads', 'notifications']
+const OPTIONAL_PERMISSIONS = ["downloads", "notifications"];
 
 export default defineConfig({
-  modules: [
-    '@wxt-dev/module-react',
-    '@wxt-dev/i18n/module',
-    '@wxt-dev/auto-icons',
-  ],
+  modules: ["@wxt-dev/module-react", "@wxt-dev/i18n/module", "@wxt-dev/auto-icons"],
   zip: {
-    name: 'snug',
+    name: "snug",
     zipSources: true,
-    sourcesRoot: fileURLToPath(new URL('../..', import.meta.url)),
+    sourcesRoot: fileURLToPath(new URL("../..", import.meta.url)),
     includeSources: [
-      'package.json',
-      'bun.lock',
-      'bunfig.toml',
-      'tsconfig.base.json',
-      'turbo.json',
-      'apps/extension/**',
-      'apps/video/package.json',
-      'packages/**',
+      "package.json",
+      "bun.lock",
+      "bunfig.toml",
+      "tsconfig.base.json",
+      "turbo.json",
+      "apps/extension/**",
+      "apps/video/package.json",
+      "packages/**",
     ],
     excludeSources: [
-      'apps/extension/.output/**',
-      'apps/extension/.wxt/**',
-      'apps/extension/coverage/**',
-      'apps/extension/test-results/**',
-      'apps/extension/playwright-report/**',
+      "apps/extension/.output/**",
+      "apps/extension/.wxt/**",
+      "apps/extension/coverage/**",
+      "apps/extension/test-results/**",
+      "apps/extension/playwright-report/**",
     ],
   },
   imports: {
@@ -49,16 +46,14 @@ export default defineConfig({
     },
   },
   manifest: ({ browser }) => ({
-    name: '__MSG_extensionManifestName__',
+    name: "__MSG_extensionManifestName__",
     description:
-      browser === 'edge'
-        ? '__MSG_extensionDescriptionEdge__'
-        : '__MSG_extensionDescription__',
-    default_locale: 'en',
-    minimum_chrome_version: '119',
+      browser === "edge" ? "__MSG_extensionDescriptionEdge__" : "__MSG_extensionDescription__",
+    default_locale: "en",
+    minimum_chrome_version: "119",
     homepage_url: SITE_URL,
-    options_ui: { page: 'app.html', open_in_tab: true },
-    ...(process.env.SNUG_E2E_REQUIRED_PERMISSIONS === '1'
+    options_ui: { page: "app.html", open_in_tab: true },
+    ...(process.env.SNUG_E2E_REQUIRED_PERMISSIONS === "1"
       ? {
           permissions: [...REQUIRED_PERMISSIONS, ...OPTIONAL_PERMISSIONS],
         }
@@ -70,4 +65,4 @@ export default defineConfig({
   vite: () => ({
     plugins: [tailwindcss()],
   }),
-})
+});
