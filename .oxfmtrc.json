@@ -1,13 +1,5 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "trailingComma": "all",
-  "semi": false,
-  "tabWidth": 2,
-  "singleQuote": true,
-  "printWidth": 80,
-  "proseWrap": "always",
-  "endOfLine": "lf",
-  "arrowParens": "always",
   "sortPackageJson": false,
   "sortTailwindcss": {
     "stylesheet": "./packages/ui/src/styles/globals.css",
@@ -36,19 +28,9 @@
     "apps/site/src/content/playground-samples"
   ],
   "sortImports": {
-    "groups": [
-      ["builtin", "external", "unknown", "astro"],
-      "internal",
-      ["parent", "sibling", "index"]
-    ],
+    "groups": ["builtin", "external", "internal", ["parent", "sibling", "index"], "unknown"],
     "internalPattern": ["@/"],
     "ignoreCase": true,
-    "newlinesBetween": true,
-    "customGroups": [
-      {
-        "groupName": "astro",
-        "elementNamePattern": ["astro", "astro/**", "astro:*"]
-      }
-    ]
+    "newlinesBetween": true
   }
 }
