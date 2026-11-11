@@ -39,8 +39,9 @@ To add one, take the next number, write the file, and add a row below.
 | 0029   | [A Goodbye page opens on uninstall with non-identifying parameters](0029-goodbye-page-with-non-identifying-parameters.md)                       | Accepted   | -                        |
 | 0030   | [Downloads and Notification access become optional permissions](0030-optional-downloads-and-notification-access.md)                             | Accepted   | -                        |
 | 0031   | [GitHub-hosted CI with sharded E2E and an optional Blacksmith runner](0031-github-hosted-ci-with-sharded-e2e-and-optional-blacksmith-runner.md) | Accepted   | -                        |
-| 0035   | [Adopt the andryorelabs standard v1](0035-adopt-andryorelabs-standard-v1.md)                                                                    | Accepted   | -                        |
+| 0035   | [Adopt the andryorelabs standard v1](0035-adopt-andryorelabs-standard-v1.md)                                                                    | Accepted   | 0040                     |
 | 0036   | [Brand kit in docs/brand with a maker credit](0036-brand-kit-and-maker-credit.md)                                                               | Accepted   | -                        |
 | 0037   | [The site CSP is a header with build-time script hashes](0037-site-csp-header-with-build-time-hashes.md)                                        | Accepted   | -                        |
 | 0038   | [Robots policy for AI crawlers](0038-ai-crawler-robots-policy.md)                                                                               | Accepted   | -                        |
-| 0039   | [Branch model: main is the only long-lived branch](0039-branch-model.md)                                                                        | Accepted   | -                        |
+| 0039   | [Branch model: main is the only long-lived branch](0039-branch-model.md)                                                                        | Superseded | 0040                     |
+| 0040   | [Develop branch promoted to main by merge commit](0040-develop-branch-promoted-by-merge-commit.md)                                              | Accepted   | -                        |

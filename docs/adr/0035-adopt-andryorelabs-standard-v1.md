@@ -2,9 +2,13 @@
 
 ## Status
 
-Accepted.
+Accepted. Amended by [0040](0040-develop-branch-promoted-by-merge-commit.md):
+Snug has a `develop` branch, so its ruleset is no longer N-A.
 
 Date: 2026-11-11
+
+Revised: 2026-11-11, removed the `develop` ruleset from the N-A list
+([0040](0040-develop-branch-promoted-by-merge-commit.md)).
 
 ## Context
 
@@ -31,8 +35,6 @@ Snug keeps its own palette, type and voice. Only the maker credit is shared
 Rules that do not apply to Snug (N-A):
 
 - `FUNDING.yml`: Snug is a product repository, not a sponsored library.
-- A `develop` ruleset: `main` is the only long-lived branch
-  ([0039](0039-branch-model.md)).
 - npm trusted publishing: Snug is an extension and a site, not a library
   published to npm.
 - Plugin manifests: Snug ships no agent plugin.

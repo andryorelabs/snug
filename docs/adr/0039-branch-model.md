@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted.
+Superseded by [0040](0040-develop-branch-promoted-by-merge-commit.md).
 
 Date: 2026-11-11
 
