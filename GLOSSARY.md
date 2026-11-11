@@ -233,6 +233,14 @@ cookies or scripts. _Avoid_: UTM tag, ref, source code
 plan, the directory tracker, positioning and community copy, the press kit, and
 launch-sized assets. _Avoid_: marketing pack, launch docs, PR kit
 
+**Development branch**: The `develop` branch, where every pull request lands
+first and which never deploys and is never tagged. _Avoid_: staging branch,
+release branch, trunk
+
+**Promotion**: A pull request from the Development branch to `main`, merged with
+a merge commit, that makes verified work deployable and taggable. _Avoid_: sync,
+release merge, deploy
+
 ## Relationships
 
 - A **Bookmark node** is a bookmark or a folder; a tree of nodes hangs from the
@@ -265,8 +273,13 @@ launch-sized assets. _Avoid_: marketing pack, launch docs, PR kit
   identifies a person.
 - The **Launch kit** holds the material used to promote the Landing page and the
   store listings.
+- Work reaches `main` only through a **Promotion** from the **Development
+  branch**; the Website deploys and releases are tagged from `main`.
 
 ## Flagged ambiguities
+
+- "Promote" for a branch means a **Promotion**; promoting Snug to an audience is
+  the job of the **Launch kit**.
 
 - "Site" is avoided: **Website** means the whole of snug.andryore.dev and
   **Landing page** means only its home page.

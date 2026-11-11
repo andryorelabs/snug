@@ -44,26 +44,35 @@ function createGitRunner(responses: Record<string, GitResult>): {
 }
 
 describe("resolveCommitlintBase", () => {
-  test("prefers origin/main", () => {
+  test("prefers origin/develop", () => {
+    const { git, calls } = createGitRunner({
+      "merge-base origin/develop HEAD": { ok: true, output: "ddd" },
+      "merge-base origin/main HEAD": { ok: true, output: "aaa" },
+    });
+    expect(resolveCommitlintBase(git)).toBe("ddd");
+    expect(calls).toEqual([["merge-base", "origin/develop", "HEAD"]]);
+  });
+
+  test("falls back to origin/main when origin/develop is missing", () => {
     const { git, calls } = createGitRunner({
       "merge-base origin/main HEAD": { ok: true, output: "aaa" },
       "merge-base main HEAD": { ok: true, output: "bbb" },
     });
     expect(resolveCommitlintBase(git)).toBe("aaa");
-    expect(calls).toEqual([["merge-base", "origin/main", "HEAD"]]);
+    expect(calls.map((call) => call[1])).toEqual(["origin/develop", "origin/main"]);
   });
 
-  test("falls back to main when origin/main is missing", () => {
+  test("falls back to main when no origin ref exists", () => {
     const { git, calls } = createGitRunner({
       "merge-base main HEAD": { ok: true, output: "bbb" },
     });
     expect(resolveCommitlintBase(git)).toBe("bbb");
-    expect(calls.map((call) => call[1])).toEqual(["origin/main", "main"]);
+    expect(calls.map((call) => call[1])).toEqual(["origin/develop", "origin/main", "main"]);
   });
 
   test("throws when neither ref resolves", () => {
     const { git } = createGitRunner({});
-    expect(() => resolveCommitlintBase(git)).toThrow(/could not resolve a merge-base/);
+    expect(() => resolveCommitlintBase(git)).toThrow(/"origin\/develop", "origin\/main", "main"/);
   });
 });
 

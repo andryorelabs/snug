@@ -113,7 +113,8 @@ Hooks are installed via Husky and live in `.husky/`:
   emoji still passes this hook. The gitmoji is a repository convention, not a
   lint-enforced rule.
 - **`pre-push`** — rejects a push if the current branch name doesn't match
-  `^(main|renovate/.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9._-]+)$`.
+  `^((feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9._-]+|ao-\d+-[a-z0-9._-]+|renovate/.+|worktree-[a-z0-9._-]+)$`.
+  `main` and `develop` are refused; push a feature branch instead.
 
 ## CI
 
@@ -164,7 +165,7 @@ it back with `gh variable delete BLACKSMITH_RUNNER`. A new job must either join
 `bun run test` fails otherwise.
 
 `.github/workflows/codeql.yml` runs CodeQL static analysis
-(`javascript-typescript`) on every PR, on push to `main`, and weekly. It's not
+(`javascript-typescript`) on every PR, on push to `main` and `develop`, and weekly. It's not
 part of the `CI passed` aggregator — findings surface via code scanning, not as
 a gate. See [ADR 0004](adr/0004-enable-codeql-sast.md).
 
@@ -202,15 +203,47 @@ feat fix docs style refactor perf test build ci chore revert
 
 The subject must start with a lowercase letter.
 
+## Branching and promotion
+
+Snug has two long-lived branches ([ADR 0040](adr/0040-develop-branch-promoted-by-merge-commit.md)).
+`develop` is the development branch: every feature branch, `/emet` wave and
+Renovate pull request targets it and is squash-merged, so `develop` stays
+linear. `main` is the default branch the site deploys from and releases are
+tagged on, and it receives promotions only.
+
+Open work against `develop`:
+
+```
+gh pr create --base develop
+```
+
+A pull request opened without `--base develop` targets `main`, the default
+branch. No ruleset refuses it: that `main` receives promotions only is a
+convention, so check the base before you merge. To promote, open a pull request
+from `develop` to `main` and merge it with a merge commit, not a squash:
+
+```
+gh pr create --base main --head develop --title "chore: 🔀 promote develop to main"
+gh pr merge --merge
+```
+
+No sync step exists. A merge commit keeps `develop` in the history of `main`, so
+after a promotion `main` already contains `develop`. A squash would break that
+ancestry and force a follow-up merge of `main` back into `develop`, which the
+pull-request-only `develop` ruleset blocks. `develop` never deploys and is never
+tagged. Commitlint is skipped on a promotion, whose commits were linted when
+they reached `develop`.
+
 ## Branch naming
 
 Branch names must match:
 
 ```
-^(main|renovate/.+|(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9._-]+)$
+^((feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)/[a-z0-9._-]+|ao-\d+-[a-z0-9._-]+|renovate/.+|worktree-[a-z0-9._-]+)$
 ```
 
-e.g. `feat/csv-export`, `fix/popup-crash`, `chore/bump-deps`.
+e.g. `feat/csv-export`, `fix/popup-crash`, `chore/bump-deps`. Neither `main` nor
+`develop` is a valid name to push from.
 
 ## Adding a `@shadcn/lint` contract
 
@@ -590,8 +623,8 @@ be updated by hand in the same PR.
 
 ## Repository settings
 
-This repo's GitHub settings are code, not clicks. The rulesets for `main` and
-the `v*` tags live in `.github/rulesets/`, and the repository settings (merge
+This repo's GitHub settings are code, not clicks. The rulesets for `develop`,
+`main` and the `v*` tags live in `.github/rulesets/`, and the repository settings (merge
 strategy, secret scanning, private vulnerability reporting, feature flags) are
 listed with the exact `gh api` commands that apply them in
 [`.github/rulesets/README.md`](../.github/rulesets/README.md). Apply a change

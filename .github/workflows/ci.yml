@@ -4,11 +4,11 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches: [main] # only permanent branches — avoids duplicate runs when a feature branch has an open PR
+    branches: [main, develop] # only permanent branches — avoids duplicate runs when a feature branch has an open PR
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
 
 permissions:
   contents: read
@@ -410,7 +410,10 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-    if: github.event_name == 'pull_request'
+    # A promotion (develop into main) carries develop's squash commits, each
+    # already linted on its own pull request and impossible to rewrite here.
+    if: github.event_name == 'pull_request' && !(github.base_ref == 'main' &&
+      github.head_ref == 'develop')
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -440,7 +443,8 @@ jobs:
   # Stable status-check name for branch protection: aggregates
   # quality/build/build-site/e2e/commitlint so a single required check covers
   # the whole pipeline regardless of which jobs run for a given trigger (e.g.
-  # commitlint is skipped on push).
+  # commitlint is skipped on push and on a promotion pull request); a skipped
+  # job never fails it.
   ci-passed:
     name: CI passed
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' ||

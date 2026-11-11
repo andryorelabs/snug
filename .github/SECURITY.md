@@ -24,8 +24,8 @@ vulnerability before a fix is available.
 ## Supported Versions
 
 Only the latest published version of the extension is supported. There are no
-maintained release branches — a fix lands on `main` and ships in the next
-release.
+maintained release branches — a fix lands on `develop`, is promoted to `main` and ships in
+the next release.
 
 | Version | Supported |
 | ------- | --------- |
