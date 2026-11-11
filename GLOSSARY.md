@@ -1,232 +1,283 @@
-# Glossary
+# Snug
 
-Terms used consistently across this project's code, docs, and UI. This is a
-glossary of concepts, not an implementation reference — it defines what things
-mean, not how they're built.
+Snug is a Chrome extension that exports, imports and auto-exports browser
+bookmarks locally, with a multilingual website beside it. This glossary defines
+the terms the code, docs and UI use for it; it is a glossary of concepts, not an
+implementation reference — it defines what things mean, not how they're built.
 
-**Snug** The product's name, shown as "Snug" in every locale and never
+## Language
+
+**Snug**: The product's name, shown as "Snug" in every locale and never
 translated. The repository slug and package name are `snug`; only the Chrome Web
 Store extension ID keeps the legacy identity. _Avoid_: Bookmark Import/Export,
-Importar/Exportar Marcadores, BIE, `bookmarks-import-export`.
+Importar/Exportar Marcadores, BIE, `bookmarks-import-export`
 
-**Wordmark** The product name rendered as brand text next to the mark: "Sn" in
+**Wordmark**: The product name rendered as brand text next to the mark: "Sn" in
 the amber brand text gradient, "ug" in the normal text color. Used only on the
 App sidebar header and the Welcome hero, never on controls. _Avoid_: logo text,
-title, brand text.
+title, brand text
 
-**App** The extension's single full-page UI (`app.html`, also the options page),
-hash-routed with a sidebar: Export, Import, Duplicates, Auto-export, Settings,
-What's new and Welcome. The popup is separate and compact; anything that needs
-more room opens the App. Its What's new page lists the highlights of each
-release and links to the full Release notes on the Website. _Avoid_: dashboard,
-options page, advanced page, full page.
+**App**: The extension's single full-page UI (`app.html`, also the options
+page), hash-routed with a sidebar: Export, Import, Duplicates, Auto-export,
+Settings, What's new and Welcome. The popup is separate and compact; anything
+that needs more room opens the App. Its What's new page lists the highlights of
+each release and links to the full Release notes on the Website. _Avoid_:
+dashboard, options page, advanced page, full page
 
-**Bookmark node** A single entry in a bookmark tree: either a bookmark (has a
+**Bookmark node**: A single entry in a bookmark tree: either a bookmark (has a
 title and a URL) or a folder (has a title and children, no URL). Trees are built
-from nodes nested inside other nodes. _Avoid_: bookmark item, entry, record.
+from nodes nested inside other nodes. _Avoid_: bookmark item, entry, record
 
-**Root folder** One of the fixed top-level folders every bookmark tree has: the
+**Root folder**: One of the fixed top-level folders every bookmark tree has: the
 bookmarks bar, "other bookmarks", and — where the browser provides it — "mobile
 bookmarks". Every import and export operates relative to these, and their names
 are shown in the browser's own language rather than a fixed English label.
-_Avoid_: toolbar folder, top-level folder, root node.
+_Avoid_: toolbar folder, top-level folder, root node
 
-**Location data** Information about which root folder (bookmarks bar, other
+**Location data**: Information about which root folder (bookmarks bar, other
 bookmarks, or mobile bookmarks) a bookmark or folder belongs to. Some import
 formats carry it and some don't; its presence determines which import modes are
-offered. _Avoid_: placement, position data, folder assignment.
+offered. _Avoid_: placement, position data, folder assignment
 
-**Import mode** The strategy used when bringing bookmarks into the browser.
+**Import mode**: The strategy used when bringing bookmarks into the browser.
 Three modes exist: Folder (add everything into one new folder, leaving existing
 bookmarks untouched), Restore-merge (add imported bookmarks directly into the
 bookmarks bar and other-bookmarks roots, alongside what's already there), and
 Restore-replace (clear the bookmarks bar and other-bookmarks roots first, then
 add the imported bookmarks in their place). _Avoid_: import strategy, import
-type, merge mode.
+type, merge mode
 
-**Default import mode** The import mode the user has chosen to apply by default,
-remembered between sessions and shared by Quick import and the Import page.
-Formats without location data always import in Folder mode regardless. _Avoid_:
-preferred mode, saved mode.
+**Default import mode**: The import mode the user has chosen to apply by
+default, remembered between sessions and shared by Quick import and the Import
+page. Formats without location data always import in Folder mode regardless.
+_Avoid_: preferred mode, saved mode
 
-**Quick import** Importing one or more files directly from the popup, picked or
+**Quick import**: Importing one or more files directly from the popup, picked or
 dropped, in one step, using the default import mode and committing immediately,
 as opposed to the Import page's preview-first flow, which shows the Import
 preview and lets the user choose a mode before anything changes. _Avoid_: basic
-import, simple import, popup import.
+import, simple import, popup import
 
-**Import preview** A summary shown before committing an import: how many
+**Import preview**: A summary shown before committing an import: how many
 bookmarks were found, split by root folder, and whether the file carries
 location data at all. It also lists the bookmarks that will be created, the
 duplicates Skip duplicates will leave out and, for a Restore-replace, the
 existing bookmarks that will be deleted. Lets the user judge a file before it
-changes anything. _Avoid_: import summary, pre-import check, dry run.
+changes anything. _Avoid_: import summary, pre-import check, dry run
 
-**Import selection** The subset of bookmarks a user has checked in the Import
+**Import selection**: The subset of bookmarks a user has checked in the Import
 page's tree before importing, mixing single bookmarks and whole folders. Not
 offered for Restore-replace, which always imports everything. _Avoid_: partial
-import, import filter, selective import.
+import, import filter, selective import
 
-**Import batch** Several files imported together as one operation, with one
+**Import batch**: Several files imported together as one operation, with one
 import mode, one Import preview and one progress. Cancelling or failing leaves
 the bookmarks as they were before the batch started; a file that cannot be read
-is left out at preview time. _Avoid_: bulk import, multi-import.
+is left out at preview time. _Avoid_: bulk import, multi-import
 
-**Export selection** The subset of bookmarks a user has explicitly checked in
+**Export selection**: The subset of bookmarks a user has explicitly checked in
 the Export page's bookmark tree, as opposed to exporting the entire bookmark
 collection at once. A selection can mix individual bookmarks and whole folders.
 _Avoid_: Advanced Export selection, export scope, checked bookmarks, chosen
-items.
+items
 
-**Export options** The per-export switches that shape a file's content: whether
+**Export options**: The per-export switches that shape a file's content: whether
 to include icons and which dates, whether to hide the "other bookmarks" and
 parent folders, and the filename template. They are shared by the Export page
-and the Auto-export page. _Avoid_: export settings, export preferences.
+and the Auto-export page. _Avoid_: export settings, export preferences
 
-**Safety snapshot** A copy of the bookmarks bar and other-bookmarks roots that
+**Safety snapshot**: A copy of the bookmarks bar and other-bookmarks roots that
 Snug takes automatically before every Restore-replace, kept both as a file saved
 like a manual export and inside the extension so the import can be undone. The
 latest five are kept, and the newest one that holds any bookmarks is never
 dropped. The user can also take one at any time. _Avoid_: backup, restore point,
-undo file.
+undo file
 
-**Duplicate** Two or more bookmarks whose URLs are the same once normalized:
+**Duplicate**: Two or more bookmarks whose URLs are the same once normalized:
 scheme and host lowercased, `http` treated as `https`, a leading `www.`, a
 trailing slash and any `#fragment` ignored. Folders are never duplicates of each
-other. _Avoid_: dupe, repeated bookmark, copy.
+other. _Avoid_: dupe, repeated bookmark, copy
 
-**Skip duplicates** An import option that leaves out any bookmark whose
+**Skip duplicates**: An import option that leaves out any bookmark whose
 normalized URL already exists in the browser, reporting how many were skipped.
 On by default in Folder and Restore-merge. _Avoid_: dedupe on import, merge
-duplicates, ignore existing.
+duplicates, ignore existing
 
-**Auto-export** A recurring, unattended export that runs on a schedule the user
+**Auto-export**: A recurring, unattended export that runs on a schedule the user
 configures (how often — hourly, every 12 hours, daily, every 3 days, every 7
 days, or weekly on a chosen day — and to which formats), saving files without
 any manual export action. _Avoid_: scheduled export, automatic backup,
-background export.
+background export
 
-**Retention** How many Auto-export files Snug keeps: after a successful run it
+**Retention**: How many Auto-export files Snug keeps: after a successful run it
 deletes the oldest files it created itself beyond the user's limit, in Downloads
 or the current Custom folder, and never touches files it did not create.
-_Avoid_: cleanup, rotation, pruning.
+_Avoid_: cleanup, rotation, pruning
 
-**Export destination** Where Auto-export saves its files: the browser's
-Downloads folder or a Custom folder. _Avoid_: save location, output path,
-target.
+**Export destination**: Where Auto-export saves its files: the browser's
+Downloads folder or a Custom folder. _Avoid_: save location, output path, target
 
-**Custom folder** A folder anywhere on the user's computer, picked by the user,
+**Custom folder**: A folder anywhere on the user's computer, picked by the user,
 that Auto-export saves into instead of Downloads. _Avoid_: chosen folder, local
-folder, directory.
+folder, directory
 
-**Folder access** The user's permission for Snug to write to the Custom folder.
+**Folder access**: The user's permission for Snug to write to the Custom folder.
 The browser can withdraw it (always once, after the first restart), and the user
-then allows it again. _Avoid_: folder permission, grant, authorization.
+then allows it again. _Avoid_: folder permission, grant, authorization
 
-**Downloads access** The optional permission that lets Snug save Auto-export
+**Downloads access**: The optional permission that lets Snug save Auto-export
 files to the Downloads folder and clean them up. Snug asks for it when the user
 turns on Auto-export with the Downloads destination, picks that destination or
 runs Export now without it, and the user can refuse. _Avoid_: downloads
-permission, download rights.
+permission, download rights
 
-**Notification access** The optional permission that lets Snug show the Failure
+**Notification access**: The optional permission that lets Snug show the Failure
 notification. Snug asks for it when the user turns on that notification, and the
 user can refuse. Without it Snug stays silent. _Avoid_: notifications
-permission, alert permission.
+permission, alert permission
 
-**Filename template** A user-configurable pattern for naming exported files,
+**Filename template**: A user-configurable pattern for naming exported files,
 made of placeholders that get replaced with parts of the current date and time
 when a file is generated. _Avoid_: naming pattern, filename format, export
-filename.
+filename
 
-**Auto-export run** One execution of auto-export, whether scheduled, a catch-up
+**Auto-export run**: One execution of auto-export, whether scheduled, a catch-up
 run, or triggered with Export now; its time and outcome form the last run
-status. _Avoid_: backup, job.
+status. _Avoid_: backup, job
 
-**Catch-up run** An auto-export run performed shortly after the browser starts
+**Catch-up run**: An auto-export run performed shortly after the browser starts
 because its scheduled time passed while the browser was closed. _Avoid_: missed
-run, retry.
+run, retry
 
-**Failure notification** The system notification Snug shows when an Auto-export
-run fails; successful runs never notify. _Avoid_: alert, error toast, warning.
+**Failure notification**: The system notification Snug shows when an Auto-export
+run fails; successful runs never notify. _Avoid_: alert, error toast, warning
 
-**Goodbye page** The page on the Website that the browser opens when someone
+**Goodbye page**: The page on the Website that the browser opens when someone
 removes Snug. It asks once why they left, replies according to the answer, says
 when scheduled backups have stopped and shows exactly what it received. It
 collects nothing that identifies a person. _Avoid_: exit survey, uninstall page,
-feedback form.
+feedback form
 
-**Leaving reason** The one answer a visitor picks on the Goodbye page to say why
-they removed Snug. Answering is optional, and each answer is counted without
-cookies. _Avoid_: uninstall reason, feedback, survey answer.
+**Leaving reason**: The one answer a visitor picks on the Goodbye page to say
+why they removed Snug. Answering is optional, and each answer is counted without
+cookies. _Avoid_: uninstall reason, feedback, survey answer
 
-**Review prompt** A one-time, dismissible invitation in the popup to leave an
+**Review prompt**: A one-time, dismissible invitation in the popup to leave an
 honest review on the store listing for the browser in use, offered only after
 the user's first successful export or Auto-export run. Once acted on or
 dismissed, it never returns. _Avoid_: rating prompt, review nag, review request,
-feedback prompt.
+feedback prompt
 
-**Website** snug.andryore.dev as a whole: the Landing page, the Guide, What's
+**Website**: snug.andryore.dev as a whole: the Landing page, the Guide, What's
 new, the Privacy policy, the Alternatives page, the Comparison pages and the
 How-to pages, all multilingual. It is separate from the App and the popup, which
-live inside the extension. _Avoid_: site, web app, portal.
+live inside the extension. _Avoid_: site, web app, portal
 
-**Landing page** The Website's home page: a static, multilingual page whose one
+**Landing page**: The Website's home page: a static, multilingual page whose one
 job is to send visitors to the store listing for the browser in use. _Avoid_:
-website, homepage, marketing site, promo page.
+website, homepage, marketing site, promo page
 
-**Guide** The user documentation on the Website, one page per area of the App
+**Guide**: The user documentation on the Website, one page per area of the App
 (exporting, importing, duplicates, settings, Auto-export), plus one page of
 frequently asked questions. The English text prevails; every other locale shows
 a translation that says so when it lags the English. _Avoid_: docs, manual,
-usage docs, help center.
+usage docs, help center
 
-**Install dock** The floating bar on the Landing page that carries the Install
+**Install dock**: The floating bar on the Landing page that carries the Install
 redirect once the hero has scrolled out of view, and hides again at the closing
-panel. _Avoid_: sticky CTA, floating button, install bar.
+panel. _Avoid_: sticky CTA, floating button, install bar
 
-**Format playground** The Landing page section where a visitor picks one of the
+**Format playground**: The Landing page section where a visitor picks one of the
 export formats and sees the same sample bookmarks written in it. _Avoid_: demo,
-code preview, format picker.
+code preview, format picker
 
-**Alternatives page** The Website page that lists Snug, the browser's built-in
+**Alternatives page**: The Website page that lists Snug, the browser's built-in
 export and the other bookmark export or backup extensions side by side, and
-links to each Comparison page. _Avoid_: hub, comparison index, directory.
+links to each Comparison page. _Avoid_: hub, comparison index, directory
 
-**Comparison page** A Website page that sets Snug beside one named alternative,
+**Comparison page**: A Website page that sets Snug beside one named alternative,
 using only facts checked on that alternative's live store listing, each with an
 as-of date. It says who should pick the alternative instead. _Avoid_: vs page,
-competitor page, alternative page.
+competitor page, alternative page
 
-**How-to page** A Website page that answers one bookmark task: moving bookmarks
+**How-to page**: A Website page that answers one bookmark task: moving bookmarks
 between browsers, backing them up, restoring them, converting their format or
 removing duplicates. It shows the browser's built-in method first and Snug only
 where Snug adds something, and every browser fact on it carries a verified date.
 It starts from the task, while the Guide documents the App. _Avoid_: blog post,
-tutorial, article, guide.
+tutorial, article, guide
 
-**How-to index** The Website page at `/how-to/` that lists every How-to page,
-grouped by task. _Avoid_: hub, blog, resources.
+**How-to index**: The Website page at `/how-to/` that lists every How-to page,
+grouped by task. _Avoid_: hub, blog, resources
 
-**Release notes** The full list of changes per version, kept in `CHANGELOG.md`
+**Release notes**: The full list of changes per version, kept in `CHANGELOG.md`
 and reused as the GitHub Release body. The Website's What's new page shows them
 in full; the App's What's new page shows only the highlights. _Avoid_: changelog
-(as a label shown to users), patch notes, release log.
+(as a label shown to users), patch notes, release log
 
-**Privacy policy** The legal text describing what Snug and the Landing page
+**Privacy policy**: The legal text describing what Snug and the Landing page
 collect. The English version prevails; every other locale shows a translation
-that says so. _Avoid_: privacy page, privacy notice, data policy.
+that says so. _Avoid_: privacy page, privacy notice, data policy
 
-**Install redirect** The landing page's `/install` route, which sends the
+**Install redirect**: The landing page's `/install` route, which sends the
 visitor to the store listing for the browser in use with attribution tags so
 install clicks can be counted without cookies or scripts. _Avoid_: download
-link, store link, CTA link.
+link, store link, CTA link
 
-**Campaign tag** The identifier of one external channel (a directory, a
+**Campaign tag**: The identifier of one external channel (a directory, a
 community, or a post), carried as `c=` on links to the Landing page and the
 Install redirect so visits and installs from that channel can be counted without
-cookies or scripts. _Avoid_: UTM tag, ref, source code.
+cookies or scripts. _Avoid_: UTM tag, ref, source code
 
-**Launch kit** The versioned set of launch material for Snug's relaunch: the
+**Launch kit**: The versioned set of launch material for Snug's relaunch: the
 plan, the directory tracker, positioning and community copy, the press kit, and
-launch-sized assets. _Avoid_: marketing pack, launch docs, PR kit.
+launch-sized assets. _Avoid_: marketing pack, launch docs, PR kit
+
+## Relationships
+
+- A **Bookmark node** is a bookmark or a folder; a tree of nodes hangs from the
+  **Root folders**, and **Location data** says which Root folder a node belongs
+  to.
+- An **Import mode** decides how an import meets the existing tree; the
+  **Default import mode** is shared by **Quick import** and the Import page, and
+  formats without Location data always use Folder mode.
+- An **Import preview** comes before an import; it shows the **Import
+  selection**, the **Duplicates** that **Skip duplicates** will leave out and,
+  for a Restore-replace, the bookmarks that will be deleted. An **Import batch**
+  has one preview.
+- A Restore-replace takes a **Safety snapshot** first, so the import can be
+  undone.
+- An **Export selection** and the **Export options** shape an export; the
+  **Filename template** names its file.
+- **Auto-export** produces **Auto-export runs** (scheduled, **Catch-up run** or
+  Export now) to an **Export destination**: Downloads, which needs **Downloads
+  access**, or a **Custom folder**, which needs **Folder access**. **Retention**
+  deletes only files Snug created.
+- A failed Auto-export run raises the **Failure notification**, which needs
+  **Notification access**.
+- The **App** and the popup live inside the extension; the **Website** (the
+  **Landing page**, **Guide**, **Release notes**, **Privacy policy**,
+  **Alternatives page**, **Comparison pages**, **How-to pages**) does not.
+- The **Landing page** sends visitors through the **Install redirect**, which
+  carries a **Campaign tag**; the **Install dock** repeats that redirect once
+  the hero has scrolled away.
+- The **Goodbye page** collects one **Leaving reason** and nothing that
+  identifies a person.
+- The **Launch kit** holds the material used to promote the Landing page and the
+  store listings.
+
+## Flagged ambiguities
+
+- "Site" is avoided: **Website** means the whole of snug.andryore.dev and
+  **Landing page** means only its home page.
+- "Backup" is avoided for a **Safety snapshot**, which exists to undo one
+  import, and for an **Auto-export run**, which is an export on a schedule.
+- "Changelog" is the `CHANGELOG.md` file; users see **Release notes**, and the
+  App's What's new page shows only highlights of them.
+- "Guide" is the user documentation of the **App** on the Website; a **How-to
+  page** starts from a task, and the repository's `docs/` folder is developer
+  documentation, never called the Guide.
+- "Import" without a qualifier means the Import page's preview-first flow; the
+  one-step popup flow is **Quick import**.
+- "Duplicate" is decided on the normalized URL only; folders are never
+  Duplicates.

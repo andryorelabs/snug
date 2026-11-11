@@ -182,6 +182,59 @@ as if the file were valid. This lets the user see, before committing anything,
 whether a file parsed as expected (a plausible bookmark count, matching the
 format they expected) or clearly didn't — and back out.
 
+## Supply chain
+
+How the code that ships, and the tooling that builds it, are kept trustworthy.
+
+- **Pinned dependencies.** `bun.lock` is committed and the release workflow
+  installs with `--frozen-lockfile`, so a release never resolves a newer version
+  than the one reviewed.
+- **Slow, reviewed updates.** Renovate (`renovate.json5`) opens the update pull
+  requests and waits three days after a release before proposing it, and seven
+  days before it automerges a development dependency or an Action update.
+  Vulnerability alerts come from OSV, as described in
+  [ADR 0001](adr/0001-public-repo-security-posture.md).
+- **SHA-pinned Actions.** Every GitHub Action is pinned to a full commit SHA
+  with a version comment, workflows are linted by actionlint, and the workflow
+  invariants tests fail on an unpinned `uses:` line.
+- **Static analysis and scoring.** CodeQL scans the code on every pull request
+  and weekly ([ADR 0004](adr/0004-enable-codeql-sast.md)), and OpenSSF Scorecard
+  runs weekly and on every push to `main`.
+- **Gated, attested releases.** A store release is gated on a verified tag
+  ([ADR 0026](adr/0026-store-release-is-gated-on-a-verified-tag.md)), and the
+  release workflow attests the build provenance of the extension zip.
+- **Secrets stay in CI.** The only deploy secret is `COOLIFY_API_TOKEN`, a
+  GitHub Actions secret
+  ([ADR 0022](adr/0022-coolify-token-as-github-secret.md)). The shipped
+  extension and the site carry no secrets. See [configuration](configuration.md)
+  for every environment variable.
+- **Third-party agent skills** are committed under `.claude/skills`, pinned to a
+  commit in `skills-lock.json`, and read before they are added (see
+  [development](development.md#agent-skills)).
+
+## CSP requirements
+
+- **The extension** keeps the default Manifest V3 policy for its own pages
+  (`script-src 'self' 'wasm-unsafe-eval'`) and does not override it. It loads no
+  remote code, injects no inline script and has no `host_permissions`.
+- **The site** sends its Content Security Policy as a response header from
+  `apps/site/docker/security-headers.conf`, not as a `<meta>` tag. The script
+  hashes are computed at build time: Astro hashes its own inline scripts, and
+  `apps/site/src/docs/starlight-inline-hashes.ts` adds the ones Starlight ships.
+  A change that adds an inline script must keep its hash in the policy.
+- **The site policy starts from `default-src 'none'`** and opens only what a
+  page needs: `'self'` for scripts, styles, images, fonts, manifest and
+  connections; the cookieless Umami origins for the analytics script and its
+  beacon ([ADR 0017](adr/0017-landing-umami-cloud-cookieless-analytics.md)); the
+  `youtube-nocookie.com` frame for the promo video; and no framing of the site
+  itself (`frame-ancestors 'none'`). It also sets `base-uri 'none'`,
+  `form-action 'none'`, `upgrade-insecure-requests` and
+  `require-trusted-types-for 'script'`.
+- **The checks:** `apps/site/docker/smoke.sh` fails when the header is missing,
+  names a third-party origin outside that list or lacks a required directive,
+  and `distribution-audit.test.ts` fails when an inline script hash is missing
+  from the policy of its own page.
+
 ## Known limitations
 
 - **No sanitization beyond structural parsing.** Defenses described above rely

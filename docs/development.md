@@ -5,15 +5,41 @@ Snug is a bun-workspaces monorepo orchestrated by Turborepo (see
 repo root. Paths in this page are relative to the root unless they start with
 `apps/` or `packages/`.
 
+The repository follows the andryorelabs engineering standard v1
+([ADR 0035](adr/0035-adopt-andryorelabs-standard-v1.md)). The standards live in
+[aokit's `docs/standards`](https://github.com/andryorelabs/aokit/tree/main/docs/standards),
+and the brand and credit rules shared across the repositories live in
+[andryore-web's brand docs](https://github.com/andryorelabs/andryore-web/tree/main/docs/brand).
+Snug keeps its own palette, type and voice ([`docs/brand`](brand/README.md));
+only the maker credit line is shared.
+
+## Setup
+
+1. Install [Bun](https://bun.sh/) and the Node.js version in `.node-version`.
+2. Run `bun install` at the repo root. Its `postinstall` runs `wxt prepare` in
+   `apps/extension`, which generates the types `tsc` needs, and Husky installs
+   the git hooks.
+3. Run `bun run dev` to start the WXT dev server, then load
+   `apps/extension/.output/chrome-mv3-dev` as an unpacked extension.
+4. Run `bun run check` and `bun run test` before opening a pull request.
+
+There are no environment variables to set for local work; see
+[configuration](configuration.md). If something fails, see
+[troubleshooting](troubleshooting.md).
+
+## Workspaces
+
 | Workspace        | Package           | What it holds                                            |
 | ---------------- | ----------------- | -------------------------------------------------------- |
 | `apps/extension` | `@snug/extension` | The WXT Chrome MV3 extension: entrypoints, `lib/`, tests |
+| `apps/site`      | `@snug/site`      | The Astro landing page, Guide and How-to pages           |
 | `packages/ui`    | `@workspace/ui`   | Shared shadcn/ui components, hooks and theme tokens      |
 | `apps/video`     | `@snug/video`     | The Remotion promo video and its thumbnails              |
 
 Agent and contributor rules are split the same way: the root `AGENTS.md` holds
-repo-wide rules, and `apps/extension/AGENTS.md`, `packages/ui/AGENTS.md` and
-`apps/video/AGENTS.md` hold the stack rules for their workspace.
+repo-wide rules, and `apps/extension/AGENTS.md`, `apps/site/AGENTS.md`,
+`packages/ui/AGENTS.md` and `apps/video/AGENTS.md` hold the stack rules for
+their workspace.
 
 ## Scripts
 
@@ -25,7 +51,7 @@ repo-wide rules, and `apps/extension/AGENTS.md`, `packages/ui/AGENTS.md` and
 | `bun run check`             | Aggregate gate: each workspace's `check` plus the root `format:check` → `lint` → `typecheck` → `knip`, in parallel under Turborepo. Run before opening a PR.     |
 | `bun run fix`               | Aggregate autofix: `format:write` → `lint:fix` → `typecheck`.                                                                                                    |
 | `bun run knip`              | Finds unused files, exports, and dependencies (`bunx knip`).                                                                                                     |
-| `bun run ci:local`          | Reproduces CI locally: frozen-lockfile install → `check` → `lint:docs` → `test`.                                                                                 |
+| `bun run ci:local`          | Reproduces CI locally: frozen-lockfile install → `lint:commits` → `lint:docs` → `check` → `test:coverage` → `build` → `test:e2e`.                                |
 | `bun run clean`             | Removes build output, `.turbo` and every workspace's `node_modules`.                                                                                             |
 | `bun run cache:clear`       | Clears the `.astro` ESLint, Turborepo and `node_modules/.cache` caches.                                                                                          |
 | `bun run format:check`      | Checks formatting with Oxfmt (no writes).                                                                                                                        |
@@ -33,6 +59,7 @@ repo-wide rules, and `apps/extension/AGENTS.md`, `packages/ui/AGENTS.md` and
 | `bun run lint`              | Runs Oxlint (`--type-aware --deny-warnings`) as parallel `lint:oxlint:*` shards, then ESLint on `**/*.astro` only (`--max-warnings=0`, cached).                  |
 | `bun run lint:oxlint`       | Runs the Oxlint shards in parallel (`bun run --parallel`): same flags and config, one path per shard. Run one shard alone with `bun run lint:oxlint:<shard>`.    |
 | `bun run lint:docs`         | Local `lychee` link check, matching `lint-docs.yml`'s markdown link gate.                                                                                        |
+| `bun run lint:commits`      | Lints the commit messages of the current branch against `commitlint.config.ts`, as CI's `commitlint` job does.                                                   |
 | `bun run lint:fix`          | Runs Oxlint and the `.astro` ESLint run with `--fix`.                                                                                                            |
 | `bun run typecheck`         | Runs TypeScript 7.1 `tsc --noEmit` at the root, in `packages/ui`, `apps/extension`, `apps/video` and `apps/site`.                                                |
 | `bun run test`              | Turborepo runs each workspace's Vitest suite once, plus the root tooling tests.                                                                                  |
@@ -76,7 +103,7 @@ Hooks are installed via Husky and live in `.husky/`:
   `*.astro` files, and Oxfmt alone to staged `*.{json,md,mdx,css,scss,yml,yaml}`
   files (see `lint-staged.config.mjs`).
 - **`commit-msg`** — runs `bunx commitlint --edit $1` against
-  `commitlint.config.mjs`, which only extends `@commitlint/config-conventional`.
+  `commitlint.config.ts`, which only extends `@commitlint/config-conventional`.
   It enforces the Conventional Commits `<type>: <subject>` shape and the type
   list below, but it does **not** enforce the gitmoji — a commit without an
   emoji still passes this hook. The gitmoji is a repository convention, not a
@@ -558,15 +585,15 @@ whose SHA-256 must be updated by hand in the same PR.
 
 ## Repository settings
 
-This repo's GitHub settings (rulesets on `main` and `v*` tags, merge strategy,
-private vulnerability reporting, SHA-pinned Actions, immutable releases,
-workflow execution protections, and feature/metadata flags) are no longer
-applied via a script — `scripts/repo-settings/apply.sh` was temporary
-settings-as-code tooling and has since been deleted. See
+This repo's GitHub settings are code, not clicks. The rulesets for `main` and
+the `v*` tags live in `.github/rulesets/`, and the repository settings (merge
+strategy, secret scanning, private vulnerability reporting, feature flags) are
+listed with the exact `gh api` commands that apply them in
+[`.github/rulesets/README.md`](../.github/rulesets/README.md). Apply a change
+with `gh api` from there, and run `bun run repo-settings:check` to diff the live
+settings against the files; it exits non-zero naming each difference. See
 [`docs/adr/0001-public-repo-security-posture.md`](adr/0001-public-repo-security-posture.md)
-for the target state this repository's settings were brought to, the reasoning
-behind each choice, and why the script was removed rather than kept around
-permanently.
+for the target state, and the reasoning behind each choice.
 
 ## Agent skills
 

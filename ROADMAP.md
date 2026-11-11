@@ -2,8 +2,8 @@
 
 This document describes the project's direction at a high level. It is reviewed
 yearly; day-to-day planning happens in [Linear](https://linear.app/) and
-[GitHub issues](https://github.com/AndryOre/snug/issues), which are the source
-of truth for what's actually being worked on next.
+[GitHub issues](https://github.com/andryorelabs/snug/issues), which are the
+source of truth for what's actually being worked on next.
 
 ## Next 12 months
 
@@ -23,7 +23,7 @@ The focus for the next year is maintenance rather than new surface area:
 Nothing is queued at the moment. The formats and import sources, finer-grained
 scheduling, and accessibility and localization ideas that used to be listed here
 all shipped in v2.0.0. New ideas are welcome as
-[GitHub issues](https://github.com/AndryOre/snug/issues); being listed here
+[GitHub issues](https://github.com/andryorelabs/snug/issues); being listed here
 would never be a promise that they ship.
 
 ## Landing page
@@ -56,6 +56,6 @@ posture (see the [Privacy Policy](PRIVACY_POLICY.md)):
 ## Where planning actually happens
 
 This roadmap is intentionally coarse. Concrete, scheduled work lives in Linear
-and in [GitHub issues](https://github.com/AndryOre/snug/issues) — those are the
-places to check for what's happening next, and the places to propose new work.
-This document itself is reviewed yearly to keep it aligned with reality.
+and in [GitHub issues](https://github.com/andryorelabs/snug/issues) — those are
+the places to check for what's happening next, and the places to propose new
+work. This document itself is reviewed yearly to keep it aligned with reality.
