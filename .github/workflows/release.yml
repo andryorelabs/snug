@@ -110,24 +110,12 @@ jobs:
             exit 1
           fi
 
+      - name: Require a CHANGELOG section for the tag
+        run: |
+          bun scripts/release/release-notes.ts "${GITHUB_REF_NAME}" > release-notes.md
+
       - name: Build extension zip
         run: bun run zip
-
-      - name: Extract changelog section
-        run: |
-          tag_version="${GITHUB_REF_NAME#v}"
-          awk -v ver="${tag_version}" '
-            /^## \[/ {
-              if (found) exit
-              if ($0 ~ "^## \\[" ver "\\]") { found = 1; next }
-              next
-            }
-            found { print }
-          ' CHANGELOG.md > release-notes.md
-          if [[ ! -s release-notes.md ]]; then
-            echo "No CHANGELOG.md section found for version ${tag_version}"
-            exit 1
-          fi
 
       - name: Attest build provenance
         id: attest

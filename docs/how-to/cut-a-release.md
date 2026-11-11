@@ -1,22 +1,38 @@
 # How to cut a release
 
-1. Bump the `version` field in `apps/extension/package.json` to the new version
-   number.
+1. Make sure the `## [Unreleased]` section of the root `CHANGELOG.md` lists
+   everything the release ships, one list item per change, written for users.
+   The release script refuses an `[Unreleased]` section with no list item.
 
-2. Add a new entry to the top of the array `getChangelog()` returns in
-   `apps/extension/lib/changelog.ts`: a `version`, an `isoDate` (`YYYY-MM-DD`),
-   and one or more `items` (each an object with a `textKey` and, optionally, a
-   `linkKey` + `linkUrl` for entries that link to a specific page, e.g. an App
-   route built with `getAppUrl` (`apps/extension/lib/app-url.ts`) or via
-   `browser.runtime.getURL`). Add the same entry (version, date, and items) to
-   the top of the root `CHANGELOG.md` at the same time.
+2. On a release branch, run `bun run release X.Y.Z` (for example
+   `bun run release 2.4.0`; a prerelease suffix such as `2.4.0-beta.1` is
+   accepted, a leading `v` is not). The version must be higher than the one in
+   `apps/extension/package.json`. The script (`scripts/release/bump.ts`)
+   rewrites every place that carries the version and nothing else:
 
-3. Add the i18n keys that entry references (every item's `textKey` and any
-   `linkKey`; the date needs no key) to **every** file in
-   `apps/extension/locales/` (all 10: `de`, `en`, `es`, `fr`, `it`, `ja`, `ko`,
-   `pt_BR`, `ru`, `zh_CN`). `apps/extension/lib/locale-parity.test.ts` requires
-   every locale to carry the same top-level key set as `en.json`, so a new
-   changelog entry with keys missing from either file fails that test.
+   - `apps/extension/package.json`: the `version` field.
+   - `apps/extension/lib/changelog.ts`: a new entry at the top of the array
+     `getChangelog()` returns, with the `version`, today's `isoDate` and one
+     item per `[Unreleased]` list item, keyed `changelog_X_Y_Z_<n>`.
+   - Every file in `apps/extension/locales/` (all 10: `de`, `en`, `es`, `fr`,
+     `it`, `ja`, `ko`, `pt_BR`, `ru`, `zh_CN`): those keys, with the English
+     text of the CHANGELOG entry as the message.
+   - `CHANGELOG.md`: `[Unreleased]` moves into a `## [X.Y.Z] - YYYY-MM-DD`
+     section, `[Unreleased]` is left empty and the compare links at the bottom
+     are updated.
+
+   It prints the files it changed. It never commits, tags or pushes, and a
+   rejected release changes no file.
+
+3. Finish what the script cannot write. Translate the new `changelog_X_Y_Z_<n>`
+   messages in every locale other than `en`: they hold the English text as a
+   placeholder, and `apps/extension/lib/locale-parity.test.ts` compares key sets
+   only, so nothing but review catches a message left in English. To make an
+   item link to a page, add a `linkKey` and `linkUrl` to it in
+   `apps/extension/lib/changelog.ts` (an App route built with `getAppUrl` from
+   `apps/extension/lib/app-url.ts`, or a site URL) and the `linkKey` message to
+   every locale. Then run `bun run fix` so the formatter settles the generated
+   code.
 
 4. Update the website translations of anything the release changed in the
    English Guide or `CHANGELOG.md`. Run `bun run i18n:status`: every page listed
@@ -28,7 +44,9 @@
    in `bun run test` fails on a stale translation.
 
 5. Run `bun run check` and `bun run test` to confirm the version bump, changelog
-   entry, and locale keys are all consistent.
+   entry, and locale keys are all consistent. Commit, then open a PR titled
+   `chore: 🔖 release vX.Y.Z`; the squash merge makes that title the release
+   commit on `main`.
 
 6. Run `bun run zip` (the root `zip` script, which runs `wxt zip` in
    `apps/extension`) to produce the distributable extension archive and the
@@ -42,16 +60,20 @@
    `bun install --frozen-lockfile && bun run build`. If a root file the build
    needs is added later, add it to that allowlist.
 
-7. After the release PR merges, tag the merge commit with a **signed** tag and
-   push it: `git tag -s vX.Y.Z <merge-commit-sha> && git push origin vX.Y.Z`.
-   Release tags must be signed (`-s`, GPG or SSH per your `git config`) — an
-   unsigned `git tag vX.Y.Z` is not acceptable. Verify a tag's signature at any
-   time with `git tag -v vX.Y.Z`. A `v*` tag ruleset already protects these tags
-   — see [ADR 0001](../adr/0001-public-repo-security-posture.md). Pushing the
-   tag triggers the `release.yml` workflow, which builds the extension zip,
-   extracts that version's `CHANGELOG.md` section as release notes, attests
-   build provenance, and publishes the GitHub Release — no manual
-   `gh release create` needed.
+7. After the release PR merges, tag the merge commit on `main` with a **signed,
+   annotated** tag and push it:
+   `git tag -s vX.Y.Z -m "vX.Y.Z" <merge-commit-sha> && git push origin vX.Y.Z`.
+   `-s` signs the tag (GPG or SSH per your `git config`) and always creates an
+   annotated tag; an unsigned or lightweight `git tag vX.Y.Z` is not acceptable.
+   Verify a tag's signature at any time with `git tag -v vX.Y.Z`. A `v*` tag
+   ruleset already protects these tags — see
+   [ADR 0001](../adr/0001-public-repo-security-posture.md). Pushing the tag
+   triggers the `release.yml` workflow. Before it builds or publishes anything,
+   it runs `scripts/release/release-notes.ts` on the tag: the job fails when
+   `CHANGELOG.md` has no `## [X.Y.Z]` section for the tag or the section is
+   empty, otherwise the section becomes the release notes. It then builds the
+   extension zip, attests build provenance, and publishes the GitHub Release —
+   no manual `gh release create` needed.
 
 8. Once the GitHub Release job finishes, a second job,
    `publish-chrome-web-store`, submits the same zip to the Chrome Web Store via
