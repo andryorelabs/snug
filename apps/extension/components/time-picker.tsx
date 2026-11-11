@@ -1,13 +1,9 @@
-import { Button } from '@workspace/ui/components/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@workspace/ui/components/popover'
-import { ScrollArea } from '@workspace/ui/components/scroll-area'
-import { Separator } from '@workspace/ui/components/separator'
-import { ChevronDownIcon, ClockIcon } from 'lucide-react'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { Button } from "@workspace/ui/components/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import { Separator } from "@workspace/ui/components/separator";
+import { ChevronDownIcon, ClockIcon } from "lucide-react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import {
   type DayPeriod,
@@ -18,32 +14,32 @@ import {
   is12HourLocale,
   parseTime24,
   to12Hour,
-} from '@/lib/time-format'
+} from "@/lib/time-format";
 
-const HOURS_24 = Array.from({ length: 24 }, (_, hour) => hour)
-const HOURS_12 = Array.from({ length: 12 }, (_, index) => index + 1)
-const MINUTES = Array.from({ length: 60 }, (_, minute) => minute)
-const DAY_PERIODS: DayPeriod[] = ['am', 'pm']
-const FALLBACK_TIME = { hour: 0, minute: 0 }
+const HOURS_24 = Array.from({ length: 24 }, (_, hour) => hour);
+const HOURS_12 = Array.from({ length: 12 }, (_, index) => index + 1);
+const MINUTES = Array.from({ length: 60 }, (_, minute) => minute);
+const DAY_PERIODS: DayPeriod[] = ["am", "pm"];
+const FALLBACK_TIME = { hour: 0, minute: 0 };
 
 interface TimePickerOption<Value extends number | string> {
-  value: Value
-  label: string
+  value: Value;
+  label: string;
 }
 
 interface TimePickerColumnProperties<Value extends number | string> {
-  label: string
-  options: TimePickerOption<Value>[]
-  selected: Value
-  onSelect: (value: Value) => void
-  onCommit: () => void
+  label: string;
+  options: TimePickerOption<Value>[];
+  selected: Value;
+  onSelect: (value: Value) => void;
+  onCommit: () => void;
 }
 
 function toNumberOptions(values: number[]): TimePickerOption<number>[] {
   return values.map((value) => ({
     value,
-    label: String(value).padStart(2, '0'),
-  }))
+    label: String(value).padStart(2, "0"),
+  }));
 }
 
 /**
@@ -57,47 +53,42 @@ function toNumberOptions(values: number[]): TimePickerOption<number>[] {
 function TimePickerColumn<Value extends number | string>(
   properties: TimePickerColumnProperties<Value>,
 ) {
-  const { label, options, selected, onSelect, onCommit } = properties
-  const listReference = useRef<HTMLDivElement>(null)
+  const { label, options, selected, onSelect, onCommit } = properties;
+  const listReference = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     listReference.current
       ?.querySelector('[aria-selected="true"]')
-      ?.scrollIntoView({ block: 'nearest' })
-  }, [])
+      ?.scrollIntoView({ block: "nearest" });
+  }, []);
 
   function moveTo(index: number) {
-    const target = options[index]
+    const target = options[index];
     if (!target) {
-      return
+      return;
     }
-    onSelect(target.value)
-    listReference.current
-      ?.querySelectorAll<HTMLElement>('[role="option"]')
-      [index]?.focus()
+    onSelect(target.value);
+    listReference.current?.querySelectorAll<HTMLElement>('[role="option"]')[index]?.focus();
   }
 
-  function handleKeyDown(
-    event: React.KeyboardEvent<HTMLButtonElement>,
-    index: number,
-  ) {
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      onCommit()
-      return
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      onCommit();
+      return;
     }
     const targets: Record<string, number> = {
       ArrowDown: index + 1,
       ArrowUp: index - 1,
       Home: 0,
       End: options.length - 1,
-    }
-    const targetIndex = targets[event.key]
+    };
+    const targetIndex = targets[event.key];
     if (targetIndex === undefined) {
-      return
+      return;
     }
-    event.preventDefault()
-    moveTo(targetIndex)
+    event.preventDefault();
+    moveTo(targetIndex);
   }
 
   return (
@@ -110,14 +101,14 @@ function TimePickerColumn<Value extends number | string>(
         className="flex flex-col gap-0.5 p-1"
       >
         {options.map((option, index) => {
-          const isSelected = option.value === selected
+          const isSelected = option.value === selected;
           return (
             <Button
               key={option.value}
               type="button"
               role="option"
               size="sm"
-              variant={isSelected ? 'default' : 'ghost'}
+              variant={isSelected ? "default" : "ghost"}
               aria-selected={isSelected}
               tabIndex={isSelected ? 0 : -1}
               className="justify-center"
@@ -126,45 +117,45 @@ function TimePickerColumn<Value extends number | string>(
             >
               <span className="tabular-nums">{option.label}</span>
             </Button>
-          )
+          );
         })}
       </div>
     </ScrollArea>
-  )
+  );
 }
 
 export interface TimePickerProperties {
   /**
   The current time as a 24-hour `HH:MM` string.
    */
-  value: string
+  value: string;
   /**
   Called with a 24-hour `HH:MM` string, whichever clock is displayed.
    */
-  onChange: (value: string) => void
+  onChange: (value: string) => void;
   /**
   Accessible name of the hour column.
    */
-  hourLabel: string
+  hourLabel: string;
   /**
   Accessible name of the minute column.
    */
-  minuteLabel: string
+  minuteLabel: string;
   /**
   Accessible name of the AM/PM column, only rendered on 12-hour clocks.
    */
-  periodLabel: string
+  periodLabel: string;
   /**
    * BCP 47 locale deciding between the 12-hour and 24-hour clock and the
    * AM/PM wording. Defaults to the runtime locale.
    */
-  locale?: string
-  id?: string
-  'aria-label'?: string
-  'aria-labelledby'?: string
-  'aria-describedby'?: string
-  'aria-invalid'?: boolean
-  disabled?: boolean
+  locale?: string;
+  id?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+  disabled?: boolean;
 }
 
 /**
@@ -183,37 +174,30 @@ export interface TimePickerProperties {
  * @returns The trigger button and its popover.
  */
 export function TimePicker(properties: TimePickerProperties) {
-  const {
-    value,
-    onChange,
-    hourLabel,
-    minuteLabel,
-    periodLabel,
-    locale,
-    ...triggerProperties
-  } = properties
-  const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState(value)
-  const { hour, minute } = parseTime24(open ? draft : value) ?? FALLBACK_TIME
-  const is12Hour = is12HourLocale(locale)
-  const twelveHour = to12Hour(hour)
-  const dayPeriodLabels = getDayPeriodLabels(locale)
+  const { value, onChange, hourLabel, minuteLabel, periodLabel, locale, ...triggerProperties } =
+    properties;
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const { hour, minute } = parseTime24(open ? draft : value) ?? FALLBACK_TIME;
+  const is12Hour = is12HourLocale(locale);
+  const twelveHour = to12Hour(hour);
+  const dayPeriodLabels = getDayPeriodLabels(locale);
 
   function emit(nextHour: number, nextMinute: number) {
-    setDraft(formatTime24(nextHour, nextMinute))
+    setDraft(formatTime24(nextHour, nextMinute));
   }
 
   function handleOpenChange(isOpening: boolean) {
     if (isOpening) {
-      setDraft(value)
+      setDraft(value);
     } else if (draft !== value) {
-      onChange(draft)
+      onChange(draft);
     }
-    setOpen(isOpening)
+    setOpen(isOpening);
   }
 
   function commit() {
-    handleOpenChange(false)
+    handleOpenChange(false);
   }
 
   return (
@@ -243,9 +227,7 @@ export function TimePicker(properties: TimePickerProperties) {
               label={hourLabel}
               options={toNumberOptions(HOURS_12)}
               selected={twelveHour.hour}
-              onSelect={(next) =>
-                emit(from12Hour(next, twelveHour.period), minute)
-              }
+              onSelect={(next) => emit(from12Hour(next, twelveHour.period), minute)}
               onCommit={commit}
             />
           ) : (
@@ -275,9 +257,7 @@ export function TimePicker(properties: TimePickerProperties) {
                   label: dayPeriodLabels[period],
                 }))}
                 selected={twelveHour.period}
-                onSelect={(next) =>
-                  emit(from12Hour(twelveHour.hour, next), minute)
-                }
+                onSelect={(next) => emit(from12Hour(twelveHour.hour, next), minute)}
                 onCommit={commit}
               />
             </>
@@ -285,5 +265,5 @@ export function TimePicker(properties: TimePickerProperties) {
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

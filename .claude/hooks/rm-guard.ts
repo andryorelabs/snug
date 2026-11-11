@@ -1,15 +1,15 @@
-import os from 'node:os'
-import path from 'node:path'
+import os from "node:os";
+import path from "node:path";
 
-const SEGMENT_SEPARATOR = /&&|\|\||[;|&\n()`]/
+const SEGMENT_SEPARATOR = /&&|\|\||[;|&\n()`]/;
 
-const SHELL_COMMANDS = new Set(['sh', 'bash', 'zsh', 'dash'])
+const SHELL_COMMANDS = new Set(["sh", "bash", "zsh", "dash"]);
 
-const PRINT_COMMANDS = new Set(['echo', 'printf'])
+const PRINT_COMMANDS = new Set(["echo", "printf"]);
 
-const UNRESOLVABLE_TARGET = /[$`~]/
+const UNRESOLVABLE_TARGET = /[$`~]/;
 
-const SCRATCH_DIRECTORY_NAME = '.emet'
+const SCRATCH_DIRECTORY_NAME = ".emet";
 
 /**
  * Splits one shell segment into words, honouring single and double quotes.
@@ -18,35 +18,35 @@ const SCRATCH_DIRECTORY_NAME = '.emet'
  * @returns The words of the segment.
  */
 function tokenize(segment: string): string[] {
-  const tokens: string[] = []
-  let current = ''
-  let hasToken = false
-  let quote: string | null = null
+  const tokens: string[] = [];
+  let current = "";
+  let hasToken = false;
+  let quote: string | null = null;
   for (const character of segment) {
     if (quote !== null) {
       if (character === quote) {
-        quote = null
+        quote = null;
       } else {
-        current += character
+        current += character;
       }
     } else if (character === '"' || character === "'") {
-      quote = character
-      hasToken = true
+      quote = character;
+      hasToken = true;
     } else if (/\s/.test(character)) {
       if (hasToken) {
-        tokens.push(current)
-        current = ''
-        hasToken = false
+        tokens.push(current);
+        current = "";
+        hasToken = false;
       }
     } else {
-      current += character
-      hasToken = true
+      current += character;
+      hasToken = true;
     }
   }
   if (hasToken) {
-    tokens.push(current)
+    tokens.push(current);
   }
-  return tokens
+  return tokens;
 }
 
 /**
@@ -56,13 +56,7 @@ function tokenize(segment: string): string[] {
  * @returns Absolute scratch directories.
  */
 function scratchRoots(cwd: string): string[] {
-  return [
-    ...new Set([
-      '/tmp',
-      os.tmpdir(),
-      path.resolve(cwd, SCRATCH_DIRECTORY_NAME),
-    ]),
-  ]
+  return [...new Set(["/tmp", os.tmpdir(), path.resolve(cwd, SCRATCH_DIRECTORY_NAME)])];
 }
 
 /**
@@ -75,10 +69,10 @@ function scratchRoots(cwd: string): string[] {
  */
 function isInsideScratch(target: string, cwd: string): boolean {
   if (UNRESOLVABLE_TARGET.test(target)) {
-    return false
+    return false;
   }
-  const resolved = path.resolve(cwd, target)
-  return scratchRoots(cwd).some((root) => resolved.startsWith(`${root}/`))
+  const resolved = path.resolve(cwd, target);
+  return scratchRoots(cwd).some((root) => resolved.startsWith(`${root}/`));
 }
 
 /**
@@ -88,19 +82,19 @@ function isInsideScratch(target: string, cwd: string): boolean {
  * @returns True when both recursion and force are requested.
  */
 function isRecursiveForce(flags: readonly string[]): boolean {
-  let isRecursive = false
-  let isForced = false
+  let isRecursive = false;
+  let isForced = false;
   for (const flag of flags) {
-    if (flag === '--recursive') {
-      isRecursive = true
-    } else if (flag === '--force') {
-      isForced = true
+    if (flag === "--recursive") {
+      isRecursive = true;
+    } else if (flag === "--force") {
+      isForced = true;
     } else if (/^-[A-Za-z]+$/.test(flag)) {
-      isRecursive ||= /[rR]/.test(flag)
-      isForced ||= flag.includes('f')
+      isRecursive ||= /[rR]/.test(flag);
+      isForced ||= flag.includes("f");
     }
   }
-  return isRecursive && isForced
+  return isRecursive && isForced;
 }
 
 /**
@@ -110,7 +104,7 @@ function isRecursiveForce(flags: readonly string[]): boolean {
  * @returns The bare command name.
  */
 function plainWord(token: string): string {
-  return path.basename(token.replace(/^\\+/, ''))
+  return path.basename(token.replace(/^\\+/, ""));
 }
 
 /**
@@ -122,12 +116,11 @@ function plainWord(token: string): string {
  */
 function findRmIndex(tokens: readonly string[]): number {
   return tokens.findIndex(
-    (token, index) =>
-      plainWord(token) === 'rm' && plainWord(tokens[index - 1] ?? '') !== 'git',
-  )
+    (token, index) => plainWord(token) === "rm" && plainWord(tokens[index - 1] ?? "") !== "git",
+  );
 }
 
-const SHELL_SCRIPT_FLAG = /^-[A-Za-z]*c[A-Za-z]*$/
+const SHELL_SCRIPT_FLAG = /^-[A-Za-z]*c[A-Za-z]*$/;
 
 /**
  * The script of the first `sh -c`-style or `eval` invocation in the segment,
@@ -137,20 +130,17 @@ const SHELL_SCRIPT_FLAG = /^-[A-Za-z]*c[A-Za-z]*$/
  * @returns The script text, if any.
  */
 function shellScript(tokens: readonly string[]): string | undefined {
-  const evalIndex = tokens.findIndex((token) => plainWord(token) === 'eval')
+  const evalIndex = tokens.findIndex((token) => plainWord(token) === "eval");
   if (evalIndex !== -1) {
-    return tokens.slice(evalIndex + 1).join(' ')
+    return tokens.slice(evalIndex + 1).join(" ");
   }
-  const shellIndex = tokens.findIndex((token) =>
-    SHELL_COMMANDS.has(plainWord(token)),
-  )
+  const shellIndex = tokens.findIndex((token) => SHELL_COMMANDS.has(plainWord(token)));
   if (shellIndex === -1) {
-    return undefined
+    return undefined;
   }
-  const rest = tokens.slice(shellIndex + 1)
-  const scriptIndex =
-    rest.findIndex((token) => SHELL_SCRIPT_FLAG.test(token)) + 1
-  return scriptIndex > 0 ? rest[scriptIndex] : undefined
+  const rest = tokens.slice(shellIndex + 1);
+  const scriptIndex = rest.findIndex((token) => SHELL_SCRIPT_FLAG.test(token)) + 1;
+  return scriptIndex > 0 ? rest[scriptIndex] : undefined;
 }
 
 /**
@@ -159,22 +149,22 @@ function shellScript(tokens: readonly string[]): string | undefined {
  * @returns The flags and the targets.
  */
 function splitRmArguments(argumentsAfterRm: readonly string[]): {
-  flags: string[]
-  targets: string[]
+  flags: string[];
+  targets: string[];
 } {
-  const flags: string[] = []
-  const targets: string[] = []
-  let hasOptionsEnded = false
+  const flags: string[] = [];
+  const targets: string[] = [];
+  let hasOptionsEnded = false;
   for (const argument of argumentsAfterRm) {
-    if (!hasOptionsEnded && argument === '--') {
-      hasOptionsEnded = true
-    } else if (!hasOptionsEnded && argument.startsWith('-')) {
-      flags.push(argument)
-    } else if (argument !== '}') {
-      targets.push(argument)
+    if (!hasOptionsEnded && argument === "--") {
+      hasOptionsEnded = true;
+    } else if (!hasOptionsEnded && argument.startsWith("-")) {
+      flags.push(argument);
+    } else if (argument !== "}") {
+      targets.push(argument);
     }
   }
-  return { flags, targets }
+  return { flags, targets };
 }
 
 /**
@@ -184,21 +174,20 @@ function splitRmArguments(argumentsAfterRm: readonly string[]): {
  * @returns True when the segment is allowed.
  */
 function isSegmentAllowed(segment: string, cwd: string): boolean {
-  const tokens = tokenize(segment)
-  const script = shellScript(tokens)
+  const tokens = tokenize(segment);
+  const script = shellScript(tokens);
   if (script !== undefined && !isAllowedRemoval(script, cwd)) {
-    return false
+    return false;
   }
-  const rmIndex = findRmIndex(tokens)
-  if (rmIndex === -1 || PRINT_COMMANDS.has(plainWord(tokens[0] ?? ''))) {
-    return true
+  const rmIndex = findRmIndex(tokens);
+  if (rmIndex === -1 || PRINT_COMMANDS.has(plainWord(tokens[0] ?? ""))) {
+    return true;
   }
-  const { flags, targets } = splitRmArguments(tokens.slice(rmIndex + 1))
+  const { flags, targets } = splitRmArguments(tokens.slice(rmIndex + 1));
   return (
     !isRecursiveForce(flags) ||
-    (targets.length > 0 &&
-      targets.every((target) => isInsideScratch(target, cwd)))
-  )
+    (targets.length > 0 && targets.every((target) => isInsideScratch(target, cwd)))
+  );
 }
 
 /**
@@ -214,9 +203,7 @@ function isSegmentAllowed(segment: string, cwd: string): boolean {
  * @returns True when the command may run.
  */
 export function isAllowedRemoval(command: string, cwd: string): boolean {
-  return command
-    .split(SEGMENT_SEPARATOR)
-    .every((segment) => isSegmentAllowed(segment, cwd))
+  return command.split(SEGMENT_SEPARATOR).every((segment) => isSegmentAllowed(segment, cwd));
 }
 
 /**
@@ -225,22 +212,22 @@ export function isAllowedRemoval(command: string, cwd: string): boolean {
  * @returns The command (if any) and the working directory.
  */
 function readHookInput(hookInput: string): {
-  command: unknown
-  cwd: string
+  command: unknown;
+  cwd: string;
 } {
-  const parsed: unknown = JSON.parse(hookInput)
-  if (typeof parsed !== 'object' || parsed === null) {
-    return { command: undefined, cwd: process.cwd() }
+  const parsed: unknown = JSON.parse(hookInput);
+  if (typeof parsed !== "object" || parsed === null) {
+    return { command: undefined, cwd: process.cwd() };
   }
   const { tool_input: toolInput, cwd } = parsed as {
-    tool_input?: unknown
-    cwd?: unknown
-  }
+    tool_input?: unknown;
+    cwd?: unknown;
+  };
   const command =
-    typeof toolInput === 'object' && toolInput !== null
+    typeof toolInput === "object" && toolInput !== null
       ? (toolInput as { command?: unknown }).command
-      : undefined
-  return { command, cwd: typeof cwd === 'string' ? cwd : process.cwd() }
+      : undefined;
+  return { command, cwd: typeof cwd === "string" ? cwd : process.cwd() };
 }
 
 /**
@@ -251,23 +238,23 @@ function readHookInput(hookInput: string): {
  * @returns The JSON output to print, or null.
  */
 export function decideRemovalGuard(hookInput: string): string | null {
-  const { command, cwd } = readHookInput(hookInput)
-  if (typeof command !== 'string' || isAllowedRemoval(command, cwd)) {
-    return null
+  const { command, cwd } = readHookInput(hookInput);
+  if (typeof command !== "string" || isAllowedRemoval(command, cwd)) {
+    return null;
   }
   return JSON.stringify({
     hookSpecificOutput: {
-      hookEventName: 'PreToolUse',
-      permissionDecision: 'deny',
+      hookEventName: "PreToolUse",
+      permissionDecision: "deny",
       permissionDecisionReason:
-        'recursive force-delete outside the scratch area (/tmp, the OS temp dir, .emet) is blocked; delete specific paths or ask the user',
+        "recursive force-delete outside the scratch area (/tmp, the OS temp dir, .emet) is blocked; delete specific paths or ask the user",
     },
-  })
+  });
 }
 
 if (import.meta.main) {
-  const output = decideRemovalGuard(await Bun.stdin.text())
+  const output = decideRemovalGuard(await Bun.stdin.text());
   if (output !== null) {
-    process.stdout.write(`${output}\n`)
+    process.stdout.write(`${output}\n`);
   }
 }

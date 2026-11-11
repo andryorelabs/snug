@@ -4,8 +4,7 @@ on:
   workflow_call:
     inputs:
       tier:
-        description:
-          lean (layout specs without accessibility) or full (every layout spec)
+        description: lean (layout specs without accessibility) or full (every layout spec)
         type: string
         default: lean
       platform:
@@ -26,7 +25,7 @@ on:
       - packages/ui/**
       - .github/workflows/browserstack.yml
   schedule:
-    - cron: '17 3 * * *'
+    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       tier:
@@ -66,8 +65,7 @@ jobs:
     env:
       BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
       BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-      REQUESTED_TIER:
-        ${{ inputs.tier || (github.event_name == 'push' && 'lean') || 'full' }}
+      REQUESTED_TIER: ${{ inputs.tier || (github.event_name == 'push' && 'lean') || 'full' }}
       REQUESTED_PLATFORM: ${{ inputs.platform || 'all' }}
     steps:
       - name: Build the platform matrix
@@ -200,8 +198,7 @@ jobs:
   report-failure:
     name: Report a failed nightly run
     needs: [layout]
-    if:
-      ${{ always() && github.event_name == 'schedule' && needs.layout.result ==
+    if: ${{ always() && github.event_name == 'schedule' && needs.layout.result ==
       'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -210,8 +207,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPOSITORY: ${{ github.repository }}
-      RUN_URL:
-        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
         github.run_id }}
     steps:
       - name: Open or update the failure issue
@@ -228,8 +224,7 @@ jobs:
   resolve-failure:
     name: Close the failure issue after a passing nightly run
     needs: [layout]
-    if:
-      ${{ github.event_name == 'schedule' && needs.layout.result == 'success' }}
+    if: ${{ github.event_name == 'schedule' && needs.layout.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -237,8 +232,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       REPOSITORY: ${{ github.repository }}
-      RUN_URL:
-        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
         github.run_id }}
     steps:
       - name: Close the open failure issue

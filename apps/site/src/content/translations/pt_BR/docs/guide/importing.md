@@ -1,10 +1,9 @@
 ---
 title: Importar favoritos
 sourceHash: 4c537c8e1b7a7231
-description:
-  'Importe favoritos de um arquivo para o Chrome. Confira a prévia, escolha o
-  modo de importação e ignore os favoritos que você já tem.'
-seoTitle: 'Importar favoritos para o Chrome de um arquivo'
+description: "Importe favoritos de um arquivo para o Chrome. Confira a prévia, escolha o
+  modo de importação e ignore os favoritos que você já tem."
+seoTitle: "Importar favoritos para o Chrome de um arquivo"
 ---
 
 1. Importação rápida, a partir do popup:

@@ -1,40 +1,37 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { countBookmarks, countImportableBookmarks } from './count-bookmarks'
-import { summarizeImportDuplicates } from './import-duplicates'
-import { getImportPreview } from './import-preview'
-import { parseImportFile } from './importers/parse-import'
-import {
-  loadLiveRootTitles,
-  resolveImportRootTitles,
-} from './importers/resolve-roots'
-import { collectExistingUrls, dropDuplicateBookmarks } from './skip-duplicates'
-import type { ImportMode } from './types'
+import { countBookmarks, countImportableBookmarks } from "./count-bookmarks";
+import { summarizeImportDuplicates } from "./import-duplicates";
+import { getImportPreview } from "./import-preview";
+import { parseImportFile } from "./importers/parse-import";
+import { loadLiveRootTitles, resolveImportRootTitles } from "./importers/resolve-roots";
+import { collectExistingUrls, dropDuplicateBookmarks } from "./skip-duplicates";
+import type { ImportMode } from "./types";
 
 /**
  * Largest import (in bookmarks that will be created) the popup runs itself.
  * Chrome closes the popup on focus loss and kills its JS context with no
  * rollback, so anything larger is routed to the App page.
  */
-export const POPUP_IMPORT_BOOKMARK_LIMIT = 200
+export const POPUP_IMPORT_BOOKMARK_LIMIT = 200;
 
 /**
  * What the popup should do with a picked file.
  */
 export type PopupImportPlan =
-  | { kind: 'import'; mode: ImportMode }
-  | { kind: 'app' }
-  | { kind: 'all-duplicates'; skippedDuplicates: number }
+  | { kind: "import"; mode: ImportMode }
+  | { kind: "app" }
+  | { kind: "all-duplicates"; skippedDuplicates: number };
 
 /**
  * Input of {@link planPopupImport}.
  */
 export interface PopupImportRequest {
-  text: string
-  mimeType: string
-  fileName: string
-  mode: ImportMode
-  skipDuplicates: boolean
+  text: string;
+  mimeType: string;
+  fileName: string;
+  mode: ImportMode;
+  skipDuplicates: boolean;
 }
 
 /**
@@ -47,39 +44,34 @@ export interface PopupImportRequest {
  * @returns The plan for this file.
  * @throws {Error} When the format is unsupported or the file has no bookmarks.
  */
-export async function planPopupImport(
-  request: PopupImportRequest,
-): Promise<PopupImportPlan> {
-  const { text, mimeType, fileName } = request
+export async function planPopupImport(request: PopupImportRequest): Promise<PopupImportPlan> {
+  const { text, mimeType, fileName } = request;
   const { format, totalCount, hasLocationData } = getImportPreview(
     text,
     mimeType,
     fileName,
     await loadLiveRootTitles(),
-  )
-  if (format === 'unknown') throw new Error(i18n.t('unsupportedFileFormat'))
-  if (totalCount === 0) throw new Error(i18n.t('import_noBookmarks'))
+  );
+  if (format === "unknown") throw new Error(i18n.t("unsupportedFileFormat"));
+  if (totalCount === 0) throw new Error(i18n.t("import_noBookmarks"));
 
-  const mode = hasLocationData ? request.mode : 'folder'
-  if (mode === 'restore-replace') return { kind: 'app' }
+  const mode = hasLocationData ? request.mode : "folder";
+  if (mode === "restore-replace") return { kind: "app" };
 
-  let remainingCount = totalCount
+  let remainingCount = totalCount;
   if (request.skipDuplicates) {
-    const summary = await summarizeImportDuplicates(text, mimeType, fileName)
+    const summary = await summarizeImportDuplicates(text, mimeType, fileName);
     if (summary.importableCount === 0 && summary.skippedDuplicates > 0) {
       return {
-        kind: 'all-duplicates',
+        kind: "all-duplicates",
         skippedDuplicates: summary.skippedDuplicates,
-      }
+      };
     }
-    const isSummaryEmpty =
-      summary.importableCount === 0 && summary.skippedDuplicates === 0
-    remainingCount = isSummaryEmpty ? totalCount : summary.importableCount
+    const isSummaryEmpty = summary.importableCount === 0 && summary.skippedDuplicates === 0;
+    remainingCount = isSummaryEmpty ? totalCount : summary.importableCount;
   }
 
-  return remainingCount > POPUP_IMPORT_BOOKMARK_LIMIT
-    ? { kind: 'app' }
-    : { kind: 'import', mode }
+  return remainingCount > POPUP_IMPORT_BOOKMARK_LIMIT ? { kind: "app" } : { kind: "import", mode };
 }
 
 /**
@@ -95,62 +87,62 @@ export async function planPopupImport(
 export async function planPopupImportBatch(
   requests: PopupImportRequest[],
 ): Promise<PopupImportPlan> {
-  const [first] = requests
-  if (!first) throw new Error(i18n.t('import_noBookmarks'))
-  if (requests.length === 1) return planPopupImport(first)
-  const { plan } = await planSummedBatch(requests, first)
-  return plan
+  const [first] = requests;
+  if (!first) throw new Error(i18n.t("import_noBookmarks"));
+  if (requests.length === 1) return planPopupImport(first);
+  const { plan } = await planSummedBatch(requests, first);
+  return plan;
 }
 
 interface SummedBatchPlan {
-  plan: PopupImportPlan
-  bookmarkCount: number
+  plan: PopupImportPlan;
+  bookmarkCount: number;
 }
 
 async function planSummedBatch(
   requests: PopupImportRequest[],
   first: PopupImportRequest,
 ): Promise<SummedBatchPlan> {
-  if (first.mode === 'restore-replace') {
-    return { plan: { kind: 'app' }, bookmarkCount: 0 }
+  if (first.mode === "restore-replace") {
+    return { plan: { kind: "app" }, bookmarkCount: 0 };
   }
 
-  const liveTree = await browser.bookmarks.getTree()
-  const liveRootTitles = resolveImportRootTitles(liveTree[0]?.children ?? [])
-  const seenUrls = collectExistingUrls(liveTree)
-  let remainingCount = 0
-  let skippedDuplicates = 0
+  const liveTree = await browser.bookmarks.getTree();
+  const liveRootTitles = resolveImportRootTitles(liveTree[0]?.children ?? []);
+  const seenUrls = collectExistingUrls(liveTree);
+  let remainingCount = 0;
+  let skippedDuplicates = 0;
   for (const request of requests) {
     const { tree } = parseImportFile(
       request.text,
       request.mimeType,
       request.fileName,
       liveRootTitles,
-    )
+    );
     if (countBookmarks(tree) === 0) {
-      throw new Error(i18n.t('import_noBookmarks'))
+      throw new Error(i18n.t("import_noBookmarks"));
     }
     if (!request.skipDuplicates) {
-      remainingCount += countImportableBookmarks(tree)
-      continue
+      remainingCount += countImportableBookmarks(tree);
+      continue;
     }
-    const dropped = dropDuplicateBookmarks(tree, seenUrls)
-    skippedDuplicates += dropped.skippedDuplicates
-    remainingCount += countImportableBookmarks(dropped.nodes)
-    for (const url of collectExistingUrls(dropped.nodes)) seenUrls.add(url)
+    const dropped = dropDuplicateBookmarks(tree, seenUrls);
+    skippedDuplicates += dropped.skippedDuplicates;
+    remainingCount += countImportableBookmarks(dropped.nodes);
+    for (const url of collectExistingUrls(dropped.nodes)) seenUrls.add(url);
   }
 
   if (remainingCount === 0 && skippedDuplicates > 0) {
     return {
-      plan: { kind: 'all-duplicates', skippedDuplicates },
+      plan: { kind: "all-duplicates", skippedDuplicates },
       bookmarkCount: 0,
-    }
+    };
   }
   const plan: PopupImportPlan =
     remainingCount > POPUP_IMPORT_BOOKMARK_LIMIT
-      ? { kind: 'app' }
-      : { kind: 'import', mode: first.mode }
-  return { plan, bookmarkCount: remainingCount }
+      ? { kind: "app" }
+      : { kind: "import", mode: first.mode };
+  return { plan, bookmarkCount: remainingCount };
 }
 
 /**
@@ -158,29 +150,29 @@ async function planSummedBatch(
  * shows for the same file.
  */
 export interface SkippedPopupFile {
-  fileName: string
-  reason: string
+  fileName: string;
+  reason: string;
 }
 
 /**
  * The outcome of planning the files picked in the popup.
  */
 export interface PopupFileBatchPlan {
-  plan: PopupImportPlan
+  plan: PopupImportPlan;
   /**
    * The picked files that parsed with at least one bookmark, in pick order.
    */
-  readableRequests: PopupImportRequest[]
+  readableRequests: PopupImportRequest[];
   /**
    * The picked files left out because they could not be read, in pick order,
    * each with its reason.
    */
-  skippedFiles: SkippedPopupFile[]
+  skippedFiles: SkippedPopupFile[];
   /**
    * Bookmarks the batch will create, summed across the readable files after
    * Skip duplicates; 0 when the plan is not an import or for a lone file.
    */
-  bookmarkCount: number
+  bookmarkCount: number;
 }
 
 function findUnreadableReason(
@@ -193,17 +185,17 @@ function findUnreadableReason(
       request.mimeType,
       request.fileName,
       liveRootTitles,
-    )
-    if (format === 'unknown') return i18n.t('unsupportedFileFormat')
+    );
+    if (format === "unknown") return i18n.t("unsupportedFileFormat");
     const { tree } = parseImportFile(
       request.text,
       request.mimeType,
       request.fileName,
       liveRootTitles,
-    )
-    return countBookmarks(tree) > 0 ? null : i18n.t('import_noBookmarks')
+    );
+    return countBookmarks(tree) > 0 ? null : i18n.t("import_noBookmarks");
   } catch (error) {
-    return (error as Error).message
+    return (error as Error).message;
   }
 }
 
@@ -220,31 +212,28 @@ function findUnreadableReason(
 export async function planPopupFileBatch(
   requests: PopupImportRequest[],
 ): Promise<PopupFileBatchPlan> {
-  const [first] = requests
-  if (!first) throw new Error(i18n.t('import_noBookmarks'))
+  const [first] = requests;
+  if (!first) throw new Error(i18n.t("import_noBookmarks"));
   if (requests.length === 1) {
     return {
       plan: await planPopupImport(first),
       readableRequests: requests,
       skippedFiles: [],
       bookmarkCount: 0,
-    }
+    };
   }
 
-  const liveTree = await browser.bookmarks.getTree()
-  const liveRootTitles = resolveImportRootTitles(liveTree[0]?.children ?? [])
-  const readableRequests: PopupImportRequest[] = []
-  const skippedFiles: SkippedPopupFile[] = []
+  const liveTree = await browser.bookmarks.getTree();
+  const liveRootTitles = resolveImportRootTitles(liveTree[0]?.children ?? []);
+  const readableRequests: PopupImportRequest[] = [];
+  const skippedFiles: SkippedPopupFile[] = [];
   for (const request of requests) {
-    const reason = findUnreadableReason(request, liveRootTitles)
-    if (reason === null) readableRequests.push(request)
-    else skippedFiles.push({ fileName: request.fileName, reason })
+    const reason = findUnreadableReason(request, liveRootTitles);
+    if (reason === null) readableRequests.push(request);
+    else skippedFiles.push({ fileName: request.fileName, reason });
   }
-  const [firstReadable] = readableRequests
-  if (!firstReadable) throw new Error(i18n.t('import_noBookmarks'))
-  const { plan, bookmarkCount } = await planSummedBatch(
-    readableRequests,
-    firstReadable,
-  )
-  return { plan, readableRequests, skippedFiles, bookmarkCount }
+  const [firstReadable] = readableRequests;
+  if (!firstReadable) throw new Error(i18n.t("import_noBookmarks"));
+  const { plan, bookmarkCount } = await planSummedBatch(readableRequests, firstReadable);
+  return { plan, readableRequests, skippedFiles, bookmarkCount };
 }

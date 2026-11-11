@@ -1,3 +1,3 @@
-import { installFakeLocks } from './fake-locks'
+import { installFakeLocks } from "./fake-locks";
 
-installFakeLocks()
+installFakeLocks();

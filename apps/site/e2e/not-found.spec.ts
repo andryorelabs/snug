@@ -1,124 +1,112 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import {
-  DEFAULT_LOCALE,
-  languageTag,
-  localePath,
-  LOCALES,
-} from '../src/i18n/locales'
-import { howToIndexPath } from './how-to-paths'
-import { expectNoHorizontalOverflow } from './layout-helpers'
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test } from "@playwright/test";
 
-const siteRoot = fileURLToPath(new URL('..', import.meta.url))
-const builtSite = path.join(siteRoot, 'dist')
+import { DEFAULT_LOCALE, languageTag, localePath, LOCALES } from "../src/i18n/locales";
+import { howToIndexPath } from "./how-to-paths";
+import { expectNoHorizontalOverflow } from "./layout-helpers";
 
-type Locale = (typeof LOCALES)[number]
+const siteRoot = fileURLToPath(new URL("..", import.meta.url));
+const builtSite = path.join(siteRoot, "dist");
+
+type Locale = (typeof LOCALES)[number];
 
 function getNotFoundCopy(locale: Locale): {
-  title: string
-  body: string
-  backLink: string
+  title: string;
+  body: string;
+  backLink: string;
 } {
   const content = JSON.parse(
-    readFileSync(path.join(siteRoot, 'src/content', `${locale}.json`), 'utf8'),
-  ) as { notFound: { title: string; body: string; backLink: string } }
-  return content.notFound
+    readFileSync(path.join(siteRoot, "src/content", `${locale}.json`), "utf8"),
+  ) as { notFound: { title: string; body: string; backLink: string } };
+  return content.notFound;
 }
 
 function escapeHtml(text: string): string {
   return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }
 
 function notFoundUrl(locale: Locale): string {
-  return locale === DEFAULT_LOCALE ? '/404.html' : `${localePath(locale)}404/`
+  return locale === DEFAULT_LOCALE ? "/404.html" : `${localePath(locale)}404/`;
 }
 
-test.describe('built 404 pages', () => {
+test.describe("built 404 pages", () => {
   for (const locale of LOCALES) {
     test(`${locale} 404 carries its own language and copy`, () => {
       const html = readFileSync(
         path.join(
           builtSite,
           notFoundUrl(locale).slice(1),
-          locale === DEFAULT_LOCALE ? '' : 'index.html',
+          locale === DEFAULT_LOCALE ? "" : "index.html",
         ),
-        'utf8',
-      )
-      const notFound = getNotFoundCopy(locale)
+        "utf8",
+      );
+      const notFound = getNotFoundCopy(locale);
 
-      expect(html).toContain(`<html lang="${languageTag(locale)}"`)
-      expect(html).toContain(escapeHtml(notFound.title))
-      expect(html).toContain(escapeHtml(notFound.body))
-      expect(html).toContain(`href="${localePath(locale)}"`)
-      expect(html).toContain(escapeHtml(notFound.backLink))
-      expect(html).toContain('name="robots" content="noindex"')
-      expect(html).not.toContain('aria-current')
-    })
+      expect(html).toContain(`<html lang="${languageTag(locale)}"`);
+      expect(html).toContain(escapeHtml(notFound.title));
+      expect(html).toContain(escapeHtml(notFound.body));
+      expect(html).toContain(`href="${localePath(locale)}"`);
+      expect(html).toContain(escapeHtml(notFound.backLink));
+      expect(html).toContain('name="robots" content="noindex"');
+      expect(html).not.toContain("aria-current");
+    });
   }
-})
+});
 
-test.describe('404 secondary links', () => {
+test.describe("404 secondary links", () => {
   for (const locale of LOCALES) {
-    test(`${locale} 404 links the Guide and the How-to index`, async ({
-      page,
-    }) => {
-      await page.goto(notFoundUrl(locale))
-      const links = page.locator('[data-not-found-links] a')
-      await expect(links).toHaveCount(2)
-      await expect(links.nth(0)).toHaveAttribute(
-        'href',
-        localePath(locale, '/guide/'),
-      )
-      await expect(links.nth(1)).toHaveAttribute('href', howToIndexPath(locale))
-    })
+    test(`${locale} 404 links the Guide and the How-to index`, async ({ page }) => {
+      await page.goto(notFoundUrl(locale));
+      const links = page.locator("[data-not-found-links] a");
+      await expect(links).toHaveCount(2);
+      await expect(links.nth(0)).toHaveAttribute("href", localePath(locale, "/guide/"));
+      await expect(links.nth(1)).toHaveAttribute("href", howToIndexPath(locale));
+    });
   }
-})
+});
 
-test.describe('rendered 404 pages', () => {
+test.describe("rendered 404 pages", () => {
   for (const locale of LOCALES) {
-    test(`${locale} 404 fits the width, shows the footer and passes axe`, async ({
-      page,
-    }) => {
-      const notFound = getNotFoundCopy(locale)
+    test(`${locale} 404 fits the width, shows the footer and passes axe`, async ({ page }) => {
+      const notFound = getNotFoundCopy(locale);
       for (const viewport of [
         { width: 320, height: 568 },
         { width: 1280, height: 720 },
       ]) {
-        await page.setViewportSize(viewport)
-        await page.goto(notFoundUrl(locale))
+        await page.setViewportSize(viewport);
+        await page.goto(notFoundUrl(locale));
 
-        await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-          notFound.title,
-        )
-        await expect(
-          page.getByRole('link', { name: notFound.backLink }),
-        ).toHaveAttribute('href', localePath(locale))
+        await expect(page.getByRole("heading", { level: 1 })).toHaveText(notFound.title);
+        await expect(page.getByRole("link", { name: notFound.backLink })).toHaveAttribute(
+          "href",
+          localePath(locale),
+        );
         if (viewport.width >= 1280) {
           const scrollHeight = await page.evaluate(
             () => globalThis.document.documentElement.scrollHeight,
-          )
-          expect(scrollHeight).toBeLessThanOrEqual(viewport.height)
+          );
+          expect(scrollHeight).toBeLessThanOrEqual(viewport.height);
         }
-        await expectNoHorizontalOverflow(page)
+        await expectNoHorizontalOverflow(page);
       }
 
-      await page.setViewportSize({ width: 320, height: 568 })
-      await page.goto(notFoundUrl(locale))
+      await page.setViewportSize({ width: 320, height: 568 });
+      await page.goto(notFoundUrl(locale));
       const { violations } = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-        .analyze()
-      expect(violations).toEqual([])
-      await expect(page.locator('a[aria-current]')).toHaveCount(0)
-      await expect(page.locator('footer')).toBeVisible()
-    })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+      expect(violations).toEqual([]);
+      await expect(page.locator("a[aria-current]")).toHaveCount(0);
+      await expect(page.locator("footer")).toBeVisible();
+    });
   }
-})
+});

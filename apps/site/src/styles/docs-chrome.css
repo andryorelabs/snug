@@ -27,8 +27,8 @@
     color: var(--foreground);
   }
 
-  .sidebar-content a[aria-current='page'],
-  .sidebar-content a[aria-current='page']:hover {
+  .sidebar-content a[aria-current="page"],
+  .sidebar-content a[aria-current="page"]:hover {
     background-color: var(--muted);
     color: var(--foreground);
     font-weight: 500;
@@ -229,7 +229,7 @@
   }
 
   .main-frame::before {
-    content: '';
+    content: "";
     position: fixed;
     z-index: var(--sl-z-index-toc);
     inset-block-start: var(--sl-nav-height);
@@ -385,7 +385,7 @@
     color: var(--foreground);
   }
 
-  starlight-toc a[aria-current='true'] {
+  starlight-toc a[aria-current="true"] {
     border-inline-start-color: var(--primary);
     color: var(--foreground);
   }
@@ -511,19 +511,15 @@
     font-weight: 500;
   }
 
-  #starlight__search
-    .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)),
+  #starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)),
   #starlight__search .pagefind-ui__result-nested {
     border-radius: var(--docs-radius);
     background-color: transparent;
   }
 
+  #starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
   #starlight__search
-    .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):hover,
-  #starlight__search
-    .pagefind-ui__result-title:not(
-      :where(.pagefind-ui__result-nested *)
-    ):focus-within,
+    .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):focus-within,
   #starlight__search .pagefind-ui__result-nested:hover,
   #starlight__search .pagefind-ui__result-nested:focus-within {
     outline: none;
@@ -535,10 +531,8 @@
     border-radius: var(--docs-radius);
   }
 
-  #starlight__search
-    .pagefind-ui__result-title:has(.pagefind-ui__result-link:focus-visible),
-  #starlight__search
-    .pagefind-ui__result-nested:has(.pagefind-ui__result-link:focus-visible) {
+  #starlight__search .pagefind-ui__result-title:has(.pagefind-ui__result-link:focus-visible),
+  #starlight__search .pagefind-ui__result-nested:has(.pagefind-ui__result-link:focus-visible) {
     outline: 2px solid var(--ring);
     outline-offset: -2px;
   }

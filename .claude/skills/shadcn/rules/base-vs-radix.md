@@ -169,9 +169,7 @@ values with `itemToStringValue`. Radix is single-select with string values only.
 <Select items={items} multiple defaultValue={[]}>
   <SelectTrigger>
     <SelectValue>
-      {(value: string[]) =>
-        value.length === 0 ? 'Select fruits' : `${value.length} selected`
-      }
+      {(value: string[]) => (value.length === 0 ? "Select fruits" : `${value.length} selected`)}
     </SelectValue>
   </SelectTrigger>
   ...

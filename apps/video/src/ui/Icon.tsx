@@ -1,15 +1,15 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from "react";
 
 export type IconName =
-  | 'download'
-  | 'upload'
-  | 'duplicates'
-  | 'refresh'
-  | 'settings'
-  | 'history'
-  | 'chevron'
-  | 'check'
-  | 'undo'
+  | "download"
+  | "upload"
+  | "duplicates"
+  | "refresh"
+  | "settings"
+  | "history"
+  | "chevron"
+  | "check"
+  | "undo";
 
 const PATHS: Record<IconName, ReactNode> = {
   download: (
@@ -61,24 +61,19 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
     </>
   ),
-}
+};
 
 export type IconProps = {
-  name: IconName
-  size?: number
-  color?: string
-  strokeWidth?: number
-}
+  name: IconName;
+  size?: number;
+  color?: string;
+  strokeWidth?: number;
+};
 
 /**
  * Stroke icon drawn from the lucide shapes the real app uses.
  */
-export const Icon = ({
-  name,
-  size = 24,
-  color = 'currentColor',
-  strokeWidth = 2,
-}: IconProps) => (
+export const Icon = ({ name, size = 24, color = "currentColor", strokeWidth = 2 }: IconProps) => (
   <svg
     width={size}
     height={size}
@@ -92,4 +87,4 @@ export const Icon = ({
   >
     {PATHS[name]}
   </svg>
-)
+);

@@ -1,5 +1,5 @@
-import { i18n } from '#i18n'
-import { Button } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Button } from "@workspace/ui/components/button";
 import {
   Card,
   CardContent,
@@ -7,35 +7,35 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@workspace/ui/components/card'
-import { Progress } from '@workspace/ui/components/progress'
-import { Spinner } from '@workspace/ui/components/spinner'
+} from "@workspace/ui/components/card";
+import { Progress } from "@workspace/ui/components/progress";
+import { Spinner } from "@workspace/ui/components/spinner";
 
-import { formatCount } from '@/lib/format-count'
-import type { OperationProgressState } from '@/lib/use-operation-progress'
+import { formatCount } from "@/lib/format-count";
+import type { OperationProgressState } from "@/lib/use-operation-progress";
 
-type OperationKind = 'import' | 'export'
+type OperationKind = "import" | "export";
 
 interface OperationProgressCardProperties {
-  kind: OperationKind
-  state: OperationProgressState
-  onCancel: () => void
+  kind: OperationKind;
+  state: OperationProgressState;
+  onCancel: () => void;
 }
 
 function countLine(
   kind: OperationKind,
   { done, total, skippedDuplicates }: OperationProgressState,
 ): string {
-  const counts: [string, string] = [formatCount(done), formatCount(total)]
+  const counts: [string, string] = [formatCount(done), formatCount(total)];
   const base =
-    kind === 'import'
-      ? i18n.t('progress_importCount', counts)
-      : i18n.t('progress_exportCount', counts)
-  if (kind !== 'import' || skippedDuplicates === 0) return base
-  const skipped = i18n.t('import_skippedDuplicates', skippedDuplicates, [
+    kind === "import"
+      ? i18n.t("progress_importCount", counts)
+      : i18n.t("progress_exportCount", counts);
+  if (kind !== "import" || skippedDuplicates === 0) return base;
+  const skipped = i18n.t("import_skippedDuplicates", skippedDuplicates, [
     formatCount(skippedDuplicates),
-  ])
-  return `${base} · ${skipped}`
+  ]);
+  return `${base} · ${skipped}`;
 }
 
 /**
@@ -50,22 +50,18 @@ function countLine(
  * @param properties.onCancel Called when the Cancel button is pressed.
  * @returns The progress card element.
  */
-export function OperationProgressCard({
-  kind,
-  state,
-  onCancel,
-}: OperationProgressCardProperties) {
-  const isCanceling = state.phase === 'canceling'
+export function OperationProgressCard({ kind, state, onCancel }: OperationProgressCardProperties) {
+  const isCanceling = state.phase === "canceling";
   const title = isCanceling
-    ? i18n.t('progress_cancelingTitle')
-    : kind === 'import'
-      ? i18n.t('progress_importTitle')
-      : i18n.t('progress_exportTitle')
+    ? i18n.t("progress_cancelingTitle")
+    : kind === "import"
+      ? i18n.t("progress_importTitle")
+      : i18n.t("progress_exportTitle");
   const description = isCanceling
-    ? kind === 'import'
-      ? i18n.t('progress_cancelingImportDescription')
-      : i18n.t('progress_cancelingExportDescription')
-    : countLine(kind, state)
+    ? kind === "import"
+      ? i18n.t("progress_cancelingImportDescription")
+      : i18n.t("progress_cancelingExportDescription")
+    : countLine(kind, state);
 
   return (
     <Card size="sm">
@@ -76,11 +72,7 @@ export function OperationProgressCard({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Progress
-          value={state.done}
-          max={Math.max(state.total, 1)}
-          aria-label={title}
-        />
+        <Progress value={state.done} max={Math.max(state.total, 1)} aria-label={title} />
       </CardContent>
       <CardFooter>
         <Button
@@ -88,16 +80,14 @@ export function OperationProgressCard({
           variant="outline"
           disabled={isCanceling}
           aria-label={
-            kind === 'import'
-              ? i18n.t('progress_cancelImport')
-              : i18n.t('progress_cancelExport')
+            kind === "import" ? i18n.t("progress_cancelImport") : i18n.t("progress_cancelExport")
           }
           onClick={onCancel}
         >
           {isCanceling && <Spinner data-icon="inline-start" />}
-          {i18n.t('cancel')}
+          {i18n.t("cancel")}
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }

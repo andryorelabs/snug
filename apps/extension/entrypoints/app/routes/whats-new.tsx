@@ -1,22 +1,18 @@
-import { i18n } from '#i18n'
-import { Badge } from '@workspace/ui/components/badge'
-import { buttonVariants } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Badge } from "@workspace/ui/components/badge";
+import { buttonVariants } from "@workspace/ui/components/button";
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@workspace/ui/components/item'
-import { ExternalLinkIcon } from 'lucide-react'
+} from "@workspace/ui/components/item";
+import { ExternalLinkIcon } from "lucide-react";
 
-import { getSiteChangelogUrl, getStoreListingUrl } from '@/lib/brand'
-import {
-  formatChangelogDate,
-  getChangelog,
-  isExternalChangelogUrl,
-} from '@/lib/changelog'
-import { getCurrentChangelogVersion } from '@/lib/version'
+import { getSiteChangelogUrl, getStoreListingUrl } from "@/lib/brand";
+import { formatChangelogDate, getChangelog, isExternalChangelogUrl } from "@/lib/changelog";
+import { getCurrentChangelogVersion } from "@/lib/version";
 
 /**
  * The What's new screen: a changelog timeline (newest first, installed
@@ -26,21 +22,19 @@ import { getCurrentChangelogVersion } from '@/lib/version'
  * @returns The changelog view.
  */
 export function WhatsNewRoute() {
-  const installedVersion = browser.runtime.getManifest().version
-  const changelog = getChangelog()
+  const installedVersion = browser.runtime.getManifest().version;
+  const changelog = getChangelog();
   const currentVersion = getCurrentChangelogVersion(
     changelog.map((entry) => entry.version),
     installedVersion,
-  )
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
-      <p className="text-xs leading-normal text-muted-foreground">
-        {i18n.t('whatsNew_intro')}
-      </p>
+      <p className="text-xs leading-normal text-muted-foreground">{i18n.t("whatsNew_intro")}</p>
       <ol className="flex flex-col">
         {changelog.map(({ version, isoDate, items }, index) => {
-          const isLast = index === changelog.length - 1
+          const isLast = index === changelog.length - 1;
           return (
             <li key={version} className="flex gap-4">
               <div className="flex flex-col items-center">
@@ -48,18 +42,12 @@ export function WhatsNewRoute() {
                   aria-hidden="true"
                   className="mt-2 size-2.5 shrink-0 rounded-full bg-primary"
                 />
-                {!isLast && (
-                  <span aria-hidden="true" className="w-px flex-1 bg-border" />
-                )}
+                {!isLast && <span aria-hidden="true" className="w-px flex-1 bg-border" />}
               </div>
               <div className="flex flex-1 flex-col gap-2 pb-8">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="font-heading text-base font-semibold">
-                    {version}
-                  </h2>
-                  {version === currentVersion && (
-                    <Badge>{i18n.t('whatsNew_current')}</Badge>
-                  )}
+                  <h2 className="font-heading text-base font-semibold">{version}</h2>
+                  {version === currentVersion && <Badge>{i18n.t("whatsNew_current")}</Badge>}
                   <span className="text-sm text-muted-foreground">
                     {formatChangelogDate(isoDate, browser.i18n.getUILanguage())}
                   </span>
@@ -70,21 +58,18 @@ export function WhatsNewRoute() {
                       {i18n.t(textKey)}
                       {linkKey && linkUrl && (
                         <>
-                          {' '}
+                          {" "}
                           <a
                             href={linkUrl}
                             {...(isExternalChangelogUrl(linkUrl) && {
-                              target: '_blank',
-                              rel: 'noopener noreferrer',
+                              target: "_blank",
+                              rel: "noopener noreferrer",
                             })}
                             className="inline-flex items-center gap-1 text-foreground underline hover:no-underline"
                           >
                             {i18n.t(linkKey)}
                             {isExternalChangelogUrl(linkUrl) && (
-                              <ExternalLinkIcon
-                                aria-hidden="true"
-                                className="size-3"
-                              />
+                              <ExternalLinkIcon aria-hidden="true" className="size-3" />
                             )}
                           </a>
                         </>
@@ -94,7 +79,7 @@ export function WhatsNewRoute() {
                 </ul>
               </div>
             </li>
-          )
+          );
         })}
       </ol>
 
@@ -104,28 +89,26 @@ export function WhatsNewRoute() {
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 self-start text-sm text-foreground underline hover:no-underline"
       >
-        {i18n.t('whatsNew_fullNotesLink')}
+        {i18n.t("whatsNew_fullNotesLink")}
         <ExternalLinkIcon aria-hidden="true" className="size-3" />
       </a>
 
       <Item variant="muted">
         <ItemContent>
-          <ItemTitle>{i18n.t('whatsNew_reviewTitle')}</ItemTitle>
-          <ItemDescription>
-            {i18n.t('whatsNew_reviewDescription')}
-          </ItemDescription>
+          <ItemTitle>{i18n.t("whatsNew_reviewTitle")}</ItemTitle>
+          <ItemDescription>{i18n.t("whatsNew_reviewDescription")}</ItemDescription>
         </ItemContent>
         <ItemActions>
           <a
             href={getStoreListingUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
           >
-            {i18n.t('whatsNew_reviewAction')}
+            {i18n.t("whatsNew_reviewAction")}
           </a>
         </ItemActions>
       </Item>
     </div>
-  )
+  );
 }

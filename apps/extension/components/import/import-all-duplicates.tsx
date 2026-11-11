@@ -1,5 +1,5 @@
-import { i18n } from '#i18n'
-import { Button } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Button } from "@workspace/ui/components/button";
 import {
   Empty,
   EmptyContent,
@@ -7,11 +7,11 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '@workspace/ui/components/empty'
-import { CircleCheckIcon } from 'lucide-react'
+} from "@workspace/ui/components/empty";
+import { CircleCheckIcon } from "lucide-react";
 
 interface ImportAllDuplicatesProperties {
-  onTurnOffSkipDuplicates: () => void
+  onTurnOffSkipDuplicates: () => void;
 }
 
 /**
@@ -22,9 +22,7 @@ interface ImportAllDuplicatesProperties {
  * @param root0.onTurnOffSkipDuplicates Called when the action is pressed.
  * @returns The empty state.
  */
-export function ImportAllDuplicates({
-  onTurnOffSkipDuplicates,
-}: ImportAllDuplicatesProperties) {
+export function ImportAllDuplicates({ onTurnOffSkipDuplicates }: ImportAllDuplicatesProperties) {
   return (
     <div className="rounded-lg border">
       <Empty>
@@ -32,22 +30,15 @@ export function ImportAllDuplicates({
           <EmptyMedia variant="icon">
             <CircleCheckIcon />
           </EmptyMedia>
-          <EmptyTitle>{i18n.t('import_allDuplicatesTitle')}</EmptyTitle>
-          <EmptyDescription>
-            {i18n.t('import_allDuplicatesDescription')}
-          </EmptyDescription>
+          <EmptyTitle>{i18n.t("import_allDuplicatesTitle")}</EmptyTitle>
+          <EmptyDescription>{i18n.t("import_allDuplicatesDescription")}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onTurnOffSkipDuplicates}
-          >
-            {i18n.t('import_allDuplicatesAction')}
+          <Button type="button" variant="outline" size="sm" onClick={onTurnOffSkipDuplicates}>
+            {i18n.t("import_allDuplicatesAction")}
           </Button>
         </EmptyContent>
       </Empty>
     </div>
-  )
+  );
 }

@@ -6,8 +6,8 @@ import {
   rmSync,
   statSync,
   writeFileSync,
-} from 'node:fs'
-import path from 'node:path'
+} from "node:fs";
+import path from "node:path";
 
 /**
  * Grace period for a lock directory that exists but has no readable
@@ -20,7 +20,7 @@ import path from 'node:path'
  * file landing is normally sub-millisecond; this only needs to outlast it,
  * not the crash case `isLockStale`'s own `maxAgeMs` handles.
  */
-const HOLDERLESS_GRACE_MS = 2000
+const HOLDERLESS_GRACE_MS = 2000;
 
 /**
  * Directory-based mutual-exclusion lock, shared by every `/emet` script
@@ -44,9 +44,9 @@ const HOLDERLESS_GRACE_MS = 2000
  */
 
 export interface LockHolder {
-  readonly pid: number
-  readonly worktree: string
-  readonly acquiredAt: number
+  readonly pid: number;
+  readonly worktree: string;
+  readonly acquiredAt: number;
 }
 
 /**
@@ -60,22 +60,22 @@ export interface LockHolder {
  * @returns The lock directory's absolute path.
  */
 export async function resolveLockDirectory(lockName: string): Promise<string> {
-  const output = await Bun.$`git rev-parse --git-common-dir`.text()
-  const gitCommonDirectory = output.trim()
+  const output = await Bun.$`git rev-parse --git-common-dir`.text();
+  const gitCommonDirectory = output.trim();
   if (!gitCommonDirectory) {
     throw new Error(
       `emet-locks: could not resolve --git-common-dir for lock "${lockName}" — are we inside a git repo?`,
-    )
+    );
   }
-  return path.join(gitCommonDirectory, lockName)
+  return path.join(gitCommonDirectory, lockName);
 }
 
 function isProcessAlive(pid: number): boolean {
   try {
-    process.kill(pid, 0)
-    return true
+    process.kill(pid, 0);
+    return true;
   } catch (error) {
-    return (error as NodeJS.ErrnoException).code !== 'ESRCH'
+    return (error as NodeJS.ErrnoException).code !== "ESRCH";
   }
 }
 
@@ -83,10 +83,10 @@ export function readLockHolder<THolder extends LockHolder = LockHolder>(
   lockDirectory: string,
 ): THolder | undefined {
   try {
-    const raw = readFileSync(path.join(lockDirectory, 'holder.json'), 'utf8')
-    return JSON.parse(raw) as THolder
+    const raw = readFileSync(path.join(lockDirectory, "holder.json"), "utf8");
+    return JSON.parse(raw) as THolder;
   } catch {
-    return undefined
+    return undefined;
   }
 }
 
@@ -107,7 +107,7 @@ export function readLockHolder<THolder extends LockHolder = LockHolder>(
  * @returns Whether the lock should be treated as abandoned.
  */
 export function isLockStale(lockDirectory: string, maxAgeMs: number): boolean {
-  const holder = readLockHolder(lockDirectory)
+  const holder = readLockHolder(lockDirectory);
   if (!holder) {
     /**
      * No readable holder yet: could be a genuinely abandoned directory (the
@@ -115,13 +115,13 @@ export function isLockStale(lockDirectory: string, maxAgeMs: number): boolean {
      * acquirer that hasn't finished writing `holder.json`. Only the first is
      * stale.
      */
-    const { birthtimeMs } = statSync(lockDirectory)
-    return Date.now() - birthtimeMs > HOLDERLESS_GRACE_MS
+    const { birthtimeMs } = statSync(lockDirectory);
+    return Date.now() - birthtimeMs > HOLDERLESS_GRACE_MS;
   }
   return (
     !isProcessAlive(holder.pid) ||
     (Date.now() - holder.acquiredAt > maxAgeMs && !existsSync(holder.worktree))
-  )
+  );
 }
 
 /**
@@ -140,10 +140,10 @@ export function didAcquireLock<THolder extends LockHolder>(
   holder: THolder,
 ): boolean {
   try {
-    mkdirSync(lockDirectory)
+    mkdirSync(lockDirectory);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'EEXIST') return false
-    throw error
+    if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
+    throw error;
   }
   /**
    * Writes to a sibling temp file, then renames into place — `renameSync`
@@ -152,34 +152,34 @@ export function didAcquireLock<THolder extends LockHolder>(
    * holder-less directory can be observed in; {@link HOLDERLESS_GRACE_MS} in
    * {@link isLockStale} covers what's left of it.
    */
-  const holderPath = path.join(lockDirectory, 'holder.json')
-  const temporaryPath = path.join(lockDirectory, `.holder.${process.pid}.tmp`)
-  writeFileSync(temporaryPath, JSON.stringify(holder))
-  renameSync(temporaryPath, holderPath)
-  return true
+  const holderPath = path.join(lockDirectory, "holder.json");
+  const temporaryPath = path.join(lockDirectory, `.holder.${process.pid}.tmp`);
+  writeFileSync(temporaryPath, JSON.stringify(holder));
+  renameSync(temporaryPath, holderPath);
+  return true;
 }
 
 export function releaseLock(lockDirectory: string): void {
-  rmSync(lockDirectory, { recursive: true, force: true })
+  rmSync(lockDirectory, { recursive: true, force: true });
 }
 
 export interface AcquireLockOptions {
   /**
    * Bounded wait, in ms, before {@link acquireLock} gives up and throws.
    */
-  readonly timeoutMs: number
+  readonly timeoutMs: number;
   /**
    * Delay, in ms, between poll attempts.
    */
-  readonly pollIntervalMs: number
+  readonly pollIntervalMs: number;
   /**
    * Passed through to {@link isLockStale} as its pid-reuse fallback.
    */
-  readonly maxAgeMs: number
+  readonly maxAgeMs: number;
   /**
    * Prefixes every message {@link acquireLock} logs or throws (e.g. `"e2e-queue"`).
    */
-  readonly logLabel: string
+  readonly logLabel: string;
 }
 
 /**
@@ -200,26 +200,26 @@ export async function acquireLock<THolder extends LockHolder>(
   buildHolder: () => THolder,
   options: AcquireLockOptions,
 ): Promise<void> {
-  const { timeoutMs, pollIntervalMs, maxAgeMs, logLabel } = options
-  const deadline = Date.now() + timeoutMs
+  const { timeoutMs, pollIntervalMs, maxAgeMs, logLabel } = options;
+  const deadline = Date.now() + timeoutMs;
   for (;;) {
-    if (didAcquireLock(lockDirectory, buildHolder())) return
+    if (didAcquireLock(lockDirectory, buildHolder())) return;
     if (existsSync(lockDirectory) && isLockStale(lockDirectory, maxAgeMs)) {
-      const holder = readLockHolder(lockDirectory)
+      const holder = readLockHolder(lockDirectory);
       console.log(
-        `${logLabel}: reclaiming a stale lock${holder ? ` (pid ${holder.pid} is no longer alive, or the lock is too old)` : ' (unreadable holder metadata)'}...`,
-      )
-      rmSync(lockDirectory, { recursive: true, force: true })
-      continue
+        `${logLabel}: reclaiming a stale lock${holder ? ` (pid ${holder.pid} is no longer alive, or the lock is too old)` : " (unreadable holder metadata)"}...`,
+      );
+      rmSync(lockDirectory, { recursive: true, force: true });
+      continue;
     }
     if (Date.now() >= deadline) {
-      const holder = readLockHolder(lockDirectory)
+      const holder = readLockHolder(lockDirectory);
       throw new Error(
         `${logLabel}: timed out after ${timeoutMs}ms waiting for the lock` +
-          (holder ? ` (held by pid ${holder.pid} in ${holder.worktree})` : '') +
-          ' — another process is mid-run. Re-run this command to retry.',
-      )
+          (holder ? ` (held by pid ${holder.pid} in ${holder.worktree})` : "") +
+          " — another process is mid-run. Re-run this command to retry.",
+      );
     }
-    await Bun.sleep(pollIntervalMs)
+    await Bun.sleep(pollIntervalMs);
   }
 }

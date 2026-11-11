@@ -1,94 +1,92 @@
-import path from 'node:path'
+import path from "node:path";
 
 /**
  * Pseudo rule id for "unused disable directive" reports: ESLint emits them
  * without a rule id, Oxlint with an empty code, and both are enforced.
  */
-export const UNUSED_DIRECTIVE_RULE = 'unused-disable-directive'
+export const UNUSED_DIRECTIVE_RULE = "unused-disable-directive";
 
 /**
  * Pseudo rule id for an Oxlint diagnostic that carries no `code` and is not
  * an unused-directive report, so it still shows up in the diff.
  */
-export const OXLINT_UNCODED_RULE = 'oxlint-uncoded-diagnostic'
+export const OXLINT_UNCODED_RULE = "oxlint-uncoded-diagnostic";
 
-const UNUSED_DIRECTIVE_MESSAGE =
-  /^Unused (?:eslint|oxlint)-(?:disable|enable) directive/
+const UNUSED_DIRECTIVE_MESSAGE = /^Unused (?:eslint|oxlint)-(?:disable|enable) directive/;
 
-const UNKNOWN_RULE_MESSAGE = /^Definition for rule '.+' was not found\.?$/
+const UNKNOWN_RULE_MESSAGE = /^Definition for rule '.+' was not found\.?$/;
 
 const OXLINT_PLUGIN_PREFIX: Readonly<Record<string, string>> = {
-  eslint: '',
-  'eslint-js': '',
-  typescript: '@typescript-eslint/',
-  'typescript-eslint': '@typescript-eslint/',
-  'typescript-eslint-js': '@typescript-eslint/',
-  unicorn: 'unicorn/',
-  'unicorn-js': 'unicorn/',
-  'jsx-a11y': 'jsx-a11y/',
-  'jsx-a11y-js': 'jsx-a11y/',
-  'react-js': 'react/',
-  'react-hooks-js': 'react-hooks/',
-  jsdoc: 'jsdoc/',
-  'jsdoc-js': 'jsdoc/',
-  'eslint-comments': '@eslint-community/eslint-comments/',
-  'typed-react': '@eslint-react/',
-}
+  eslint: "",
+  "eslint-js": "",
+  typescript: "@typescript-eslint/",
+  "typescript-eslint": "@typescript-eslint/",
+  "typescript-eslint-js": "@typescript-eslint/",
+  unicorn: "unicorn/",
+  "unicorn-js": "unicorn/",
+  "jsx-a11y": "jsx-a11y/",
+  "jsx-a11y-js": "jsx-a11y/",
+  "react-js": "react/",
+  "react-hooks-js": "react-hooks/",
+  jsdoc: "jsdoc/",
+  "jsdoc-js": "jsdoc/",
+  "eslint-comments": "@eslint-community/eslint-comments/",
+  "typed-react": "@eslint-react/",
+};
 
 /**
  * ESLint id prefixes that `eslint.config.mjs` registers a second time under a
  * `-js` alias, so a disable directive is valid in both linters.
  */
 const ESLINT_ALIAS_PREFIX: Readonly<Record<string, string>> = {
-  'unicorn-js/': 'unicorn/',
-  'jsx-a11y-js/': 'jsx-a11y/',
-}
+  "unicorn-js/": "unicorn/",
+  "jsx-a11y-js/": "jsx-a11y/",
+};
 
 /**
  * `eslint-plugin-react-hooks` rules Oxlint ports natively under its `react`
  * plugin; every other native `react(...)` rule is `eslint-plugin-react`.
  */
 const REACT_HOOKS_NATIVE_RULES = new Set([
-  'rules-of-hooks',
-  'exhaustive-deps',
-  'static-components',
-  'use-memo',
-  'void-use-memo',
-  'preserve-manual-memoization',
-  'incompatible-library',
-  'immutability',
-  'globals',
-  'refs',
-  'set-state-in-effect',
-  'error-boundaries',
-  'purity',
-  'set-state-in-render',
-  'unsupported-syntax',
-  'component-hook-factories',
-  'config',
-  'gating',
-])
+  "rules-of-hooks",
+  "exhaustive-deps",
+  "static-components",
+  "use-memo",
+  "void-use-memo",
+  "preserve-manual-memoization",
+  "incompatible-library",
+  "immutability",
+  "globals",
+  "refs",
+  "set-state-in-effect",
+  "error-boundaries",
+  "purity",
+  "set-state-in-render",
+  "unsupported-syntax",
+  "component-hook-factories",
+  "config",
+  "gating",
+]);
 
 /**
  * Core rules whose typescript-eslint extension `recommendedTypeChecked`
  * enables; Oxlint's native port enforces the extension under the core id.
  */
 const TYPESCRIPT_EXTENSION_RULES = new Set([
-  'no-array-constructor',
-  'no-unused-expressions',
-  'no-unused-vars',
-])
+  "no-array-constructor",
+  "no-unused-expressions",
+  "no-unused-vars",
+]);
 
 function prefixOf(plugin: string, rule: string): string {
-  if (plugin === 'react') {
-    return REACT_HOOKS_NATIVE_RULES.has(rule) ? 'react-hooks/' : 'react/'
+  if (plugin === "react") {
+    return REACT_HOOKS_NATIVE_RULES.has(rule) ? "react-hooks/" : "react/";
   }
   const isTypescriptExtension =
-    (plugin === 'eslint' || plugin === 'typescript') &&
-    TYPESCRIPT_EXTENSION_RULES.has(rule)
+    (plugin === "eslint" || plugin === "typescript") && TYPESCRIPT_EXTENSION_RULES.has(rule);
   return isTypescriptExtension
-    ? '@typescript-eslint/'
-    : (OXLINT_PLUGIN_PREFIX[plugin] ?? `${plugin}/`)
+    ? "@typescript-eslint/"
+    : (OXLINT_PLUGIN_PREFIX[plugin] ?? `${plugin}/`);
 }
 
 /**
@@ -101,15 +99,13 @@ function prefixOf(plugin: string, rule: string): string {
  * @returns The ESLint rule id.
  */
 export function normalizeOxlintCode(code: string, message: string): string {
-  if (code === '') {
-    return UNUSED_DIRECTIVE_MESSAGE.test(message)
-      ? UNUSED_DIRECTIVE_RULE
-      : OXLINT_UNCODED_RULE
+  if (code === "") {
+    return UNUSED_DIRECTIVE_MESSAGE.test(message) ? UNUSED_DIRECTIVE_RULE : OXLINT_UNCODED_RULE;
   }
-  const match = /^([^()]+)\((.+)\)$/.exec(code)
-  if (!match) return code
-  const [, plugin = '', rule = ''] = match
-  return `${prefixOf(plugin, rule)}${rule}`
+  const match = /^([^()]+)\((.+)\)$/.exec(code);
+  if (!match) return code;
+  const [, plugin = "", rule = ""] = match;
+  return `${prefixOf(plugin, rule)}${rule}`;
 }
 
 /**
@@ -120,22 +116,15 @@ export function normalizeOxlintCode(code: string, message: string): string {
  * @param message - The message text.
  * @returns The rule id, or undefined for a message that is not a finding.
  */
-export function normalizeEslintRule(
-  ruleId: string | null,
-  message: string,
-): string | undefined {
-  if (UNKNOWN_RULE_MESSAGE.test(message)) return UNUSED_DIRECTIVE_RULE
+export function normalizeEslintRule(ruleId: string | null, message: string): string | undefined {
+  if (UNKNOWN_RULE_MESSAGE.test(message)) return UNUSED_DIRECTIVE_RULE;
   if (ruleId === null) {
-    return UNUSED_DIRECTIVE_MESSAGE.test(message)
-      ? UNUSED_DIRECTIVE_RULE
-      : undefined
+    return UNUSED_DIRECTIVE_MESSAGE.test(message) ? UNUSED_DIRECTIVE_RULE : undefined;
   }
-  const alias = Object.keys(ESLINT_ALIAS_PREFIX).find((prefix) =>
-    ruleId.startsWith(prefix),
-  )
+  const alias = Object.keys(ESLINT_ALIAS_PREFIX).find((prefix) => ruleId.startsWith(prefix));
   return alias === undefined
     ? ruleId
-    : `${ESLINT_ALIAS_PREFIX[alias] ?? ''}${ruleId.slice(alias.length)}`
+    : `${ESLINT_ALIAS_PREFIX[alias] ?? ""}${ruleId.slice(alias.length)}`;
 }
 
 /**
@@ -143,9 +132,9 @@ export function normalizeEslintRule(
  * rule ids.
  */
 export interface Finding {
-  file: string
-  line: number
-  rule: string
+  file: string;
+  line: number;
+  rule: string;
 }
 
 /**
@@ -153,32 +142,30 @@ export interface Finding {
  * `(file, rule)`; `reason` is mandatory and must not be blank.
  */
 export interface AcceptedEntry {
-  file: string
-  line?: number
-  rule: string
-  reason: string
+  file: string;
+  line?: number;
+  rule: string;
+  reason: string;
 }
 
 interface FindingsDiff {
-  common: Finding[]
-  eslintOnly: Finding[]
-  oxlintOnly: Finding[]
+  common: Finding[];
+  eslintOnly: Finding[];
+  oxlintOnly: Finding[];
 }
 
-const findingKey = (item: Finding): string =>
-  `${item.file}:${String(item.line)}:${item.rule}`
+const findingKey = (item: Finding): string => `${item.file}:${String(item.line)}:${item.rule}`;
 
-export const compareText = (left: string, right: string): number =>
-  left.localeCompare(right)
+export const compareText = (left: string, right: string): number => left.localeCompare(right);
 
 const compareFindings = (left: Finding, right: Finding): number =>
   left.file.localeCompare(right.file) ||
   left.line - right.line ||
-  left.rule.localeCompare(right.rule)
+  left.rule.localeCompare(right.rule);
 
 function uniqueSorted(findings: readonly Finding[]): Finding[] {
-  const byKey = new Map(findings.map((item) => [findingKey(item), item]))
-  return byKey.values().toArray().toSorted(compareFindings)
+  const byKey = new Map(findings.map((item) => [findingKey(item), item]));
+  return byKey.values().toArray().toSorted(compareFindings);
 }
 
 /**
@@ -188,23 +175,16 @@ function uniqueSorted(findings: readonly Finding[]): Finding[] {
  * @param oxlint - Findings reported by the candidate, in ESLint rule ids.
  * @returns The findings split into common, ESLint-only and Oxlint-only.
  */
-export function diffFindings(
-  eslint: readonly Finding[],
-  oxlint: readonly Finding[],
-): FindingsDiff {
-  const eslintUnique = uniqueSorted(eslint)
-  const oxlintUnique = uniqueSorted(oxlint)
-  const eslintKeys = new Set(eslintUnique.map((item) => findingKey(item)))
-  const oxlintKeys = new Set(oxlintUnique.map((item) => findingKey(item)))
+export function diffFindings(eslint: readonly Finding[], oxlint: readonly Finding[]): FindingsDiff {
+  const eslintUnique = uniqueSorted(eslint);
+  const oxlintUnique = uniqueSorted(oxlint);
+  const eslintKeys = new Set(eslintUnique.map((item) => findingKey(item)));
+  const oxlintKeys = new Set(oxlintUnique.map((item) => findingKey(item)));
   return {
     common: eslintUnique.filter((item) => oxlintKeys.has(findingKey(item))),
-    eslintOnly: eslintUnique.filter(
-      (item) => !oxlintKeys.has(findingKey(item)),
-    ),
-    oxlintOnly: oxlintUnique.filter(
-      (item) => !eslintKeys.has(findingKey(item)),
-    ),
-  }
+    eslintOnly: eslintUnique.filter((item) => !oxlintKeys.has(findingKey(item))),
+    oxlintOnly: oxlintUnique.filter((item) => !eslintKeys.has(findingKey(item))),
+  };
 }
 
 /**
@@ -215,35 +195,35 @@ export function diffFindings(
  * @returns The validated entries.
  */
 export function parseAccepted(text: string): AcceptedEntry[] {
-  const document: unknown = JSON.parse(text)
+  const document: unknown = JSON.parse(text);
   if (!Array.isArray(document)) {
-    throw new TypeError('accepted.json must be a JSON array')
+    throw new TypeError("accepted.json must be a JSON array");
   }
   return (document as unknown[]).map((raw, index) => {
-    const entry = raw as Partial<AcceptedEntry> | null
-    const label = `accepted.json entry ${String(index)}`
-    if (typeof entry?.file !== 'string' || typeof entry.rule !== 'string') {
-      throw new TypeError(`${label} needs string "file" and "rule"`)
+    const entry = raw as Partial<AcceptedEntry> | null;
+    const label = `accepted.json entry ${String(index)}`;
+    if (typeof entry?.file !== "string" || typeof entry.rule !== "string") {
+      throw new TypeError(`${label} needs string "file" and "rule"`);
     }
-    if (typeof entry.reason !== 'string' || entry.reason.trim() === '') {
-      throw new TypeError(`${label} needs a non-empty "reason"`)
+    if (typeof entry.reason !== "string" || entry.reason.trim() === "") {
+      throw new TypeError(`${label} needs a non-empty "reason"`);
     }
-    if (entry.line !== undefined && typeof entry.line !== 'number') {
-      throw new TypeError(`${label} "line" must be a number`)
+    if (entry.line !== undefined && typeof entry.line !== "number") {
+      throw new TypeError(`${label} "line" must be a number`);
     }
     return {
       file: entry.file,
       ...(entry.line !== undefined && { line: entry.line }),
       rule: entry.rule,
       reason: entry.reason,
-    }
-  })
+    };
+  });
 }
 
 /**
  * Prefix of every corpus finding's path, ahead of the corpus repo's name.
  */
-export const CORPUS_PREFIX = 'corpus/'
+export const CORPUS_PREFIX = "corpus/";
 
 /**
  * Splits accepted gaps by the section they belong to, so a fixture entry is
@@ -252,13 +232,13 @@ export const CORPUS_PREFIX = 'corpus/'
  * @returns The fixture entries and the corpus entries.
  */
 export function partitionAccepted(accepted: readonly AcceptedEntry[]): {
-  fixtures: AcceptedEntry[]
-  corpus: AcceptedEntry[]
+  fixtures: AcceptedEntry[];
+  corpus: AcceptedEntry[];
 } {
   return {
     fixtures: accepted.filter((entry) => !entry.file.startsWith(CORPUS_PREFIX)),
     corpus: accepted.filter((entry) => entry.file.startsWith(CORPUS_PREFIX)),
-  }
+  };
 }
 
 /**
@@ -266,18 +246,17 @@ export function partitionAccepted(accepted: readonly AcceptedEntry[]): {
  * same `(file, rule)` may be and still count as one finding reported at a
  * different node position (a multi-line node's start versus its name).
  */
-const LINE_SHIFT_WINDOW = 2
+const LINE_SHIFT_WINDOW = 2;
 
 /**
  * One finding both linters report, on lines up to `LINE_SHIFT_WINDOW` apart.
  */
 interface LineShift {
-  eslint: Finding
-  oxlint: Finding
+  eslint: Finding;
+  oxlint: Finding;
 }
 
-const lineDistance = (pair: LineShift): number =>
-  Math.abs(pair.oxlint.line - pair.eslint.line)
+const lineDistance = (pair: LineShift): number => Math.abs(pair.oxlint.line - pair.eslint.line);
 
 function pairLineShifts(
   eslintOnly: readonly Finding[],
@@ -296,41 +275,38 @@ function pairLineShifts(
     )
     .toSorted(
       (left, right) =>
-        lineDistance(left) - lineDistance(right) ||
-        compareFindings(left.eslint, right.eslint),
-    )
-  const pairedEslint = new Set<Finding>()
-  const pairedOxlint = new Set<Finding>()
-  const lineShifts: LineShift[] = []
+        lineDistance(left) - lineDistance(right) || compareFindings(left.eslint, right.eslint),
+    );
+  const pairedEslint = new Set<Finding>();
+  const pairedOxlint = new Set<Finding>();
+  const lineShifts: LineShift[] = [];
   for (const pair of candidates) {
-    if (pairedEslint.has(pair.eslint) || pairedOxlint.has(pair.oxlint)) continue
-    pairedEslint.add(pair.eslint)
-    pairedOxlint.add(pair.oxlint)
-    lineShifts.push(pair)
+    if (pairedEslint.has(pair.eslint) || pairedOxlint.has(pair.oxlint)) continue;
+    pairedEslint.add(pair.eslint);
+    pairedOxlint.add(pair.oxlint);
+    lineShifts.push(pair);
   }
   return {
-    lineShifts: lineShifts.toSorted((left, right) =>
-      compareFindings(left.eslint, right.eslint),
-    ),
+    lineShifts: lineShifts.toSorted((left, right) => compareFindings(left.eslint, right.eslint)),
     eslintOnly: eslintOnly.filter((item) => !pairedEslint.has(item)),
     oxlintOnly: oxlintOnly.filter((item) => !pairedOxlint.has(item)),
-  }
+  };
 }
 
 const isCoveredBy = (entry: AcceptedEntry, item: Finding): boolean =>
   entry.file === item.file &&
   entry.rule === item.rule &&
-  (entry.line === undefined || entry.line === item.line)
+  (entry.line === undefined || entry.line === item.line);
 
 /**
  * The inputs of one comparison: what the baseline ESLint and the candidate
  * (Oxlint, plus the `.astro`-scoped ESLint) report over the same files.
  */
 interface SectionInput {
-  name: string
-  baseline: readonly Finding[]
-  candidate: readonly Finding[]
-  accepted: readonly AcceptedEntry[]
+  name: string;
+  baseline: readonly Finding[];
+  candidate: readonly Finding[];
+  accepted: readonly AcceptedEntry[];
 }
 
 /**
@@ -339,14 +315,14 @@ interface SectionInput {
  * sides report a line or two apart; `stale` accepted entries matched nothing.
  */
 export interface SectionResult {
-  name: string
-  common: Finding[]
-  oxlintOnly: Finding[]
-  lineShifts: LineShift[]
-  explained: (Finding & { reason: string })[]
-  unexplained: Finding[]
-  stale: AcceptedEntry[]
-  exitCode: 0 | 1
+  name: string;
+  common: Finding[];
+  oxlintOnly: Finding[];
+  lineShifts: LineShift[];
+  explained: (Finding & { reason: string })[];
+  unexplained: Finding[];
+  stale: AcceptedEntry[];
+  exitCode: 0 | 1;
 }
 
 /**
@@ -356,18 +332,18 @@ export interface SectionResult {
  * @returns The classified findings and the section's exit code.
  */
 export function compareSection(input: SectionInput): SectionResult {
-  const diff = diffFindings(input.baseline, input.candidate)
-  const paired = pairLineShifts(diff.eslintOnly, diff.oxlintOnly)
-  const unexplained: Finding[] = []
-  const explained: SectionResult['explained'] = []
-  const used = new Set<AcceptedEntry>()
+  const diff = diffFindings(input.baseline, input.candidate);
+  const paired = pairLineShifts(diff.eslintOnly, diff.oxlintOnly);
+  const unexplained: Finding[] = [];
+  const explained: SectionResult["explained"] = [];
+  const used = new Set<AcceptedEntry>();
   for (const item of paired.eslintOnly) {
-    const match = input.accepted.find((entry) => isCoveredBy(entry, item))
+    const match = input.accepted.find((entry) => isCoveredBy(entry, item));
     if (match === undefined) {
-      unexplained.push(item)
+      unexplained.push(item);
     } else {
-      used.add(match)
-      explained.push({ ...item, reason: match.reason })
+      used.add(match);
+      explained.push({ ...item, reason: match.reason });
     }
   }
   return {
@@ -379,7 +355,7 @@ export function compareSection(input: SectionInput): SectionResult {
     unexplained,
     stale: input.accepted.filter((entry) => !used.has(entry)),
     exitCode: unexplained.length > 0 ? 1 : 0,
-  }
+  };
 }
 
 /**
@@ -388,11 +364,11 @@ export function compareSection(input: SectionInput): SectionResult {
  * line shifts).
  */
 interface RuleSummary {
-  rule: string
-  common: number
-  eslintOnly: number
-  oxlintOnly: number
-  explained: number
+  rule: string;
+  common: number;
+  eslintOnly: number;
+  oxlintOnly: number;
+  explained: number;
 }
 
 /**
@@ -401,8 +377,8 @@ interface RuleSummary {
  * @returns One row per rule that appears anywhere in the section.
  */
 export function summarizeByRule(result: SectionResult): RuleSummary[] {
-  type RuleCount = Exclude<keyof RuleSummary, 'rule'>
-  const rows = new Map<string, RuleSummary>()
+  type RuleCount = Exclude<keyof RuleSummary, "rule">;
+  const rows = new Map<string, RuleSummary>();
   const tally = (rule: string, column: RuleCount): void => {
     const row = rows.get(rule) ?? {
       rule,
@@ -410,29 +386,29 @@ export function summarizeByRule(result: SectionResult): RuleSummary[] {
       eslintOnly: 0,
       oxlintOnly: 0,
       explained: 0,
-    }
-    row[column] += 1
-    rows.set(rule, row)
-  }
-  for (const item of result.common) tally(item.rule, 'common')
-  for (const item of result.unexplained) tally(item.rule, 'eslintOnly')
-  for (const item of result.oxlintOnly) tally(item.rule, 'oxlintOnly')
-  for (const item of result.explained) tally(item.rule, 'explained')
-  for (const pair of result.lineShifts) tally(pair.eslint.rule, 'explained')
+    };
+    row[column] += 1;
+    rows.set(rule, row);
+  };
+  for (const item of result.common) tally(item.rule, "common");
+  for (const item of result.unexplained) tally(item.rule, "eslintOnly");
+  for (const item of result.oxlintOnly) tally(item.rule, "oxlintOnly");
+  for (const item of result.explained) tally(item.rule, "explained");
+  for (const pair of result.lineShifts) tally(pair.eslint.rule, "explained");
   return rows
     .values()
     .toArray()
-    .toSorted((left, right) => left.rule.localeCompare(right.rule))
+    .toSorted((left, right) => left.rule.localeCompare(right.rule));
 }
 
 interface EslintResult {
-  filePath: string
+  filePath: string;
   messages: {
-    ruleId: string | null
-    line: number
-    message?: string
-    fatal?: boolean
-  }[]
+    ruleId: string | null;
+    line: number;
+    message?: string;
+    fatal?: boolean;
+  }[];
 }
 
 /**
@@ -443,41 +419,37 @@ interface EslintResult {
  * @param prefix - Prepended to every relative path, such as `corpus/<name>/`.
  * @returns The findings, one per reported rule.
  */
-export function parseEslintJson(
-  text: string,
-  root: string,
-  prefix: string,
-): Finding[] {
-  const results = JSON.parse(text) as EslintResult[]
+export function parseEslintJson(text: string, root: string, prefix: string): Finding[] {
+  const results = JSON.parse(text) as EslintResult[];
   const fatal = results.flatMap((result) =>
     result.messages
       .filter((message) => message.fatal === true)
-      .map((message) => `${result.filePath}: ${message.message ?? 'fatal'}`),
-  )
+      .map((message) => `${result.filePath}: ${message.message ?? "fatal"}`),
+  );
   if (fatal.length > 0) {
-    throw new Error(`ESLint reported fatal errors:\n${fatal.join('\n')}`)
+    throw new Error(`ESLint reported fatal errors:\n${fatal.join("\n")}`);
   }
   return results.flatMap((result) =>
     result.messages.flatMap((message) => {
-      const rule = normalizeEslintRule(message.ruleId, message.message ?? '')
+      const rule = normalizeEslintRule(message.ruleId, message.message ?? "");
       return rule === undefined
         ? []
         : {
             file: `${prefix}${path.relative(root, result.filePath)}`,
             line: message.line,
             rule,
-          }
+          };
     }),
-  )
+  );
 }
 
 interface OxlintOutput {
   diagnostics: {
-    code?: string
-    message?: string
-    filename: string
-    labels?: { span: { line: number } }[]
-  }[]
+    code?: string;
+    message?: string;
+    filename: string;
+    labels?: { span: { line: number } }[];
+  }[];
 }
 
 /**
@@ -488,28 +460,21 @@ interface OxlintOutput {
  * @param prefix - Prepended to every relative path, such as `corpus/<name>/`.
  * @returns The findings, one per diagnostic.
  */
-export function parseOxlintJson(
-  text: string,
-  root: string,
-  prefix: string,
-): Finding[] {
-  const output = JSON.parse(text) as OxlintOutput
+export function parseOxlintJson(text: string, root: string, prefix: string): Finding[] {
+  const output = JSON.parse(text) as OxlintOutput;
   return output.diagnostics.map((diagnostic) => {
     const relative = path.isAbsolute(diagnostic.filename)
       ? path.relative(root, diagnostic.filename)
-      : diagnostic.filename
+      : diagnostic.filename;
     return {
       file: `${prefix}${relative}`,
       line: diagnostic.labels?.[0]?.span.line ?? 0,
-      rule: normalizeOxlintCode(
-        diagnostic.code ?? '',
-        diagnostic.message ?? '',
-      ),
-    }
-  })
+      rule: normalizeOxlintCode(diagnostic.code ?? "", diagnostic.message ?? ""),
+    };
+  });
 }
 
-const FIXTURE_SUFFIX = '.fixture'
+const FIXTURE_SUFFIX = ".fixture";
 
 /**
  * The repo-relative path a fixture is copied to for the run. Every fixture
@@ -520,9 +485,9 @@ const FIXTURE_SUFFIX = '.fixture'
  */
 export function fixtureTargetPath(fixture: string): string {
   if (!fixture.endsWith(FIXTURE_SUFFIX)) {
-    throw new Error(`Fixture ${fixture} must end in ${FIXTURE_SUFFIX}`)
+    throw new Error(`Fixture ${fixture} must end in ${FIXTURE_SUFFIX}`);
   }
-  return fixture.slice(0, -FIXTURE_SUFFIX.length)
+  return fixture.slice(0, -FIXTURE_SUFFIX.length);
 }
 
 /**
@@ -539,16 +504,16 @@ export function checkExpectedFixtures(
   baseline: readonly Finding[],
   files: readonly string[],
 ): string[] {
-  const seen = new Set(baseline.map((item) => `${item.file}|${item.rule}`))
+  const seen = new Set(baseline.map((item) => `${item.file}|${item.rule}`));
   const missing = Object.entries(expected).flatMap(([file, rules]) =>
     rules
       .filter((rule) => !seen.has(`${file}|${rule}`))
       .map((rule) => `ESLint did not report ${rule} on fixture ${file}`),
-  )
+  );
   const unlisted = files
     .filter((file) => !Object.hasOwn(expected, file))
-    .map((file) => `Fixture ${file} is missing from expected.json`)
-  return [...missing, ...unlisted]
+    .map((file) => `Fixture ${file} is missing from expected.json`);
+  return [...missing, ...unlisted];
 }
 
 /**
@@ -566,80 +531,72 @@ export function checkRuleCoverage(
   baseline: readonly Finding[],
   untriggerable: Readonly<Record<string, string>>,
 ): string[] {
-  const triggered = new Set(baseline.map((item) => item.rule))
-  const allowListProblems = Object.entries(untriggerable).flatMap(
-    ([rule, reason]) => {
-      if (reason.trim() === '') {
-        return `Untriggerable rule ${rule} needs a reason`
-      }
-      if (triggered.has(rule)) {
-        return `Untriggerable rule ${rule} is triggered by a fixture; drop its entry`
-      }
-      return enforced.has(rule)
-        ? []
-        : `Untriggerable rule ${rule} is not enforced; drop its entry`
-    },
-  )
+  const triggered = new Set(baseline.map((item) => item.rule));
+  const allowListProblems = Object.entries(untriggerable).flatMap(([rule, reason]) => {
+    if (reason.trim() === "") {
+      return `Untriggerable rule ${rule} needs a reason`;
+    }
+    if (triggered.has(rule)) {
+      return `Untriggerable rule ${rule} is triggered by a fixture; drop its entry`;
+    }
+    return enforced.has(rule) ? [] : `Untriggerable rule ${rule} is not enforced; drop its entry`;
+  });
   const uncovered = [...enforced]
-    .filter(
-      (rule) =>
-        !triggered.has(rule) && (untriggerable[rule] ?? '').trim() === '',
-    )
+    .filter((rule) => !triggered.has(rule) && (untriggerable[rule] ?? "").trim() === "")
     .toSorted(compareText)
-    .map((rule) => `Enforced rule ${rule} is not triggered by any fixture`)
-  return [...allowListProblems, ...uncovered]
+    .map((rule) => `Enforced rule ${rule} is not triggered by any fixture`);
+  return [...allowListProblems, ...uncovered];
 }
 
 const formatFinding = (item: Finding): string =>
-  `- \`${item.file}:${String(item.line)}\` \`${item.rule}\``
+  `- \`${item.file}:${String(item.line)}\` \`${item.rule}\``;
 
 function renderRuleTable(rows: readonly RuleSummary[]): string[] {
-  if (rows.length === 0) return ['_No findings._']
+  if (rows.length === 0) return ["_No findings._"];
   return [
-    '| Rule | Common | ESLint-only (gap) | Oxlint-only (extra) | Explained |',
-    '| --- | ---: | ---: | ---: | ---: |',
+    "| Rule | Common | ESLint-only (gap) | Oxlint-only (extra) | Explained |",
+    "| --- | ---: | ---: | ---: | ---: |",
     ...rows.map(
       (row) =>
         `| \`${row.rule}\` | ${String(row.common)} | ${String(row.eslintOnly)} | ${String(row.oxlintOnly)} | ${String(row.explained)} |`,
     ),
-  ]
+  ];
 }
 
 function renderSection(result: SectionResult): string[] {
-  const explainedCount = result.explained.length + result.lineShifts.length
+  const explainedCount = result.explained.length + result.lineShifts.length;
   return [
     `## ${result.name}`,
-    '',
+    "",
     ...renderRuleTable(summarizeByRule(result)),
-    '',
+    "",
     `### ESLint-only, UNEXPLAINED (${String(result.unexplained.length)})`,
-    '',
+    "",
     ...result.unexplained.map((item) => formatFinding(item)),
-    '',
+    "",
     `### Explained differences (${String(explainedCount)})`,
-    '',
+    "",
     ...result.explained.map((item) => `${formatFinding(item)}: ${item.reason}`),
     ...result.lineShifts.map(
       (pair) =>
         `${formatFinding(pair.eslint)}: same rule reported by Oxlint on line ${String(pair.oxlint.line)}`,
     ),
-    '',
+    "",
     `### Oxlint-only (${String(result.oxlintOnly.length)})`,
-    '',
+    "",
     ...result.oxlintOnly.map((item) => formatFinding(item)),
-    '',
+    "",
     ...(result.stale.length > 0
       ? [
           `### Stale accepted entries (${String(result.stale.length)})`,
-          '',
+          "",
           ...result.stale.map(
-            (entry) =>
-              `- \`${entry.file}:${String(entry.line ?? '*')}\` \`${entry.rule}\``,
+            (entry) => `- \`${entry.file}:${String(entry.line ?? "*")}\` \`${entry.rule}\``,
           ),
-          '',
+          "",
         ]
       : []),
-  ]
+  ];
 }
 
 /**
@@ -648,10 +605,10 @@ function renderSection(result: SectionResult): string[] {
  * fixture exercises.
  */
 interface ReportInput {
-  sections: readonly SectionResult[]
-  typeAwareRules: ReadonlySet<string>
-  problems: readonly string[]
-  uncoveredRules: readonly string[]
+  sections: readonly SectionResult[];
+  typeAwareRules: ReadonlySet<string>;
+  problems: readonly string[];
+  uncoveredRules: readonly string[];
 }
 
 /**
@@ -662,57 +619,52 @@ interface ReportInput {
  * @returns The report as Markdown.
  */
 export function renderReport(input: ReportInput): string {
-  const unexplained = input.sections.flatMap((result) => result.unexplained)
-  const isPass = unexplained.length === 0 && input.problems.length === 0
+  const unexplained = input.sections.flatMap((result) => result.unexplained);
+  const isPass = unexplained.length === 0 && input.problems.length === 0;
   const typeAwareRows = input.sections.flatMap((result) =>
     summarizeByRule(result)
       .filter((row) => input.typeAwareRules.has(row.rule))
       .map((row) => ({ ...row, rule: `${result.name}: ${row.rule}` })),
-  )
+  );
   const problemLines =
     input.problems.length > 0
-      ? [
-          '## Harness problems',
-          '',
-          ...input.problems.map((problem) => `- ${problem}`),
-          '',
-        ]
-      : []
+      ? ["## Harness problems", "", ...input.problems.map((problem) => `- ${problem}`), ""]
+      : [];
   return [
-    '# Lint parity report: baseline ESLint vs Oxlint',
-    '',
-    `Gate: ${isPass ? 'PASS' : 'FAIL'}`,
-    '',
+    "# Lint parity report: baseline ESLint vs Oxlint",
+    "",
+    `Gate: ${isPass ? "PASS" : "FAIL"}`,
+    "",
     `UNEXPLAINED ESLint-only findings: ${String(unexplained.length)}`,
-    '',
+    "",
     ...unexplained.map((item) => formatFinding(item)),
-    '',
+    "",
     ...problemLines,
     ...input.sections.flatMap((result) => renderSection(result)),
-    '## (c) Type-aware rules: tsgolint vs typescript-eslint',
-    '',
+    "## (c) Type-aware rules: tsgolint vs typescript-eslint",
+    "",
     ...renderRuleTable(typeAwareRows),
-    '',
+    "",
     `## Enforced rules no fixture exercises (${String(input.uncoveredRules.length)})`,
-    '',
+    "",
     ...input.uncoveredRules.map((rule) => `- \`${rule}\``),
-    '',
-  ].join('\n')
+    "",
+  ].join("\n");
 }
 
-const OXLINT_SHARD_BASE = 'oxlint --type-aware --deny-warnings'
+const OXLINT_SHARD_BASE = "oxlint --type-aware --deny-warnings";
 
-const OXLINT_SHARD_RUNNER = 'bun run --parallel --no-exit-on-error'
+const OXLINT_SHARD_RUNNER = "bun run --parallel --no-exit-on-error";
 
 /**
  * One parallel Oxlint pass of `lint:oxlint`: the path it lints (none for the
  * catch-all pass) and the `--ignore-pattern` globs it skips.
  */
 interface OxlintShard {
-  name: string
-  root: string | undefined
-  ignores: string[]
-  problems: string[]
+  name: string;
+  root: string | undefined;
+  ignores: string[];
+  problems: string[];
 }
 
 function parseOxlintShard(name: string, command: string): OxlintShard {
@@ -721,38 +673,37 @@ function parseOxlintShard(name: string, command: string): OxlintShard {
     root: undefined,
     ignores: [],
     problems: [],
-  }
-  const extraArgumentProblem = `${name} may only add one path and --ignore-pattern flags`
-  const hasBase =
-    command.startsWith(`${OXLINT_SHARD_BASE} `) || command === OXLINT_SHARD_BASE
+  };
+  const extraArgumentProblem = `${name} may only add one path and --ignore-pattern flags`;
+  const hasBase = command.startsWith(`${OXLINT_SHARD_BASE} `) || command === OXLINT_SHARD_BASE;
   if (!hasBase) {
-    shard.problems.push(`${name} must start with "${OXLINT_SHARD_BASE}"`)
+    shard.problems.push(`${name} must start with "${OXLINT_SHARD_BASE}"`);
   }
   const tokens = (hasBase ? command.slice(OXLINT_SHARD_BASE.length) : command)
     .split(/\s+/)
-    .filter((token) => token !== '')
+    .filter((token) => token !== "")
     .slice(hasBase ? 0 : 1)
-    .map((token) => token.replaceAll("'", ''))
+    .map((token) => token.replaceAll("'", ""));
   for (let index = 0; index < tokens.length; index++) {
-    const token = tokens[index] ?? ''
-    if (token === '--ignore-pattern') {
-      index++
-      shard.ignores.push(tokens[index] ?? '')
-    } else if (token.startsWith('-')) {
+    const token = tokens[index] ?? "";
+    if (token === "--ignore-pattern") {
+      index++;
+      shard.ignores.push(tokens[index] ?? "");
+    } else if (token.startsWith("-")) {
       if (hasBase) {
-        shard.problems.push(extraArgumentProblem)
+        shard.problems.push(extraArgumentProblem);
       }
     } else if (shard.root === undefined) {
-      shard.root = token.replace(/\/+$/, '')
+      shard.root = token.replace(/\/+$/, "");
     } else {
-      shard.problems.push(extraArgumentProblem)
+      shard.problems.push(extraArgumentProblem);
     }
   }
-  return shard
+  return shard;
 }
 
 function isInside(child: string, parent: string | undefined): boolean {
-  return parent === undefined || child.startsWith(`${parent}/`)
+  return parent === undefined || child.startsWith(`${parent}/`);
 }
 
 /**
@@ -764,52 +715,37 @@ function isInside(child: string, parent: string | undefined): boolean {
  * @param scripts - The root `package.json` scripts.
  * @returns One message per problem; empty when the shards partition the repo.
  */
-export function checkOxlintShards(
-  scripts: Readonly<Record<string, string>>,
-): string[] {
-  const runner = scripts['lint:oxlint'] ?? ''
+export function checkOxlintShards(scripts: Readonly<Record<string, string>>): string[] {
+  const runner = scripts["lint:oxlint"] ?? "";
   const names = runner.startsWith(`${OXLINT_SHARD_RUNNER} `)
     ? runner.slice(OXLINT_SHARD_RUNNER.length).trim().split(/\s+/)
-    : []
-  if (
-    names.length === 0 ||
-    names.some((name) => !name.startsWith('lint:oxlint:'))
-  ) {
-    return [
-      `lint:oxlint must be "${OXLINT_SHARD_RUNNER}" followed by its lint:oxlint:* shards`,
-    ]
+    : [];
+  if (names.length === 0 || names.some((name) => !name.startsWith("lint:oxlint:"))) {
+    return [`lint:oxlint must be "${OXLINT_SHARD_RUNNER}" followed by its lint:oxlint:* shards`];
   }
-  const shards = names.map((name) =>
-    parseOxlintShard(name, scripts[name] ?? ''),
-  )
-  const problems = shards.flatMap((shard) => shard.problems)
-  const roots = shards.flatMap((shard) =>
-    shard.root === undefined ? [] : shard.root,
-  )
-  const catchAllCount = shards.length - roots.length
+  const shards = names.map((name) => parseOxlintShard(name, scripts[name] ?? ""));
+  const problems = shards.flatMap((shard) => shard.problems);
+  const roots = shards.flatMap((shard) => (shard.root === undefined ? [] : shard.root));
+  const catchAllCount = shards.length - roots.length;
   if (catchAllCount !== 1) {
     problems.push(
       `lint:oxlint needs exactly one shard without a path (found ${String(catchAllCount)})`,
-    )
+    );
   }
   for (const shard of shards) {
-    const nested = roots.filter((root) => isInside(root, shard.root))
+    const nested = roots.filter((root) => isInside(root, shard.root));
     const outermost = nested.filter((root) =>
       nested.every((other) => other === root || !isInside(root, other)),
-    )
+    );
     const expected = outermost
       .map((root) => `${root}/**`)
-      .toSorted((left, right) => left.localeCompare(right))
-    const actual = shard.ignores.toSorted((left, right) =>
-      left.localeCompare(right),
-    )
-    if (expected.join('\n') === actual.join('\n')) {
-      continue
+      .toSorted((left, right) => left.localeCompare(right));
+    const actual = shard.ignores.toSorted((left, right) => left.localeCompare(right));
+    if (expected.join("\n") === actual.join("\n")) {
+      continue;
     }
-    const found = actual.length === 0 ? 'nothing' : actual.join(', ')
-    problems.push(
-      `${shard.name} must ignore exactly ${expected.join(', ')} (it ignores ${found})`,
-    )
+    const found = actual.length === 0 ? "nothing" : actual.join(", ");
+    problems.push(`${shard.name} must ignore exactly ${expected.join(", ")} (it ignores ${found})`);
   }
-  return problems
+  return problems;
 }

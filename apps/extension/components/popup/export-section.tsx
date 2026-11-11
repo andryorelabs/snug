@@ -1,5 +1,5 @@
-import { i18n } from '#i18n'
-import { Button } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Button } from "@workspace/ui/components/button";
 import {
   Select,
   SelectContent,
@@ -7,34 +7,31 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@workspace/ui/components/select'
-import { toast } from '@workspace/ui/components/toast'
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@workspace/ui/components/toggle-group'
-import { DownloadIcon } from 'lucide-react'
-import { useState } from 'react'
+} from "@workspace/ui/components/select";
+import { toast } from "@workspace/ui/components/toast";
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group";
+import { DownloadIcon } from "lucide-react";
+import { useState } from "react";
 
-import { OperationProgressCard } from '@/components/operation-progress-card'
-import { exportAllBookmarks } from '@/lib/export-all-bookmarks'
-import { ExportCanceledError } from '@/lib/export-control'
+import { OperationProgressCard } from "@/components/operation-progress-card";
+import { exportAllBookmarks } from "@/lib/export-all-bookmarks";
+import { ExportCanceledError } from "@/lib/export-control";
 import {
   EXPORT_FORMAT_INFO,
   EXPORT_FORMATS,
   type ExportFormat,
   POPUP_TOGGLE_FORMAT_LIMIT,
-} from '@/lib/export-formats'
-import { formatCount } from '@/lib/format-count'
-import { markReviewPromptEligible } from '@/lib/review-prompt'
-import { lastExportFormatStore } from '@/lib/storage'
-import { useOperationProgress } from '@/lib/use-operation-progress'
-import { useStorageItem } from '@/lib/use-storage-item'
+} from "@/lib/export-formats";
+import { formatCount } from "@/lib/format-count";
+import { markReviewPromptEligible } from "@/lib/review-prompt";
+import { lastExportFormatStore } from "@/lib/storage";
+import { useOperationProgress } from "@/lib/use-operation-progress";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 const formatItems = EXPORT_FORMATS.map((value) => ({
   value,
   label: EXPORT_FORMAT_INFO[value].label,
-}))
+}));
 
 /**
  * Popup Export section: a full-width format picker (a toggle group up to
@@ -43,42 +40,42 @@ const formatItems = EXPORT_FORMATS.map((value) => ({
  * @returns The export section element.
  */
 export function ExportSection() {
-  const [format, setFormat] = useStorageItem(lastExportFormatStore)
-  const [isExporting, setIsExporting] = useState(false)
-  const progress = useOperationProgress()
+  const [format, setFormat] = useStorageItem(lastExportFormatStore);
+  const [isExporting, setIsExporting] = useState(false);
+  const progress = useOperationProgress();
 
   const handleExport = async () => {
-    setIsExporting(true)
-    const signal = progress.begin()
+    setIsExporting(true);
+    const signal = progress.begin();
     try {
       const { fileName, count } = await exportAllBookmarks(format, {
         signal,
         onProgress: progress.report,
-      })
-      await markReviewPromptEligible(Date.now())
+      });
+      await markReviewPromptEligible(Date.now());
       toast.add({
-        type: 'success',
-        title: i18n.t('popup_exportSuccessTitle', count, [formatCount(count)]),
+        type: "success",
+        title: i18n.t("popup_exportSuccessTitle", count, [formatCount(count)]),
         description: fileName,
-      })
+      });
     } catch (error) {
       toast.add(
         error instanceof ExportCanceledError
           ? {
-              title: i18n.t('progress_exportCanceledTitle'),
-              description: i18n.t('progress_exportCanceledDescription'),
+              title: i18n.t("progress_exportCanceledTitle"),
+              description: i18n.t("progress_exportCanceledDescription"),
             }
           : {
-              type: 'error',
-              title: i18n.t('popup_exportFailedTitle'),
+              type: "error",
+              title: i18n.t("popup_exportFailedTitle"),
               description: (error as Error).message,
             },
-      )
+      );
     } finally {
-      progress.end()
-      setIsExporting(false)
+      progress.end();
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <section className="flex flex-col gap-2">
@@ -88,10 +85,7 @@ export function ExportSection() {
           value={format}
           onValueChange={(value) => void setFormat(value as ExportFormat)}
         >
-          <SelectTrigger
-            className="w-full"
-            aria-label={i18n.t('popup_exportFormatLabel')}
-          >
+          <SelectTrigger className="w-full" aria-label={i18n.t("popup_exportFormatLabel")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -108,11 +102,11 @@ export function ExportSection() {
         <ToggleGroup
           variant="outline"
           className="w-full"
-          aria-label={i18n.t('popup_exportFormatLabel')}
+          aria-label={i18n.t("popup_exportFormatLabel")}
           value={[format]}
           onValueChange={(values) => {
-            const next = values[0] as ExportFormat | undefined
-            if (next) void setFormat(next)
+            const next = values[0] as ExportFormat | undefined;
+            if (next) void setFormat(next);
           }}
         >
           {EXPORT_FORMATS.map((value) => (
@@ -122,13 +116,9 @@ export function ExportSection() {
           ))}
         </ToggleGroup>
       )}
-      <Button
-        className="w-full"
-        disabled={isExporting}
-        onClick={() => void handleExport()}
-      >
+      <Button className="w-full" disabled={isExporting} onClick={() => void handleExport()}>
         <DownloadIcon data-icon="inline-start" />
-        {i18n.t('popup_exportAll')}
+        {i18n.t("popup_exportAll")}
       </Button>
       {progress.state.isCardVisible && (
         <OperationProgressCard
@@ -138,5 +128,5 @@ export function ExportSection() {
         />
       )}
     </section>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import type { GeneratedI18nStructure } from '#i18n'
+import type { GeneratedI18nStructure } from "#i18n";
 
-import { APP_ROUTES, getAppUrl } from './app-url'
-import { getSiteGuideUrl, getSiteUrl } from './brand'
+import { APP_ROUTES, getAppUrl } from "./app-url";
+import { getSiteGuideUrl, getSiteUrl } from "./brand";
 
 /**
  * Every changelog key is rendered as plain, argument-less text, so this
@@ -10,12 +10,12 @@ import { getSiteGuideUrl, getSiteUrl } from './brand'
  */
 type I18nKey = {
   [K in keyof GeneratedI18nStructure]: GeneratedI18nStructure[K] extends {
-    plural: false
-    substitutions: 0
+    plural: false;
+    substitutions: 0;
   }
     ? K
-    : never
-}[keyof GeneratedI18nStructure]
+    : never;
+}[keyof GeneratedI18nStructure];
 
 /**
  * Whether a changelog link leaves the extension (an `http(s)://` URL) and so
@@ -24,19 +24,19 @@ type I18nKey = {
  * @returns `true` for external web URLs.
  */
 export function isExternalChangelogUrl(url: string): boolean {
-  return /^https?:\/\//.test(url)
+  return /^https?:\/\//.test(url);
 }
 
 export interface ChangelogEntry {
-  version: string
-  isoDate: string
-  items: ChangelogItem[]
+  version: string;
+  isoDate: string;
+  items: ChangelogItem[];
 }
 
 interface ChangelogItem {
-  textKey: I18nKey
-  linkKey?: I18nKey
-  linkUrl?: string
+  textKey: I18nKey;
+  linkKey?: I18nKey;
+  linkUrl?: string;
 }
 
 /**
@@ -60,188 +60,188 @@ interface ChangelogItem {
  * @returns The changelog entries, newest release first.
  */
 export function getChangelog(): ChangelogEntry[] {
-  const exportUrl = getAppUrl(APP_ROUTES.export)
-  const importUrl = getAppUrl(APP_ROUTES.import)
-  const autoExportUrl = getAppUrl(APP_ROUTES.autoExport)
-  const duplicatesUrl = getAppUrl(APP_ROUTES.duplicates)
+  const exportUrl = getAppUrl(APP_ROUTES.export);
+  const importUrl = getAppUrl(APP_ROUTES.import);
+  const autoExportUrl = getAppUrl(APP_ROUTES.autoExport);
+  const duplicatesUrl = getAppUrl(APP_ROUTES.duplicates);
 
   return [
     {
-      version: '2.3.1',
-      isoDate: '2026-11-03',
+      version: "2.3.1",
+      isoDate: "2026-11-03",
       items: [
-        { textKey: 'changelog_2_3_1_1' },
-        { textKey: 'changelog_2_3_1_2' },
-        { textKey: 'changelog_2_3_1_3' },
+        { textKey: "changelog_2_3_1_1" },
+        { textKey: "changelog_2_3_1_2" },
+        { textKey: "changelog_2_3_1_3" },
       ],
     },
     {
-      version: '2.3.0',
-      isoDate: '2026-11-03',
+      version: "2.3.0",
+      isoDate: "2026-11-03",
       items: [
-        { textKey: 'changelog_2_3_0_1' },
-        { textKey: 'changelog_2_3_0_2' },
-        { textKey: 'changelog_2_3_0_3' },
+        { textKey: "changelog_2_3_0_1" },
+        { textKey: "changelog_2_3_0_2" },
+        { textKey: "changelog_2_3_0_3" },
       ],
     },
     {
-      version: '2.2.0',
-      isoDate: '2026-10-10',
+      version: "2.2.0",
+      isoDate: "2026-10-10",
       items: [
         {
-          textKey: 'changelog_2_2_0_1',
-          linkKey: 'changelog_2_2_0_1_link',
+          textKey: "changelog_2_2_0_1",
+          linkKey: "changelog_2_2_0_1_link",
           linkUrl: `${getSiteGuideUrl()}auto-export/`,
         },
-        { textKey: 'changelog_2_2_0_2' },
-        { textKey: 'changelog_2_2_0_3' },
+        { textKey: "changelog_2_2_0_2" },
+        { textKey: "changelog_2_2_0_3" },
       ],
     },
     {
-      version: '2.1.0',
-      isoDate: '2026-10-08',
-      items: [{ textKey: 'changelog_2_1_0_1' }],
+      version: "2.1.0",
+      isoDate: "2026-10-08",
+      items: [{ textKey: "changelog_2_1_0_1" }],
     },
     {
-      version: '2.0.3',
-      isoDate: '2026-10-06',
-      items: [{ textKey: 'changelog_2_0_3_1' }],
+      version: "2.0.3",
+      isoDate: "2026-10-06",
+      items: [{ textKey: "changelog_2_0_3_1" }],
     },
     {
-      version: '2.0.2',
-      isoDate: '2026-10-06',
+      version: "2.0.2",
+      isoDate: "2026-10-06",
       items: [
         {
-          textKey: 'changelog_2_0_2_1',
-          linkKey: 'changelog_2_0_2_1_link',
+          textKey: "changelog_2_0_2_1",
+          linkKey: "changelog_2_0_2_1_link",
           linkUrl: getSiteUrl(),
         },
       ],
     },
     {
-      version: '2.0.0',
-      isoDate: '2026-10-02',
+      version: "2.0.0",
+      isoDate: "2026-10-02",
       items: [
         {
-          textKey: 'changelog_2_0_0_1',
+          textKey: "changelog_2_0_0_1",
         },
         {
-          textKey: 'changelog_2_0_0_2',
-          linkKey: 'changelog_2_0_0_2_link',
+          textKey: "changelog_2_0_0_2",
+          linkKey: "changelog_2_0_0_2_link",
           linkUrl: exportUrl,
         },
-        { textKey: 'changelog_2_0_0_3' },
-        { textKey: 'changelog_2_0_0_4' },
+        { textKey: "changelog_2_0_0_3" },
+        { textKey: "changelog_2_0_0_4" },
         {
-          textKey: 'changelog_2_0_0_5',
-          linkKey: 'changelog_2_0_0_5_link',
+          textKey: "changelog_2_0_0_5",
+          linkKey: "changelog_2_0_0_5_link",
           linkUrl: duplicatesUrl,
         },
         {
-          textKey: 'changelog_2_0_0_6',
-          linkKey: 'changelog_2_0_0_6_link',
+          textKey: "changelog_2_0_0_6",
+          linkKey: "changelog_2_0_0_6_link",
           linkUrl: autoExportUrl,
         },
-        { textKey: 'changelog_2_0_0_7' },
-        { textKey: 'changelog_2_0_0_8' },
+        { textKey: "changelog_2_0_0_7" },
+        { textKey: "changelog_2_0_0_8" },
       ],
     },
     {
-      version: '1.7.0',
-      isoDate: '2026-10-01',
+      version: "1.7.0",
+      isoDate: "2026-10-01",
       items: [
         {
-          textKey: 'changelog_1_7_0_1',
-          linkKey: 'changelog_1_7_0_1_link',
+          textKey: "changelog_1_7_0_1",
+          linkKey: "changelog_1_7_0_1_link",
           linkUrl: autoExportUrl,
         },
         {
-          textKey: 'changelog_1_7_0_2',
-        },
-      ],
-    },
-    {
-      version: '1.6.0',
-      isoDate: '2026-04-29',
-      items: [
-        {
-          textKey: 'changelog_1_6_0_1',
-          linkKey: 'changelog_1_6_0_1_link',
-          linkUrl: autoExportUrl,
+          textKey: "changelog_1_7_0_2",
         },
       ],
     },
     {
-      version: '1.5.0',
-      isoDate: '2025-04-29',
+      version: "1.6.0",
+      isoDate: "2026-04-29",
       items: [
         {
-          textKey: 'changelog_1_5_0_1',
-          linkKey: 'changelog_1_5_0_1_link',
+          textKey: "changelog_1_6_0_1",
+          linkKey: "changelog_1_6_0_1_link",
+          linkUrl: autoExportUrl,
+        },
+      ],
+    },
+    {
+      version: "1.5.0",
+      isoDate: "2025-04-29",
+      items: [
+        {
+          textKey: "changelog_1_5_0_1",
+          linkKey: "changelog_1_5_0_1_link",
           linkUrl: importUrl,
         },
       ],
     },
     {
-      version: '1.4.0',
-      isoDate: '2025-04-29',
-      items: [{ textKey: 'changelog_1_4_0_1' }],
+      version: "1.4.0",
+      isoDate: "2025-04-29",
+      items: [{ textKey: "changelog_1_4_0_1" }],
     },
     {
-      version: '1.3.0',
-      isoDate: '2025-02-16',
-      items: [{ textKey: 'changelog_1_3_0_1' }],
+      version: "1.3.0",
+      isoDate: "2025-02-16",
+      items: [{ textKey: "changelog_1_3_0_1" }],
     },
     {
-      version: '1.2.0',
-      isoDate: '2025-02-14',
-      items: [{ textKey: 'changelog_1_2_0_1' }],
+      version: "1.2.0",
+      isoDate: "2025-02-14",
+      items: [{ textKey: "changelog_1_2_0_1" }],
     },
     {
-      version: '1.1.0',
-      isoDate: '2025-02-13',
+      version: "1.1.0",
+      isoDate: "2025-02-13",
       items: [
-        { textKey: 'changelog_1_1_0_1' },
+        { textKey: "changelog_1_1_0_1" },
         {
-          textKey: 'changelog_1_1_0_2',
-          linkKey: 'changelog_1_1_0_2_link',
+          textKey: "changelog_1_1_0_2",
+          linkKey: "changelog_1_1_0_2_link",
           linkUrl: exportUrl,
         },
       ],
     },
     {
-      version: '1.0.0',
-      isoDate: '2024-08-05',
+      version: "1.0.0",
+      isoDate: "2024-08-05",
       items: [
         {
-          textKey: 'changelog_1_0_0_1',
-          linkKey: 'changelog_1_0_0_1_link',
+          textKey: "changelog_1_0_0_1",
+          linkKey: "changelog_1_0_0_1_link",
           linkUrl: exportUrl,
         },
-        { textKey: 'changelog_1_0_0_2' },
-        { textKey: 'changelog_1_0_0_3' },
+        { textKey: "changelog_1_0_0_2" },
+        { textKey: "changelog_1_0_0_3" },
       ],
     },
     {
-      version: '0.1.1',
-      isoDate: '2024-08-04',
+      version: "0.1.1",
+      isoDate: "2024-08-04",
       items: [
-        { textKey: 'changelog_0_1_1_1' },
-        { textKey: 'changelog_0_1_1_2' },
-        { textKey: 'changelog_0_1_1_3' },
-        { textKey: 'changelog_0_1_1_4' },
+        { textKey: "changelog_0_1_1_1" },
+        { textKey: "changelog_0_1_1_2" },
+        { textKey: "changelog_0_1_1_3" },
+        { textKey: "changelog_0_1_1_4" },
       ],
     },
     {
-      version: '0.1.0',
-      isoDate: '2024-08-03',
+      version: "0.1.0",
+      isoDate: "2024-08-03",
       items: [
-        { textKey: 'changelog_0_1_0_1' },
-        { textKey: 'changelog_0_1_0_2' },
-        { textKey: 'changelog_0_1_0_3' },
+        { textKey: "changelog_0_1_0_1" },
+        { textKey: "changelog_0_1_0_2" },
+        { textKey: "changelog_0_1_0_3" },
       ],
     },
-  ]
+  ];
 }
 
 /**
@@ -254,7 +254,7 @@ export function getChangelog(): ChangelogEntry[] {
  */
 export function formatChangelogDate(isoDate: string, locale?: string): string {
   return new Intl.DateTimeFormat(locale, {
-    dateStyle: 'long',
-    timeZone: 'UTC',
-  }).format(new Date(`${isoDate}T00:00:00Z`))
+    dateStyle: "long",
+    timeZone: "UTC",
+  }).format(new Date(`${isoDate}T00:00:00Z`));
 }

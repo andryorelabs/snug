@@ -1,10 +1,9 @@
 ---
 title: Configurações
 sourceHash: 27e95d807b037c3c
-description:
-  'Defina o tema, a exibição da árvore de favoritos e o modo de importação
-  padrão nas Configurações do Snug e veja o cartão de instantâneos de segurança.'
-seoTitle: 'Configurações do Snug: tema, importação e segurança'
+description: "Defina o tema, a exibição da árvore de favoritos e o modo de importação
+  padrão nas Configurações do Snug e veja o cartão de instantâneos de segurança."
+seoTitle: "Configurações do Snug: tema, importação e segurança"
 ---
 
 A página **Configurações** do app reúne o tema (Sistema, Claro, Escuro), as

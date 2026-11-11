@@ -3,16 +3,15 @@
  * (see `docs/landing/content.md`). Re-check before launch.
  */
 export const STORE_FACTS = {
-  name: 'Snug',
-  category: 'BrowserApplication',
-  operatingSystem: 'Windows, macOS, Linux, ChromeOS',
-  browserRequirements:
-    'Requires a Chromium browser (Chrome 119 or later, Edge, Brave, Opera)',
+  name: "Snug",
+  category: "BrowserApplication",
+  operatingSystem: "Windows, macOS, Linux, ChromeOS",
+  browserRequirements: "Requires a Chromium browser (Chrome 119 or later, Edge, Brave, Opera)",
   ratingValue: 4.8,
   ratingCount: 20,
   userCount: 5000,
-  license: 'https://opensource.org/license/mit',
-  promoVideoUploadDate: '2026-10-04',
-  sourceUrl: 'https://github.com/andryorelabs/snug',
-  author: { name: 'Andry Orellana', url: 'https://andryore.dev' },
-} as const
+  license: "https://opensource.org/license/mit",
+  promoVideoUploadDate: "2026-10-04",
+  sourceUrl: "https://github.com/andryorelabs/snug",
+  author: { name: "Andry Orellana", url: "https://andryore.dev" },
+} as const;

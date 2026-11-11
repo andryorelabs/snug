@@ -1,50 +1,41 @@
-import type enComparisons from '../content/comparisons/en.json'
-import { COMPETITORS, type CompetitorSlug } from '../content/competitors'
-import { assertSameKeys, type ContentTree } from './content'
-import {
-  DEFAULT_LOCALE,
-  languageTag,
-  type Locale,
-  localePath,
-  LOCALES,
-} from './locales'
+import type enComparisons from "../content/comparisons/en.json";
+import { COMPETITORS, type CompetitorSlug } from "../content/competitors";
+import { assertSameKeys, type ContentTree } from "./content";
+import { DEFAULT_LOCALE, languageTag, type Locale, localePath, LOCALES } from "./locales";
 
 /**
  * Shape of every locale's comparison copy, taken from the English source file.
  */
-export type ComparisonContent = typeof enComparisons
+export type ComparisonContent = typeof enComparisons;
 
-type ComparisonFiles = Record<string, { default: ComparisonContent }>
+type ComparisonFiles = Record<string, { default: ComparisonContent }>;
 
 /**
  * Slug of a competitor that has its own comparison page. Always a key of
  * `COMPETITORS` whose `comparisonPage` flag is set.
  */
-export type ComparisonSlug = Extract<
-  keyof ComparisonContent['pages'],
-  CompetitorSlug
->
+export type ComparisonSlug = Extract<keyof ComparisonContent["pages"], CompetitorSlug>;
 
 /**
  * Key of one page's entry in the copy's `meta` block: the Alternatives page or
  * one comparison page.
  */
-export type ComparisonPageKey = 'alternatives' | ComparisonSlug
+export type ComparisonPageKey = "alternatives" | ComparisonSlug;
 
 /**
  * Site-relative path of the English Alternatives page.
  */
-export const ALTERNATIVES_PATH = '/alternatives/'
+export const ALTERNATIVES_PATH = "/alternatives/";
 
-const FILE_PATTERN = /^\.\.\/content\/comparisons\/(.+)\.json$/
+const FILE_PATTERN = /^\.\.\/content\/comparisons\/(.+)\.json$/;
 
 const bundledFiles = import.meta.glob<{ default: ComparisonContent }>(
-  '../content/comparisons/*.json',
+  "../content/comparisons/*.json",
   { eager: true },
-)
+);
 
 function isLocale(code: string): code is Locale {
-  return (LOCALES as readonly string[]).includes(code)
+  return (LOCALES as readonly string[]).includes(code);
 }
 
 /**
@@ -58,54 +49,48 @@ function isLocale(code: string): code is Locale {
 export function loadComparisonContent(
   files: ComparisonFiles = bundledFiles,
 ): Partial<Record<Locale, ComparisonContent>> {
-  const byLocale: Partial<Record<Locale, ComparisonContent>> = {}
+  const byLocale: Partial<Record<Locale, ComparisonContent>> = {};
   for (const [file, module] of Object.entries(files)) {
-    const code = FILE_PATTERN.exec(file)?.[1]
+    const code = FILE_PATTERN.exec(file)?.[1];
     if (code === undefined || !isLocale(code)) {
-      throw new Error(
-        `Comparison copy file "${file}" is not a supported locale`,
-      )
+      throw new Error(`Comparison copy file "${file}" is not a supported locale`);
     }
-    byLocale[code] = module.default
+    byLocale[code] = module.default;
   }
-  const reference = byLocale[DEFAULT_LOCALE]
+  const reference = byLocale[DEFAULT_LOCALE];
   if (!reference) {
-    throw new Error('Missing English comparison copy file "en.json"')
+    throw new Error('Missing English comparison copy file "en.json"');
   }
   for (const locale of LOCALES) {
-    const content = byLocale[locale]
+    const content = byLocale[locale];
     if (content && locale !== DEFAULT_LOCALE) {
       assertSameKeys(
         reference as unknown as ContentTree,
         locale,
         content as unknown as ContentTree,
-      )
+      );
     }
   }
-  return byLocale
+  return byLocale;
 }
 
-const loadedContent = loadComparisonContent()
+const loadedContent = loadComparisonContent();
 
 /**
  * Locales that have a translated comparison copy file. English is the source
  * and is never listed here.
  */
 export const TRANSLATED_COMPARISON_LOCALES: ReadonlySet<Locale> = new Set(
-  LOCALES.filter(
-    (locale) =>
-      locale !== DEFAULT_LOCALE && loadedContent[locale] !== undefined,
-  ),
-)
+  LOCALES.filter((locale) => locale !== DEFAULT_LOCALE && loadedContent[locale] !== undefined),
+);
 
 /**
  * Locales that have the Alternatives and Comparison pages, English first.
  * These are the hreflang and sitemap alternates.
  */
 export const COMPARISON_PAGE_LOCALES: readonly Locale[] = LOCALES.filter(
-  (locale) =>
-    locale === DEFAULT_LOCALE || TRANSLATED_COMPARISON_LOCALES.has(locale),
-)
+  (locale) => locale === DEFAULT_LOCALE || TRANSLATED_COMPARISON_LOCALES.has(locale),
+);
 
 /**
  * Competitors that have a comparison page, in the order of `COMPETITORS`.
@@ -116,12 +101,12 @@ export const COMPARISON_SLUGS: readonly ComparisonSlug[] = (
 )
   .filter(([, facts]) => facts.comparisonPage)
   .map(([slug]) => {
-    const english = loadedContent[DEFAULT_LOCALE]
+    const english = loadedContent[DEFAULT_LOCALE];
     if (!english || !Object.keys(english.pages).includes(slug)) {
-      throw new Error(`Competitor "${slug}" has no English comparison copy`)
+      throw new Error(`Competitor "${slug}" has no English comparison copy`);
     }
-    return slug as ComparisonSlug
-  })
+    return slug as ComparisonSlug;
+  });
 
 /**
  * The locale whose copy a page renders: the locale itself when it has a
@@ -131,7 +116,7 @@ export const COMPARISON_SLUGS: readonly ComparisonSlug[] = (
  * @returns `locale` or the default locale.
  */
 function comparisonCopyLocale(locale: Locale): Locale {
-  return TRANSLATED_COMPARISON_LOCALES.has(locale) ? locale : DEFAULT_LOCALE
+  return TRANSLATED_COMPARISON_LOCALES.has(locale) ? locale : DEFAULT_LOCALE;
 }
 
 /**
@@ -141,9 +126,9 @@ function comparisonCopyLocale(locale: Locale): Locale {
  * @returns The locale's copy, or the English copy.
  */
 export function getComparisonContent(locale: Locale): ComparisonContent {
-  const content = loadedContent[locale] ?? loadedContent[DEFAULT_LOCALE]
-  if (!content) throw new Error('Missing English comparison copy')
-  return content
+  const content = loadedContent[locale] ?? loadedContent[DEFAULT_LOCALE];
+  if (!content) throw new Error("Missing English comparison copy");
+  return content;
 }
 
 /**
@@ -160,39 +145,37 @@ export function alternativesPath(
   slug?: ComparisonSlug,
   translated: ReadonlySet<Locale> = TRANSLATED_COMPARISON_LOCALES,
 ): string {
-  const page = slug ? `${ALTERNATIVES_PATH}${slug}/` : ALTERNATIVES_PATH
-  return locale !== DEFAULT_LOCALE && translated.has(locale)
-    ? localePath(locale, page)
-    : page
+  const page = slug ? `${ALTERNATIVES_PATH}${slug}/` : ALTERNATIVES_PATH;
+  return locale !== DEFAULT_LOCALE && translated.has(locale) ? localePath(locale, page) : page;
 }
 
 /**
  * Values a comparison copy string can interpolate.
  */
 export interface ComparisonValues {
-  users?: number
-  rating?: number
-  languages?: number
-  historyMonths?: number
-  date?: string
-  name?: string
+  users?: number;
+  rating?: number;
+  languages?: number;
+  historyMonths?: number;
+  date?: string;
+  name?: string;
 }
 
 function formatValue(key: string, value: string | number, tag: string): string {
-  if (typeof value === 'string' && key !== 'date') return value
-  if (key === 'date') {
+  if (typeof value === "string" && key !== "date") return value;
+  if (key === "date") {
     return new Intl.DateTimeFormat(tag, {
-      dateStyle: 'long',
-      timeZone: 'UTC',
-    }).format(new Date(`${String(value)}T00:00:00Z`))
+      dateStyle: "long",
+      timeZone: "UTC",
+    }).format(new Date(`${String(value)}T00:00:00Z`));
   }
-  if (key === 'rating') {
+  if (key === "rating") {
     return new Intl.NumberFormat(tag, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
-    }).format(Number(value))
+    }).format(Number(value));
   }
-  return new Intl.NumberFormat(tag).format(Number(value))
+  return new Intl.NumberFormat(tag).format(Number(value));
 }
 
 /**
@@ -209,14 +192,14 @@ export function interpolateComparison(
   locale: Locale,
   values: ComparisonValues,
 ): string {
-  const tag = languageTag(locale)
+  const tag = languageTag(locale);
   return template.replaceAll(/\{(\w+)\}/g, (_match, key: string) => {
-    const value = (values as Record<string, string | number | undefined>)[key]
+    const value = (values as Record<string, string | number | undefined>)[key];
     if (value === undefined) {
-      throw new Error(`No value for placeholder "{${key}}" in "${template}"`)
+      throw new Error(`No value for placeholder "{${key}}" in "${template}"`);
     }
-    return formatValue(key, value, tag)
-  })
+    return formatValue(key, value, tag);
+  });
 }
 
 /**
@@ -231,13 +214,13 @@ export function getComparisonMeta(
   locale: Locale,
   page: ComparisonPageKey,
 ): { title: string; description: string } {
-  const { title, description } = getComparisonContent(locale).meta[page]
+  const { title, description } = getComparisonContent(locale).meta[page];
   const date =
-    page === 'alternatives'
+    page === "alternatives"
       ? COMPARISON_SLUGS.map((slug) => COMPETITORS[slug].verifiedOn)
           .toSorted((a, b) => a.localeCompare(b))
           .at(-1)
-      : COMPETITORS[page].verifiedOn
+      : COMPETITORS[page].verifiedOn;
   return {
     title,
     description: interpolateComparison(
@@ -245,5 +228,5 @@ export function getComparisonMeta(
       comparisonCopyLocale(locale),
       date === undefined ? {} : { date },
     ),
-  }
+  };
 }

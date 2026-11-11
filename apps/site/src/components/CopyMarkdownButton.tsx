@@ -1,61 +1,52 @@
-import { Button } from '@workspace/ui/components/button'
-import { CheckIcon, CopyIcon, TriangleAlertIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { Button } from "@workspace/ui/components/button";
+import { CheckIcon, CopyIcon, TriangleAlertIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import {
-  COPY_FEEDBACK_MILLISECONDS,
-  copyMarkdownTwin,
-} from '../docs/copy-markdown'
+import { COPY_FEEDBACK_MILLISECONDS, copyMarkdownTwin } from "../docs/copy-markdown";
 
 const STATE_ICONS = {
   idle: CopyIcon,
   copied: CheckIcon,
   failed: TriangleAlertIcon,
-} as const
+} as const;
 
 /**
  * Localized labels of the Copy Markdown button.
  */
 interface CopyMarkdownCopy {
-  copyMarkdown: string
-  copied: string
-  copyFailed: string
+  copyMarkdown: string;
+  copied: string;
+  copyFailed: string;
 }
 
 interface CopyMarkdownButtonProperties {
-  twinHref: string
-  copy: CopyMarkdownCopy
+  twinHref: string;
+  copy: CopyMarkdownCopy;
 }
 
 const STATE_LABEL_KEYS = {
-  idle: 'copyMarkdown',
-  copied: 'copied',
-  failed: 'copyFailed',
-} as const
+  idle: "copyMarkdown",
+  copied: "copied",
+  failed: "copyFailed",
+} as const;
 
-export default function CopyMarkdownButton({
-  twinHref,
-  copy,
-}: CopyMarkdownButtonProperties) {
-  type CopyState = 'idle' | 'copied' | 'failed'
-  const [state, setState] = useState<CopyState>('idle')
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+export default function CopyMarkdownButton({ twinHref, copy }: CopyMarkdownButtonProperties) {
+  type CopyState = "idle" | "copied" | "failed";
+  const [state, setState] = useState<CopyState>("idle");
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   async function handleClick() {
-    clearTimeout(timer.current)
+    clearTimeout(timer.current);
     const result = await copyMarkdownTwin(twinHref, fetch, (text) =>
       navigator.clipboard.writeText(text),
-    )
-    setState(result)
-    timer.current = setTimeout(
-      () => setState('idle'),
-      COPY_FEEDBACK_MILLISECONDS,
-    )
+    );
+    setState(result);
+    timer.current = setTimeout(() => setState("idle"), COPY_FEEDBACK_MILLISECONDS);
   }
 
-  const Icon = STATE_ICONS[state]
+  const Icon = STATE_ICONS[state];
   return (
     <>
       <Button
@@ -69,8 +60,8 @@ export default function CopyMarkdownButton({
         <span>{copy[STATE_LABEL_KEYS[state]]}</span>
       </Button>
       <span role="status" className="sr-only">
-        {state === 'idle' ? '' : copy[STATE_LABEL_KEYS[state]]}
+        {state === "idle" ? "" : copy[STATE_LABEL_KEYS[state]]}
       </span>
     </>
-  )
+  );
 }

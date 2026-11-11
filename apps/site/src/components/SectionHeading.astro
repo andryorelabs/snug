@@ -1,19 +1,19 @@
 ---
-import { cn } from '@workspace/ui/lib/utils'
+import { cn } from "@workspace/ui/lib/utils";
 
 interface Props {
-  id?: string
-  as?: 'h1' | 'h2'
-  class?: string
+  id?: string;
+  as?: "h1" | "h2";
+  class?: string;
 }
 
-const { id, as: Tag = 'h2', class: className } = Astro.props
+const { id, as: Tag = "h2", class: className } = Astro.props;
 ---
 
 <Tag
   id={id}
   class={cn(
-    'max-w-3xl font-heading text-headline font-bold text-balance break-words phrase-break hyphens-auto',
+    "max-w-3xl font-heading text-headline font-bold text-balance break-words phrase-break hyphens-auto",
     className,
   )}
 >

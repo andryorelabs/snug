@@ -1,8 +1,8 @@
-import { type Page } from '@playwright/test'
+import { type Page } from "@playwright/test";
 
-import { localePath, LOCALES } from '../src/i18n/locales'
-import { firstFaqTrigger, hydratedFaq } from './faq-helpers'
-import { expect, test } from './fixtures'
+import { localePath, LOCALES } from "../src/i18n/locales";
+import { firstFaqTrigger, hydratedFaq } from "./faq-helpers";
+import { expect, test } from "./fixtures";
 import {
   expectNoHorizontalOverflow,
   hasFinePointer,
@@ -12,93 +12,72 @@ import {
   MIN_TOUCH_TARGET,
   openLanguageMenu,
   setViewportOrSkip,
-} from './layout-helpers'
-import { blockUmami, isUmamiOrigin } from './umami-helpers'
+} from "./layout-helpers";
+import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
-const PATHS = LOCALES.map((locale) => localePath(locale))
+const PATHS = LOCALES.map((locale) => localePath(locale));
 
 const REVIEW_AUTHORS = [
-  'Birdman, Jun 2025',
-  'Sean Frey, Sep 2024',
-  'Karol Darvaš, Feb 2026',
-  'Jacob Hanson, Jun 2026',
-]
+  "Birdman, Jun 2025",
+  "Sean Frey, Sep 2024",
+  "Karol Darvaš, Feb 2026",
+  "Jacob Hanson, Jun 2026",
+];
 
 for (const path of PATHS) {
-  test(`${path} renders proof, FAQ, final install and footer`, async ({
-    page,
-  }) => {
-    await page.goto(path)
+  test(`${path} renders proof, FAQ, final install and footer`, async ({ page }) => {
+    await page.goto(path);
 
-    const proof = page.locator('[data-section="proof"]')
-    const liveRow = proof.locator('[data-proof-row]:not([aria-hidden])')
-    await expect(liveRow).toHaveCount(1)
-    await expect(liveRow.locator('blockquote')).toHaveCount(4)
-    await expect(
-      proof.locator('[data-proof-row][aria-hidden="true"]'),
-    ).toHaveCount(1)
+    const proof = page.locator('[data-section="proof"]');
+    const liveRow = proof.locator("[data-proof-row]:not([aria-hidden])");
+    await expect(liveRow).toHaveCount(1);
+    await expect(liveRow.locator("blockquote")).toHaveCount(4);
+    await expect(proof.locator('[data-proof-row][aria-hidden="true"]')).toHaveCount(1);
     for (const caption of REVIEW_AUTHORS) {
-      await expect(
-        liveRow.locator('figcaption', { hasText: caption }),
-      ).toHaveCount(1)
+      await expect(liveRow.locator("figcaption", { hasText: caption })).toHaveCount(1);
     }
-    await expect(proof.locator('[data-proof="rename-note"]')).toHaveText(/\S/)
+    await expect(proof.locator('[data-proof="rename-note"]')).toHaveText(/\S/);
 
     await expect(
-      page.locator('[data-section="faq"]').getByRole('heading', { level: 3 }),
-    ).toHaveCount(6)
-    await expect(page.locator('[data-section="final"]')).toBeVisible()
+      page.locator('[data-section="faq"]').getByRole("heading", { level: 3 }),
+    ).toHaveCount(6);
+    await expect(page.locator('[data-section="final"]')).toBeVisible();
     await expect(page.locator('a[data-install="final"]')).toHaveAttribute(
-      'href',
-      '/install?c=final',
-    )
-    await expect(page.locator('a[data-install="final"]')).toHaveAttribute(
-      'target',
-      '_blank',
-    )
-    await expect(page.locator('a[data-install="final"]')).toHaveAttribute(
-      'rel',
-      'noopener',
-    )
+      "href",
+      "/install?c=final",
+    );
+    await expect(page.locator('a[data-install="final"]')).toHaveAttribute("target", "_blank");
+    await expect(page.locator('a[data-install="final"]')).toHaveAttribute("rel", "noopener");
     await expect(page.locator('a[data-footer-link="listing"]')).toHaveAttribute(
-      'href',
-      '/install?c=footer',
-    )
-    await expect(page.locator('a[data-footer-link="listing"]')).toHaveAttribute(
-      'target',
-      '_blank',
-    )
-    await expect(page.locator('a[data-footer-link="listing"]')).toHaveAttribute(
-      'rel',
-      'noopener',
-    )
-    await expect(page.locator('a[data-footer-link]')).toHaveCount(10)
-  })
+      "href",
+      "/install?c=footer",
+    );
+    await expect(page.locator('a[data-footer-link="listing"]')).toHaveAttribute("target", "_blank");
+    await expect(page.locator('a[data-footer-link="listing"]')).toHaveAttribute("rel", "noopener");
+    await expect(page.locator("a[data-footer-link]")).toHaveCount(10);
+  });
 }
 
-test('reviews marquee pauses on hover', async ({ page }) => {
-  await page.goto('/')
-  const viewport = page.locator('[data-proof-viewport]')
-  const track = page.locator('[data-proof-track]')
-  await viewport.scrollIntoViewIfNeeded()
-  const playState = () =>
-    track.evaluate((element) => getComputedStyle(element).animationPlayState)
-  test.skip(!(await hasFinePointer(page)), 'hover pause needs a fine pointer')
-  expect(await playState()).toBe('running')
-  await viewport.hover()
-  await expect.poll(playState).toBe('paused')
-})
+test("reviews marquee pauses on hover", async ({ page }) => {
+  await page.goto("/");
+  const viewport = page.locator("[data-proof-viewport]");
+  const track = page.locator("[data-proof-track]");
+  await viewport.scrollIntoViewIfNeeded();
+  const playState = () => track.evaluate((element) => getComputedStyle(element).animationPlayState);
+  test.skip(!(await hasFinePointer(page)), "hover pause needs a fine pointer");
+  expect(await playState()).toBe("running");
+  await viewport.hover();
+  await expect.poll(playState).toBe("paused");
+});
 
-test('reviews marquee pauses while focus is inside it', async ({ page }) => {
-  await page.goto('/')
-  const track = page.locator('[data-proof-track]')
-  await page.locator('[data-proof-viewport]').focus()
+test("reviews marquee pauses while focus is inside it", async ({ page }) => {
+  await page.goto("/");
+  const track = page.locator("[data-proof-track]");
+  await page.locator("[data-proof-viewport]").focus();
   await expect
-    .poll(() =>
-      track.evaluate((element) => getComputedStyle(element).animationPlayState),
-    )
-    .toBe('paused')
-})
+    .poll(() => track.evaluate((element) => getComputedStyle(element).animationPlayState))
+    .toBe("paused");
+});
 
 /**
  * Whether this browser lacks scroll-driven animations (`animation-timeline`),
@@ -110,8 +89,8 @@ test('reviews marquee pauses while focus is inside it', async ({ page }) => {
  */
 async function isMissingScrollTimelines(page: Page): Promise<boolean> {
   return !(await page.evaluate(
-    () => 'animationTimeline' in globalThis.document.documentElement.style,
-  ))
+    () => "animationTimeline" in globalThis.document.documentElement.style,
+  ));
 }
 
 /**
@@ -121,312 +100,271 @@ async function isMissingScrollTimelines(page: Page): Promise<boolean> {
  * @param page - A loaded landing page.
  */
 async function expectDockStaysOutOfTheWay(page: Page): Promise<void> {
-  const dock = page.locator('[data-dock]')
-  await expect(dock).toBeHidden()
-  await page.locator('[data-section="final"]').scrollIntoViewIfNeeded()
-  await expect(dock).toBeHidden()
-  await expect(page.locator('a[data-install="hero"]')).toHaveCount(1)
-  await expect(
-    page.locator('[data-section="final"] a[data-install="final"]'),
-  ).toBeVisible()
+  const dock = page.locator("[data-dock]");
+  await expect(dock).toBeHidden();
+  await page.locator('[data-section="final"]').scrollIntoViewIfNeeded();
+  await expect(dock).toBeHidden();
+  await expect(page.locator('a[data-install="hero"]')).toHaveCount(1);
+  await expect(page.locator('[data-section="final"] a[data-install="final"]')).toBeVisible();
 }
 
-test.describe('reduced motion', () => {
+test.describe("reduced motion", () => {
   test.beforeEach(async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-  })
+    await page.emulateMedia({ reducedMotion: "reduce" });
+  });
 
-  test('reviews render as a static wrapped grid without the duplicate row', async ({
+  test("reviews render as a static wrapped grid without the duplicate row", async ({ page }) => {
+    await page.goto("/");
+    const track = page.locator("[data-proof-track]");
+    await expect(page.locator('[data-proof-row][aria-hidden="true"]')).toBeHidden();
+    expect(await track.evaluate((element) => getComputedStyle(element).animationName)).toBe("none");
+    await expectNoHorizontalOverflow(page);
+  });
+
+  test("the install dock appears after the hero and hides at the closing panel", async ({
     page,
   }) => {
-    await page.goto('/')
-    const track = page.locator('[data-proof-track]')
-    await expect(
-      page.locator('[data-proof-row][aria-hidden="true"]'),
-    ).toBeHidden()
-    expect(
-      await track.evaluate(
-        (element) => getComputedStyle(element).animationName,
-      ),
-    ).toBe('none')
-    await expectNoHorizontalOverflow(page)
-  })
-
-  test('the install dock appears after the hero and hides at the closing panel', async ({
-    page,
-  }) => {
-    await page.goto('/')
-    const dock = page.locator('[data-dock]')
-    await expect(dock).toBeHidden()
+    await page.goto("/");
+    const dock = page.locator("[data-dock]");
+    await expect(dock).toBeHidden();
     await page
       .locator('[data-section="how"]')
-      .evaluate((element) => element.scrollIntoView({ block: 'start' }))
+      .evaluate((element) => element.scrollIntoView({ block: "start" }));
     if (await isMissingScrollTimelines(page)) {
-      await expectDockStaysOutOfTheWay(page)
-      return
+      await expectDockStaysOutOfTheWay(page);
+      return;
     }
-    await expect(dock).toBeVisible()
-    await page.locator('[data-section="final"]').scrollIntoViewIfNeeded()
-    await expect(dock).toBeHidden()
-  })
-})
+    await expect(dock).toBeVisible();
+    await page.locator('[data-section="final"]').scrollIntoViewIfNeeded();
+    await expect(dock).toBeHidden();
+  });
+});
 
-test('install dock is hidden over the hero and the closing panel and visible between', async ({
+test("install dock is hidden over the hero and the closing panel and visible between", async ({
   page,
 }) => {
-  await page.goto('/')
-  const dock = page.locator('[data-dock]')
-  await expect(dock).toBeHidden()
-  await page.locator('[data-section="proof"]').scrollIntoViewIfNeeded()
+  await page.goto("/");
+  const dock = page.locator("[data-dock]");
+  await expect(dock).toBeHidden();
+  await page.locator('[data-section="proof"]').scrollIntoViewIfNeeded();
   if (await isMissingScrollTimelines(page)) {
-    await expectDockStaysOutOfTheWay(page)
-    return
+    await expectDockStaysOutOfTheWay(page);
+    return;
   }
-  await expect(dock).toBeVisible()
-  const link = dock.locator('a[data-install="dock"]')
-  await expect(link).toHaveAttribute('href', '/install?c=dock')
-  expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(
-    MIN_TOUCH_TARGET,
-  )
-  await page.locator('[data-section="final"]').scrollIntoViewIfNeeded()
-  await expect(dock).toBeHidden()
-})
+  await expect(dock).toBeVisible();
+  const link = dock.locator('a[data-install="dock"]');
+  await expect(link).toHaveAttribute("href", "/install?c=dock");
+  expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+  await page.locator('[data-section="final"]').scrollIntoViewIfNeeded();
+  await expect(dock).toBeHidden();
+});
 
-test('closing panel keeps the final install button', async ({ page }) => {
-  await page.goto('/')
+test("closing panel keeps the final install button", async ({ page }) => {
+  await page.goto("/");
   await expect(
-    page.locator(
-      '[data-section="final"] [data-final-panel] a[data-install="final"]',
-    ),
-  ).toBeVisible()
-})
+    page.locator('[data-section="final"] [data-final-panel] a[data-install="final"]'),
+  ).toBeVisible();
+});
 
-test('FAQ opens and closes by keyboard', async ({ page }) => {
-  await page.goto('/')
-  const trigger = await firstFaqTrigger(page)
-  await trigger.focus()
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
-  await page.keyboard.press('Enter')
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
-  await page.keyboard.press('Space')
-  await expect(trigger).toHaveAttribute('aria-expanded', 'false')
-  await page.keyboard.press('Space')
-  await expect(trigger).toHaveAttribute('aria-expanded', 'true')
-})
+test("FAQ opens and closes by keyboard", async ({ page }) => {
+  await page.goto("/");
+  const trigger = await firstFaqTrigger(page);
+  await trigger.focus();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Enter");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("Space");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Space");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+});
 
-test('FAQ questions are headings and only one answer is open', async ({
-  page,
-}) => {
-  await page.goto('/')
-  const faq = await hydratedFaq(page)
-  const triggers = faq.getByRole('button')
-  await expect(faq.getByRole('heading', { level: 3 })).toHaveCount(6)
-  await triggers.nth(0).click()
-  await expect(triggers.nth(0)).toHaveAttribute('aria-expanded', 'true')
-  await triggers.nth(1).click()
-  await expect(triggers.nth(1)).toHaveAttribute('aria-expanded', 'true')
-  await expect(triggers.nth(0)).toHaveAttribute('aria-expanded', 'false')
-})
+test("FAQ questions are headings and only one answer is open", async ({ page }) => {
+  await page.goto("/");
+  const faq = await hydratedFaq(page);
+  const triggers = faq.getByRole("button");
+  await expect(faq.getByRole("heading", { level: 3 })).toHaveCount(6);
+  await triggers.nth(0).click();
+  await expect(triggers.nth(0)).toHaveAttribute("aria-expanded", "true");
+  await triggers.nth(1).click();
+  await expect(triggers.nth(1)).toHaveAttribute("aria-expanded", "true");
+  await expect(triggers.nth(0)).toHaveAttribute("aria-expanded", "false");
+});
 
-const MENU = '[data-language-menu]'
+const MENU = "[data-language-menu]";
 
-test('language switcher moves between locales without redirecting', async ({
-  page,
-}) => {
-  await page.goto('/')
-  await hydrateHeaderIsland(page)
-  await languageTrigger(page).focus()
-  await page.keyboard.press('Enter')
-  const links = page.locator(`${MENU} a`)
-  await expect(links).toHaveCount(LOCALES.length)
-  await expect(links.first()).toHaveAttribute('aria-current', 'page')
-  await expect(page.locator(`${MENU} a[aria-current]`)).toHaveCount(1)
+test("language switcher moves between locales without redirecting", async ({ page }) => {
+  await page.goto("/");
+  await hydrateHeaderIsland(page);
+  await languageTrigger(page).focus();
+  await page.keyboard.press("Enter");
+  const links = page.locator(`${MENU} a`);
+  await expect(links).toHaveCount(LOCALES.length);
+  await expect(links.first()).toHaveAttribute("aria-current", "page");
+  await expect(page.locator(`${MENU} a[aria-current]`)).toHaveCount(1);
 
-  await page.locator(MENU).getByRole('link', { name: 'Deutsch' }).click()
-  await expect(page).toHaveURL(/\/de\/$/)
-  await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+  await page.locator(MENU).getByRole("link", { name: "Deutsch" }).click();
+  await expect(page).toHaveURL(/\/de\/$/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "de");
 
-  await openLanguageMenu(page)
-  await page.locator(MENU).getByRole('link', { name: 'English' }).click()
-  await expect(page).toHaveURL(/localhost:4399\/$/)
-})
+  await openLanguageMenu(page);
+  await page.locator(MENU).getByRole("link", { name: "English" }).click();
+  await expect(page).toHaveURL(/localhost:4399\/$/);
+});
 
-test('language switcher menu moves focus through items with Tab', async ({
-  page,
-}) => {
-  await page.goto('/')
-  await hydrateHeaderIsland(page)
-  await languageTrigger(page).focus()
-  await page.keyboard.press('Enter')
-  const links = page.locator(`${MENU} a`)
-  await expect(links.first()).toBeFocused()
-  await page.keyboard.press(await linkTabKey(page))
-  await expect(links.nth(1)).toBeFocused()
-})
+test("language switcher menu moves focus through items with Tab", async ({ page }) => {
+  await page.goto("/");
+  await hydrateHeaderIsland(page);
+  await languageTrigger(page).focus();
+  await page.keyboard.press("Enter");
+  const links = page.locator(`${MENU} a`);
+  await expect(links.first()).toBeFocused();
+  await page.keyboard.press(await linkTabKey(page));
+  await expect(links.nth(1)).toBeFocused();
+});
 
-test('language switcher closes on Escape and returns focus to the trigger', async ({
-  page,
-}) => {
-  await page.goto('/')
-  const trigger = languageTrigger(page)
-  const panel = page.locator(MENU)
-  await openLanguageMenu(page)
-  await page.keyboard.press('Escape')
-  await expect(panel).toBeHidden()
-  await expect(trigger).toBeFocused()
-})
+test("language switcher closes on Escape and returns focus to the trigger", async ({ page }) => {
+  await page.goto("/");
+  const trigger = languageTrigger(page);
+  const panel = page.locator(MENU);
+  await openLanguageMenu(page);
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await expect(trigger).toBeFocused();
+});
 
-test('language switcher closes on outside click', async ({ page }) => {
-  await page.goto('/')
-  const panel = page.locator(MENU)
-  await openLanguageMenu(page)
-  await page.mouse.click(10, 400)
-  await expect(panel).toBeHidden()
-})
+test("language switcher closes on outside click", async ({ page }) => {
+  await page.goto("/");
+  const panel = page.locator(MENU);
+  await openLanguageMenu(page);
+  await page.mouse.click(10, 400);
+  await expect(panel).toBeHidden();
+});
 
-test('language menu items are at least 44px tall', async ({ page }) => {
-  await page.goto('/')
-  await openLanguageMenu(page)
-  const links = page.locator(`${MENU} a`)
-  await expect(links).toHaveCount(LOCALES.length)
-  const items = await links.all()
+test("language menu items are at least 44px tall", async ({ page }) => {
+  await page.goto("/");
+  await openLanguageMenu(page);
+  const links = page.locator(`${MENU} a`);
+  await expect(links).toHaveCount(LOCALES.length);
+  const items = await links.all();
   for (const link of items) {
-    expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(
-      MIN_TOUCH_TARGET,
-    )
+    expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
   }
-})
+});
 
 for (const width of [320, 375, 768, 1240, 1280, 1300, 1400]) {
-  test(`language switcher opens within the viewport at ${width}px`, async ({
-    page,
-  }) => {
-    await setViewportOrSkip(page, { width, height: 800 })
-    await page.goto('/pt-br/')
-    const trigger = languageTrigger(page)
-    await openLanguageMenu(page)
-    const box = await page.locator(MENU).boundingBox()
-    expect(box).not.toBeNull()
-    expect(box!.x).toBeGreaterThanOrEqual(0)
-    expect(box!.x + box!.width).toBeLessThanOrEqual(width)
-    const triggerBox = (await trigger.boundingBox())!
-    expect(
-      Math.abs(box!.x + box!.width - (triggerBox.x + triggerBox.width)),
-    ).toBeLessThanOrEqual(1)
-    expect(box!.y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height)
-    await expectNoHorizontalOverflow(page)
-  })
+  test(`language switcher opens within the viewport at ${width}px`, async ({ page }) => {
+    await setViewportOrSkip(page, { width, height: 800 });
+    await page.goto("/pt-br/");
+    const trigger = languageTrigger(page);
+    await openLanguageMenu(page);
+    const box = await page.locator(MENU).boundingBox();
+    expect(box).not.toBeNull();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+    const triggerBox = (await trigger.boundingBox())!;
+    expect(Math.abs(box!.x + box!.width - (triggerBox.x + triggerBox.width))).toBeLessThanOrEqual(
+      1,
+    );
+    expect(box!.y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height);
+    await expectNoHorizontalOverflow(page);
+  });
 }
 
-test('header keeps brand and switcher on one row at 320px', async ({
-  page,
-}) => {
-  await setViewportOrSkip(page, { width: 320, height: 800 })
-  await page.goto('/pt-br/')
-  const header = page.locator('header')
-  const brand = await header.getByRole('link', { name: 'Snug' }).boundingBox()
-  const trigger = await languageTrigger(page).boundingBox()
-  expect(brand!.y).toBeLessThan(trigger!.y + trigger!.height)
-  expect(trigger!.y).toBeLessThan(brand!.y + brand!.height)
-  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(64)
-})
+test("header keeps brand and switcher on one row at 320px", async ({ page }) => {
+  await setViewportOrSkip(page, { width: 320, height: 800 });
+  await page.goto("/pt-br/");
+  const header = page.locator("header");
+  const brand = await header.getByRole("link", { name: "Snug" }).boundingBox();
+  const trigger = await languageTrigger(page).boundingBox();
+  expect(brand!.y).toBeLessThan(trigger!.y + trigger!.height);
+  expect(trigger!.y).toBeLessThan(brand!.y + brand!.height);
+  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(64);
+});
 
-test('skip link is first in tab order and reaches main', async ({ page }) => {
-  await page.goto('/')
-  await page.keyboard.press(await linkTabKey(page))
-  const skip = page.locator('a[href="#main"]')
-  await expect(skip).toBeFocused()
-  await expect(skip).toBeVisible()
-  await page.keyboard.press('Enter')
-  await expect(page).toHaveURL(/#main$/)
-  await expect(page.locator('main#main')).toHaveCount(1)
-})
+test("skip link is first in tab order and reaches main", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press(await linkTabKey(page));
+  const skip = page.locator('a[href="#main"]');
+  await expect(skip).toBeFocused();
+  await expect(skip).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#main$/);
+  await expect(page.locator("main#main")).toHaveCount(1);
+});
 
-for (const path of ['/de/', '/privacy/', '/404/']) {
+for (const path of ["/de/", "/privacy/", "/404/"]) {
   test(`footer is present on ${path}`, async ({ page }) => {
-    await page.goto(path)
-    await expect(page.locator('footer [data-footer-languages] a')).toHaveCount(
-      LOCALES.length,
-    )
-  })
+    await page.goto(path);
+    await expect(page.locator("footer [data-footer-languages] a")).toHaveCount(LOCALES.length);
+  });
 
   test(`header is present on ${path}`, async ({ page }) => {
-    await page.goto(path)
-    await expect(page.locator('header [data-language-switcher]')).toBeVisible()
-    await expect(page.locator('main#main')).toHaveCount(1)
-  })
+    await page.goto(path);
+    await expect(page.locator("header [data-language-switcher]")).toBeVisible();
+    await expect(page.locator("main#main")).toHaveCount(1);
+  });
 }
 
-test('visiting a locale never redirects to another', async ({ page }) => {
-  const response = await page.goto('/ja/')
-  expect(response?.request().redirectedFrom()).toBeNull()
-  await expect(page).toHaveURL(/\/ja\/$/)
-})
+test("visiting a locale never redirects to another", async ({ page }) => {
+  const response = await page.goto("/ja/");
+  expect(response?.request().redirectedFrom()).toBeNull();
+  await expect(page).toHaveURL(/\/ja\/$/);
+});
 
-test('proof section keeps third-party requests off the page', async ({
-  page,
-}) => {
-  await blockUmami(page)
-  const origins = new Set<string>()
-  page.on('request', (request) => {
-    const url = new URL(request.url())
-    if (url.protocol.startsWith('http') && !isUmamiOrigin(url.origin))
-      origins.add(url.origin)
-  })
-  await page.goto('/')
-  await page.waitForLoadState('networkidle')
-  expect([...origins]).toEqual(['http://localhost:4399'])
-})
+test("proof section keeps third-party requests off the page", async ({ page }) => {
+  await blockUmami(page);
+  const origins = new Set<string>();
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith("http") && !isUmamiOrigin(url.origin)) origins.add(url.origin);
+  });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  expect([...origins]).toEqual(["http://localhost:4399"]);
+});
 
-test.describe('without JavaScript', () => {
-  test.use({ javaScriptEnabled: false })
+test.describe("without JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
 
-  test('footer links reach every locale', async ({ page }) => {
-    await page.goto('/')
-    const links = page.locator('footer [data-footer-languages] a')
-    await expect(links).toHaveCount(LOCALES.length)
+  test("footer links reach every locale", async ({ page }) => {
+    await page.goto("/");
+    const links = page.locator("footer [data-footer-languages] a");
+    await expect(links).toHaveCount(LOCALES.length);
     await page
-      .locator('footer [data-footer-languages]')
-      .getByRole('link', { name: 'Deutsch' })
-      .click()
-    await expect(page).toHaveURL(/\/de\/$/)
-  })
-})
+      .locator("footer [data-footer-languages]")
+      .getByRole("link", { name: "Deutsch" })
+      .click();
+    await expect(page).toHaveURL(/\/de\/$/);
+  });
+});
 
-test('/404/ marks no language link as current', async ({ page }) => {
-  await page.goto('/404/')
-  await expect(page.locator('a[aria-current]')).toHaveCount(0)
-})
+test("/404/ marks no language link as current", async ({ page }) => {
+  await page.goto("/404/");
+  await expect(page.locator("a[aria-current]")).toHaveCount(0);
+});
 
 for (const [path, locale] of [
-  ['/privacy/', 'en'],
-  ['/es/privacy/', 'es'],
+  ["/privacy/", "en"],
+  ["/es/privacy/", "es"],
 ] as const) {
-  test(`${path} marks only its own language link as current`, async ({
-    page,
-  }) => {
-    await page.goto(path)
-    const current = page.locator(
-      'footer [data-footer-languages] a[aria-current]',
-    )
-    await expect(current).toHaveCount(1)
-    await expect(current).toHaveAttribute('hreflang', locale)
-  })
+  test(`${path} marks only its own language link as current`, async ({ page }) => {
+    await page.goto(path);
+    const current = page.locator("footer [data-footer-languages] a[aria-current]");
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveAttribute("hreflang", locale);
+  });
 }
 
-test('localized pages mark only the active footer locale as current', async ({
-  page,
-}) => {
-  await page.goto('/de/')
-  const current = page.locator('footer [data-footer-languages] a[aria-current]')
-  await expect(current).toHaveCount(1)
-  await expect(current).toHaveText('Deutsch')
-})
+test("localized pages mark only the active footer locale as current", async ({ page }) => {
+  await page.goto("/de/");
+  const current = page.locator("footer [data-footer-languages] a[aria-current]");
+  await expect(current).toHaveCount(1);
+  await expect(current).toHaveText("Deutsch");
+});
 
-test('language trigger is announced as the label plus the language name', async ({
-  page,
-}) => {
-  await page.goto('/')
-  await hydrateHeaderIsland(page)
-  await expect(languageTrigger(page)).toHaveAccessibleName('Language: English')
-})
+test("language trigger is announced as the label plus the language name", async ({ page }) => {
+  await page.goto("/");
+  await hydrateHeaderIsland(page);
+  await expect(languageTrigger(page)).toHaveAccessibleName("Language: English");
+});

@@ -1,108 +1,103 @@
-import { Button } from '@workspace/ui/components/button'
+import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from '@workspace/ui/components/dropdown-menu'
-import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react'
-import { useEffect, useSyncExternalStore } from 'react'
+} from "@workspace/ui/components/dropdown-menu";
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
+import { useEffect, useSyncExternalStore } from "react";
 
-import { themeColor } from '../scripts/theme-color'
+import { themeColor } from "../scripts/theme-color";
 
-const THEME_STORAGE_KEY = 'snug:theme'
-const DARK_QUERY = '(prefers-color-scheme: dark)'
-const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+const THEME_STORAGE_KEY = "snug:theme";
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
-type ThemeChoice = 'system' | 'light' | 'dark'
+type ThemeChoice = "system" | "light" | "dark";
 
-const CHOICES: readonly ThemeChoice[] = ['system', 'light', 'dark']
+const CHOICES: readonly ThemeChoice[] = ["system", "light", "dark"];
 
 const CHOICE_ICONS = {
   system: MonitorIcon,
   light: SunIcon,
   dark: MoonIcon,
-} as const
+} as const;
 
 /**
  * Localized names of the theme menu and its three choices.
  */
 export interface ThemeMenuCopy {
-  label: string
-  system: string
-  light: string
-  dark: string
+  label: string;
+  system: string;
+  light: string;
+  dark: string;
 }
 
 function isThemeChoice(value: unknown): value is ThemeChoice {
-  return CHOICES.includes(value as ThemeChoice)
+  return CHOICES.includes(value as ThemeChoice);
 }
 
 function readStoredChoice(): ThemeChoice {
   try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY)
-    return stored === 'light' || stored === 'dark' ? stored : 'system'
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === "light" || stored === "dark" ? stored : "system";
   } catch {
-    return 'system'
+    return "system";
   }
 }
 
-const choiceListeners = new Set<() => void>()
-const memory: { choice?: ThemeChoice } = {}
+const choiceListeners = new Set<() => void>();
+const memory: { choice?: ThemeChoice } = {};
 
 function readChoice(): ThemeChoice {
-  return memory.choice ?? readStoredChoice()
+  return memory.choice ?? readStoredChoice();
 }
 
 function subscribeToChoice(listener: () => void) {
-  choiceListeners.add(listener)
+  choiceListeners.add(listener);
   return () => {
-    choiceListeners.delete(listener)
-  }
+    choiceListeners.delete(listener);
+  };
 }
 
 function writeChoice(choice: ThemeChoice) {
-  memory.choice = choice
+  memory.choice = choice;
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, choice)
+    localStorage.setItem(THEME_STORAGE_KEY, choice);
   } catch {
-    return
+    return;
   } finally {
-    for (const listener of choiceListeners) listener()
+    for (const listener of choiceListeners) listener();
   }
 }
 function applyChoice(choice: ThemeChoice) {
-  const isDark =
-    choice === 'dark' || (choice === 'system' && matchMedia(DARK_QUERY).matches)
-  const root = document.documentElement
+  const isDark = choice === "dark" || (choice === "system" && matchMedia(DARK_QUERY).matches);
+  const root = document.documentElement;
   for (const meta of document.querySelectorAll('meta[name="theme-color"]')) {
-    const isDarkMedia = meta.getAttribute('media') === DARK_QUERY
-    meta.setAttribute(
-      'content',
-      themeColor(choice === 'system' ? isDarkMedia : isDark),
-    )
+    const isDarkMedia = meta.getAttribute("media") === DARK_QUERY;
+    meta.setAttribute("content", themeColor(choice === "system" ? isDarkMedia : isDark));
   }
-  root.dataset.themeChoice = choice
+  root.dataset.themeChoice = choice;
   const flip = () => {
-    root.classList.add('theme-switching')
-    root.classList.toggle('dark', isDark)
-    root.dataset.theme = isDark ? 'dark' : 'light'
+    root.classList.add("theme-switching");
+    root.classList.toggle("dark", isDark);
+    root.dataset.theme = isDark ? "dark" : "light";
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => root.classList.remove('theme-switching'))
-    })
-  }
+      requestAnimationFrame(() => root.classList.remove("theme-switching"));
+    });
+  };
   const shouldAnimate =
-    typeof document.startViewTransition === 'function' &&
-    !matchMedia(REDUCED_MOTION_QUERY).matches
-  if (shouldAnimate) document.startViewTransition(flip)
-  else flip()
+    typeof document.startViewTransition === "function" && !matchMedia(REDUCED_MOTION_QUERY).matches;
+  if (shouldAnimate) document.startViewTransition(flip);
+  else flip();
 }
 
 function selectChoice(value: string) {
-  if (!isThemeChoice(value)) return
-  writeChoice(value)
-  applyChoice(value)
+  if (!isThemeChoice(value)) return;
+  writeChoice(value);
+  applyChoice(value);
 }
 
 /**
@@ -115,19 +110,15 @@ function selectChoice(value: string) {
  * @returns The icon trigger and the menu with the three choices.
  */
 export default function ThemeMenu({ copy }: { copy: ThemeMenuCopy }) {
-  const choice = useSyncExternalStore(
-    subscribeToChoice,
-    readChoice,
-    (): ThemeChoice => 'system',
-  )
+  const choice = useSyncExternalStore(subscribeToChoice, readChoice, (): ThemeChoice => "system");
 
   useEffect(() => {
-    if (choice !== 'system') return
-    const query = matchMedia(DARK_QUERY)
-    const follow = () => applyChoice('system')
-    query.addEventListener('change', follow)
-    return () => query.removeEventListener('change', follow)
-  }, [choice])
+    if (choice !== "system") return;
+    const query = matchMedia(DARK_QUERY);
+    const follow = () => applyChoice("system");
+    query.addEventListener("change", follow);
+    return () => query.removeEventListener("change", follow);
+  }, [choice]);
 
   return (
     <div className="hidden shrink-0 js:block" data-theme-menu>
@@ -146,19 +137,13 @@ export default function ThemeMenu({ copy }: { copy: ThemeMenuCopy }) {
             aria-hidden="true"
             className="in-data-[theme-choice=dark]:hidden in-data-[theme-choice=light]:hidden"
           />
-          <SunIcon
-            aria-hidden="true"
-            className="hidden in-data-[theme-choice=light]:block"
-          />
-          <MoonIcon
-            aria-hidden="true"
-            className="hidden in-data-[theme-choice=dark]:block"
-          />
+          <SunIcon aria-hidden="true" className="hidden in-data-[theme-choice=light]:block" />
+          <MoonIcon aria-hidden="true" className="hidden in-data-[theme-choice=dark]:block" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={8} className="w-46">
           <DropdownMenuRadioGroup value={choice} onValueChange={selectChoice}>
             {CHOICES.map((value) => {
-              const Icon = CHOICE_ICONS[value]
+              const Icon = CHOICE_ICONS[value];
               return (
                 <DropdownMenuRadioItem
                   key={value}
@@ -171,11 +156,11 @@ export default function ThemeMenu({ copy }: { copy: ThemeMenuCopy }) {
                   <Icon aria-hidden="true" />
                   {copy[value]}
                 </DropdownMenuRadioItem>
-              )
+              );
             })}
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  )
+  );
 }

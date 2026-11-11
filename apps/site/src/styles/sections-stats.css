@@ -1,26 +1,25 @@
 @layer components {
-  [data-section='stats'] dd[data-stat] {
+  [data-section="stats"] dd[data-stat] {
     font-size: clamp(1.75rem, 4vw, 2.75rem);
   }
 
   @media (prefers-reduced-motion: no-preference) {
     @supports (animation-timeline: view()) and (top: mod(1px, 1px)) {
-      [data-section='stats'] dd[data-stat] {
+      [data-section="stats"] dd[data-stat] {
         position: relative;
         --stat-value: 0;
         animation: stat-count-up 1ms var(--ease-out-strong) both;
         animation-timeline: view();
         animation-range: entry 0% cover 35%;
-        counter-reset: stat-whole round(down, calc(var(--stat-value) / 10), 1)
-          stat-tenth mod(var(--stat-value), 10) stat-thousand
-          round(down, calc(var(--stat-value) / 1000), 1) stat-hundred
-          mod(round(down, calc(var(--stat-value) / 100), 1), 10) stat-ten
-          mod(round(down, calc(var(--stat-value) / 10), 1), 10) stat-one
-          mod(var(--stat-value), 10) stat-plain var(--stat-value);
+        counter-reset: stat-whole round(down, calc(var(--stat-value) / 10), 1) stat-tenth
+          mod(var(--stat-value), 10) stat-thousand round(down, calc(var(--stat-value) / 1000), 1)
+          stat-hundred mod(round(down, calc(var(--stat-value) / 100), 1), 10) stat-ten
+          mod(round(down, calc(var(--stat-value) / 10), 1), 10) stat-one mod(var(--stat-value), 10)
+          stat-plain var(--stat-value);
       }
 
       @supports (timeline-trigger-name: --stat-count) {
-        [data-section='stats'] dd[data-stat] {
+        [data-section="stats"] dd[data-stat] {
           timeline-trigger: --stat-count view() entry 0% exit 0%;
           animation-name: stat-count-up;
           animation-duration: 1.6s;
@@ -30,7 +29,7 @@
         }
       }
 
-      [data-section='stats'] dd[data-stat] [data-stat-text] {
+      [data-section="stats"] dd[data-stat] [data-stat-text] {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -39,18 +38,17 @@
         white-space: nowrap;
       }
 
-      [data-section='stats'] dd[data-stat]::after {
-        content: counter(stat-plain) / '';
+      [data-section="stats"] dd[data-stat]::after {
+        content: counter(stat-plain) / "";
       }
 
-      [data-section='stats'] dd[data-stat='tenths']::after {
-        content: counter(stat-whole) var(--stat-separator) counter(stat-tenth) /
-          '';
+      [data-section="stats"] dd[data-stat="tenths"]::after {
+        content: counter(stat-whole) var(--stat-separator) counter(stat-tenth) / "";
       }
 
-      [data-section='stats'] dd[data-stat='grouped']::after {
-        content: counter(stat-thousand) var(--stat-separator)
-          counter(stat-hundred) counter(stat-ten) counter(stat-one) / '';
+      [data-section="stats"] dd[data-stat="grouped"]::after {
+        content: counter(stat-thousand) var(--stat-separator) counter(stat-hundred)
+          counter(stat-ten) counter(stat-one) / "";
       }
     }
   }

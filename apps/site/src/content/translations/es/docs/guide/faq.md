@@ -1,10 +1,9 @@
 ---
 title: Preguntas frecuentes
 sourceHash: 304e0622b68c13d7
-description:
-  'Respuestas a las preguntas habituales sobre Snug: importar varios archivos,
-  permisos, formatos y navegadores compatibles, seguridad y carpetas de copia.'
-seoTitle: 'FAQ de Snug: formatos, navegadores y copias'
+description: "Respuestas a las preguntas habituales sobre Snug: importar varios archivos,
+  permisos, formatos y navegadores compatibles, seguridad y carpetas de copia."
+seoTitle: "FAQ de Snug: formatos, navegadores y copias"
 ---
 
 Respuestas breves a las preguntas que más se hacen sobre Snug.

@@ -1,17 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect } from "react";
 
-import { themeStore } from '@/lib/storage'
-import {
-  applyResolvedTheme,
-  readCachedTheme,
-  writeCachedTheme,
-} from '@/lib/theme-cache'
-import { useStorageItem } from '@/lib/use-storage-item'
+import { themeStore } from "@/lib/storage";
+import { applyResolvedTheme, readCachedTheme, writeCachedTheme } from "@/lib/theme-cache";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 function noop() {}
 
 interface ThemeProviderProperties {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 /**
@@ -24,17 +20,17 @@ interface ThemeProviderProperties {
  * @returns The `children`, rendered as-is.
  */
 export function ThemeProvider({ children }: ThemeProviderProperties) {
-  const [theme] = useStorageItem(themeStore, readCachedTheme())
+  const [theme] = useStorageItem(themeStore, readCachedTheme());
 
   useEffect(() => {
-    writeCachedTheme(theme)
-  }, [theme])
+    writeCachedTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
-    if (theme === 'system') {
-      const mql = globalThis.matchMedia('(prefers-color-scheme: dark)')
+    if (theme === "system") {
+      const mql = globalThis.matchMedia("(prefers-color-scheme: dark)");
 
-      applyResolvedTheme(mql.matches ? 'dark' : 'light')
+      applyResolvedTheme(mql.matches ? "dark" : "light");
 
       /**
        * Reacts to OS-level color scheme changes while the preference is
@@ -43,15 +39,15 @@ export function ThemeProvider({ children }: ThemeProviderProperties) {
        * @param event The OS color-scheme change event.
        */
       const handleChange = (event: MediaQueryListEvent) => {
-        applyResolvedTheme(event.matches ? 'dark' : 'light')
-      }
+        applyResolvedTheme(event.matches ? "dark" : "light");
+      };
 
-      mql.addEventListener('change', handleChange)
-      return () => mql.removeEventListener('change', handleChange)
+      mql.addEventListener("change", handleChange);
+      return () => mql.removeEventListener("change", handleChange);
     }
-    applyResolvedTheme(theme)
-    return noop
-  }, [theme])
+    applyResolvedTheme(theme);
+    return noop;
+  }, [theme]);
 
-  return children
+  return children;
 }

@@ -144,48 +144,33 @@ Details: [`docs/development.md`](docs/development.md#cross-browser-testing).
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file
 for details.
 
-[Chrome Web Store Version]:
-  https://img.shields.io/chrome-web-store/v/gdhpeilfkeeajillmcncaelnppiakjhn?style=flat
-[Chrome Web Store Users]:
-  https://img.shields.io/chrome-web-store/users/gdhpeilfkeeajillmcncaelnppiakjhn?style=flat
-[Chrome Web Store]:
-  https://img.shields.io/badge/Chrome%20Web%20Store-4285F4.svg?style=flat&logo=Chrome-Web-Store&logoColor=white
-[Chrome Web Store-url]:
-  https://chromewebstore.google.com/detail/gdhpeilfkeeajillmcncaelnppiakjhn
-[Microsoft Edge Add-ons]:
-  https://img.shields.io/badge/Microsoft%20Edge%20Add--ons-0078D7.svg?style=flat&logo=Microsoft-Edge&logoColor=white
-[Microsoft Edge Add-ons-url]:
-  https://microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho
-[CI]:
-  https://img.shields.io/github/actions/workflow/status/andryorelabs/snug/ci.yml?branch=main&style=flat
+[Chrome Web Store Version]: https://img.shields.io/chrome-web-store/v/gdhpeilfkeeajillmcncaelnppiakjhn?style=flat
+[Chrome Web Store Users]: https://img.shields.io/chrome-web-store/users/gdhpeilfkeeajillmcncaelnppiakjhn?style=flat
+[Chrome Web Store]: https://img.shields.io/badge/Chrome%20Web%20Store-4285F4.svg?style=flat&logo=Chrome-Web-Store&logoColor=white
+[Chrome Web Store-url]: https://chromewebstore.google.com/detail/gdhpeilfkeeajillmcncaelnppiakjhn
+[Microsoft Edge Add-ons]: https://img.shields.io/badge/Microsoft%20Edge%20Add--ons-0078D7.svg?style=flat&logo=Microsoft-Edge&logoColor=white
+[Microsoft Edge Add-ons-url]: https://microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho
+[CI]: https://img.shields.io/github/actions/workflow/status/andryorelabs/snug/ci.yml?branch=main&style=flat
 [CI-url]: https://github.com/andryorelabs/snug/actions/workflows/ci.yml
 [License]: https://img.shields.io/github/license/andryorelabs/snug?style=flat
 [License-url]: LICENSE
 [Release]: https://img.shields.io/github/v/release/andryorelabs/snug?style=flat
 [Release-url]: https://github.com/andryorelabs/snug/releases/latest
-[OpenSSF Scorecard]:
-  https://api.scorecard.dev/projects/github.com/andryorelabs/snug/badge
-[OpenSSF Scorecard-url]:
-  https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug
+[OpenSSF Scorecard]: https://api.scorecard.dev/projects/github.com/andryorelabs/snug/badge
+[OpenSSF Scorecard-url]: https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug
 [OpenSSF Best Practices]: https://www.bestpractices.dev/projects/15093/badge
 [OpenSSF Best Practices-url]: https://www.bestpractices.dev/projects/15093
-[WXT]:
-  https://img.shields.io/badge/WXT-67D55E.svg?style=for-the-badge&logo=WXT&logoColor=white
+[WXT]: https://img.shields.io/badge/WXT-67D55E.svg?style=for-the-badge&logo=WXT&logoColor=white
 [WXT-url]: https://wxt.dev/
-[React]:
-  https://img.shields.io/badge/React-61DAFB.svg?style=for-the-badge&logo=React&logoColor=black
+[React]: https://img.shields.io/badge/React-61DAFB.svg?style=for-the-badge&logo=React&logoColor=black
 [React-url]: https://react.dev/
-[TailwindCSS]:
-  https://img.shields.io/badge/Tailwind%20CSS-06B6D4.svg?style=for-the-badge&logo=Tailwind-CSS&logoColor=white
+[TailwindCSS]: https://img.shields.io/badge/Tailwind%20CSS-06B6D4.svg?style=for-the-badge&logo=Tailwind-CSS&logoColor=white
 [TailwindCSS-url]: https://tailwindcss.com/
-[Shadcn/UI]:
-  https://img.shields.io/badge/shadcn%2Fui-000000.svg?style=for-the-badge&logo=shadcn%2Fui&logoColor=white
+[Shadcn/UI]: https://img.shields.io/badge/shadcn%2Fui-000000.svg?style=for-the-badge&logo=shadcn%2Fui&logoColor=white
 [Shadcn/UI-url]: https://ui.shadcn.com/
-[Lucide]:
-  https://img.shields.io/badge/Lucide-F56565.svg?style=for-the-badge&logo=Lucide&logoColor=white
+[Lucide]: https://img.shields.io/badge/Lucide-F56565.svg?style=for-the-badge&logo=Lucide&logoColor=white
 [Lucide-url]: https://lucide.dev/
-[TypeScript]:
-  https://img.shields.io/badge/TypeScript-3178C6.svg?style=for-the-badge&logo=TypeScript&logoColor=white
+[TypeScript]: https://img.shields.io/badge/TypeScript-3178C6.svg?style=for-the-badge&logo=TypeScript&logoColor=white
 [TypeScript-url]: https://www.typescriptlang.org/
 
 Built by [AndryOre](https://andryore.dev)

@@ -1,22 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * How long an operation runs before its progress card appears, so quick
  * imports and exports never flash one.
  */
-const PROGRESS_CARD_DELAY_MS = 400
+const PROGRESS_CARD_DELAY_MS = 400;
 
-type OperationPhase = 'idle' | 'running' | 'canceling'
+type OperationPhase = "idle" | "running" | "canceling";
 
 /**
  * State of one cancelable operation as the progress card shows it.
  */
 export interface OperationProgressState {
-  phase: OperationPhase
-  done: number
-  total: number
-  skippedDuplicates: number
-  isCardVisible: boolean
+  phase: OperationPhase;
+  done: number;
+  total: number;
+  skippedDuplicates: number;
+  isCardVisible: boolean;
 }
 
 /**
@@ -25,15 +25,11 @@ export interface OperationProgressState {
  * flips the card to its canceling state, and `end` returns to idle.
  */
 export interface OperationProgressControls {
-  state: OperationProgressState
-  begin: () => AbortSignal
-  report: (progress: {
-    done: number
-    total: number
-    skippedDuplicates?: number
-  }) => void
-  requestCancel: () => void
-  end: () => void
+  state: OperationProgressState;
+  begin: () => AbortSignal;
+  report: (progress: { done: number; total: number; skippedDuplicates?: number }) => void;
+  requestCancel: () => void;
+  end: () => void;
 }
 
 /**
@@ -43,60 +39,55 @@ export interface OperationProgressControls {
  * @returns The state and the controls that drive it.
  */
 export function useOperationProgress(): OperationProgressControls {
-  const [phase, setPhase] = useState<OperationPhase>('idle')
+  const [phase, setPhase] = useState<OperationPhase>("idle");
   const [counts, setCounts] = useState({
     done: 0,
     total: 0,
     skippedDuplicates: 0,
-  })
-  const [hasDelayPassed, setHasDelayPassed] = useState(false)
-  const controllerReference = useRef<AbortController | null>(null)
+  });
+  const [hasDelayPassed, setHasDelayPassed] = useState(false);
+  const controllerReference = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (phase === 'idle') return
-    const timer = setTimeout(
-      () => setHasDelayPassed(true),
-      PROGRESS_CARD_DELAY_MS,
-    )
-    return () => clearTimeout(timer)
-  }, [phase])
+    if (phase === "idle") return;
+    const timer = setTimeout(() => setHasDelayPassed(true), PROGRESS_CARD_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [phase]);
 
   const begin = useCallback(() => {
-    const controller = new AbortController()
-    controllerReference.current = controller
-    setCounts({ done: 0, total: 0, skippedDuplicates: 0 })
-    setHasDelayPassed(false)
-    setPhase('running')
-    return controller.signal
-  }, [])
+    const controller = new AbortController();
+    controllerReference.current = controller;
+    setCounts({ done: 0, total: 0, skippedDuplicates: 0 });
+    setHasDelayPassed(false);
+    setPhase("running");
+    return controller.signal;
+  }, []);
 
-  const report = useCallback<OperationProgressControls['report']>(
-    ({ done, total, skippedDuplicates = 0 }) =>
-      setCounts({ done, total, skippedDuplicates }),
+  const report = useCallback<OperationProgressControls["report"]>(
+    ({ done, total, skippedDuplicates = 0 }) => setCounts({ done, total, skippedDuplicates }),
     [],
-  )
+  );
 
   const requestCancel = useCallback(() => {
-    controllerReference.current?.abort()
-    setPhase('canceling')
-  }, [])
+    controllerReference.current?.abort();
+    setPhase("canceling");
+  }, []);
 
   const end = useCallback(() => {
-    controllerReference.current = null
-    setPhase('idle')
-    setHasDelayPassed(false)
-  }, [])
+    controllerReference.current = null;
+    setPhase("idle");
+    setHasDelayPassed(false);
+  }, []);
 
   return {
     state: {
       phase,
       ...counts,
-      isCardVisible:
-        phase === 'canceling' || (phase === 'running' && hasDelayPassed),
+      isCardVisible: phase === "canceling" || (phase === "running" && hasDelayPassed),
     },
     begin,
     report,
     requestCancel,
     end,
-  }
+  };
 }

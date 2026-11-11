@@ -1,20 +1,16 @@
 ---
-import TextLink from '../../components/TextLink.astro'
-import { DOCS_UI } from '../../i18n/docs-ui'
-import { externalLinkAttributes } from '../../site-links'
+import TextLink from "../../components/TextLink.astro";
+import { DOCS_UI } from "../../i18n/docs-ui";
+import { externalLinkAttributes } from "../../site-links";
 
 interface Props {
-  href: string
+  href: string;
 }
 
-const { href } = Astro.props
+const { href } = Astro.props;
 ---
 
-<TextLink
-  href={href}
-  class="self-start text-sm print:hidden"
-  {...externalLinkAttributes()}
->
+<TextLink href={href} class="self-start text-sm print:hidden" {...externalLinkAttributes()}>
   {DOCS_UI.editPage}
   <span class="sr-only"> ({DOCS_UI.opensInNewTab})</span>
 </TextLink>

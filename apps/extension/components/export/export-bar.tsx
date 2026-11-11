@@ -1,26 +1,19 @@
-import { i18n } from '#i18n'
-import { Button } from '@workspace/ui/components/button'
-import { Spinner } from '@workspace/ui/components/spinner'
-import {
-  ToggleGroup,
-  ToggleGroupItem,
-} from '@workspace/ui/components/toggle-group'
-import { DownloadIcon } from 'lucide-react'
+import { i18n } from "#i18n";
+import { Button } from "@workspace/ui/components/button";
+import { Spinner } from "@workspace/ui/components/spinner";
+import { ToggleGroup, ToggleGroupItem } from "@workspace/ui/components/toggle-group";
+import { DownloadIcon } from "lucide-react";
 
-import {
-  EXPORT_FORMAT_INFO,
-  EXPORT_FORMATS,
-  type ExportFormat,
-} from '@/lib/export-formats'
-import { formatCount } from '@/lib/format-count'
+import { EXPORT_FORMAT_INFO, EXPORT_FORMATS, type ExportFormat } from "@/lib/export-formats";
+import { formatCount } from "@/lib/format-count";
 
 interface ExportBarProperties {
-  selectedCount: number
-  totalCount: number
-  format: ExportFormat
-  onFormatChange: (format: ExportFormat) => void
-  isExporting: boolean
-  onExport: () => void
+  selectedCount: number;
+  totalCount: number;
+  format: ExportFormat;
+  onFormatChange: (format: ExportFormat) => void;
+  isExporting: boolean;
+  onExport: () => void;
 }
 
 /**
@@ -44,7 +37,7 @@ export function ExportBar({
   isExporting,
   onExport,
 }: ExportBarProperties) {
-  const hasSelection = selectedCount > 0
+  const hasSelection = selectedCount > 0;
 
   return (
     <div className="sticky bottom-0 -mx-4 -mb-4 flex h-14 shrink-0 items-center gap-3 border-t bg-background px-4">
@@ -53,19 +46,19 @@ export function ExportBar({
         aria-live="polite"
       >
         {hasSelection
-          ? i18n.t('exportPage_selectionCount', selectedCount, [
+          ? i18n.t("exportPage_selectionCount", selectedCount, [
               formatCount(selectedCount),
               formatCount(totalCount),
             ])
-          : i18n.t('exportPage_nothingSelected')}
+          : i18n.t("exportPage_nothingSelected")}
       </p>
       <ToggleGroup
         variant="outline"
-        aria-label={i18n.t('exportPage_formatLabel')}
+        aria-label={i18n.t("exportPage_formatLabel")}
         value={[format]}
         onValueChange={(values) => {
-          const next = values[0] as ExportFormat | undefined
-          if (next) onFormatChange(next)
+          const next = values[0] as ExportFormat | undefined;
+          if (next) onFormatChange(next);
         }}
       >
         {EXPORT_FORMATS.map((value) => (
@@ -81,11 +74,9 @@ export function ExportBar({
           <DownloadIcon data-icon="inline-start" />
         )}
         {isExporting
-          ? i18n.t('exportPage_exporting')
-          : i18n.t('exportPage_exportButton', selectedCount, [
-              formatCount(selectedCount),
-            ])}
+          ? i18n.t("exportPage_exporting")
+          : i18n.t("exportPage_exportButton", selectedCount, [formatCount(selectedCount)])}
       </Button>
     </div>
-  )
+  );
 }

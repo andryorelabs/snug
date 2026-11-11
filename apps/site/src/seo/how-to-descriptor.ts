@@ -9,22 +9,19 @@ import {
   howToIndexPath,
   howToPageLocales,
   howToPath,
-} from '../i18n/how-to'
-import { DEFAULT_LOCALE, type Locale, localePath } from '../i18n/locales'
-import { HOW_TO_SOURCES } from './how-to-pages'
-import { lastCommitDate } from './last-modified'
-import type { PageDescriptor } from './page-descriptor'
-import {
-  buildHowToIndexStructuredData,
-  buildHowToStructuredData,
-} from './structured-data'
+} from "../i18n/how-to";
+import { DEFAULT_LOCALE, type Locale, localePath } from "../i18n/locales";
+import { HOW_TO_SOURCES } from "./how-to-pages";
+import { lastCommitDate } from "./last-modified";
+import type { PageDescriptor } from "./page-descriptor";
+import { buildHowToIndexStructuredData, buildHowToStructuredData } from "./structured-data";
 
 /**
  * One step of a How-to page's breadcrumb trail. The page itself comes last.
  */
 export interface HowToCrumb {
-  name: string
-  path: string
+  name: string;
+  path: string;
 }
 
 /**
@@ -34,17 +31,17 @@ export interface HowToCrumb {
  * @returns The crumbs, the page itself last.
  */
 export function howToCrumbs(locale: Locale, slug: string): HowToCrumb[] {
-  const { breadcrumb } = getHowToSharedContent(locale)
-  const hasPage = howToPageLocales(slug).includes(locale)
-  const prefix = hasPage ? locale : DEFAULT_LOCALE
+  const { breadcrumb } = getHowToSharedContent(locale);
+  const hasPage = howToPageLocales(slug).includes(locale);
+  const prefix = hasPage ? locale : DEFAULT_LOCALE;
   return [
     { name: breadcrumb.home, path: localePath(prefix) },
-    { name: breadcrumb.howTo, path: localePath(prefix, '/how-to/') },
+    { name: breadcrumb.howTo, path: localePath(prefix, "/how-to/") },
     {
       name: getHowToContent(locale, slug).title,
       path: howToPath(locale, slug),
     },
-  ]
+  ];
 }
 
 /**
@@ -53,12 +50,12 @@ export function howToCrumbs(locale: Locale, slug: string): HowToCrumb[] {
  * @returns The crumbs, the index itself last.
  */
 export function howToIndexCrumbs(locale: Locale): HowToCrumb[] {
-  const { breadcrumb } = getHowToSharedContent(locale)
-  const prefix = HOW_TO_INDEX_LOCALES.includes(locale) ? locale : DEFAULT_LOCALE
+  const { breadcrumb } = getHowToSharedContent(locale);
+  const prefix = HOW_TO_INDEX_LOCALES.includes(locale) ? locale : DEFAULT_LOCALE;
   return [
     { name: breadcrumb.home, path: localePath(prefix) },
     { name: breadcrumb.howTo, path: howToIndexPath(locale) },
-  ]
+  ];
 }
 
 /**
@@ -69,10 +66,10 @@ export function howToIndexCrumbs(locale: Locale): HowToCrumb[] {
  * @returns The descriptor for the index in that locale.
  */
 export function howToIndexDescriptor(locale: Locale): PageDescriptor {
-  const meta = getHowToIndexMeta(locale)
+  const meta = getHowToIndexMeta(locale);
   const items = howToIndexGroups(locale).flatMap((group) =>
     group.pages.map((card) => ({ name: card.title, path: card.href })),
-  )
+  );
   return {
     meta,
     path: howToIndexPath,
@@ -84,7 +81,7 @@ export function howToIndexDescriptor(locale: Locale): PageDescriptor {
       items,
       dateModified: lastCommitDate(HOW_TO_SOURCES),
     }),
-  }
+  };
 }
 
 /**
@@ -95,11 +92,8 @@ export function howToIndexDescriptor(locale: Locale): PageDescriptor {
  * @param slug - A How-to page slug.
  * @returns The descriptor for that page in that locale.
  */
-export function howToPageDescriptor(
-  locale: Locale,
-  slug: string,
-): PageDescriptor {
-  const meta = getHowToMeta(locale, slug)
+export function howToPageDescriptor(locale: Locale, slug: string): PageDescriptor {
+  const meta = getHowToMeta(locale, slug);
   return {
     meta,
     path: (code) => howToPath(code, slug),
@@ -111,5 +105,5 @@ export function howToPageDescriptor(
       hasSnugSection: hasHowToSnugSection(slug),
       dateModified: lastCommitDate(HOW_TO_SOURCES),
     }),
-  }
+  };
 }

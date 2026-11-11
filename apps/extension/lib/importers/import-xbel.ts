@@ -1,9 +1,9 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { classifyRootTitle } from '@/lib/importers/import-html'
-import type { ResolvedImportRootTitles } from '@/lib/importers/resolve-roots'
-import { isAllowedBookmarkUrl } from '@/lib/importers/url-validation'
-import type { ParsedBookmark } from '@/lib/types'
+import { classifyRootTitle } from "@/lib/importers/import-html";
+import type { ResolvedImportRootTitles } from "@/lib/importers/resolve-roots";
+import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import type { ParsedBookmark } from "@/lib/types";
 
 /**
  * A parsed XBEL document. `hasLocationData` is true only when the file's
@@ -12,47 +12,44 @@ import type { ParsedBookmark } from '@/lib/types'
  * make no sense.
  */
 export interface ParsedXBEL {
-  tree: ParsedBookmark[]
-  hasLocationData: boolean
+  tree: ParsedBookmark[];
+  hasLocationData: boolean;
 }
 
 function isValidXBEL(content: string): boolean {
-  if (!/<xbel[\s>]/i.test(content)) return false
-  const document = new DOMParser().parseFromString(content, 'application/xml')
+  if (!/<xbel[\s>]/i.test(content)) return false;
+  const document = new DOMParser().parseFromString(content, "application/xml");
   return (
-    document.querySelector('parsererror') === null &&
-    document.documentElement.localName === 'xbel'
-  )
+    document.querySelector("parsererror") === null && document.documentElement.localName === "xbel"
+  );
 }
 
 function parseDate(element: Element): number {
-  const parsed = Date.parse(element.getAttribute('added') ?? '')
-  return Number.isNaN(parsed) ? Date.now() : parsed
+  const parsed = Date.parse(element.getAttribute("added") ?? "");
+  return Number.isNaN(parsed) ? Date.now() : parsed;
 }
 
 function parseEntries(parent: Element): ParsedBookmark[] {
-  const entries: ParsedBookmark[] = []
+  const entries: ParsedBookmark[] = [];
   for (const element of parent.children) {
     const title =
-      [...element.children]
-        .find((child) => child.localName === 'title')
-        ?.textContent?.trim() ?? ''
-    if (element.localName === 'folder') {
+      [...element.children].find((child) => child.localName === "title")?.textContent?.trim() ?? "";
+    if (element.localName === "folder") {
       entries.push({
         title,
         dateAdded: parseDate(element),
         children: parseEntries(element),
-      })
-    } else if (element.localName === 'bookmark') {
-      const href = element.getAttribute('href') ?? undefined
+      });
+    } else if (element.localName === "bookmark") {
+      const href = element.getAttribute("href") ?? undefined;
       entries.push({
         title,
         ...(isAllowedBookmarkUrl(href) && { url: href }),
         dateAdded: parseDate(element),
-      })
+      });
     }
   }
-  return entries
+  return entries;
 }
 
 /**
@@ -67,56 +64,51 @@ function parseEntries(parent: Element): ParsedBookmark[] {
  *   carried location data.
  * @throws {Error} When `text` is not well-formed XML with an `xbel` root.
  */
-export function parseXBEL(
-  text: string,
-  liveRootTitles?: ResolvedImportRootTitles,
-): ParsedXBEL {
-  if (!isValidXBEL(text)) throw new Error('Invalid XBEL document')
-  const document = new DOMParser().parseFromString(text, 'application/xml')
+export function parseXBEL(text: string, liveRootTitles?: ResolvedImportRootTitles): ParsedXBEL {
+  if (!isValidXBEL(text)) throw new Error("Invalid XBEL document");
+  const document = new DOMParser().parseFromString(text, "application/xml");
   const buckets = {
     bar: [] as ParsedBookmark[],
     other: [] as ParsedBookmark[],
     mobile: [] as ParsedBookmark[],
-  }
-  let hasLocationData = false
+  };
+  let hasLocationData = false;
 
   for (const entry of parseEntries(document.documentElement)) {
-    const role = entry.children
-      ? classifyRootTitle(entry.title, liveRootTitles)
-      : undefined
+    const role = entry.children ? classifyRootTitle(entry.title, liveRootTitles) : undefined;
     if (role) {
-      hasLocationData = true
-      buckets[role].push(...(entry.children ?? []))
+      hasLocationData = true;
+      buckets[role].push(...(entry.children ?? []));
     } else {
-      buckets.other.push(entry)
+      buckets.other.push(entry);
     }
   }
 
-  const tree: ParsedBookmark[] = []
-  const now = Date.now()
+  const tree: ParsedBookmark[] = [];
+  const now = Date.now();
   if (buckets.bar.length > 0) {
     tree.push({
-      title: i18n.t('bookmarksBar'),
+      title: i18n.t("bookmarksBar"),
       dateAdded: now,
       children: buckets.bar,
       isBookmarksBar: true,
-    })
+    });
   }
   if (hasLocationData || buckets.other.length > 0) {
     tree.push({
-      title: i18n.t('otherBookmarks'),
+      title: i18n.t("otherBookmarks"),
       dateAdded: now,
       children: buckets.other,
       isOtherBookmarks: true,
-    })
+    });
   }
   if (buckets.mobile.length > 0) {
     tree.push({
-      title: i18n.t('mobileBookmarks'),
+      title: i18n.t("mobileBookmarks"),
       dateAdded: now,
       children: buckets.mobile,
       isMobileBookmarks: true,
-    })
+    });
   }
-  return { tree, hasLocationData }
+  return { tree, hasLocationData };
 }

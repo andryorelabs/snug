@@ -1,24 +1,23 @@
-import { fileURLToPath } from 'node:url'
-import { describe, expect, it, vi } from 'vitest'
+import { fileURLToPath } from "node:url";
 
-import { interactionDirective } from './interaction-integration'
+import { describe, expect, it, vi } from "vitest";
 
-describe('interactionDirective integration', () => {
-  it('is named after the directive it registers', () => {
-    expect(interactionDirective().name).toBe('interaction-directive')
-  })
+import { interactionDirective } from "./interaction-integration";
 
-  it('registers client:interaction with the directive entrypoint', () => {
-    const addClientDirective = vi.fn()
-    const setup = interactionDirective().hooks['astro:config:setup']
+describe("interactionDirective integration", () => {
+  it("is named after the directive it registers", () => {
+    expect(interactionDirective().name).toBe("interaction-directive");
+  });
 
-    void setup?.({ addClientDirective } as never)
+  it("registers client:interaction with the directive entrypoint", () => {
+    const addClientDirective = vi.fn();
+    const setup = interactionDirective().hooks["astro:config:setup"];
+
+    void setup?.({ addClientDirective } as never);
 
     expect(addClientDirective).toHaveBeenCalledExactlyOnceWith({
-      name: 'interaction',
-      entrypoint: fileURLToPath(
-        new URL('interaction-directive.ts', import.meta.url),
-      ),
-    })
-  })
-})
+      name: "interaction",
+      entrypoint: fileURLToPath(new URL("interaction-directive.ts", import.meta.url)),
+    });
+  });
+});

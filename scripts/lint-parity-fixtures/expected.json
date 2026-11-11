@@ -163,9 +163,7 @@
   ],
   "apps/extension/e2e/lint-parity-probe.ts": ["no-var"],
   "apps/extension/lib/lint-parity-probe/[Ignored_Name].ts": ["no-var"],
-  "apps/extension/lib/lint-parity-probe/Bad_fileName.ts": [
-    "unicorn/filename-case"
-  ],
+  "apps/extension/lib/lint-parity-probe/Bad_fileName.ts": ["unicorn/filename-case"],
   "apps/extension/lib/lint-parity-probe/comments.ts": [
     "@eslint-community/eslint-comments/no-duplicate-disable",
     "@eslint-community/eslint-comments/no-unlimited-disable",
@@ -472,9 +470,7 @@
     "@typescript-eslint/no-unused-vars",
     "unicorn/consistent-tuple-labels"
   ],
-  "scripts/lint-parity-probe/unicorn/default-export-style.js": [
-    "unicorn/default-export-style"
-  ],
+  "scripts/lint-parity-probe/unicorn/default-export-style.js": ["unicorn/default-export-style"],
   "scripts/lint-parity-probe/unicorn/dom-node-dataset.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/dom-node-dataset"
@@ -640,9 +636,7 @@
     "unicorn/consistent-boolean-name",
     "unicorn/no-declarations-before-early-exit"
   ],
-  "scripts/lint-parity-probe/unicorn/no-document-cookie.js": [
-    "unicorn/consistent-boolean-name"
-  ],
+  "scripts/lint-parity-probe/unicorn/no-document-cookie.js": ["unicorn/consistent-boolean-name"],
   "scripts/lint-parity-probe/unicorn/no-double-comparison.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-double-comparison"
@@ -663,17 +657,13 @@
     "unicorn/consistent-boolean-name",
     "unicorn/no-duplicate-set-values"
   ],
-  "scripts/lint-parity-probe/unicorn/no-empty-file.js": [
-    "unicorn/no-empty-file"
-  ],
+  "scripts/lint-parity-probe/unicorn/no-empty-file.js": ["unicorn/no-empty-file"],
   "scripts/lint-parity-probe/unicorn/no-error-property-assignment.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-error-property-assignment",
     "unicorn/no-top-level-side-effects"
   ],
-  "scripts/lint-parity-probe/unicorn/no-exports-in-scripts.js": [
-    "unicorn/no-exports-in-scripts"
-  ],
+  "scripts/lint-parity-probe/unicorn/no-exports-in-scripts.js": ["unicorn/no-exports-in-scripts"],
   "scripts/lint-parity-probe/unicorn/no-global-object-property-assignment.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-global-object-property-assignment"
@@ -758,9 +748,7 @@
     "unicorn/no-multiple-promise-resolver-calls",
     "unicorn/no-top-level-side-effects"
   ],
-  "scripts/lint-parity-probe/unicorn/no-named-default.js": [
-    "unicorn/no-named-default"
-  ],
+  "scripts/lint-parity-probe/unicorn/no-named-default.js": ["unicorn/no-named-default"],
   "scripts/lint-parity-probe/unicorn/no-negated-array-predicate.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-negated-array-predicate"
@@ -1002,9 +990,7 @@
     "unicorn/consistent-boolean-name",
     "unicorn/no-useless-override"
   ],
-  "scripts/lint-parity-probe/unicorn/no-useless-re-export.js": [
-    "unicorn/no-useless-re-export"
-  ],
+  "scripts/lint-parity-probe/unicorn/no-useless-re-export.js": ["unicorn/no-useless-re-export"],
   "scripts/lint-parity-probe/unicorn/no-useless-recursion.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-useless-recursion",
@@ -1053,9 +1039,7 @@
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-add-event-listener"
   ],
-  "scripts/lint-parity-probe/unicorn/prefer-aggregate-error.ts": [
-    "unicorn/prefer-aggregate-error"
-  ],
+  "scripts/lint-parity-probe/unicorn/prefer-aggregate-error.ts": ["unicorn/prefer-aggregate-error"],
   "scripts/lint-parity-probe/unicorn/prefer-array-flat.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-array-flat"
@@ -1164,12 +1148,8 @@
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-else-if"
   ],
-  "scripts/lint-parity-probe/unicorn/prefer-event-target.js": [
-    "unicorn/prefer-event-target"
-  ],
-  "scripts/lint-parity-probe/unicorn/prefer-export-from.js": [
-    "unicorn/prefer-export-from"
-  ],
+  "scripts/lint-parity-probe/unicorn/prefer-event-target.js": ["unicorn/prefer-event-target"],
+  "scripts/lint-parity-probe/unicorn/prefer-export-from.js": ["unicorn/prefer-export-from"],
   "scripts/lint-parity-probe/unicorn/prefer-flat-math-min-max.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-flat-math-min-max"
@@ -1372,9 +1352,7 @@
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-set-has"
   ],
-  "scripts/lint-parity-probe/unicorn/prefer-set-methods.js": [
-    "unicorn/consistent-boolean-name"
-  ],
+  "scripts/lint-parity-probe/unicorn/prefer-set-methods.js": ["unicorn/consistent-boolean-name"],
   "scripts/lint-parity-probe/unicorn/prefer-set-size.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-set-size"
@@ -1477,9 +1455,7 @@
     "unicorn/consistent-boolean-name",
     "unicorn/prefer-unary-minus"
   ],
-  "scripts/lint-parity-probe/unicorn/prefer-url-can-parse.js": [
-    "unicorn/prefer-url-can-parse"
-  ],
+  "scripts/lint-parity-probe/unicorn/prefer-url-can-parse.js": ["unicorn/prefer-url-can-parse"],
   "scripts/lint-parity-probe/unicorn/prefer-url-href.js": [
     "unicorn/consistent-boolean-name",
     "unicorn/no-top-level-side-effects",

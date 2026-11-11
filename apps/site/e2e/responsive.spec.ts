@@ -1,43 +1,35 @@
-import { localePath, LOCALES } from '../src/i18n/locales'
-import { firstFaqTrigger } from './faq-helpers'
-import { expect, test } from './fixtures'
-import {
-  expectNoHorizontalOverflow,
-  openLanguageMenu,
-  setViewportOrSkip,
-} from './layout-helpers'
+import { localePath, LOCALES } from "../src/i18n/locales";
+import { firstFaqTrigger } from "./faq-helpers";
+import { expect, test } from "./fixtures";
+import { expectNoHorizontalOverflow, openLanguageMenu, setViewportOrSkip } from "./layout-helpers";
 
-const PATHS = LOCALES.map((locale) => localePath(locale))
+const PATHS = LOCALES.map((locale) => localePath(locale));
 
-test('/privacy/ has no horizontal overflow', async ({ page }) => {
-  await page.goto('/privacy/')
-  await expect(page.locator('h1')).toBeVisible()
-  await expectNoHorizontalOverflow(page)
-})
+test("/privacy/ has no horizontal overflow", async ({ page }) => {
+  await page.goto("/privacy/");
+  await expect(page.locator("h1")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
 
 for (const path of PATHS) {
   test(`${path} has no horizontal overflow`, async ({ page }) => {
-    await page.goto(path)
-    await expect(page.locator('h1')).toBeVisible()
-    await expectNoHorizontalOverflow(page)
-  })
+    await page.goto(path);
+    await expect(page.locator("h1")).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  });
 
-  test(`${path} has no horizontal overflow with the language switcher open`, async ({
-    page,
-  }) => {
-    await page.goto(path)
-    await openLanguageMenu(page)
-    await expectNoHorizontalOverflow(page)
-  })
+  test(`${path} has no horizontal overflow with the language switcher open`, async ({ page }) => {
+    await page.goto(path);
+    await openLanguageMenu(page);
+    await expectNoHorizontalOverflow(page);
+  });
 
-  test(`${path} has no horizontal overflow at 320px with a FAQ answer open`, async ({
-    page,
-  }) => {
-    await setViewportOrSkip(page, { width: 320, height: 640 })
-    await page.goto(path)
-    const first = await firstFaqTrigger(page)
-    await first.click()
-    await expect(first).toHaveAttribute('aria-expanded', 'true')
-    await expectNoHorizontalOverflow(page)
-  })
+  test(`${path} has no horizontal overflow at 320px with a FAQ answer open`, async ({ page }) => {
+    await setViewportOrSkip(page, { width: 320, height: 640 });
+    await page.goto(path);
+    const first = await firstFaqTrigger(page);
+    await first.click();
+    await expect(first).toHaveAttribute("aria-expanded", "true");
+    await expectNoHorizontalOverflow(page);
+  });
 }

@@ -1,17 +1,14 @@
-import { countBookmarks } from '@/lib/count-bookmarks'
-import {
-  resolveImportRoots,
-  type RootChildNode,
-} from '@/lib/importers/resolve-roots'
-import type { ImportPreview } from '@/lib/types'
+import { countBookmarks } from "@/lib/count-bookmarks";
+import { resolveImportRoots, type RootChildNode } from "@/lib/importers/resolve-roots";
+import type { ImportPreview } from "@/lib/types";
 
 /**
  * What a Restore-replace of a given file would change: how many bookmarks
  * the replace deletes from the current tree, and how many the file adds.
  */
 export interface ReplaceDiff {
-  removedCount: number
-  addedCount: number
+  removedCount: number;
+  addedCount: number;
 }
 
 /**
@@ -26,19 +23,18 @@ export interface ReplaceDiff {
  */
 export function selectClearedRoots<T extends RootChildNode>(
   rootChildren: T[],
-  clearing: Pick<ImportPreview, 'clearsMobileRoot' | 'splitRootTypes'>,
+  clearing: Pick<ImportPreview, "clearsMobileRoot" | "splitRootTypes">,
 ): T[] {
-  const { bookmarksBarId, otherBookmarksId, mobileId } =
-    resolveImportRoots(rootChildren)
-  const clearedIds = new Set([bookmarksBarId, otherBookmarksId])
-  if (clearing.clearsMobileRoot) clearedIds.add(mobileId)
+  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(rootChildren);
+  const clearedIds = new Set([bookmarksBarId, otherBookmarksId]);
+  if (clearing.clearsMobileRoot) clearedIds.add(mobileId);
 
-  const splitRootTypes = new Set<string>(clearing.splitRootTypes)
-  if (!clearing.clearsMobileRoot) splitRootTypes.delete('mobile')
+  const splitRootTypes = new Set<string>(clearing.splitRootTypes);
+  if (!clearing.clearsMobileRoot) splitRootTypes.delete("mobile");
   for (const node of rootChildren) {
-    if (splitRootTypes.has(node.folderType ?? '')) clearedIds.add(node.id)
+    if (splitRootTypes.has(node.folderType ?? "")) clearedIds.add(node.id);
   }
-  return rootChildren.filter((node) => clearedIds.has(node.id))
+  return rootChildren.filter((node) => clearedIds.has(node.id));
 }
 
 /**
@@ -50,13 +46,11 @@ export function selectClearedRoots<T extends RootChildNode>(
  * @param preview The preview of the file about to be restored.
  * @returns The removed and added bookmark counts.
  */
-export async function getReplaceDiff(
-  preview: ImportPreview,
-): Promise<ReplaceDiff> {
-  const [treeRoot] = await browser.bookmarks.getTree()
-  const clearedRoots = selectClearedRoots(treeRoot?.children ?? [], preview)
+export async function getReplaceDiff(preview: ImportPreview): Promise<ReplaceDiff> {
+  const [treeRoot] = await browser.bookmarks.getTree();
+  const clearedRoots = selectClearedRoots(treeRoot?.children ?? [], preview);
   return {
     removedCount: countBookmarks(clearedRoots),
     addedCount: preview.totalCount,
-  }
+  };
 }

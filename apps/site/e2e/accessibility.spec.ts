@@ -1,168 +1,144 @@
-import AxeBuilder from '@axe-core/playwright'
-import { type Page } from '@playwright/test'
+import AxeBuilder from "@axe-core/playwright";
+import { type Page } from "@playwright/test";
 
-import { firstFaqTrigger } from './faq-helpers'
-import { expect, test } from './fixtures'
-import {
-  expectNoHorizontalOverflow,
-  openLanguageMenu,
-  setViewportOrSkip,
-} from './layout-helpers'
-import { CONTENT_PATHS, SCANNED_PATHS, WIDTH_CHECK_PATHS } from './routes'
+import { firstFaqTrigger } from "./faq-helpers";
+import { expect, test } from "./fixtures";
+import { expectNoHorizontalOverflow, openLanguageMenu, setViewportOrSkip } from "./layout-helpers";
+import { CONTENT_PATHS, SCANNED_PATHS, WIDTH_CHECK_PATHS } from "./routes";
 
-const AXE_TAGS = [
-  'wcag2a',
-  'wcag2aa',
-  'wcag21a',
-  'wcag21aa',
-  'wcag22aa',
-  'best-practice',
-]
+const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
 async function expectNoViolations(page: Page): Promise<void> {
   const { violations } = await new AxeBuilder({ page })
     .withTags(AXE_TAGS)
-    .exclude('[data-base-ui-focus-guard]')
-    .disableRules(['label-content-name-mismatch'])
-    .analyze()
-  expect(violations).toEqual([])
+    .exclude("[data-base-ui-focus-guard]")
+    .disableRules(["label-content-name-mismatch"])
+    .analyze();
+  expect(violations).toEqual([]);
 }
 
-const SCHEMES = ['light', 'dark'] as const
+const SCHEMES = ["light", "dark"] as const;
 
 test.beforeEach(async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-})
+  await page.emulateMedia({ reducedMotion: "reduce" });
+});
 
 for (const colorScheme of SCHEMES) {
   for (const path of SCANNED_PATHS) {
-    test(`${path} has no accessibility violations in ${colorScheme}`, async ({
-      page,
-    }) => {
-      await page.emulateMedia({ colorScheme })
-      await page.goto(path)
-      await expectNoViolations(page)
-    })
+    test(`${path} has no accessibility violations in ${colorScheme}`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme });
+      await page.goto(path);
+      await expectNoViolations(page);
+    });
   }
 }
 
-test('/privacy/ has no accessibility violations at 320px', async ({ page }) => {
-  await setViewportOrSkip(page, { width: 320, height: 640 })
-  await page.goto('/privacy/')
-  await expectNoViolations(page)
-})
+test("/privacy/ has no accessibility violations at 320px", async ({ page }) => {
+  await setViewportOrSkip(page, { width: 320, height: 640 });
+  await page.goto("/privacy/");
+  await expectNoViolations(page);
+});
 
 for (const path of WIDTH_CHECK_PATHS) {
   test(`${path} has no accessibility violations or horizontal scroll at 320px`, async ({
     page,
   }) => {
-    await setViewportOrSkip(page, { width: 320, height: 640 })
-    await page.goto(path)
-    await expectNoViolations(page)
-    await expectNoHorizontalOverflow(page)
-  })
+    await setViewportOrSkip(page, { width: 320, height: 640 });
+    await page.goto(path);
+    await expectNoViolations(page);
+    await expectNoHorizontalOverflow(page);
+  });
 }
 
-test('/guide/ has no accessibility violations at 320px and 768px', async ({
-  page,
-}) => {
+test("/guide/ has no accessibility violations at 320px and 768px", async ({ page }) => {
   for (const width of [320, 768]) {
-    await setViewportOrSkip(page, { width, height: 800 })
-    await page.goto('/guide/')
-    await expectNoViolations(page)
+    await setViewportOrSkip(page, { width, height: 800 });
+    await page.goto("/guide/");
+    await expectNoViolations(page);
   }
-})
+});
 
-test('/privacy/ inline links are underlined with visible contrast', async ({
-  page,
-}) => {
-  await page.goto('/privacy/')
-  const link = page.locator('[data-section="policy"] a').first()
+test("/privacy/ inline links are underlined with visible contrast", async ({ page }) => {
+  await page.goto("/privacy/");
+  const link = page.locator('[data-section="policy"] a').first();
   const style = await link.evaluate((element) => {
-    const computed = globalThis.getComputedStyle(element)
+    const computed = globalThis.getComputedStyle(element);
     return {
       line: computed.textDecorationLine,
       color: computed.textDecorationColor,
       text: computed.color,
-      thickness: Number(computed.textDecorationThickness.replace('px', '')),
-    }
-  })
-  expect(style.line).toBe('underline')
-  expect(style.color).toBe(style.text)
-  expect(style.thickness).toBeGreaterThanOrEqual(1)
-})
+      thickness: Number(computed.textDecorationThickness.replace("px", "")),
+    };
+  });
+  expect(style.line).toBe("underline");
+  expect(style.color).toBe(style.text);
+  expect(style.thickness).toBeGreaterThanOrEqual(1);
+});
 
 for (const colorScheme of SCHEMES) {
-  test(`the 404 page has no accessibility violations in ${colorScheme}`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ colorScheme })
-    const response = await page.goto('/nope')
-    expect(response?.status()).toBe(404)
-    await expectNoViolations(page)
-  })
+  test(`the 404 page has no accessibility violations in ${colorScheme}`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme });
+    const response = await page.goto("/nope");
+    expect(response?.status()).toBe(404);
+    await expectNoViolations(page);
+  });
 }
 
 for (const path of CONTENT_PATHS) {
   test(`${path} has one h1 and no skipped heading levels`, async ({ page }) => {
-    await page.goto(path)
+    await page.goto(path);
     const levels = await page
-      .locator('h1, h2, h3, h4, h5, h6')
-      .evaluateAll((headings) =>
-        headings.map((heading) => Number(heading.tagName.slice(1))),
-      )
-    expect(levels.filter((level) => level === 1)).toHaveLength(1)
-    expect(levels[0]).toBe(1)
+      .locator("h1, h2, h3, h4, h5, h6")
+      .evaluateAll((headings) => headings.map((heading) => Number(heading.tagName.slice(1))));
+    expect(levels.filter((level) => level === 1)).toHaveLength(1);
+    expect(levels[0]).toBe(1);
     for (const [index, level] of levels.entries()) {
-      if (index > 0) expect(level - levels[index - 1]!).toBeLessThanOrEqual(1)
+      if (index > 0) expect(level - levels[index - 1]!).toBeLessThanOrEqual(1);
     }
-  })
+  });
 }
 
-test.describe('opened states', () => {
-  test('FAQ open has no accessibility violations', async ({ page }) => {
-    await page.goto('/')
-    const first = await firstFaqTrigger(page)
-    await first.click()
-    await expect(first).toHaveAttribute('aria-expanded', 'true')
-    await expectNoViolations(page)
-  })
+test.describe("opened states", () => {
+  test("FAQ open has no accessibility violations", async ({ page }) => {
+    await page.goto("/");
+    const first = await firstFaqTrigger(page);
+    await first.click();
+    await expect(first).toHaveAttribute("aria-expanded", "true");
+    await expectNoViolations(page);
+  });
 
-  test('FAQ open has no accessibility violations at 320px', async ({
-    page,
-  }) => {
-    await setViewportOrSkip(page, { width: 320, height: 640 })
-    await page.goto('/')
-    const first = await firstFaqTrigger(page)
-    await first.click()
-    await expect(first).toHaveAttribute('aria-expanded', 'true')
-    await expectNoViolations(page)
-  })
+  test("FAQ open has no accessibility violations at 320px", async ({ page }) => {
+    await setViewportOrSkip(page, { width: 320, height: 640 });
+    await page.goto("/");
+    const first = await firstFaqTrigger(page);
+    await first.click();
+    await expect(first).toHaveAttribute("aria-expanded", "true");
+    await expectNoViolations(page);
+  });
 
-  test('language switcher open has no accessibility violations', async ({
-    page,
-  }) => {
-    await page.goto('/')
-    await openLanguageMenu(page)
-    await expectNoViolations(page)
-  })
+  test("language switcher open has no accessibility violations", async ({ page }) => {
+    await page.goto("/");
+    await openLanguageMenu(page);
+    await expectNoViolations(page);
+  });
 
-  test('activated video has no accessibility violations', async ({ page }) => {
-    await page.route('https://www.youtube-nocookie.com/**', (route) =>
+  test("activated video has no accessibility violations", async ({ page }) => {
+    await page.route("https://www.youtube-nocookie.com/**", (route) =>
       route.fulfill({
-        contentType: 'text/html',
-        body: '<!doctype html><title>mock player</title>',
+        contentType: "text/html",
+        body: "<!doctype html><title>mock player</title>",
       }),
-    )
-    await page.goto('/')
-    const poster = page.locator('[data-video-poster]')
-    await poster.scrollIntoViewIfNeeded()
-    await poster.hover()
-    await expect(
-      page.locator('astro-island:has([data-video-poster])'),
-    ).not.toHaveAttribute('ssr', '')
-    await poster.click()
-    await expect(page.locator('iframe[data-video-player]')).toBeVisible()
-    await expectNoViolations(page)
-  })
-})
+    );
+    await page.goto("/");
+    const poster = page.locator("[data-video-poster]");
+    await poster.scrollIntoViewIfNeeded();
+    await poster.hover();
+    await expect(page.locator("astro-island:has([data-video-poster])")).not.toHaveAttribute(
+      "ssr",
+      "",
+    );
+    await poster.click();
+    await expect(page.locator("iframe[data-video-player]")).toBeVisible();
+    await expectNoViolations(page);
+  });
+});

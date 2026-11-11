@@ -1,10 +1,9 @@
 ---
 title: Ajustes
 sourceHash: 27e95d807b037c3c
-description:
-  'Define el tema, la vista del árbol de marcadores y el modo de importación
-  predeterminado en Ajustes, y consulta la tarjeta de instantáneas de seguridad.'
-seoTitle: 'Ajustes de Snug: tema, modo de importación y respaldo'
+description: "Define el tema, la vista del árbol de marcadores y el modo de importación
+  predeterminado en Ajustes, y consulta la tarjeta de instantáneas de seguridad."
+seoTitle: "Ajustes de Snug: tema, modo de importación y respaldo"
 ---
 
 La página **Ajustes** de la app reúne el tema (Sistema, Claro, Oscuro), las

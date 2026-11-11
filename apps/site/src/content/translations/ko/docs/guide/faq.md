@@ -1,10 +1,9 @@
 ---
 title: FAQ
 sourceHash: 304e0622b68c13d7
-description:
-  'Snug에 대해 자주 묻는 질문에 답해요. 여러 파일 가져오기, 권한, 지원하는
-  형식과 브라우저, 보안, 백업 폴더를 다뤄요.'
-seoTitle: 'Snug FAQ: 형식, 브라우저, 보안, 백업'
+description: "Snug에 대해 자주 묻는 질문에 답해요. 여러 파일 가져오기, 권한, 지원하는
+  형식과 브라우저, 보안, 백업 폴더를 다뤄요."
+seoTitle: "Snug FAQ: 형식, 브라우저, 보안, 백업"
 ---
 
 Snug에 대해 가장 자주 묻는 질문에 짧게 답해요.

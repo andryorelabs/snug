@@ -1,27 +1,19 @@
-import { i18n } from '#i18n'
-import type { Browser } from '@wxt-dev/browser'
+import { i18n } from "#i18n";
+import type { Browser } from "@wxt-dev/browser";
 
-import { countBookmarks, countImportableBookmarks } from '@/lib/count-bookmarks'
+import { countBookmarks, countImportableBookmarks } from "@/lib/count-bookmarks";
 import {
   ImportCanceledError,
   type ImportControl,
   ImportWriter,
   withImportRollback,
-} from '@/lib/import-control'
-import { shouldClearMobileRoot } from '@/lib/importers/mobile-root'
-import {
-  resolveImportRoots,
-  resolveSplitRootTargets,
-} from '@/lib/importers/resolve-roots'
-import { isAllowedBookmarkUrl } from '@/lib/importers/url-validation'
-import { ROOT_FOLDER_IDS } from '@/lib/root-folders'
-import { applySkipDuplicates } from '@/lib/skip-duplicates'
-import type {
-  ImportMode,
-  ImportOptions,
-  ImportResult,
-  ParsedBookmark,
-} from '@/lib/types'
+} from "@/lib/import-control";
+import { shouldClearMobileRoot } from "@/lib/importers/mobile-root";
+import { resolveImportRoots, resolveSplitRootTargets } from "@/lib/importers/resolve-roots";
+import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import { ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { applySkipDuplicates } from "@/lib/skip-duplicates";
+import type { ImportMode, ImportOptions, ImportResult, ParsedBookmark } from "@/lib/types";
 
 /**
  * Imports bookmarks from a previously exported `ParsedBookmark[]` JSON
@@ -43,14 +35,10 @@ import type {
  */
 export async function importFromJSON(
   bookmarks: ParsedBookmark[] | ParsedBookmark,
-  mode: ImportMode = 'folder',
+  mode: ImportMode = "folder",
   options: ImportOptions = {},
 ): Promise<ImportResult> {
-  return importParsedTree(
-    preprocessBookmarks(normalizeJsonRoot(bookmarks)),
-    mode,
-    options,
-  )
+  return importParsedTree(preprocessBookmarks(normalizeJsonRoot(bookmarks)), mode, options);
 }
 
 /**
@@ -65,7 +53,7 @@ export async function importFromJSON(
  */
 export async function importParsedTree(
   preprocessed: ParsedBookmark[],
-  mode: ImportMode = 'folder',
+  mode: ImportMode = "folder",
   options: ImportOptions = {},
 ): Promise<ImportResult> {
   try {
@@ -75,9 +63,9 @@ export async function importParsedTree(
       options.skipDuplicates ?? false,
       options,
       options.trusted ?? false,
-    )
+    );
   } catch (error) {
-    throw toImportError(error)
+    throw toImportError(error);
   }
 }
 
@@ -88,14 +76,13 @@ export async function importParsedTree(
  * @returns The error to rethrow.
  */
 export function toImportError(error: unknown): unknown {
-  if (error instanceof ImportCanceledError) return error
-  const isProcessError =
-    error instanceof Error && error.message.startsWith('PROCESS_ERROR')
+  if (error instanceof ImportCanceledError) return error;
+  const isProcessError = error instanceof Error && error.message.startsWith("PROCESS_ERROR");
   return new Error(
     isProcessError
-      ? i18n.t('importFromJSONProcessError')
-      : i18n.t('importFromJSONImportError', [(error as Error).message]),
-  )
+      ? i18n.t("importFromJSONProcessError")
+      : i18n.t("importFromJSONImportError", [(error as Error).message]),
+  );
 }
 
 /**
@@ -106,7 +93,7 @@ export function toImportError(error: unknown): unknown {
  * @returns The root as an array of nodes.
  */
 export function normalizeJsonRoot(raw: unknown): ParsedBookmark[] {
-  return (Array.isArray(raw) ? raw : [raw]) as ParsedBookmark[]
+  return (Array.isArray(raw) ? raw : [raw]) as ParsedBookmark[];
 }
 
 /**
@@ -116,28 +103,28 @@ export function normalizeJsonRoot(raw: unknown): ParsedBookmark[] {
  * virtual root node, if one was found (see `preprocessBookmarks`).
  */
 interface PreprocessLevelResult {
-  result: ParsedBookmark[]
-  orphans: ParsedBookmark[]
-  virtualRootChildren: ParsedBookmark[] | undefined
+  result: ParsedBookmark[];
+  orphans: ParsedBookmark[];
+  virtualRootChildren: ParsedBookmark[] | undefined;
 }
 
 const ROOT_ID_BY_FOLDER_TYPE: Readonly<Record<string, string>> = {
-  'bookmarks-bar': ROOT_FOLDER_IDS.bookmarksBar,
+  "bookmarks-bar": ROOT_FOLDER_IDS.bookmarksBar,
   other: ROOT_FOLDER_IDS.otherBookmarks,
   mobile: ROOT_FOLDER_IDS.mobileBookmarks,
-}
+};
 
 const ROOT_IDS: ReadonlySet<string> = new Set([
   ROOT_FOLDER_IDS.bookmarksBar,
   ROOT_FOLDER_IDS.otherBookmarks,
   ROOT_FOLDER_IDS.mobileBookmarks,
-])
+]);
 
 function resolveRootId(bookmark: ParsedBookmark): string | undefined {
   return (
-    ROOT_ID_BY_FOLDER_TYPE[bookmark.folderType ?? ''] ??
-    (ROOT_IDS.has(bookmark.id ?? '') ? bookmark.id : undefined)
-  )
+    ROOT_ID_BY_FOLDER_TYPE[bookmark.folderType ?? ""] ??
+    (ROOT_IDS.has(bookmark.id ?? "") ? bookmark.id : undefined)
+  );
 }
 
 /**
@@ -154,10 +141,8 @@ function resolveRootId(bookmark: ParsedBookmark): string | undefined {
 function isVirtualRoot(bookmark: ParsedBookmark): boolean {
   return (
     bookmark.id === ROOT_FOLDER_IDS.virtualRoot ||
-    (bookmark.children ?? []).some(
-      (child) => resolveRootId(child) !== undefined,
-    )
-  )
+    (bookmark.children ?? []).some((child) => resolveRootId(child) !== undefined)
+  );
 }
 
 /**
@@ -183,40 +168,40 @@ function isVirtualRoot(bookmark: ParsedBookmark): boolean {
  * @returns The classified nodes, orphans, and any virtual root's children.
  */
 function preprocessLevel(level: ParsedBookmark[]): PreprocessLevelResult {
-  const result: ParsedBookmark[] = []
-  const orphans: ParsedBookmark[] = []
-  let virtualRootChildren: ParsedBookmark[] | undefined
+  const result: ParsedBookmark[] = [];
+  const orphans: ParsedBookmark[] = [];
+  let virtualRootChildren: ParsedBookmark[] | undefined;
 
   for (const bookmark of level) {
     switch (resolveRootId(bookmark)) {
       case ROOT_FOLDER_IDS.bookmarksBar: {
-        bookmark.isBookmarksBar = true
-        result.unshift(bookmark)
-        continue
+        bookmark.isBookmarksBar = true;
+        result.unshift(bookmark);
+        continue;
       }
       case ROOT_FOLDER_IDS.otherBookmarks: {
-        bookmark.isOtherBookmarks = true
-        result.push(bookmark)
-        continue
+        bookmark.isOtherBookmarks = true;
+        result.push(bookmark);
+        continue;
       }
       case ROOT_FOLDER_IDS.mobileBookmarks: {
-        bookmark.isMobileBookmarks = true
-        result.push(bookmark)
-        continue
+        bookmark.isMobileBookmarks = true;
+        result.push(bookmark);
+        continue;
       }
     }
 
     if (bookmark.parentId === ROOT_FOLDER_IDS.otherBookmarks) {
-      orphans.push(bookmark)
+      orphans.push(bookmark);
     } else if (bookmark.children && isVirtualRoot(bookmark)) {
-      virtualRootChildren = bookmark.children
-      break
+      virtualRootChildren = bookmark.children;
+      break;
     } else {
-      orphans.push(bookmark)
+      orphans.push(bookmark);
     }
   }
 
-  return { result, orphans, virtualRootChildren }
+  return { result, orphans, virtualRootChildren };
 }
 
 /**
@@ -227,13 +212,13 @@ function preprocessLevel(level: ParsedBookmark[]): PreprocessLevelResult {
  */
 function coerceTitles(nodes: ParsedBookmark[]): void {
   for (const node of nodes) {
-    const { title: rawTitle }: { title: unknown } = node
-    if (typeof rawTitle === 'number' || typeof rawTitle === 'boolean') {
-      node.title = String(rawTitle)
-    } else if (typeof rawTitle !== 'string') {
-      node.title = ''
+    const { title: rawTitle }: { title: unknown } = node;
+    if (typeof rawTitle === "number" || typeof rawTitle === "boolean") {
+      node.title = String(rawTitle);
+    } else if (typeof rawTitle !== "string") {
+      node.title = "";
     }
-    if (node.children) coerceTitles(node.children)
+    if (node.children) coerceTitles(node.children);
   }
 }
 
@@ -252,35 +237,32 @@ function coerceTitles(nodes: ParsedBookmark[]): void {
  * @returns The normalized
  *   `[ bookmarksBar?, otherBookmarks?, mobileBookmarks? ]` array.
  */
-export function preprocessBookmarks(
-  bookmarks: ParsedBookmark[],
-): ParsedBookmark[] {
-  coerceTitles(bookmarks)
-  let currentLevel = bookmarks
+export function preprocessBookmarks(bookmarks: ParsedBookmark[]): ParsedBookmark[] {
+  coerceTitles(bookmarks);
+  let currentLevel = bookmarks;
 
   for (;;) {
-    const { result, orphans, virtualRootChildren } =
-      preprocessLevel(currentLevel)
+    const { result, orphans, virtualRootChildren } = preprocessLevel(currentLevel);
 
     if (virtualRootChildren) {
-      currentLevel = virtualRootChildren
-      continue
+      currentLevel = virtualRootChildren;
+      continue;
     }
 
-    const existingOther = result.find((b) => b.isOtherBookmarks)
+    const existingOther = result.find((b) => b.isOtherBookmarks);
     if (existingOther && orphans.length > 0) {
-      existingOther.children = [...(existingOther.children ?? []), ...orphans]
+      existingOther.children = [...(existingOther.children ?? []), ...orphans];
     } else if (orphans.length > 0) {
       result.push({
         id: ROOT_FOLDER_IDS.otherBookmarks,
         isOtherBookmarks: true,
-        title: i18n.t('otherBookmarks'),
+        title: i18n.t("otherBookmarks"),
         dateAdded: Date.now(),
         children: orphans,
-      })
+      });
     }
 
-    return result
+    return result;
   }
 }
 
@@ -307,26 +289,24 @@ async function processBookmarks(
   control: ImportControl,
   isTrusted: boolean,
 ): Promise<ImportResult> {
-  const tree = await browser.bookmarks.getTree()
+  const tree = await browser.bookmarks.getTree();
   const { nodes: parsed, skippedDuplicates } = applySkipDuplicates(
     allParsed,
     tree,
     mode,
     shouldSkipDuplicates,
-  )
-  const result: ImportResult = { skippedInvalidUrl: 0, skippedDuplicates }
+  );
+  const result: ImportResult = { skippedInvalidUrl: 0, skippedDuplicates };
   const writer = new ImportWriter(
     control,
     isTrusted ? countBookmarks(parsed) : countImportableBookmarks(parsed),
     skippedDuplicates,
-  )
-  const root = tree[0]
-  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(
-    root?.children ?? [],
-  )
+  );
+  const root = tree[0];
+  const { bookmarksBarId, otherBookmarksId, mobileId } = resolveImportRoots(root?.children ?? []);
 
   if (!bookmarksBarId || !otherBookmarksId) {
-    throw new Error('PROCESS_ERROR:' + i18n.t('importFromJSONProcessError'))
+    throw new Error("PROCESS_ERROR:" + i18n.t("importFromJSONProcessError"));
   }
 
   await withImportRollback(writer, () =>
@@ -341,30 +321,30 @@ async function processBookmarks(
       writer,
       isTrusted,
     }),
-  )
-  writer.finish()
+  );
+  writer.finish();
 
-  return result
+  return result;
 }
 
 /**
  * Everything {@link writeParsedTree} needs to write one tree.
  */
 export interface WriteParsedTreeRequest {
-  parsed: ParsedBookmark[]
-  mode: ImportMode
-  liveRoot: Browser.bookmarks.BookmarkTreeNode | undefined
-  bookmarksBarId: string
-  otherBookmarksId: string
-  mobileId: string | undefined
-  result: ImportResult
-  writer: ImportWriter
-  isTrusted: boolean
+  parsed: ParsedBookmark[];
+  mode: ImportMode;
+  liveRoot: Browser.bookmarks.BookmarkTreeNode | undefined;
+  bookmarksBarId: string;
+  otherBookmarksId: string;
+  mobileId: string | undefined;
+  result: ImportResult;
+  writer: ImportWriter;
+  isTrusted: boolean;
   /**
    * Title of the folder Folder mode writes into; defaults to "Imported
    * bookmarks".
    */
-  folderTitle?: string
+  folderTitle?: string;
 }
 
 /**
@@ -374,9 +354,7 @@ export interface WriteParsedTreeRequest {
  * @param request The tree, target roots and shared writer.
  * @returns Resolves once the tree is written.
  */
-export async function writeParsedTree(
-  request: WriteParsedTreeRequest,
-): Promise<void> {
+export async function writeParsedTree(request: WriteParsedTreeRequest): Promise<void> {
   const {
     parsed,
     mode,
@@ -387,62 +365,36 @@ export async function writeParsedTree(
     result,
     writer,
     isTrusted,
-  } = request
-  const folderTitle = request.folderTitle ?? i18n.t('importedBookmarks')
-  if (mode === 'folder') {
+  } = request;
+  const folderTitle = request.folderTitle ?? i18n.t("importedBookmarks");
+  if (mode === "folder") {
     const importedFolder = await writer.create({
       title: folderTitle,
-    })
+    });
 
     for (const bookmark of parsed) {
-      if (
-        bookmark.isBookmarksBar &&
-        bookmark.children &&
-        bookmark.children.length > 0
-      ) {
+      if (bookmark.isBookmarksBar && bookmark.children && bookmark.children.length > 0) {
         const importedBar = await writer.create({
           parentId: importedFolder.id,
-          title: i18n.t('bookmarksBar'),
-        })
-        await createBookmarks(
-          bookmark.children,
-          importedBar.id,
-          result,
-          writer,
-          isTrusted,
-        )
+          title: i18n.t("bookmarksBar"),
+        });
+        await createBookmarks(bookmark.children, importedBar.id, result, writer, isTrusted);
       } else if (bookmark.isOtherBookmarks && bookmark.children) {
-        await createBookmarks(
-          bookmark.children,
-          importedFolder.id,
-          result,
-          writer,
-          isTrusted,
-        )
-      } else if (
-        bookmark.isMobileBookmarks &&
-        bookmark.children &&
-        bookmark.children.length > 0
-      ) {
+        await createBookmarks(bookmark.children, importedFolder.id, result, writer, isTrusted);
+      } else if (bookmark.isMobileBookmarks && bookmark.children && bookmark.children.length > 0) {
         const importedMobile = await writer.create({
           parentId: importedFolder.id,
-          title: i18n.t('mobileBookmarks'),
-        })
-        await createBookmarks(
-          bookmark.children,
-          importedMobile.id,
-          result,
-          writer,
-          isTrusted,
-        )
+          title: i18n.t("mobileBookmarks"),
+        });
+        await createBookmarks(bookmark.children, importedMobile.id, result, writer, isTrusted);
       } else if (isAllowedBookmarkUrl(bookmark.url)) {
         await writer.create({
           parentId: importedFolder.id,
           title: bookmark.title,
           url: bookmark.url,
-        })
+        });
       } else if (!bookmark.children) {
-        result.skippedInvalidUrl++
+        result.skippedInvalidUrl++;
       }
     }
   } else {
@@ -451,25 +403,21 @@ export async function writeParsedTree(
         bookmark.isMobileBookmarks &&
         bookmark.children &&
         (isTrusted || shouldClearMobileRoot(bookmark)),
-    )
+    );
 
-    const splitTargets = resolveSplitRootTargets(parsed, root?.children ?? [])
+    const splitTargets = resolveSplitRootTargets(parsed, root?.children ?? []);
 
-    if (mode === 'restore-replace') {
-      writer.markClearingExisting()
-      const clearedIds = new Set([bookmarksBarId, otherBookmarksId])
-      if (hasMobileContent && mobileId) clearedIds.add(mobileId)
+    if (mode === "restore-replace") {
+      writer.markClearingExisting();
+      const clearedIds = new Set([bookmarksBarId, otherBookmarksId]);
+      if (hasMobileContent && mobileId) clearedIds.add(mobileId);
       for (const [node, targetId] of splitTargets) {
-        if (
-          isTrusted ||
-          !node.isMobileBookmarks ||
-          shouldClearMobileRoot(node)
-        ) {
-          clearedIds.add(targetId)
+        if (isTrusted || !node.isMobileBookmarks || shouldClearMobileRoot(node)) {
+          clearedIds.add(targetId);
         }
       }
       for (const clearedId of clearedIds) {
-        await removeAllChildren(clearedId, root)
+        await removeAllChildren(clearedId, root);
       }
     }
 
@@ -481,7 +429,7 @@ export async function writeParsedTree(
           result,
           writer,
           isTrusted,
-        )
+        );
       } else if (bookmark.isOtherBookmarks && bookmark.children) {
         await createBookmarks(
           bookmark.children,
@@ -489,7 +437,7 @@ export async function writeParsedTree(
           result,
           writer,
           isTrusted,
-        )
+        );
       } else if (bookmark.isMobileBookmarks && bookmark.children) {
         await writeMobileBookmarks(
           bookmark.children,
@@ -498,15 +446,15 @@ export async function writeParsedTree(
           result,
           writer,
           isTrusted,
-        )
+        );
       } else if (isAllowedBookmarkUrl(bookmark.url)) {
         await writer.create({
           parentId: otherBookmarksId,
           title: bookmark.title,
           url: bookmark.url,
-        })
+        });
       } else if (!bookmark.children) {
-        result.skippedInvalidUrl++
+        result.skippedInvalidUrl++;
       }
     }
   }
@@ -526,10 +474,10 @@ async function removeAllChildren(
   rootId: string,
   treeRoot: Browser.bookmarks.BookmarkTreeNode | undefined,
 ): Promise<void> {
-  const rootNode = treeRoot?.children?.find((node) => node.id === rootId)
-  const children = rootNode?.children ?? []
+  const rootNode = treeRoot?.children?.find((node) => node.id === rootId);
+  const children = rootNode?.children ?? [];
   for (const child of children) {
-    await browser.bookmarks.removeTree(child.id)
+    await browser.bookmarks.removeTree(child.id);
   }
 }
 
@@ -556,13 +504,7 @@ async function writeMobileBookmarks(
   writer: ImportWriter,
   isTrusted: boolean,
 ): Promise<void> {
-  await createBookmarks(
-    nodes,
-    mobileId ?? otherBookmarksId,
-    result,
-    writer,
-    isTrusted,
-  )
+  await createBookmarks(nodes, mobileId ?? otherBookmarksId, result, writer, isTrusted);
 }
 
 /**
@@ -584,11 +526,11 @@ async function createFolderOrSkipSubtree(
   isTrusted: boolean,
 ) {
   try {
-    return await writer.create({ parentId, title: node.title })
+    return await writer.create({ parentId, title: node.title });
   } catch (error) {
-    if (!isTrusted || error instanceof ImportCanceledError) throw error
-    result.skippedInvalidUrl += Math.max(1, countBookmarks(node.children ?? []))
-    return
+    if (!isTrusted || error instanceof ImportCanceledError) throw error;
+    result.skippedInvalidUrl += Math.max(1, countBookmarks(node.children ?? []));
+    return;
   }
 }
 
@@ -615,38 +557,24 @@ async function createBookmarks(
   isTrusted: boolean,
 ): Promise<void> {
   for (const node of nodes) {
-    const hasWritableUrl = isTrusted
-      ? node.url !== undefined
-      : isAllowedBookmarkUrl(node.url)
+    const hasWritableUrl = isTrusted ? node.url !== undefined : isAllowedBookmarkUrl(node.url);
     try {
       if (hasWritableUrl) {
         await writer.create({
           parentId,
           title: node.title,
           ...(node.url !== undefined && { url: node.url }),
-        })
+        });
       } else if (node.children) {
-        const folder = await createFolderOrSkipSubtree(
-          node,
-          parentId,
-          result,
-          writer,
-          isTrusted,
-        )
-        if (!folder) continue
-        await createBookmarks(
-          node.children,
-          folder.id,
-          result,
-          writer,
-          isTrusted,
-        )
+        const folder = await createFolderOrSkipSubtree(node, parentId, result, writer, isTrusted);
+        if (!folder) continue;
+        await createBookmarks(node.children, folder.id, result, writer, isTrusted);
       } else {
-        result.skippedInvalidUrl++
+        result.skippedInvalidUrl++;
       }
     } catch (error) {
-      if (!isTrusted || error instanceof ImportCanceledError) throw error
-      result.skippedInvalidUrl++
+      if (!isTrusted || error instanceof ImportCanceledError) throw error;
+      result.skippedInvalidUrl++;
     }
   }
 }

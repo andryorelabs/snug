@@ -1,42 +1,35 @@
-import { fitText } from '@remotion/layout-utils'
-import { type ReactNode, useMemo } from 'react'
-import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from 'remotion'
+import { fitText } from "@remotion/layout-utils";
+import { type ReactNode, useMemo } from "react";
+import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-import { type Locale, storeCaptions } from '../copy'
-import { fontStackFor } from '../fonts'
-import {
-  Camera,
-  type CameraKeyframe,
-  EASE,
-  KineticText,
-  progressBetween,
-  SPRING,
-} from '../motion'
-import type { SceneProps } from '../schema'
-import { theme } from '../theme'
-import { Icon } from '../ui'
+import { type Locale, storeCaptions } from "../copy";
+import { fontStackFor } from "../fonts";
+import { Camera, type CameraKeyframe, EASE, KineticText, progressBetween, SPRING } from "../motion";
+import type { SceneProps } from "../schema";
+import { theme } from "../theme";
+import { Icon } from "../ui";
 
-const SAFE_SIDE = 80
-const SAFE_TOP = 100
-const VIEW_WIDTH = 1920 - SAFE_SIDE * 2
-const PANEL_WIDTH = 1320
-const PANEL_TOP = 400
-const ROW_HEIGHT = 100
-const PANEL_PADDING = 28
-const PANEL_HEIGHT = ROW_HEIGHT * 4 + PANEL_PADDING * 2 - 14
-const ROW_START = 10
-const ROW_STEP = 12
-const CHECK_LAG = 8
-const OUTLINE_FROM = 62
-const OUTLINE_TO = 86
-const TEXT_WIDTH = 1010
+const SAFE_SIDE = 80;
+const SAFE_TOP = 100;
+const VIEW_WIDTH = 1920 - SAFE_SIDE * 2;
+const PANEL_WIDTH = 1320;
+const PANEL_TOP = 400;
+const ROW_HEIGHT = 100;
+const PANEL_PADDING = 28;
+const PANEL_HEIGHT = ROW_HEIGHT * 4 + PANEL_PADDING * 2 - 14;
+const ROW_START = 10;
+const ROW_STEP = 12;
+const CHECK_LAG = 8;
+const OUTLINE_FROM = 62;
+const OUTLINE_TO = 86;
+const TEXT_WIDTH = 1010;
 
 const CAMERA: CameraKeyframe[] = [
   { frame: 0, x: 960, y: 540, zoom: 1 },
   { frame: 56, x: 960, y: 560, zoom: 1.04 },
-]
+];
 
-type ClaimGlyph = 'account' | 'upload' | 'tracking' | 'source'
+type ClaimGlyph = "account" | "upload" | "tracking" | "source";
 
 const GLYPHS: Record<ClaimGlyph, { paths: ReactNode; struck: boolean }> = {
   account: {
@@ -49,9 +42,7 @@ const GLYPHS: Record<ClaimGlyph, { paths: ReactNode; struck: boolean }> = {
     struck: true,
   },
   upload: {
-    paths: (
-      <path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 12.5 3.5 3.5 0 0 0 6 19z" />
-    ),
+    paths: <path d="M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 0 0 4.5 12.5 3.5 3.5 0 0 0 6 19z" />,
     struck: true,
   },
   tracking: {
@@ -72,9 +63,9 @@ const GLYPHS: Record<ClaimGlyph, { paths: ReactNode; struck: boolean }> = {
     ),
     struck: false,
   },
-}
+};
 
-const GLYPH_ORDER: ClaimGlyph[] = ['account', 'upload', 'tracking', 'source']
+const GLYPH_ORDER: ClaimGlyph[] = ["account", "upload", "tracking", "source"];
 
 const ClaimGlyphIcon = ({ glyph }: { glyph: ClaimGlyph }) => (
   <svg
@@ -90,30 +81,22 @@ const ClaimGlyphIcon = ({ glyph }: { glyph: ClaimGlyph }) => (
     {GLYPHS[glyph].paths}
     {GLYPHS[glyph].struck ? <path d="M3 3l18 18" /> : null}
   </svg>
-)
+);
 
-const ClaimRow = ({
-  index,
-  text,
-  locale,
-}: {
-  index: number
-  text: string
-  locale: Locale
-}) => {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const fonts = fontStackFor(locale)
+const ClaimRow = ({ index, text, locale }: { index: number; text: string; locale: Locale }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const fonts = fontStackFor(locale);
   const enter = spring({
     frame: frame - (ROW_START + index * ROW_STEP),
     fps,
     config: SPRING.settle,
-  })
+  });
   const check = spring({
     frame: frame - (ROW_START + index * ROW_STEP + CHECK_LAG),
     fps,
     config: SPRING.snappy,
-  })
+  });
   const size = useMemo(
     () =>
       Math.floor(
@@ -129,18 +112,18 @@ const ClaimRow = ({
         ),
       ),
     [text, fonts.body],
-  )
-  const glyph = GLYPH_ORDER[index] ?? 'source'
+  );
+  const glyph = GLYPH_ORDER[index] ?? "source";
   return (
     <div
       style={{
         height: ROW_HEIGHT - 14,
         marginBottom: 14,
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 28,
-        padding: '0 28px',
-        boxSizing: 'border-box',
+        padding: "0 28px",
+        boxSizing: "border-box",
         borderRadius: 18,
         background: theme.ui.surfaceMuted,
         border: `1.5px solid ${theme.ui.border}`,
@@ -156,20 +139,20 @@ const ClaimRow = ({
           fontSize: size,
           fontWeight: 600,
           color: theme.colors.text,
-          whiteSpace: 'nowrap',
+          whiteSpace: "nowrap",
         }}
       >
         {text}
       </div>
       <div
         style={{
-          marginLeft: 'auto',
+          marginLeft: "auto",
           width: 52,
           height: 52,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           background: theme.colors.accent,
           color: theme.ui.onAccent,
           transform: `scale(${check})`,
@@ -179,26 +162,26 @@ const ClaimRow = ({
         <Icon name="check" size={30} strokeWidth={3} />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const DeviceOutline = () => {
-  const frame = useCurrentFrame()
-  const draw = progressBetween(frame, OUTLINE_FROM, OUTLINE_TO, EASE.settle)
-  const base = progressBetween(frame, OUTLINE_TO - 6, OUTLINE_TO + 6)
-  const margin = 28
-  const width = PANEL_WIDTH + margin * 2
-  const height = PANEL_HEIGHT + margin * 2
+  const frame = useCurrentFrame();
+  const draw = progressBetween(frame, OUTLINE_FROM, OUTLINE_TO, EASE.settle);
+  const base = progressBetween(frame, OUTLINE_TO - 6, OUTLINE_TO + 6);
+  const margin = 28;
+  const width = PANEL_WIDTH + margin * 2;
+  const height = PANEL_HEIGHT + margin * 2;
   return (
     <svg
       width={width}
       height={height + 24}
       viewBox={`0 0 ${width} ${height + 24}`}
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: -margin,
         top: -margin,
-        overflow: 'visible',
+        overflow: "visible",
       }}
     >
       <rect
@@ -225,34 +208,34 @@ const DeviceOutline = () => {
         strokeDashoffset={1 - base}
       />
     </svg>
-  )
-}
+  );
+};
 
 /**
  * Local scene: four privacy claims check in one by one, then a device outline
  * closes around them.
  */
 export const LocalScene = ({ locale }: SceneProps) => {
-  const captions = storeCaptions(locale).local
+  const captions = storeCaptions(locale).local;
   return (
     <AbsoluteFill style={{ backgroundColor: theme.colors.ground }}>
       <AbsoluteFill
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,162,48,0.10), transparent)',
+            "radial-gradient(ellipse 60% 50% at 50% 60%, rgba(255,162,48,0.10), transparent)",
         }}
       />
       <Camera keyframes={CAMERA} moveFrames={34}>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: SAFE_SIDE,
             top: SAFE_TOP,
             width: VIEW_WIDTH,
             height: 230,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <KineticText
@@ -265,12 +248,12 @@ export const LocalScene = ({ locale }: SceneProps) => {
         </div>
         <div
           style={{
-            position: 'absolute',
+            position: "absolute",
             left: (1920 - PANEL_WIDTH) / 2,
             top: PANEL_TOP,
             width: PANEL_WIDTH,
             height: PANEL_HEIGHT,
-            boxSizing: 'border-box',
+            boxSizing: "border-box",
             padding: PANEL_PADDING,
             paddingBottom: 0,
           }}
@@ -282,5 +265,5 @@ export const LocalScene = ({ locale }: SceneProps) => {
         </div>
       </Camera>
     </AbsoluteFill>
-  )
-}
+  );
+};

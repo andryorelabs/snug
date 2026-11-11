@@ -1,10 +1,10 @@
-import type { Loader } from 'astro/loaders'
+import type { Loader } from "astro/loaders";
 
-import { loadAllContent, type SiteContent } from '../i18n/content'
-import { languageTag, LOCALES } from '../i18n/locales'
+import { loadAllContent, type SiteContent } from "../i18n/content";
+import { languageTag, LOCALES } from "../i18n/locales";
 
-const QUERY_PLACEHOLDER = '{query}'
-const PAGEFIND_QUERY_PLACEHOLDER = '[SEARCH_TERM]'
+const QUERY_PLACEHOLDER = "{query}";
+const PAGEFIND_QUERY_PLACEHOLDER = "[SEARCH_TERM]";
 
 /**
  * Pagefind's message for a search without results, built from the locale's
@@ -12,11 +12,11 @@ const PAGEFIND_QUERY_PLACEHOLDER = '[SEARCH_TERM]'
  * @param copy - The locale's `docsSearch` content.
  * @returns The sentence pair, with Pagefind's own query placeholder.
  */
-export function formatZeroResults(copy: SiteContent['docsSearch']): string {
+export function formatZeroResults(copy: SiteContent["docsSearch"]): string {
   return `${copy.noResults} ${copy.hint}`.replaceAll(
     QUERY_PLACEHOLDER,
     () => PAGEFIND_QUERY_PLACEHOLDER,
-  )
+  );
 }
 
 /**
@@ -27,22 +27,20 @@ export function formatZeroResults(copy: SiteContent['docsSearch']): string {
  */
 export function chromeTranslationsLoader(): Loader {
   return {
-    name: 'chrome-translations-loader',
+    name: "chrome-translations-loader",
     async load(context) {
-      const { store } = context
-      const content = loadAllContent()
+      const { store } = context;
+      const content = loadAllContent();
       for (const locale of LOCALES) {
-        const id = languageTag(locale)
+        const id = languageTag(locale);
         const data = await context.parseData({
           id,
           data: {
-            'pagefind.zero_results': formatZeroResults(
-              content[locale].docsSearch,
-            ),
+            "pagefind.zero_results": formatZeroResults(content[locale].docsSearch),
           },
-        })
-        store.set({ id, data })
+        });
+        store.set({ id, data });
       }
     },
-  }
+  };
 }

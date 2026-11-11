@@ -1,8 +1,8 @@
-import type { Browser } from '@wxt-dev/browser'
-import { fakeBrowser } from 'wxt/testing/fake-browser'
+import type { Browser } from "@wxt-dev/browser";
+import { fakeBrowser } from "wxt/testing/fake-browser";
 
-import { resetFakeI18n } from '@/lib/testing/fake-i18n'
-import type { ExtendedBookmarkTreeNode } from '@/lib/types'
+import { resetFakeI18n } from "@/lib/testing/fake-i18n";
+import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
 /**
  * `@webext-core/fake-browser` (used by `wxt/testing/fake-browser`) does not
@@ -32,63 +32,55 @@ function makeDefaultRoot(
   shouldIncludeMobileRoot: boolean,
   shouldIncludeAccountRoots = false,
 ): ExtendedBookmarkTreeNode {
-  const root = makeLocalRoot(shouldIncludeMobileRoot)
+  const root = makeLocalRoot(shouldIncludeMobileRoot);
   if (shouldIncludeAccountRoots) {
-    root.children?.push(...makeAccountRoots(shouldIncludeMobileRoot))
+    root.children?.push(...makeAccountRoots(shouldIncludeMobileRoot));
   }
-  return root
+  return root;
 }
 
-function makeAccountRoots(
-  shouldIncludeMobileRoot: boolean,
-): ExtendedBookmarkTreeNode[] {
+function makeAccountRoots(shouldIncludeMobileRoot: boolean): ExtendedBookmarkTreeNode[] {
   const roots: [string, string, string][] = [
-    ['acct-1', 'Bookmarks bar', 'bookmarks-bar'],
-    ['acct-2', 'Other bookmarks', 'other'],
+    ["acct-1", "Bookmarks bar", "bookmarks-bar"],
+    ["acct-2", "Other bookmarks", "other"],
     ...(shouldIncludeMobileRoot
-      ? ([['acct-3', 'Mobile bookmarks', 'mobile']] as [
-          string,
-          string,
-          string,
-        ][])
+      ? ([["acct-3", "Mobile bookmarks", "mobile"]] as [string, string, string][])
       : []),
-  ]
+  ];
   return roots.map(([id, title, folderType], offset) => ({
     id,
-    parentId: '0',
+    parentId: "0",
     index: 3 + offset,
     title,
-    folderType: folderType as 'bookmarks-bar',
+    folderType: folderType as "bookmarks-bar",
     syncing: true,
     dateAdded: Date.now(),
     children: [],
-  }))
+  }));
 }
 
-function makeLocalRoot(
-  shouldIncludeMobileRoot: boolean,
-): ExtendedBookmarkTreeNode {
+function makeLocalRoot(shouldIncludeMobileRoot: boolean): ExtendedBookmarkTreeNode {
   return {
-    id: '0',
-    title: '',
+    id: "0",
+    title: "",
     syncing: false,
     children: [
       {
-        id: '1',
-        parentId: '0',
+        id: "1",
+        parentId: "0",
         index: 0,
-        title: 'Bookmarks bar',
-        folderType: 'bookmarks-bar',
+        title: "Bookmarks bar",
+        folderType: "bookmarks-bar",
         syncing: false,
         dateAdded: Date.now(),
         children: [],
       },
       {
-        id: '2',
-        parentId: '0',
+        id: "2",
+        parentId: "0",
         index: 1,
-        title: 'Other bookmarks',
-        folderType: 'other',
+        title: "Other bookmarks",
+        folderType: "other",
         syncing: false,
         dateAdded: Date.now(),
         children: [],
@@ -96,11 +88,11 @@ function makeLocalRoot(
       ...(shouldIncludeMobileRoot
         ? [
             {
-              id: '3',
-              parentId: '0',
+              id: "3",
+              parentId: "0",
               index: 2,
-              title: 'Mobile bookmarks',
-              folderType: 'mobile' as const,
+              title: "Mobile bookmarks",
+              folderType: "mobile" as const,
               syncing: false,
               dateAdded: Date.now(),
               children: [],
@@ -108,45 +100,42 @@ function makeLocalRoot(
           ]
         : []),
     ],
-  }
+  };
 }
 
 const store: { nextId: number; root: ExtendedBookmarkTreeNode } = {
   nextId: 4,
   root: makeDefaultRoot(false),
-}
+};
 
 function findNode(
   id: string,
   node: ExtendedBookmarkTreeNode = store.root,
 ): ExtendedBookmarkTreeNode | undefined {
-  if (node.id === id) return node
-  const children = node.children ?? []
+  if (node.id === id) return node;
+  const children = node.children ?? [];
   for (const child of children) {
-    const found = findNode(id, child as ExtendedBookmarkTreeNode)
-    if (found) return found
+    const found = findNode(id, child as ExtendedBookmarkTreeNode);
+    if (found) return found;
   }
-  return undefined
+  return undefined;
 }
 
-function didDeleteNode(
-  id: string,
-  node: ExtendedBookmarkTreeNode = store.root,
-): boolean {
-  if (!node.children) return false
-  const index = node.children.findIndex((child) => child.id === id)
+function didDeleteNode(id: string, node: ExtendedBookmarkTreeNode = store.root): boolean {
+  if (!node.children) return false;
+  const index = node.children.findIndex((child) => child.id === id);
   if (index !== -1) {
-    node.children.splice(index, 1)
-    return true
+    node.children.splice(index, 1);
+    return true;
   }
   for (const child of node.children) {
-    if (didDeleteNode(id, child as ExtendedBookmarkTreeNode)) return true
+    if (didDeleteNode(id, child as ExtendedBookmarkTreeNode)) return true;
   }
-  return false
+  return false;
 }
 
 function clone<T>(value: T): T {
-  return structuredClone(value)
+  return structuredClone(value);
 }
 
 /**
@@ -157,14 +146,14 @@ export interface ResetFakeBookmarksOptions {
    * Also seed a Mobile bookmarks root (id `"3"`, `folderType: "mobile"`),
    * for tests exercising Mobile-aware root resolution. Defaults to `false`.
    */
-  withMobileRoot?: boolean
+  withMobileRoot?: boolean;
   /**
    * Also seed an account-storage set of roots (ids `"acct-1"`, `"acct-2"` and,
    * with `withMobileRoot`, `"acct-3"`) that share the local roots'
    * `folderType` but carry `syncing: true`, as a signed-in profile has.
    * Defaults to `false`.
    */
-  withAccountRoots?: boolean
+  withAccountRoots?: boolean;
 }
 
 /**
@@ -174,70 +163,58 @@ export interface ResetFakeBookmarksOptions {
  * `options.withMobileRoot` is set). Safe to call repeatedly (e.g. per test).
  * @param options See {@link ResetFakeBookmarksOptions}.
  */
-export function resetFakeBookmarks(
-  options: ResetFakeBookmarksOptions = {},
-): void {
-  resetFakeI18n()
-  store.nextId = options.withMobileRoot ? 4 : 3
-  store.root = makeDefaultRoot(
-    options.withMobileRoot ?? false,
-    options.withAccountRoots ?? false,
-  )
+export function resetFakeBookmarks(options: ResetFakeBookmarksOptions = {}): void {
+  resetFakeI18n();
+  store.nextId = options.withMobileRoot ? 4 : 3;
+  store.root = makeDefaultRoot(options.withMobileRoot ?? false, options.withAccountRoots ?? false);
 
-  fakeBrowser.bookmarks.getTree = async () => [clone(store.root)]
+  fakeBrowser.bookmarks.getTree = async () => [clone(store.root)];
 
-  fakeBrowser.bookmarks.create = async (
-    details: Browser.bookmarks.CreateDetails,
-  ) => {
-    const parentId = details.parentId ?? '2'
-    const parent = findNode(parentId)
-    if (!parent)
-      throw new Error(`Parent bookmark folder not found: ${parentId}`)
-    parent.children ??= []
+  fakeBrowser.bookmarks.create = async (details: Browser.bookmarks.CreateDetails) => {
+    const parentId = details.parentId ?? "2";
+    const parent = findNode(parentId);
+    if (!parent) throw new Error(`Parent bookmark folder not found: ${parentId}`);
+    parent.children ??= [];
 
     const node: ExtendedBookmarkTreeNode = {
       id: String(store.nextId++),
       parentId,
       index: parent.children.length,
-      title: details.title ?? '',
+      title: details.title ?? "",
       syncing: parent.syncing,
       dateAdded: Date.now(),
-    }
+    };
     if (details.url === undefined) {
-      node.children = []
+      node.children = [];
     } else {
-      node.url = details.url
+      node.url = details.url;
     }
 
-    parent.children.push(node)
-    return clone(node)
-  }
+    parent.children.push(node);
+    return clone(node);
+  };
 
-  fakeBrowser.bookmarks.search = async (
-    query: string | Browser.bookmarks.SearchQuery,
-  ) => {
+  fakeBrowser.bookmarks.search = async (query: string | Browser.bookmarks.SearchQuery) => {
     const title =
-      typeof query === 'object' && query !== null && 'title' in query
-        ? query.title
-        : undefined
+      typeof query === "object" && query !== null && "title" in query ? query.title : undefined;
 
-    const results: ExtendedBookmarkTreeNode[] = []
+    const results: ExtendedBookmarkTreeNode[] = [];
     const visit = (node: ExtendedBookmarkTreeNode) => {
-      if (title !== undefined && node.id !== '0' && node.title === title) {
-        results.push(clone(node))
+      if (title !== undefined && node.id !== "0" && node.title === title) {
+        results.push(clone(node));
       }
-      const children = node.children ?? []
+      const children = node.children ?? [];
       for (const child of children) {
-        visit(child as ExtendedBookmarkTreeNode)
+        visit(child as ExtendedBookmarkTreeNode);
       }
-    }
-    visit(store.root)
-    return results
-  }
+    };
+    visit(store.root);
+    return results;
+  };
 
   fakeBrowser.bookmarks.removeTree = async (id: string) => {
-    didDeleteNode(id)
-  }
+    didDeleteNode(id);
+  };
 }
 
 /**
@@ -250,15 +227,13 @@ export function seedFakeBookmarksTree(
   bookmarksBarChildren: ExtendedBookmarkTreeNode[],
   otherBookmarksChildren: ExtendedBookmarkTreeNode[] = [],
 ): void {
-  const barNode = findNode('1')
-  const otherNode = findNode('2')
+  const barNode = findNode("1");
+  const otherNode = findNode("2");
   if (!barNode || !otherNode) {
-    throw new Error(
-      'Fake bookmarks tree not initialized — call resetFakeBookmarks() first',
-    )
+    throw new Error("Fake bookmarks tree not initialized — call resetFakeBookmarks() first");
   }
-  barNode.children = bookmarksBarChildren
-  otherNode.children = otherBookmarksChildren
+  barNode.children = bookmarksBarChildren;
+  otherNode.children = otherBookmarksChildren;
 }
 
 /**
@@ -266,5 +241,5 @@ export function seedFakeBookmarksTree(
  * @returns A deep clone of the fake tree's root node.
  */
 export function getFakeBookmarksRoot(): ExtendedBookmarkTreeNode {
-  return clone(store.root)
+  return clone(store.root);
 }

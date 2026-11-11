@@ -1,8 +1,8 @@
-import type { Locale } from '../copy'
+import type { Locale } from "../copy";
 
-const DASH = /^\p{Pd}+$/u
-const TRAILING_PUNCTUATION = /^[\p{Pe}\p{Pf}\p{Po}]+$/u
-const SPACE_JOINED_PUNCTUATION = /^(?:[\p{Pe}\p{Pf}]|[:;!?])+$/u
+const DASH = /^\p{Pd}+$/u;
+const TRAILING_PUNCTUATION = /^[\p{Pe}\p{Pf}\p{Po}]+$/u;
+const SPACE_JOINED_PUNCTUATION = /^(?:[\p{Pe}\p{Pf}]|[:;!?])+$/u;
 
 /**
  * Splits text into the display words `KineticText` staggers in.
@@ -14,38 +14,38 @@ const SPACE_JOINED_PUNCTUATION = /^(?:[\p{Pe}\p{Pf}]|[:;!?])+$/u
  * space before it also joins both neighbours.
  */
 export const splitWords = (text: string, locale: Locale): string[] => {
-  const segmenter = new Intl.Segmenter(locale.replace('_', '-'), {
-    granularity: 'word',
-  })
-  const words: string[] = []
-  let joinNext = false
-  let previousWasSpace = true
+  const segmenter = new Intl.Segmenter(locale.replace("_", "-"), {
+    granularity: "word",
+  });
+  const words: string[] = [];
+  let joinNext = false;
+  let previousWasSpace = true;
   for (const { segment } of segmenter.segment(text)) {
-    if (segment.trim() === '') {
-      previousWasSpace = true
-      joinNext = false
-      continue
+    if (segment.trim() === "") {
+      previousWasSpace = true;
+      joinNext = false;
+      continue;
     }
-    const last = words.at(-1)
-    const isDash = DASH.test(segment)
-    const attachedDash = isDash && !previousWasSpace
+    const last = words.at(-1);
+    const isDash = DASH.test(segment);
+    const attachedDash = isDash && !previousWasSpace;
     if (last === undefined) {
-      words.push(segment)
+      words.push(segment);
     } else if (joinNext) {
-      words[words.length - 1] = last + segment
+      words[words.length - 1] = last + segment;
     } else if (previousWasSpace) {
       if (SPACE_JOINED_PUNCTUATION.test(segment)) {
-        words[words.length - 1] = `${last} ${segment}`
+        words[words.length - 1] = `${last} ${segment}`;
       } else {
-        words.push(segment)
+        words.push(segment);
       }
     } else if (attachedDash || TRAILING_PUNCTUATION.test(segment)) {
-      words[words.length - 1] = last + segment
+      words[words.length - 1] = last + segment;
     } else {
-      words.push(segment)
+      words.push(segment);
     }
-    joinNext = attachedDash
-    previousWasSpace = false
+    joinNext = attachedDash;
+    previousWasSpace = false;
   }
-  return words
-}
+  return words;
+};

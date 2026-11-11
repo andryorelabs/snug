@@ -1,26 +1,26 @@
-import type { BookmarkNode } from '@/lib/types'
+import type { BookmarkNode } from "@/lib/types";
 
 /**
  * One visible row of the bookmark tree, flattened with the ARIA metadata
  * (`aria-level`, `aria-setsize`, `aria-posinset`) a `treeitem` needs.
  */
 export interface FlatTreeRow {
-  node: BookmarkNode
-  parentId: string | undefined
+  node: BookmarkNode;
+  parentId: string | undefined;
   /**
    * 1-based nesting depth, as `aria-level` expects.
    */
-  level: number
+  level: number;
   /**
    * Number of siblings, including this row.
    */
-  setSize: number
+  setSize: number;
   /**
    * 1-based position among siblings.
    */
-  position: number
-  isFolder: boolean
-  isExpanded: boolean
+  position: number;
+  isFolder: boolean;
+  isExpanded: boolean;
 }
 
 /**
@@ -28,9 +28,9 @@ export interface FlatTreeRow {
  * collapse the focused folder.
  */
 export type TreeKeyAction =
-  | { type: 'focus'; id: string }
-  | { type: 'expand'; id: string }
-  | { type: 'collapse'; id: string }
+  | { type: "focus"; id: string }
+  | { type: "expand"; id: string }
+  | { type: "collapse"; id: string };
 
 /**
  * Flattens the tree into the rows that are currently visible: a folder's
@@ -47,10 +47,10 @@ export function flattenVisibleRows(
   level = 1,
   parentId?: string,
 ): FlatTreeRow[] {
-  const rows: FlatTreeRow[] = []
+  const rows: FlatTreeRow[] = [];
   for (const [index, node] of nodes.entries()) {
-    const isFolder = !node.url
-    const isExpanded = isFolder && expandedFolders.has(node.id)
+    const isFolder = !node.url;
+    const isExpanded = isFolder && expandedFolders.has(node.id);
     rows.push({
       node,
       parentId,
@@ -59,19 +59,12 @@ export function flattenVisibleRows(
       position: index + 1,
       isFolder,
       isExpanded,
-    })
+    });
     if (isExpanded && node.children) {
-      rows.push(
-        ...flattenVisibleRows(
-          node.children,
-          expandedFolders,
-          level + 1,
-          node.id,
-        ),
-      )
+      rows.push(...flattenVisibleRows(node.children, expandedFolders, level + 1, node.id));
     }
   }
-  return rows
+  return rows;
 }
 
 /**
@@ -87,46 +80,40 @@ export function resolveTreeKey(
   focusedId: string,
   key: string,
 ): TreeKeyAction | undefined {
-  const index = rows.findIndex((row) => row.node.id === focusedId)
-  const current = rows[index]
-  if (!current) return undefined
+  const index = rows.findIndex((row) => row.node.id === focusedId);
+  const current = rows[index];
+  if (!current) return undefined;
 
   const focusAt = (target: number): TreeKeyAction | undefined => {
-    const row = rows[target]
-    return row && target !== index
-      ? { type: 'focus', id: row.node.id }
-      : undefined
-  }
+    const row = rows[target];
+    return row && target !== index ? { type: "focus", id: row.node.id } : undefined;
+  };
 
   switch (key) {
-    case 'ArrowDown': {
-      return focusAt(index + 1)
+    case "ArrowDown": {
+      return focusAt(index + 1);
     }
-    case 'ArrowUp': {
-      return focusAt(index - 1)
+    case "ArrowUp": {
+      return focusAt(index - 1);
     }
-    case 'Home': {
-      return focusAt(0)
+    case "Home": {
+      return focusAt(0);
     }
-    case 'End': {
-      return focusAt(rows.length - 1)
+    case "End": {
+      return focusAt(rows.length - 1);
     }
-    case 'ArrowRight': {
-      if (!current.isFolder) return undefined
-      if (!current.isExpanded) return { type: 'expand', id: current.node.id }
-      const next = rows[index + 1]
-      return next?.parentId === current.node.id
-        ? { type: 'focus', id: next.node.id }
-        : undefined
+    case "ArrowRight": {
+      if (!current.isFolder) return undefined;
+      if (!current.isExpanded) return { type: "expand", id: current.node.id };
+      const next = rows[index + 1];
+      return next?.parentId === current.node.id ? { type: "focus", id: next.node.id } : undefined;
     }
-    case 'ArrowLeft': {
-      if (current.isExpanded) return { type: 'collapse', id: current.node.id }
-      return current.parentId
-        ? { type: 'focus', id: current.parentId }
-        : undefined
+    case "ArrowLeft": {
+      if (current.isExpanded) return { type: "collapse", id: current.node.id };
+      return current.parentId ? { type: "focus", id: current.parentId } : undefined;
     }
     default: {
-      return undefined
+      return undefined;
     }
   }
 }
@@ -140,12 +127,9 @@ export function resolveTreeKey(
  * @param pinnedIndex Index that must stay rendered, or `-1` for none.
  * @returns The indexes to render.
  */
-export function withPinnedIndex(
-  renderedIndexes: readonly number[],
-  pinnedIndex: number,
-): number[] {
-  const shouldPin = pinnedIndex >= 0 && !renderedIndexes.includes(pinnedIndex)
+export function withPinnedIndex(renderedIndexes: readonly number[], pinnedIndex: number): number[] {
+  const shouldPin = pinnedIndex >= 0 && !renderedIndexes.includes(pinnedIndex);
   return shouldPin
     ? [...renderedIndexes, pinnedIndex].toSorted((a, b) => a - b)
-    : [...renderedIndexes]
+    : [...renderedIndexes];
 }

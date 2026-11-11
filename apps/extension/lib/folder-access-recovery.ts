@@ -1,23 +1,19 @@
-import { clearFailureBadge } from '@/lib/auto-export'
-import {
-  loadFolderHandle,
-  queryFolderAccess,
-  requestFolderAccess,
-} from '@/lib/folder-handle'
-import type { FolderAccess } from '@/lib/folder-handle'
+import { clearFailureBadge } from "@/lib/auto-export";
+import { loadFolderHandle, queryFolderAccess, requestFolderAccess } from "@/lib/folder-handle";
+import type { FolderAccess } from "@/lib/folder-handle";
 
 /**
  * What the Auto-export page shows for the Folder access recovery alert.
  * `hidden` means access is granted (or the destination is not a Custom
  * folder), `needed` is the first prompt, `refused` follows a declined request.
  */
-export type FolderAccessAlertState = 'hidden' | 'needed' | 'refused'
+export type FolderAccessAlertState = "hidden" | "needed" | "refused";
 
 /**
  * Outcome of one Allow access attempt. `missing` means no handle is stored, so
  * the page falls back to the Choose folder state.
  */
-export type AllowAccessResult = 'granted' | 'refused' | 'missing'
+export type AllowAccessResult = "granted" | "refused" | "missing";
 
 /**
  * Decides whether the recovery alert is shown.
@@ -30,15 +26,15 @@ export type AllowAccessResult = 'granted' | 'refused' | 'missing'
  * @returns The alert state.
  */
 export function resolveFolderAccessAlert(input: {
-  isFolderDestination: boolean
-  access: FolderAccess | null
-  wasRefused: boolean
+  isFolderDestination: boolean;
+  access: FolderAccess | null;
+  wasRefused: boolean;
 }): FolderAccessAlertState {
-  const { isFolderDestination, access, wasRefused } = input
-  if (!isFolderDestination || access === null || access === 'granted') {
-    return 'hidden'
+  const { isFolderDestination, access, wasRefused } = input;
+  if (!isFolderDestination || access === null || access === "granted") {
+    return "hidden";
   }
-  return wasRefused ? 'refused' : 'needed'
+  return wasRefused ? "refused" : "needed";
 }
 
 /**
@@ -48,12 +44,12 @@ export function resolveFolderAccessAlert(input: {
  * @returns `granted`, `refused`, or `missing` when no handle is stored.
  */
 export async function allowFolderAccess(): Promise<AllowAccessResult> {
-  const handle = await loadFolderHandle()
-  if (!handle) return 'missing'
-  const state = await requestFolderAccess(handle)
-  if (state !== 'granted') return 'refused'
-  await clearFailureBadge()
-  return 'granted'
+  const handle = await loadFolderHandle();
+  if (!handle) return "missing";
+  const state = await requestFolderAccess(handle);
+  if (state !== "granted") return "refused";
+  await clearFailureBadge();
+  return "granted";
 }
 
 /**
@@ -61,6 +57,6 @@ export async function allowFolderAccess(): Promise<AllowAccessResult> {
  * @returns The access, or `missing` when no handle is stored.
  */
 export async function readFolderAccess(): Promise<FolderAccess> {
-  const handle = await loadFolderHandle()
-  return handle ? queryFolderAccess(handle) : 'missing'
+  const handle = await loadFolderHandle();
+  return handle ? queryFolderAccess(handle) : "missing";
 }

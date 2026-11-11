@@ -1,16 +1,9 @@
-import { loadFolderHandle, queryFolderAccess } from '@/lib/folder-handle'
-import {
-  isCurrentFolder,
-  pruneFolderIdentities,
-} from '@/lib/folder-run-identity'
-import { hasDownloadsAccess } from '@/lib/permission-access'
-import {
-  type AutoExportFolderRun,
-  type AutoExportRun,
-  autoExportRunsStore,
-} from '@/lib/storage'
+import { loadFolderHandle, queryFolderAccess } from "@/lib/folder-handle";
+import { isCurrentFolder, pruneFolderIdentities } from "@/lib/folder-run-identity";
+import { hasDownloadsAccess } from "@/lib/permission-access";
+import { type AutoExportFolderRun, type AutoExportRun, autoExportRunsStore } from "@/lib/storage";
 
-const writeQueue: { tail: Promise<void> } = { tail: Promise.resolve() }
+const writeQueue: { tail: Promise<void> } = { tail: Promise.resolve() };
 
 /**
  * Serializes read-modify-write cycles on {@link autoExportRunsStore}, so
@@ -21,16 +14,16 @@ const writeQueue: { tail: Promise<void> } = { tail: Promise.resolve() }
 async function updateRuns(
   update: (runs: AutoExportRun[]) => Promise<AutoExportRun[]> | AutoExportRun[],
 ): Promise<void> {
-  const previous = writeQueue.tail
-  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>()
-  writeQueue.tail = gate
+  const previous = writeQueue.tail;
+  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>();
+  writeQueue.tail = gate;
 
   try {
-    await previous
-    const runs = await autoExportRunsStore.getValue()
-    await autoExportRunsStore.setValue(await update(runs))
+    await previous;
+    const runs = await autoExportRunsStore.getValue();
+    await autoExportRunsStore.setValue(await update(runs));
   } finally {
-    releaseGate()
+    releaseGate();
   }
 }
 
@@ -43,23 +36,18 @@ async function updateRuns(
  * grouped into one run.
  * @returns Resolves once the id is persisted.
  */
-export function recordSavedDownload(
-  downloadId: number,
-  runAt: number,
-): Promise<void> {
+export function recordSavedDownload(downloadId: number, runAt: number): Promise<void> {
   return updateRuns((runs) => {
     const runIndex = runs.findIndex(
-      (run) => run.destination === 'downloads' && run.runAt === runAt,
-    )
-    const existing = runs[runIndex]
-    return existing?.destination === 'downloads'
+      (run) => run.destination === "downloads" && run.runAt === runAt,
+    );
+    const existing = runs[runIndex];
+    return existing?.destination === "downloads"
       ? runs.map((run, index) =>
-          index === runIndex
-            ? { ...existing, ids: [...existing.ids, downloadId] }
-            : run,
+          index === runIndex ? { ...existing, ids: [...existing.ids, downloadId] } : run,
         )
-      : [...runs, { destination: 'downloads', runAt, ids: [downloadId] }]
-  })
+      : [...runs, { destination: "downloads", runAt, ids: [downloadId] }];
+  });
 }
 
 /**
@@ -78,20 +66,15 @@ export function recordSavedFolderFile(
 ): Promise<void> {
   return updateRuns((runs) => {
     const runIndex = runs.findIndex(
-      (run) =>
-        run.destination === 'folder' &&
-        run.runAt === runAt &&
-        run.folderId === folderId,
-    )
-    const existing = runs[runIndex]
-    return existing?.destination === 'folder'
+      (run) => run.destination === "folder" && run.runAt === runAt && run.folderId === folderId,
+    );
+    const existing = runs[runIndex];
+    return existing?.destination === "folder"
       ? runs.map((run, index) =>
-          index === runIndex
-            ? { ...existing, paths: [...existing.paths, path] }
-            : run,
+          index === runIndex ? { ...existing, paths: [...existing.paths, path] } : run,
         )
-      : [...runs, { destination: 'folder', runAt, folderId, paths: [path] }]
-  })
+      : [...runs, { destination: "folder", runAt, folderId, paths: [path] }];
+  });
 }
 
 /**
@@ -103,10 +86,10 @@ export function recordSavedFolderFile(
  */
 async function isOwnDownload(downloadId: number): Promise<boolean> {
   try {
-    const [item] = await browser.downloads.search({ id: downloadId })
-    return item?.byExtensionId === browser.runtime.id
+    const [item] = await browser.downloads.search({ id: downloadId });
+    return item?.byExtensionId === browser.runtime.id;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -119,12 +102,12 @@ async function isOwnDownload(downloadId: number): Promise<boolean> {
  * @returns Resolves once both steps have been attempted.
  */
 async function removeSavedDownload(downloadId: number): Promise<void> {
-  if (!(await isOwnDownload(downloadId))) return
+  if (!(await isOwnDownload(downloadId))) return;
   try {
-    await browser.downloads.removeFile(downloadId)
+    await browser.downloads.removeFile(downloadId);
   } catch {}
   try {
-    await browser.downloads.erase({ id: downloadId })
+    await browser.downloads.erase({ id: downloadId });
   } catch {}
 }
 
@@ -137,25 +120,22 @@ async function removeSavedDownload(downloadId: number): Promise<void> {
  * @param path The file's recorded path relative to `root`.
  * @returns Resolves once the removal was attempted.
  */
-async function removeSavedFolderFile(
-  root: FileSystemDirectoryHandle,
-  path: string,
-): Promise<void> {
-  const segments = path.split('/').filter(Boolean)
-  const fileName = segments.pop()
-  if (!fileName) return
+async function removeSavedFolderFile(root: FileSystemDirectoryHandle, path: string): Promise<void> {
+  const segments = path.split("/").filter(Boolean);
+  const fileName = segments.pop();
+  if (!fileName) return;
   try {
-    let directory = root
+    let directory = root;
     for (const segment of segments) {
-      directory = await directory.getDirectoryHandle(segment)
+      directory = await directory.getDirectoryHandle(segment);
     }
-    await directory.removeEntry(fileName)
+    await directory.removeEntry(fileName);
   } catch {}
 }
 
 interface FolderContext {
-  handle: FileSystemDirectoryHandle
-  hasAccess: boolean
+  handle: FileSystemDirectoryHandle;
+  hasAccess: boolean;
 }
 
 /**
@@ -165,14 +145,14 @@ interface FolderContext {
  */
 async function loadFolderContext(): Promise<FolderContext | null> {
   try {
-    const handle = await loadFolderHandle()
-    if (!handle) return null
+    const handle = await loadFolderHandle();
+    if (!handle) return null;
     return {
       handle,
-      hasAccess: (await queryFolderAccess(handle)) === 'granted',
-    }
+      hasAccess: (await queryFolderAccess(handle)) === "granted",
+    };
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -188,20 +168,20 @@ async function dropStaleFolderRuns(
   runs: AutoExportRun[],
   context: FolderContext | null,
 ): Promise<AutoExportRun[]> {
-  if (!context) return runs
-  const kept: AutoExportRun[] = []
+  if (!context) return runs;
+  const kept: AutoExportRun[] = [];
   for (const run of runs) {
-    if (run.destination === 'downloads') {
-      kept.push(run)
-      continue
+    if (run.destination === "downloads") {
+      kept.push(run);
+      continue;
     }
-    let isCurrent = false
+    let isCurrent = false;
     try {
-      isCurrent = await isCurrentFolder(run.folderId, context.handle)
+      isCurrent = await isCurrentFolder(run.folderId, context.handle);
     } catch {}
-    if (isCurrent) kept.push(run)
+    if (isCurrent) kept.push(run);
   }
-  return kept
+  return kept;
 }
 
 /**
@@ -219,46 +199,44 @@ async function dropStaleFolderRuns(
  * @returns Resolves once the excess runs have been handled.
  */
 export async function applyRetention(keepLast: number): Promise<void> {
-  if (keepLast <= 0) return
+  if (keepLast <= 0) return;
   await updateRuns(async (storedRuns) => {
-    const hasFolderRuns = storedRuns.some((run) => run.destination === 'folder')
-    const context = hasFolderRuns ? await loadFolderContext() : null
-    const runs = await dropStaleFolderRuns(storedRuns, context)
+    const hasFolderRuns = storedRuns.some((run) => run.destination === "folder");
+    const context = hasFolderRuns ? await loadFolderContext() : null;
+    const runs = await dropStaleFolderRuns(storedRuns, context);
 
-    const excessCount = Math.max(0, runs.length - keepLast)
-    const remaining: AutoExportRun[] = runs.slice(excessCount)
-    const skipped: (
-      | AutoExportFolderRun
-      | Extract<AutoExportRun, { destination: 'downloads' }>
-    )[] = []
+    const excessCount = Math.max(0, runs.length - keepLast);
+    const remaining: AutoExportRun[] = runs.slice(excessCount);
+    const skipped: (AutoExportFolderRun | Extract<AutoExportRun, { destination: "downloads" }>)[] =
+      [];
     const hasDownloadsRuns = runs
       .slice(0, excessCount)
-      .some((run) => run.destination === 'downloads')
-    const hasDownloads = hasDownloadsRuns && (await hasDownloadsAccess())
+      .some((run) => run.destination === "downloads");
+    const hasDownloads = hasDownloadsRuns && (await hasDownloadsAccess());
     for (const run of runs.slice(0, excessCount)) {
-      if (run.destination === 'downloads') {
+      if (run.destination === "downloads") {
         if (hasDownloads) {
           for (const downloadId of run.ids) {
-            await removeSavedDownload(downloadId)
+            await removeSavedDownload(downloadId);
           }
         } else {
-          skipped.push(run)
+          skipped.push(run);
         }
       } else if (context?.hasAccess) {
         for (const path of run.paths) {
-          await removeSavedFolderFile(context.handle, path)
+          await removeSavedFolderFile(context.handle, path);
         }
       } else {
-        skipped.push(run)
+        skipped.push(run);
       }
     }
 
-    const nextRuns = [...skipped, ...remaining]
+    const nextRuns = [...skipped, ...remaining];
     if (hasFolderRuns) {
-      await pruneFolderIdentitiesSafely(nextRuns)
+      await pruneFolderIdentitiesSafely(nextRuns);
     }
-    return nextRuns
-  })
+    return nextRuns;
+  });
 }
 
 /**
@@ -267,13 +245,9 @@ export async function applyRetention(keepLast: number): Promise<void> {
  * @param runs The history that will be persisted.
  * @returns Resolves once the cleanup was attempted.
  */
-async function pruneFolderIdentitiesSafely(
-  runs: AutoExportRun[],
-): Promise<void> {
-  const referenced = runs.flatMap((run) =>
-    run.destination === 'folder' ? run.folderId : [],
-  )
+async function pruneFolderIdentitiesSafely(runs: AutoExportRun[]): Promise<void> {
+  const referenced = runs.flatMap((run) => (run.destination === "folder" ? run.folderId : []));
   try {
-    await pruneFolderIdentities(referenced)
+    await pruneFolderIdentities(referenced);
   } catch {}
 }

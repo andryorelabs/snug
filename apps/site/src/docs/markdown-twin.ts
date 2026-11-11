@@ -1,17 +1,13 @@
-import { type Locale, LOCALES } from '../i18n/locales'
-import {
-  PUBLISHED_SOURCES,
-  publishedRoute,
-  type PublishedSource,
-} from './published'
+import { type Locale, LOCALES } from "../i18n/locales";
+import { PUBLISHED_SOURCES, publishedRoute, type PublishedSource } from "./published";
 
 /**
  * One raw Markdown twin the site serves: a published page in one locale.
  */
 export interface MarkdownTwinRoute {
-  slug: string
-  locale: Locale
-  source: PublishedSource
+  slug: string;
+  locale: Locale;
+  source: PublishedSource;
 }
 
 /**
@@ -21,7 +17,7 @@ export interface MarkdownTwinRoute {
  * @returns The Markdown document, ending in a newline.
  */
 export function buildMarkdownTwin(title: string, body: string): string {
-  return `# ${title}\n\n${body.trim()}\n`
+  return `# ${title}\n\n${body.trim()}\n`;
 }
 
 /**
@@ -31,7 +27,7 @@ export function buildMarkdownTwin(title: string, body: string): string {
  * @returns The twin path, e.g. `/es/guide/exporting.md`.
  */
 export function markdownTwinPath(routePath: string): string {
-  return `${routePath.replace(/\/+$/, '')}.md`
+  return `${routePath.replace(/\/+$/, "")}.md`;
 }
 
 /**
@@ -49,7 +45,7 @@ export function markdownTwinRoutes(
     sources.map((source) => ({
       locale,
       source,
-      slug: publishedRoute(source, locale).replaceAll(/^\/|\/$/g, ''),
+      slug: publishedRoute(source, locale).replaceAll(/^\/|\/$/g, ""),
     })),
-  )
+  );
 }

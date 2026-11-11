@@ -1,4 +1,4 @@
-import type { Browser } from '@wxt-dev/browser'
+import type { Browser } from "@wxt-dev/browser";
 
 /**
  * A progress event emitted while an import writes bookmarks. `done` and
@@ -6,9 +6,9 @@ import type { Browser } from '@wxt-dev/browser'
  * left out by Skip duplicates before writing began.
  */
 export interface ImportProgress {
-  done: number
-  total: number
-  skippedDuplicates: number
+  done: number;
+  total: number;
+  skippedDuplicates: number;
 }
 
 /**
@@ -17,15 +17,15 @@ export interface ImportProgress {
  * `signal` rolls the browser back to its previous state.
  */
 export interface ImportControl {
-  onProgress?: (progress: ImportProgress) => void
-  signal?: AbortSignal
-  onClearingExisting?: () => void
+  onProgress?: (progress: ImportProgress) => void;
+  signal?: AbortSignal;
+  onClearingExisting?: () => void;
 }
 
 /**
  * Number of bookmarks created between two progress events.
  */
-export const IMPORT_PROGRESS_BATCH_SIZE = 25
+export const IMPORT_PROGRESS_BATCH_SIZE = 25;
 
 /**
  * Thrown by an importer after a cancel has been rolled back. When
@@ -33,16 +33,16 @@ export const IMPORT_PROGRESS_BATCH_SIZE = 25
  * existing bookmarks, so the caller must restore the Safety snapshot.
  */
 export class ImportCanceledError extends Error {
-  readonly hasClearedExisting: boolean
+  readonly hasClearedExisting: boolean;
 
   constructor(hasClearedExisting: boolean) {
-    super('Import canceled')
-    this.name = 'ImportCanceledError'
-    this.hasClearedExisting = hasClearedExisting
+    super("Import canceled");
+    this.name = "ImportCanceledError";
+    this.hasClearedExisting = hasClearedExisting;
   }
 }
 
-const restoredErrors = new WeakSet<object>()
+const restoredErrors = new WeakSet<object>();
 
 /**
  * Records that the Safety snapshot was restored after `error` aborted an
@@ -50,7 +50,7 @@ const restoredErrors = new WeakSet<object>()
  * @param error The error that aborted the import.
  */
 export function markImportRestored(error: unknown): void {
-  if (typeof error === 'object' && error !== null) restoredErrors.add(error)
+  if (typeof error === "object" && error !== null) restoredErrors.add(error);
 }
 
 /**
@@ -59,9 +59,7 @@ export function markImportRestored(error: unknown): void {
  * @returns True when {@link markImportRestored} was called for it.
  */
 export function wasImportRestored(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && restoredErrors.has(error)
-  )
+  return typeof error === "object" && error !== null && restoredErrors.has(error);
 }
 
 /**
@@ -70,23 +68,19 @@ export function wasImportRestored(error: unknown): boolean {
  * before each creation and reports progress per batch.
  */
 export class ImportWriter {
-  private done = 0
-  private hasClearedExisting = false
-  private readonly createdIds = new Set<string>()
-  private readonly topLevelIds: string[] = []
+  private done = 0;
+  private hasClearedExisting = false;
+  private readonly createdIds = new Set<string>();
+  private readonly topLevelIds: string[] = [];
 
-  private readonly control: ImportControl
-  private readonly total: number
-  private readonly skippedDuplicates: number
+  private readonly control: ImportControl;
+  private readonly total: number;
+  private readonly skippedDuplicates: number;
 
-  constructor(
-    control: ImportControl,
-    total: number,
-    skippedDuplicates: number,
-  ) {
-    this.control = control
-    this.total = total
-    this.skippedDuplicates = skippedDuplicates
+  constructor(control: ImportControl, total: number, skippedDuplicates: number) {
+    this.control = control;
+    this.total = total;
+    this.skippedDuplicates = skippedDuplicates;
   }
 
   private emitProgress(): void {
@@ -94,7 +88,7 @@ export class ImportWriter {
       done: this.done,
       total: this.total,
       skippedDuplicates: this.skippedDuplicates,
-    })
+    });
   }
 
   /**
@@ -107,17 +101,17 @@ export class ImportWriter {
   async create(
     details: Browser.bookmarks.CreateDetails,
   ): Promise<Browser.bookmarks.BookmarkTreeNode> {
-    this.throwIfAborted()
-    const node = await browser.bookmarks.create(details)
-    this.createdIds.add(node.id)
+    this.throwIfAborted();
+    const node = await browser.bookmarks.create(details);
+    this.createdIds.add(node.id);
     if (!details.parentId || !this.createdIds.has(details.parentId)) {
-      this.topLevelIds.push(node.id)
+      this.topLevelIds.push(node.id);
     }
     if (details.url !== undefined) {
-      this.done++
-      if (this.done % IMPORT_PROGRESS_BATCH_SIZE === 0) this.emitProgress()
+      this.done++;
+      if (this.done % IMPORT_PROGRESS_BATCH_SIZE === 0) this.emitProgress();
     }
-    return node
+    return node;
   }
 
   /**
@@ -126,9 +120,9 @@ export class ImportWriter {
    * @throws {ImportCanceledError} When the signal is already aborted.
    */
   markClearingExisting(): void {
-    this.throwIfAborted()
-    this.hasClearedExisting = true
-    this.control.onClearingExisting?.()
+    this.throwIfAborted();
+    this.hasClearedExisting = true;
+    this.control.onClearingExisting?.();
   }
 
   /**
@@ -137,7 +131,7 @@ export class ImportWriter {
    */
   throwIfAborted(): void {
     if (this.control.signal?.aborted) {
-      throw new ImportCanceledError(this.hasClearedExisting)
+      throw new ImportCanceledError(this.hasClearedExisting);
     }
   }
 
@@ -145,7 +139,7 @@ export class ImportWriter {
    * Emits the closing progress event once writing has finished.
    */
   finish(): void {
-    this.emitProgress()
+    this.emitProgress();
   }
 
   /**
@@ -154,22 +148,22 @@ export class ImportWriter {
    * @returns Resolves once the created nodes are gone.
    */
   async rollback(): Promise<void> {
-    let firstError: unknown
+    let firstError: unknown;
     for (const id of this.topLevelIds.toReversed()) {
       try {
-        await browser.bookmarks.removeTree(id)
+        await browser.bookmarks.removeTree(id);
       } catch (error) {
-        firstError ??= error
+        firstError ??= error;
       }
     }
-    this.topLevelIds.length = 0
-    this.createdIds.clear()
+    this.topLevelIds.length = 0;
+    this.createdIds.clear();
     if (firstError)
       throw firstError instanceof Error
         ? firstError
-        : new Error('Failed to remove a created bookmark', {
+        : new Error("Failed to remove a created bookmark", {
             cause: firstError,
-          })
+          });
   }
 }
 
@@ -186,13 +180,13 @@ export async function withImportRollback<T>(
   step: () => Promise<T>,
 ): Promise<T> {
   try {
-    return await step()
+    return await step();
   } catch (error) {
     try {
-      await writer.rollback()
+      await writer.rollback();
     } catch (rollbackError) {
-      console.error('Import rollback failed', rollbackError)
+      console.error("Import rollback failed", rollbackError);
     }
-    throw error
+    throw error;
   }
 }

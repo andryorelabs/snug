@@ -1,5 +1,5 @@
-import { EXPORT_FORMATS, type ExportFormat } from '@/lib/export-formats'
-import type { ExportDestination } from '@/lib/types'
+import { EXPORT_FORMATS, type ExportFormat } from "@/lib/export-formats";
+import type { ExportDestination } from "@/lib/types";
 
 /**
  * Normalizes a formats selection coming from the Auto-export page's
@@ -9,12 +9,9 @@ import type { ExportDestination } from '@/lib/types'
  * @param previous The currently persisted formats.
  * @returns The formats to persist, in canonical order.
  */
-export function resolveFormats(
-  next: ExportFormat[],
-  previous: ExportFormat[],
-): ExportFormat[] {
-  const chosen = next.length === 0 ? previous : next
-  return EXPORT_FORMATS.filter((format) => chosen.includes(format))
+export function resolveFormats(next: ExportFormat[], previous: ExportFormat[]): ExportFormat[] {
+  const chosen = next.length === 0 ? previous : next;
+  return EXPORT_FORMATS.filter((format) => chosen.includes(format));
 }
 
 /**
@@ -25,8 +22,8 @@ export function resolveFormats(
  * @returns The folder to persist.
  */
 export function resolveFolder(typed: string, previous: string): string {
-  const trimmed = typed.trim()
-  return trimmed === '' ? previous : trimmed
+  const trimmed = typed.trim();
+  return trimmed === "" ? previous : trimmed;
 }
 
 /**
@@ -36,10 +33,10 @@ export function resolveFolder(typed: string, previous: string): string {
  * @returns The parsed count, or `null` when the text is not a valid integer >= 0.
  */
 export function parseKeepLast(typed: string): number | null {
-  const trimmed = typed.trim()
-  if (!/^\d+$/.test(trimmed)) return null
-  const value = Number(trimmed)
-  return Number.isSafeInteger(value) ? value : null
+  const trimmed = typed.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const value = Number(trimmed);
+  return Number.isSafeInteger(value) ? value : null;
 }
 
 /**
@@ -54,5 +51,5 @@ export function resolveEffectiveDestination(
   stored: ExportDestination,
   canPickFolder: boolean,
 ): ExportDestination {
-  return stored === 'folder' && !canPickFolder ? 'downloads' : stored
+  return stored === "folder" && !canPickFolder ? "downloads" : stored;
 }

@@ -1,15 +1,15 @@
 ---
-import { buttonVariants } from '@workspace/ui/components/button'
-import { cn } from '@workspace/ui/lib/utils'
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 
-import { installHref, type InstallPlacement } from '../i18n/landing'
+import { installHref, type InstallPlacement } from "../i18n/landing";
 
 interface Props {
-  placement: InstallPlacement
-  label: string
+  placement: InstallPlacement;
+  label: string;
 }
 
-const { placement, label } = Astro.props
+const { placement, label } = Astro.props;
 ---
 
 {/* eslint-disable-next-line react/jsx-no-target-blank -- rel="noopener" is the spec; noreferrer would strip the referer the install redirect tags */}
@@ -21,9 +21,9 @@ const { placement, label } = Astro.props
   data-umami-event="install"
   data-umami-event-placement={placement}
   class={cn(
-    buttonVariants({ size: 'xl' }),
-    'motion-safe:hover:-translate-y-px',
-    'focus-ring-solid hover:bg-primary-hover',
+    buttonVariants({ size: "xl" }),
+    "motion-safe:hover:-translate-y-px",
+    "focus-ring-solid hover:bg-primary-hover",
   )}
 >
   {label}

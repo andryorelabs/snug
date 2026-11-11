@@ -1,12 +1,11 @@
-import { useEffect } from 'react'
-import type { RefObject } from 'react'
+import { useEffect } from "react";
+import type { RefObject } from "react";
 
 function isTypingTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
-    (target.isContentEditable ||
-      ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
-  )
+    (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
+  );
 }
 
 /**
@@ -16,14 +15,14 @@ function isTypingTarget(target: EventTarget | null): boolean {
 export function useSlashToFocus(inputReference: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      const hasModifier = event.ctrlKey || event.metaKey || event.altKey
-      if (hasModifier || event.key !== '/' || isTypingTarget(event.target)) {
-        return
+      const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
+      if (hasModifier || event.key !== "/" || isTypingTarget(event.target)) {
+        return;
       }
-      event.preventDefault()
-      inputReference.current?.focus()
-    }
-    globalThis.addEventListener('keydown', handleKeyDown)
-    return () => globalThis.removeEventListener('keydown', handleKeyDown)
-  }, [inputReference])
+      event.preventDefault();
+      inputReference.current?.focus();
+    };
+    globalThis.addEventListener("keydown", handleKeyDown);
+    return () => globalThis.removeEventListener("keydown", handleKeyDown);
+  }, [inputReference]);
 }

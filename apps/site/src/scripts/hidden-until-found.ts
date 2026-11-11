@@ -1,9 +1,10 @@
-import type { AstroIntegration } from 'astro'
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const COLLAPSED_PANEL = /<div\b[^>]*\bdata-slot="accordion-content"[^>]*>/g
+import type { AstroIntegration } from "astro";
+
+const COLLAPSED_PANEL = /<div\b[^>]*\bdata-slot="accordion-content"[^>]*>/g;
 
 /**
  * React serializes the `hidden` attribute as a boolean, so the server HTML of a
@@ -15,7 +16,7 @@ const COLLAPSED_PANEL = /<div\b[^>]*\bdata-slot="accordion-content"[^>]*>/g
 export function markCollapsedPanelsFindable(html: string): string {
   return html.replaceAll(COLLAPSED_PANEL, (tag) =>
     tag.replace(/\bhidden=""/, 'hidden="until-found"'),
-  )
+  );
 }
 
 /**
@@ -26,15 +27,15 @@ export function markCollapsedPanelsFindable(html: string): string {
  * @returns The page with every Markdown table focusable.
  */
 export function markMarkdownTablesFocusable(html: string): string {
-  return html.replaceAll('<table>', '<table tabindex="0">')
+  return html.replaceAll("<table>", '<table tabindex="0">');
 }
 
 function listHtmlFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const entryPath = path.join(directory, entry.name)
-    if (entry.isDirectory()) return listHtmlFiles(entryPath)
-    return entry.name.endsWith('.html') ? entryPath : []
-  })
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return listHtmlFiles(entryPath);
+    return entry.name.endsWith(".html") ? entryPath : [];
+  });
 }
 
 /**
@@ -44,18 +45,16 @@ function listHtmlFiles(directory: string): string[] {
  */
 export function hiddenUntilFound(): AstroIntegration {
   return {
-    name: 'hidden-until-found',
+    name: "hidden-until-found",
     hooks: {
-      'astro:build:done': ({ dir }) => {
-        const files = listHtmlFiles(fileURLToPath(dir))
+      "astro:build:done": ({ dir }) => {
+        const files = listHtmlFiles(fileURLToPath(dir));
         for (const file of files) {
-          const html = readFileSync(file, 'utf8')
-          const marked = markMarkdownTablesFocusable(
-            markCollapsedPanelsFindable(html),
-          )
-          if (marked !== html) writeFileSync(file, marked)
+          const html = readFileSync(file, "utf8");
+          const marked = markMarkdownTablesFocusable(markCollapsedPanelsFindable(html));
+          if (marked !== html) writeFileSync(file, marked);
         }
       },
     },
-  }
+  };
 }

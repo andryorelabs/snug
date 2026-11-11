@@ -1,8 +1,8 @@
-import type { Browser } from '@wxt-dev/browser'
-import type { ReactNode, Ref } from 'react'
+import type { Browser } from "@wxt-dev/browser";
+import type { ReactNode, Ref } from "react";
 
-import type { ExportFormat } from './export-formats'
-import type { ImportControl } from './import-control'
+import type { ExportFormat } from "./export-formats";
+import type { ImportControl } from "./import-control";
 
 /**
  * Minimal bookmark node shape, independent of the `browser.bookmarks` API.
@@ -11,17 +11,17 @@ import type { ImportControl } from './import-control'
  * fields that {@link ExtendedBookmarkTreeNode} carries.
  */
 export interface BookmarkNode {
-  id: string
-  title: string
-  url?: string
-  children?: BookmarkNode[]
-  parentId?: string
+  id: string;
+  title: string;
+  url?: string;
+  children?: BookmarkNode[];
+  parentId?: string;
   /**
    * Marks a node that cannot be selected (for example a skipped duplicate in
    * an import preview). Disabled nodes render without a checkbox and are
    * ignored by select-all and by the checked ids.
    */
-  isDisabled?: boolean
+  isDisabled?: boolean;
 }
 
 /**
@@ -32,12 +32,11 @@ export interface BookmarkNode {
  * Kept distinct from {@link BookmarkNode}: this type is the live API
  * object, while `BookmarkNode` is this codebase's own normalized shape.
  */
-export interface ExtendedBookmarkTreeNode
-  extends Browser.bookmarks.BookmarkTreeNode {
-  dateGroupModified?: number
-  dateLastUsed?: number
-  iconData?: string
-  [key: string]: unknown
+export interface ExtendedBookmarkTreeNode extends Browser.bookmarks.BookmarkTreeNode {
+  dateGroupModified?: number;
+  dateLastUsed?: number;
+  iconData?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -47,18 +46,18 @@ export interface ExtendedBookmarkTreeNode
  * the app turns it into real bookmarks.
  */
 export interface ParsedBookmark {
-  title: string
-  url?: string
-  dateAdded: number
-  dateGroupModified?: number
-  children?: ParsedBookmark[]
-  isBookmarksBar?: boolean
-  isOtherBookmarks?: boolean
-  isMobileBookmarks?: boolean
-  id?: string
-  parentId?: string
-  folderType?: string
-  syncing?: boolean
+  title: string;
+  url?: string;
+  dateAdded: number;
+  dateGroupModified?: number;
+  children?: ParsedBookmark[];
+  isBookmarksBar?: boolean;
+  isOtherBookmarks?: boolean;
+  isMobileBookmarks?: boolean;
+  id?: string;
+  parentId?: string;
+  folderType?: string;
+  syncing?: boolean;
 }
 
 /**
@@ -68,8 +67,8 @@ export interface ParsedBookmark {
  * `skippedDuplicates` counts bookmarks left out by Skip duplicates.
  */
 export interface ImportResult {
-  skippedInvalidUrl: number
-  skippedDuplicates: number
+  skippedInvalidUrl: number;
+  skippedDuplicates: number;
 }
 
 /**
@@ -81,63 +80,56 @@ export interface ImportResult {
  * rather than fatal. Never set it for a file the user supplied.
  */
 export interface ImportOptions extends ImportControl {
-  skipDuplicates?: boolean
-  trusted?: boolean
+  skipDuplicates?: boolean;
+  trusted?: boolean;
 }
 
-export type BookmarkFormat =
-  | 'json'
-  | 'html'
-  | 'csv'
-  | 'chrome'
-  | 'xbel'
-  | 'safari'
-  | 'unknown'
+export type BookmarkFormat = "json" | "html" | "csv" | "chrome" | "xbel" | "safari" | "unknown";
 
-export type ImportMode = 'folder' | 'restore-merge' | 'restore-replace'
+export type ImportMode = "folder" | "restore-merge" | "restore-replace";
 
-export type AutoExportInterval = '1h' | '12h' | '1d' | '3d' | '7d'
+export type AutoExportInterval = "1h" | "12h" | "1d" | "3d" | "7d";
 
 /**
  * Day of the week as `Date#getDay` numbers it: 0 is Sunday, 6 is Saturday.
  */
-export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 /**
  * Where an Auto-export run saves its files: the browser's `downloads` folder,
  * or the user-chosen Custom `folder` written through a stored directory
  * handle.
  */
-export type ExportDestination = 'downloads' | 'folder'
+export type ExportDestination = "downloads" | "folder";
 
 export interface AutoExportConfig {
-  enabled: boolean
-  interval: AutoExportInterval
+  enabled: boolean;
+  interval: AutoExportInterval;
   /**
    * `HH:mm` in 24h format — only used for intervals >= 1d.
    */
-  preferredTime: string
+  preferredTime: string;
   /**
    * The day the weekly (`7d`) interval runs on — only used for `7d`.
    */
-  dayOfWeek: DayOfWeek
-  path: string
-  formats: ExportFormat[]
+  dayOfWeek: DayOfWeek;
+  path: string;
+  formats: ExportFormat[];
   /**
    * Retention: how many of Snug's own exported files to keep in the folder.
    * `0` keeps everything. See `applyRetention` in `lib/auto-export-retention.ts`.
    */
-  keepLast: number
+  keepLast: number;
   /**
    * The Export destination. `downloads` is the default and the only value
    * for configs stored before the Custom folder existed.
    */
-  destination: ExportDestination
+  destination: ExportDestination;
   /**
    * Display name of the Custom folder (the handle's `name`), shown in the
    * Failure reason; `null` while none was ever chosen.
    */
-  folderName: string | null
+  folderName: string | null;
 }
 
 /**
@@ -147,14 +139,14 @@ export interface AutoExportConfig {
  * user-triggered "Export now" (a later ticket's UI, but the type is defined
  * here since `runAutoExport` already discriminates on it).
  */
-export type AutoExportTrigger = 'scheduled' | 'catch-up' | 'manual'
+export type AutoExportTrigger = "scheduled" | "catch-up" | "manual";
 
 /**
  * Typed reasons an Auto-export run fails that the UI treats specially:
  * `downloads-access-needed` means the Export destination is Downloads but
  * Downloads access is missing.
  */
-export type AutoExportErrorCode = 'downloads-access-needed'
+export type AutoExportErrorCode = "downloads-access-needed";
 
 /**
  * The outcome of the most recent {@link runAutoExport} call, persisted so
@@ -164,15 +156,15 @@ export type AutoExportErrorCode = 'downloads-access-needed'
  * see `readAutoExportLastRun` in `lib/auto-export.ts`.
  */
 export interface AutoExportLastRun {
-  at: number
-  ok: boolean
-  error?: string
+  at: number;
+  ok: boolean;
+  error?: string;
   /**
    * Set when the run failed for a typed reason the UI can explain without
    * parsing `error`.
    */
-  errorCode?: AutoExportErrorCode
-  trigger: AutoExportTrigger
+  errorCode?: AutoExportErrorCode;
+  trigger: AutoExportTrigger;
 }
 
 /**
@@ -181,23 +173,23 @@ export interface AutoExportLastRun {
  * milliseconds or `null`. Rules live in `lib/review-prompt.ts`.
  */
 export interface ReviewPromptState {
-  eligibleAt: number | null
-  dismissedAt: number | null
+  eligibleAt: number | null;
+  dismissedAt: number | null;
 }
 
 export interface ImportPreview {
-  format: BookmarkFormat
-  bookmarksBarCount: number
-  otherBookmarksCount: number
-  mobileBookmarksCount: number
-  clearsMobileRoot: boolean
+  format: BookmarkFormat;
+  bookmarksBarCount: number;
+  otherBookmarksCount: number;
+  mobileBookmarksCount: number;
+  clearsMobileRoot: boolean;
   /**
    * The root types (`folderType`) for which the file carries both a local
    * and an account set. Absent for a single-set file.
    */
-  splitRootTypes?: ('bookmarks-bar' | 'other' | 'mobile')[]
-  totalCount: number
-  hasLocationData: boolean
+  splitRootTypes?: ("bookmarks-bar" | "other" | "mobile")[];
+  totalCount: number;
+  hasLocationData: boolean;
 }
 
 /**
@@ -210,59 +202,59 @@ export interface ImportPreview {
  * `determineCheckedState()`. Only bookmarks (nodes with a `url`) have a
  * stored state, kept in a `Map<id, boolean>`.
  */
-export type CheckedState = boolean | 'indeterminate'
+export type CheckedState = boolean | "indeterminate";
 
 export interface BookmarkTreeHandle {
   /**
    * Adds every currently visible bookmark to the selection.
    */
-  selectAll: () => void
+  selectAll: () => void;
   /**
    * Clears the selection. While a search is active, only the visible
    * bookmarks are cleared so selections outside the search survive.
    */
-  deselectAll: () => void
+  deselectAll: () => void;
   /**
    * Whether every currently visible bookmark is selected.
    */
-  areAllVisibleSelected: () => boolean
-  expandAll: () => void
-  collapseAll: () => void
-  refresh: () => Promise<void>
+  areAllVisibleSelected: () => boolean;
+  expandAll: () => void;
+  collapseAll: () => void;
+  refresh: () => Promise<void>;
   /**
    * Returns the selected bookmarks as an `ExtendedBookmarkTreeNode[]`, with
    * the minimal folder hierarchy needed to contain them (the tree is
    * pruned). Folders left empty by the pruning are not included.
    */
-  getSelectedBookmarks: () => Promise<ExtendedBookmarkTreeNode[]>
+  getSelectedBookmarks: () => Promise<ExtendedBookmarkTreeNode[]>;
 }
 
 export interface BookmarkTreeProperties {
-  ref?: Ref<BookmarkTreeHandle>
-  searchTerm: string
-  onSelectionChange: (count: number) => void
-  onTotalChange: (count: number) => void
+  ref?: Ref<BookmarkTreeHandle>;
+  searchTerm: string;
+  onSelectionChange: (count: number) => void;
+  onTotalChange: (count: number) => void;
   /**
    * Extra classes merged onto the tree's scroll container.
    */
-  className?: string
+  className?: string;
   /**
    * Rendered instead of the tree until the first load completes.
    */
-  loadingState?: ReactNode
+  loadingState?: ReactNode;
   /**
    * Rendered instead of the tree when an active search matches nothing.
    */
-  emptyState?: ReactNode
+  emptyState?: ReactNode;
   /**
    * Rendered instead of the tree when the profile has no bookmarks at all.
    */
-  noBookmarksState?: ReactNode
+  noBookmarksState?: ReactNode;
   /**
    * Rendered instead of the tree when loading the bookmarks failed; receives
    * a callback that retries the load.
    */
-  errorState?: (retry: () => void) => ReactNode
+  errorState?: (retry: () => void) => ReactNode;
 }
 
 /**
@@ -273,67 +265,67 @@ export interface BookmarkTreeViewHandle {
   /**
    * Adds every currently visible, enabled bookmark to the selection.
    */
-  selectAll: () => void
+  selectAll: () => void;
   /**
    * Clears the selection. While a search is active, only the visible
    * bookmarks are cleared so selections outside the search survive.
    */
-  deselectAll: () => void
+  deselectAll: () => void;
   /**
    * Clears the whole selection, ignoring any active search.
    */
-  clearSelection: () => void
+  clearSelection: () => void;
   /**
    * Whether every currently visible, enabled bookmark is selected.
    */
-  areAllVisibleSelected: () => boolean
-  expandAll: () => void
-  collapseAll: () => void
+  areAllVisibleSelected: () => boolean;
+  expandAll: () => void;
+  collapseAll: () => void;
   /**
    * Ids of the checked, enabled bookmarks. Always empty when the tree is
    * read-only.
    */
-  getCheckedIds: () => string[]
+  getCheckedIds: () => string[];
 }
 
 export interface BookmarkTreeViewProperties {
-  ref?: Ref<BookmarkTreeViewHandle>
-  nodes: BookmarkNode[]
-  searchTerm: string
+  ref?: Ref<BookmarkTreeViewHandle>;
+  nodes: BookmarkNode[];
+  searchTerm: string;
   /**
    * Accessible name of the tree.
    */
-  ariaLabel: string
+  ariaLabel: string;
   /**
    * Shows checkboxes and enables selection. Defaults to `true`; when `false`
    * the tree is read-only.
    */
-  isSelectable?: boolean
+  isSelectable?: boolean;
   /**
    * Starts every enabled bookmark checked, including ones that appear later
    * (a disabled node that becomes enabled). Defaults to `false`.
    */
-  isCheckedByDefault?: boolean
+  isCheckedByDefault?: boolean;
   /**
    * Rendered at the end of a row, after the folder count.
    */
-  renderBadge?: (node: BookmarkNode) => ReactNode
+  renderBadge?: (node: BookmarkNode) => ReactNode;
   /**
    * Expands every folder whenever this value changes to one not yet applied.
    */
-  autoExpandToken?: number
-  onSelectionChange: (count: number) => void
-  onTotalChange: (count: number) => void
+  autoExpandToken?: number;
+  onSelectionChange: (count: number) => void;
+  onTotalChange: (count: number) => void;
   /**
    * Extra classes merged onto the tree's scroll container.
    */
-  className?: string
+  className?: string;
   /**
    * Rendered instead of the tree (keeping its state alive) while set.
    */
-  placeholder?: ReactNode
+  placeholder?: ReactNode;
   /**
    * Rendered instead of the tree when an active search matches nothing.
    */
-  emptyState?: ReactNode
+  emptyState?: ReactNode;
 }

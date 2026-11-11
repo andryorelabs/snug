@@ -1,8 +1,8 @@
-import { cn } from 'cn'
+import { cn } from "cn";
 
-import { PRODUCT_NAME } from '@/lib/brand'
+import { PRODUCT_NAME } from "@/lib/brand";
 
-const GRADIENT_PREFIX_LENGTH = 2
+const GRADIENT_PREFIX_LENGTH = 2;
 
 /**
  * The Snug wordmark: the product name set in the heading font, with a brand
@@ -14,11 +14,11 @@ const GRADIENT_PREFIX_LENGTH = 2
  */
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={cn('font-heading font-bold tracking-tight', className)}>
+    <span className={cn("font-heading font-bold tracking-tight", className)}>
       <span className="bg-brand-text-gradient bg-clip-text text-transparent">
         {PRODUCT_NAME.slice(0, GRADIENT_PREFIX_LENGTH)}
       </span>
       <span>{PRODUCT_NAME.slice(GRADIENT_PREFIX_LENGTH)}</span>
     </span>
-  )
+  );
 }

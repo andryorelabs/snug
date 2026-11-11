@@ -1,10 +1,9 @@
 ---
 title: Auto-export
 sourceHash: 91674afc656322e9
-description:
-  'Programa exportaciones automáticas de marcadores en Chrome. Elige formatos,
-  intervalo y carpeta, y Snug guarda los archivos sin diálogo de guardado.'
-seoTitle: 'Programar exportaciones automáticas de marcadores'
+description: "Programa exportaciones automáticas de marcadores en Chrome. Elige formatos,
+  intervalo y carpeta, y Snug guarda los archivos sin diálogo de guardado."
+seoTitle: "Programar exportaciones automáticas de marcadores"
 ---
 
 Snug puede exportar tus marcadores según un horario, sin ninguna acción manual:

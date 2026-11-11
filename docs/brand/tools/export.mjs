@@ -1,15 +1,8 @@
-import {
-  copyFile,
-  mkdir,
-  readdir,
-  readFile,
-  rm,
-  stat,
-  writeFile,
-} from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { chromium } from 'playwright'
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { chromium } from "playwright";
 
 import {
   assertSpecFile,
@@ -18,7 +11,7 @@ import {
   faviconPath,
   MARK_PNG_SIZES,
   rasterSpecs,
-} from './export-spec.ts'
+} from "./export-spec.ts";
 
 /**
  * Regenerates the derived raster assets of the Snug brand kit from the SVG
@@ -56,141 +49,129 @@ import {
  * depend on fonts installed on the host. CWS screenshots are not generated
  * here; they need the real running extension.
  */
-const brandRoot = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '..',
-)
-const repositoryRoot = path.resolve(brandRoot, '../..')
-const fontsRoot = path.join(brandRoot, 'brandbook/fonts')
+const brandRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const repositoryRoot = path.resolve(brandRoot, "../..");
+const fontsRoot = path.join(brandRoot, "brandbook/fonts");
 
-const GROUND = '#17120A'
-const ICON_ART_RATIO = 0.75
-const MARK_ART_HEIGHT_RATIO = 70 / 84
-const OG_MAX_BYTES = 300 * 1024
-const OG_SIZE = { width: 1200, height: 630 }
-const OG_TAGLINE_FONT_SIZE = 34
+const GROUND = "#17120A";
+const ICON_ART_RATIO = 0.75;
+const MARK_ART_HEIGHT_RATIO = 70 / 84;
+const OG_MAX_BYTES = 300 * 1024;
+const OG_SIZE = { width: 1200, height: 630 };
+const OG_TAGLINE_FONT_SIZE = 34;
 const NON_LATIN_FONT_FALLBACKS =
-  "'Noto Sans','Liberation Sans','Noto Sans CJK JP','Noto Sans CJK KR','Noto Sans CJK SC','Source Han Sans','WenQuanYi Zen Hei'"
-const MB = 1024 * 1024
-const YOUTUBE_SAFE_AREA = { width: 1546, height: 423 }
-const LAUNCH_MAX_BYTES = 3 * MB
-const PRODUCT_HUNT_GALLERY_SIZE = { width: 1270, height: 760 }
-const PRODUCT_HUNT_GALLERY_SHOT_HEIGHT = 664
-const PRODUCT_HUNT_GALLERY_COUNT = 5
-const X_HEADER_SIZE = { width: 1500, height: 500 }
-const X_SAFE_AREA = { width: 1200, height: 300 }
-const AVATAR_ART_DIAMETER_RATIO = 0.7
-const BANNER_TAGLINE =
-  'Export, import, and back up your bookmarks &mdash; all on your device.'
+  "'Noto Sans','Liberation Sans','Noto Sans CJK JP','Noto Sans CJK KR','Noto Sans CJK SC','Source Han Sans','WenQuanYi Zen Hei'";
+const MB = 1024 * 1024;
+const YOUTUBE_SAFE_AREA = { width: 1546, height: 423 };
+const LAUNCH_MAX_BYTES = 3 * MB;
+const PRODUCT_HUNT_GALLERY_SIZE = { width: 1270, height: 760 };
+const PRODUCT_HUNT_GALLERY_SHOT_HEIGHT = 664;
+const PRODUCT_HUNT_GALLERY_COUNT = 5;
+const X_HEADER_SIZE = { width: 1500, height: 500 };
+const X_SAFE_AREA = { width: 1200, height: 300 };
+const AVATAR_ART_DIAMETER_RATIO = 0.7;
+const BANNER_TAGLINE = "Export, import, and back up your bookmarks &mdash; all on your device.";
 
-const markSvg = await readFile(path.join(brandRoot, 'logo/mark.svg'), 'utf8')
-const lockupSvg = await readFile(
-  path.join(brandRoot, 'logo/lockup-horizontal.svg'),
-  'utf8',
-)
+const markSvg = await readFile(path.join(brandRoot, "logo/mark.svg"), "utf8");
+const lockupSvg = await readFile(path.join(brandRoot, "logo/lockup-horizontal.svg"), "utf8");
 
-const copyMarkdown = await readFile(path.join(brandRoot, 'copy.md'), 'utf8')
-const SLOGAN = /^\| Slogan\s+\| (.+?)\s+\|$/m.exec(copyMarkdown)?.[1]
+const copyMarkdown = await readFile(path.join(brandRoot, "copy.md"), "utf8");
+const SLOGAN = /^\| Slogan\s+\| (.+?)\s+\|$/m.exec(copyMarkdown)?.[1];
 if (SLOGAN === undefined) {
-  throw new Error('docs/brand/copy.md has no Slogan row')
+  throw new Error("docs/brand/copy.md has no Slogan row");
 }
-const LIGHT_GROUND = '#FAF7F0'
-const LIGHT_INK = '#17120A'
+const LIGHT_GROUND = "#FAF7F0";
+const LIGHT_INK = "#17120A";
 const WORDMARK_GRADIENT_STOPS =
-  '<stop offset="0" stop-color="#FFA230"/><stop offset="1" stop-color="#FFD37A"/>'
+  '<stop offset="0" stop-color="#FFA230"/><stop offset="1" stop-color="#FFD37A"/>';
 const LIGHT_WORDMARK_GRADIENT_STOPS =
-  '<stop offset="0" stop-color="#9A4A00"/><stop offset="1" stop-color="#A35200"/>'
+  '<stop offset="0" stop-color="#9A4A00"/><stop offset="1" stop-color="#A35200"/>';
 const lightLockupSvg = lockupSvg
-  .replaceAll('#F3EBDE', () => LIGHT_INK)
+  .replaceAll("#F3EBDE", () => LIGHT_INK)
   .replace(
     new RegExp(
       `(<linearGradient id="snug-gradient-lockup-wordmark"[^>]*>)${WORDMARK_GRADIENT_STOPS}`,
     ),
     (_match, opening) => opening + LIGHT_WORDMARK_GRADIENT_STOPS,
-  )
+  );
 
-const auroraGlow = `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.22), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.14), transparent 70%), ${GROUND}`
+const auroraGlow = `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.22), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.14), transparent 70%), ${GROUND}`;
 
-const haloSvg = await readFile(
-  path.join(brandRoot, 'logo/mark-halo.svg'),
-  'utf8',
-)
+const haloSvg = await readFile(path.join(brandRoot, "logo/mark-halo.svg"), "utf8");
 
 const fontRules = await Promise.all(
   [
-    ['Geist', 'Geist-var.woff2', '400 700'],
-    ['Space Grotesk', 'SpaceGrotesk-var.woff2', '300 700'],
+    ["Geist", "Geist-var.woff2", "400 700"],
+    ["Space Grotesk", "SpaceGrotesk-var.woff2", "300 700"],
   ].map(async ([family, fileName, weight]) => {
-    const buffer = await readFile(path.join(fontsRoot, fileName))
-    const data = buffer.toString('base64')
-    return `@font-face{font-family:'${family}';font-weight:${weight};src:url(data:font/woff2;base64,${data}) format('woff2')}`
+    const buffer = await readFile(path.join(fontsRoot, fileName));
+    const data = buffer.toString("base64");
+    return `@font-face{font-family:'${family}';font-weight:${weight};src:url(data:font/woff2;base64,${data}) format('woff2')}`;
   }),
-)
-const fontFaces = fontRules.join('')
+);
+const fontFaces = fontRules.join("");
 
 async function renderIcon(browser, size, outPath) {
   const page = await browser.newPage({
     viewport: { width: size, height: size },
-  })
-  const markSize = Math.round((size * ICON_ART_RATIO) / MARK_ART_HEIGHT_RATIO)
+  });
+  const markSize = Math.round((size * ICON_ART_RATIO) / MARK_ART_HEIGHT_RATIO);
   await page.setContent(
     `<style>svg{display:block;width:100%;height:100%}</style>` +
       `<body style="margin:0;display:grid;place-items:center;width:${size}px;height:${size}px">` +
       `<div style="width:${markSize}px;height:${markSize}px">${markSvg}</div></body>`,
-  )
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath, omitBackground: true })
-  await page.close()
-  console.log(path.relative(repositoryRoot, outPath))
+  );
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath, omitBackground: true });
+  await page.close();
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderBanner(
   browser,
   { width, height, outPath, lockupWidth, tagline, taglineFontSize, language },
 ) {
-  const page = await browser.newPage({ viewport: { width, height } })
+  const page = await browser.newPage({ viewport: { width, height } });
   const taglineHtml = tagline
     ? `<div style="font-family: Geist, ${NON_LATIN_FONT_FALLBACKS}, system-ui, sans-serif; font-size: ${taglineFontSize ?? Math.round(height * 0.032)}px; color: #DCC8A6; max-width: ${Math.round(width * 0.72)}px; text-align: center; line-height: 1.5; margin-top: ${Math.round(height * 0.04)}px">${tagline}</div>`
-    : ''
+    : "";
   await page.setContent(`
-    <html lang="${language ?? 'en'}"><style>${fontFaces}svg{display:block;width:100%;height:auto}</style>
+    <html lang="${language ?? "en"}"><style>${fontFaces}svg{display:block;width:100%;height:auto}</style>
     <body style="margin:0;width:${width}px;height:${height}px;background:${auroraGlow};display:flex;align-items:center;justify-content:center;flex-direction:column;box-sizing:border-box">
       <div style="width:${lockupWidth}px">${lockupSvg}</div>
       ${taglineHtml}
-    </body></html>`)
-  return finishPage(page, outPath)
+    </body></html>`);
+  return finishPage(page, outPath);
 }
 
 async function finishPage(page, outPath) {
-  await page.waitForFunction('document.fonts.status === "loaded"')
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
-  const { size } = await stat(outPath)
-  console.log(
-    `${path.relative(repositoryRoot, outPath)} ${(size / 1024).toFixed(0)} KB`,
-  )
-  return size
+  await page.waitForFunction('document.fonts.status === "loaded"');
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
+  const { size } = await stat(outPath);
+  console.log(`${path.relative(repositoryRoot, outPath)} ${(size / 1024).toFixed(0)} KB`);
+  return size;
 }
 
 async function renderCover(browser, outPath, { light }) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } })
+  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } });
   const ground = light
     ? `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.16), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.1), transparent 70%), ${LIGHT_GROUND}`
-    : auroraGlow
-  const lockup = light ? lightLockupSvg : lockupSvg
-  const sloganColor = light ? '#5E5240' : '#DCC8A6'
+    : auroraGlow;
+  const lockup = light ? lightLockupSvg : lockupSvg;
+  const sloganColor = light ? "#5E5240" : "#DCC8A6";
   await page.setContent(`
     <style>${fontFaces}svg{display:block;width:100%;height:auto}</style>
     <body style="margin:0;width:1280px;height:640px;background:${ground};display:flex;align-items:center;justify-content:center;flex-direction:column">
       <div style="width:520px">${lockup}</div>
       <div style="font-family:Geist,system-ui,sans-serif;font-size:36px;color:${sloganColor};max-width:900px;text-align:center;line-height:1.4;margin-top:44px">${escapeHtml(SLOGAN)}</div>
-    </body>`)
-  return finishPage(page, outPath)
+    </body>`);
+  return finishPage(page, outPath);
 }
 
 async function renderSmallTile(browser, outPath) {
-  const page = await browser.newPage({ viewport: { width: 440, height: 280 } })
+  const page = await browser.newPage({ viewport: { width: 440, height: 280 } });
   await page.setContent(`
     <style>${fontFaces}svg{display:block;width:100%;height:auto}</style>
     <body style="margin:0;width:440px;height:280px;position:relative;overflow:hidden;background:radial-gradient(70% 80% at 50% 38%, rgba(255,162,48,0.38), transparent 72%), radial-gradient(50% 60% at 100% 100%, rgba(255,162,48,0.2), transparent 70%), ${GROUND}">
@@ -199,27 +180,27 @@ async function renderSmallTile(browser, outPath) {
         <div style="width:260px">${lockupSvg}</div>
         <div style="font-family:Geist,system-ui,sans-serif;font-size:22px;color:#DCC8A6;text-align:center;line-height:1.3;margin-top:22px;max-width:400px">Export, import &amp; back up bookmarks</div>
       </div>
-    </body>`)
-  return finishPage(page, outPath)
+    </body>`);
+  return finishPage(page, outPath);
 }
 
-const folderIcon = `<svg viewBox="0 0 24 24" width="40" height="40" style="flex:none"><path d="M2 6.5A2.5 2.5 0 0 1 4.5 4H9l2.5 3H19.5A2.5 2.5 0 0 1 22 9.5v8A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5Z" fill="#DCC8A6"/></svg>`
+const folderIcon = `<svg viewBox="0 0 24 24" width="40" height="40" style="flex:none"><path d="M2 6.5A2.5 2.5 0 0 1 4.5 4H9l2.5 3H19.5A2.5 2.5 0 0 1 22 9.5v8A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5Z" fill="#DCC8A6"/></svg>`;
 
 function treeRow(indent, barWidth, checked) {
   const box = checked
     ? `<div style="width:34px;height:34px;border-radius:8px;background:#FFA230;flex:none"></div>`
-    : `<div style="width:34px;height:34px;border-radius:8px;border:3px solid #FFA230;box-sizing:border-box;flex:none"></div>`
-  return `<div style="display:flex;align-items:center;gap:20px;margin-left:${indent}px">${box}${folderIcon}<div style="height:16px;border-radius:8px;background:rgba(220,200,166,0.55);width:${barWidth}px"></div></div>`
+    : `<div style="width:34px;height:34px;border-radius:8px;border:3px solid #FFA230;box-sizing:border-box;flex:none"></div>`;
+  return `<div style="display:flex;align-items:center;gap:20px;margin-left:${indent}px">${box}${folderIcon}<div style="height:16px;border-radius:8px;background:rgba(220,200,166,0.55);width:${barWidth}px"></div></div>`;
 }
 
 async function renderMarquee(browser, outPath) {
-  const page = await browser.newPage({ viewport: { width: 1400, height: 560 } })
-  const chips = ['HTML', 'JSON', 'CSV']
+  const page = await browser.newPage({ viewport: { width: 1400, height: 560 } });
+  const chips = ["HTML", "JSON", "CSV"]
     .map(
       (label) =>
         `<div style="font-family:'Space Grotesk',Geist,sans-serif;font-weight:700;font-size:34px;letter-spacing:0.04em;color:#17120A;background:linear-gradient(135deg,#FFA230,#FFD37A);border-radius:999px;padding:14px 34px;text-align:center">${label}</div>`,
     )
-    .join('')
+    .join("");
   await page.setContent(`
     <style>${fontFaces}svg{display:block}</style>
     <body style="margin:0;width:1400px;height:560px;position:relative;overflow:hidden;background:radial-gradient(45% 80% at 72% 50%, rgba(255,162,48,0.26), transparent 70%), ${auroraGlow}">
@@ -236,18 +217,18 @@ async function renderMarquee(browser, outPath) {
         </div>
         <div style="display:flex;flex-direction:column;gap:22px;width:170px">${chips}</div>
       </div>
-    </body>`)
-  return finishPage(page, outPath)
+    </body>`);
+  return finishPage(page, outPath);
 }
 
 async function renderGithubSocialPreview(browser, outPath) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } })
-  const chips = ['HTML', 'JSON', 'CSV']
+  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } });
+  const chips = ["HTML", "JSON", "CSV"]
     .map(
       (label) =>
         `<div style="font-family:'Space Grotesk',Geist,sans-serif;font-weight:700;font-size:32px;letter-spacing:0.04em;color:#17120A;background:linear-gradient(135deg,#FFA230,#FFD37A);border-radius:999px;padding:13px 30px;text-align:center">${label}</div>`,
     )
-    .join('')
+    .join("");
   await page.setContent(`
     <style>${fontFaces}svg{display:block}</style>
     <body style="margin:0;width:1280px;height:640px;position:relative;overflow:hidden;background:radial-gradient(45% 80% at 72% 50%, rgba(255,162,48,0.26), transparent 70%), ${auroraGlow}">
@@ -264,55 +245,53 @@ async function renderGithubSocialPreview(browser, outPath) {
         </div>
         <div style="display:flex;flex-direction:column;gap:22px;width:150px">${chips}</div>
       </div>
-    </body>`)
-  return finishPage(page, outPath)
+    </body>`);
+  return finishPage(page, outPath);
 }
 
 async function assertPngSpec(outPath, { width, height, maxBytes }) {
-  const buffer = await readFile(outPath)
-  const actualWidth = buffer.readUInt32BE(16)
-  const actualHeight = buffer.readUInt32BE(20)
-  const name = path.basename(outPath)
+  const buffer = await readFile(outPath);
+  const actualWidth = buffer.readUInt32BE(16);
+  const actualHeight = buffer.readUInt32BE(20);
+  const name = path.basename(outPath);
   if (actualWidth !== width || actualHeight !== height) {
-    throw new Error(
-      `${name} is ${actualWidth}x${actualHeight}, expected ${width}x${height}`,
-    )
+    throw new Error(`${name} is ${actualWidth}x${actualHeight}, expected ${width}x${height}`);
   }
   if (buffer.length > maxBytes) {
-    throw new Error(`${name} is ${buffer.length} bytes, over ${maxBytes}`)
+    throw new Error(`${name} is ${buffer.length} bytes, over ${maxBytes}`);
   }
 }
 
 function bannerMotif(side) {
-  return `<div style="position:absolute;top:50%;${side}:150px;width:260px;height:260px;margin-top:-130px;opacity:0.12">${markSvg}</div>`
+  return `<div style="position:absolute;top:50%;${side}:150px;width:260px;height:260px;margin-top:-130px;opacity:0.12">${markSvg}</div>`;
 }
 
 async function renderYoutubeBanner(browser, outPath) {
-  const width = 2560
-  const height = 1440
-  const page = await browser.newPage({ viewport: { width, height } })
+  const width = 2560;
+  const height = 1440;
+  const page = await browser.newPage({ viewport: { width, height } });
   await page.setContent(`
     <style>${fontFaces}svg{display:block;width:100%;height:100%}</style>
     <body style="margin:0;width:${width}px;height:${height}px;position:relative;overflow:hidden;background:radial-gradient(55% 60% at 50% 50%, rgba(255,162,48,0.24), transparent 70%), ${auroraGlow}">
-      ${bannerMotif('left')}${bannerMotif('right')}
+      ${bannerMotif("left")}${bannerMotif("right")}
       <div id="content" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
         <div id="lockup" style="width:620px"><div style="width:620px;height:195px">${lockupSvg}</div></div>
         <div id="tagline" style="font-family:Geist,system-ui,sans-serif;font-size:40px;color:#DCC8A6;white-space:nowrap;line-height:1.4;margin-top:40px">${BANNER_TAGLINE}</div>
       </div>
-    </body>`)
-  await page.waitForFunction('document.fonts.status === "loaded"')
-  const bounds = []
-  for (const selector of ['#lockup', '#tagline']) {
-    const box = await page.locator(selector).boundingBox()
+    </body>`);
+  await page.waitForFunction('document.fonts.status === "loaded"');
+  const bounds = [];
+  for (const selector of ["#lockup", "#tagline"]) {
+    const box = await page.locator(selector).boundingBox();
     bounds.push({
       left: box.x,
       top: box.y,
       right: box.x + box.width,
       bottom: box.y + box.height,
-    })
+    });
   }
-  const safeLeft = (width - YOUTUBE_SAFE_AREA.width) / 2
-  const safeTop = (height - YOUTUBE_SAFE_AREA.height) / 2
+  const safeLeft = (width - YOUTUBE_SAFE_AREA.width) / 2;
+  const safeTop = (height - YOUTUBE_SAFE_AREA.height) / 2;
   for (const box of bounds) {
     if (
       box.left < safeLeft ||
@@ -320,285 +299,243 @@ async function renderYoutubeBanner(browser, outPath) {
       box.top < safeTop ||
       box.bottom > safeTop + YOUTUBE_SAFE_AREA.height
     ) {
-      throw new Error(
-        `YouTube banner content leaves the safe area: ${JSON.stringify(box)}`,
-      )
+      throw new Error(`YouTube banner content leaves the safe area: ${JSON.stringify(box)}`);
     }
   }
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
-  await assertPngSpec(outPath, { width, height, maxBytes: 6 * MB })
-  console.log(path.relative(repositoryRoot, outPath))
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
+  await assertPngSpec(outPath, { width, height, maxBytes: 6 * MB });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderYoutubeAvatar(browser, outPath) {
-  const size = 800
+  const size = 800;
   const page = await browser.newPage({
     viewport: { width: size, height: size },
-  })
-  const markSize = Math.round(
-    (size * AVATAR_ART_DIAMETER_RATIO) / MARK_ART_HEIGHT_RATIO,
-  )
+  });
+  const markSize = Math.round((size * AVATAR_ART_DIAMETER_RATIO) / MARK_ART_HEIGHT_RATIO);
   await page.setContent(`
     <style>svg{display:block;width:100%;height:100%}</style>
     <body style="margin:0;width:${size}px;height:${size}px;display:grid;place-items:center;background:radial-gradient(50% 50% at 50% 50%, rgba(255,162,48,0.38), transparent 75%), ${GROUND}">
       <div style="width:${markSize}px;height:${markSize}px">${markSvg}</div>
-    </body>`)
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
-  await assertPngSpec(outPath, { width: size, height: size, maxBytes: 2 * MB })
-  console.log(path.relative(repositoryRoot, outPath))
+    </body>`);
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
+  await assertPngSpec(outPath, { width: size, height: size, maxBytes: 2 * MB });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderYoutubeWatermark(browser, outPath) {
-  const size = 300
+  const size = 300;
   const page = await browser.newPage({
     viewport: { width: size, height: size },
-  })
-  const markSize = Math.round((size * 0.85) / MARK_ART_HEIGHT_RATIO)
+  });
+  const markSize = Math.round((size * 0.85) / MARK_ART_HEIGHT_RATIO);
   await page.setContent(`
     <style>svg{display:block;width:100%;height:100%}</style>
     <body style="margin:0;display:grid;place-items:center;width:${size}px;height:${size}px">
       <div style="width:${markSize}px;height:${markSize}px">${haloSvg}</div>
-    </body>`)
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath, omitBackground: true })
-  await page.close()
-  await assertPngSpec(outPath, { width: size, height: size, maxBytes: 1 * MB })
-  console.log(path.relative(repositoryRoot, outPath))
+    </body>`);
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath, omitBackground: true });
+  await page.close();
+  await assertPngSpec(outPath, { width: size, height: size, maxBytes: 1 * MB });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderProductHuntThumbnail(browser, outPath) {
-  const size = 240
+  const size = 240;
   const page = await browser.newPage({
     viewport: { width: size, height: size },
-  })
-  const markSize = Math.round(
-    (size * AVATAR_ART_DIAMETER_RATIO) / MARK_ART_HEIGHT_RATIO,
-  )
+  });
+  const markSize = Math.round((size * AVATAR_ART_DIAMETER_RATIO) / MARK_ART_HEIGHT_RATIO);
   await page.setContent(`
     <style>svg{display:block;width:100%;height:100%}</style>
     <body style="margin:0;width:${size}px;height:${size}px;display:grid;place-items:center;background:radial-gradient(50% 50% at 50% 50%, rgba(255,162,48,0.38), transparent 75%), ${GROUND}">
       <div style="width:${markSize}px;height:${markSize}px">${markSvg}</div>
-    </body>`)
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
+    </body>`);
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
   await assertPngSpec(outPath, {
     width: size,
     height: size,
     maxBytes: LAUNCH_MAX_BYTES,
-  })
-  console.log(path.relative(repositoryRoot, outPath))
+  });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderProductHuntGallery(browser, screenshotPath, outPath) {
-  const { width, height } = PRODUCT_HUNT_GALLERY_SIZE
-  const screenshot = await readFile(screenshotPath)
-  const dataUri = `data:image/png;base64,${screenshot.toString('base64')}`
-  const page = await browser.newPage({ viewport: { width, height } })
+  const { width, height } = PRODUCT_HUNT_GALLERY_SIZE;
+  const screenshot = await readFile(screenshotPath);
+  const dataUri = `data:image/png;base64,${screenshot.toString("base64")}`;
+  const page = await browser.newPage({ viewport: { width, height } });
   await page.setContent(`
     <body style="margin:0;width:${width}px;height:${height}px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(60% 70% at 50% 50%, rgba(255,162,48,0.22), transparent 70%), ${auroraGlow}">
       <img id="shot" src="${dataUri}" style="display:block;height:${PRODUCT_HUNT_GALLERY_SHOT_HEIGHT}px;width:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,0.55);border:1px solid rgba(255,162,48,0.25)">
-    </body>`)
+    </body>`);
   await page.waitForFunction(
     'document.getElementById("shot").complete && document.getElementById("shot").naturalWidth > 0',
-  )
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
+  );
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
   await assertPngSpec(outPath, {
     width,
     height,
     maxBytes: LAUNCH_MAX_BYTES,
-  })
-  console.log(path.relative(repositoryRoot, outPath))
+  });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderXHeader(browser, outPath) {
-  const { width, height } = X_HEADER_SIZE
-  const page = await browser.newPage({ viewport: { width, height } })
+  const { width, height } = X_HEADER_SIZE;
+  const page = await browser.newPage({ viewport: { width, height } });
   await page.setContent(`
     <style>svg{display:block;width:100%;height:100%}</style>
     <body style="margin:0;width:${width}px;height:${height}px;position:relative;overflow:hidden;background:radial-gradient(55% 70% at 50% 50%, rgba(255,162,48,0.24), transparent 70%), ${auroraGlow}">
       <div style="position:absolute;inset:0;display:grid;place-items:center">
         <div id="lockup" style="width:420px;height:132px">${lockupSvg}</div>
       </div>
-    </body>`)
-  await page.waitForFunction('document.fonts.status === "loaded"')
-  const box = await page.locator('#lockup').boundingBox()
-  const safeLeft = (width - X_SAFE_AREA.width) / 2
-  const safeTop = (height - X_SAFE_AREA.height) / 2
+    </body>`);
+  await page.waitForFunction('document.fonts.status === "loaded"');
+  const box = await page.locator("#lockup").boundingBox();
+  const safeLeft = (width - X_SAFE_AREA.width) / 2;
+  const safeTop = (height - X_SAFE_AREA.height) / 2;
   if (
     box.x < safeLeft ||
     box.x + box.width > safeLeft + X_SAFE_AREA.width ||
     box.y < safeTop ||
     box.y + box.height > safeTop + X_SAFE_AREA.height
   ) {
-    throw new Error(
-      `X header lockup leaves the safe area: ${JSON.stringify(box)}`,
-    )
+    throw new Error(`X header lockup leaves the safe area: ${JSON.stringify(box)}`);
   }
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await page.screenshot({ path: outPath })
-  await page.close()
-  await assertPngSpec(outPath, { width, height, maxBytes: LAUNCH_MAX_BYTES })
-  console.log(path.relative(repositoryRoot, outPath))
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await page.screenshot({ path: outPath });
+  await page.close();
+  await assertPngSpec(outPath, { width, height, maxBytes: LAUNCH_MAX_BYTES });
+  console.log(path.relative(repositoryRoot, outPath));
 }
 
 async function renderLaunchAssets(browser) {
-  const launchRoot = path.join(repositoryRoot, 'docs/launch/assets')
-  await renderProductHuntThumbnail(
-    browser,
-    path.join(launchRoot, 'producthunt-thumbnail-240.png'),
-  )
-  const screenshotsRoot = path.join(
-    repositoryRoot,
-    'docs/store/assets/screenshots/en',
-  )
-  const entries = await readdir(screenshotsRoot)
+  const launchRoot = path.join(repositoryRoot, "docs/launch/assets");
+  await renderProductHuntThumbnail(browser, path.join(launchRoot, "producthunt-thumbnail-240.png"));
+  const screenshotsRoot = path.join(repositoryRoot, "docs/store/assets/screenshots/en");
+  const entries = await readdir(screenshotsRoot);
   const shots = entries
-    .filter((name) => name.endsWith('.png'))
-    .toSorted((first, second) => first.localeCompare(second))
+    .filter((name) => name.endsWith(".png"))
+    .toSorted((first, second) => first.localeCompare(second));
   if (shots.length !== PRODUCT_HUNT_GALLERY_COUNT) {
     throw new Error(
       `Expected ${PRODUCT_HUNT_GALLERY_COUNT} EN store screenshots, found ${shots.length}`,
-    )
+    );
   }
   for (const [index, shot] of shots.entries()) {
-    const { width, height } = PRODUCT_HUNT_GALLERY_SIZE
+    const { width, height } = PRODUCT_HUNT_GALLERY_SIZE;
     await renderProductHuntGallery(
       browser,
       path.join(screenshotsRoot, shot),
-      path.join(
-        launchRoot,
-        `producthunt-gallery-${index + 1}-${width}x${height}.png`,
-      ),
-    )
+      path.join(launchRoot, `producthunt-gallery-${index + 1}-${width}x${height}.png`),
+    );
   }
-  await renderXHeader(browser, path.join(launchRoot, 'x-header-1500x500.png'))
+  await renderXHeader(browser, path.join(launchRoot, "x-header-1500x500.png"));
 }
 
 function escapeHtml(text) {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
+  return text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 async function readOgTaglines() {
-  const localesRoot = path.join(repositoryRoot, 'apps/extension/locales')
-  const entries = await readdir(localesRoot)
+  const localesRoot = path.join(repositoryRoot, "apps/extension/locales");
+  const entries = await readdir(localesRoot);
   const fileNames = entries
-    .filter((name) => name.endsWith('.json'))
-    .toSorted((first, second) => first.localeCompare(second))
+    .filter((name) => name.endsWith(".json"))
+    .toSorted((first, second) => first.localeCompare(second));
   return Promise.all(
     fileNames.map(async (fileName) => {
-      const raw = await readFile(path.join(localesRoot, fileName), 'utf8')
-      const messages = JSON.parse(raw)
+      const raw = await readFile(path.join(localesRoot, fileName), "utf8");
+      const messages = JSON.parse(raw);
       return {
-        locale: path.basename(fileName, '.json'),
+        locale: path.basename(fileName, ".json"),
         tagline: messages.extensionDescription.message,
-      }
+      };
     }),
-  )
+  );
 }
 
 async function renderOgImages(browser) {
-  const ogRoot = path.join(repositoryRoot, 'apps/site/public/og')
-  await rm(ogRoot, { recursive: true, force: true })
-  const taglines = await readOgTaglines()
+  const ogRoot = path.join(repositoryRoot, "apps/site/public/og");
+  await rm(ogRoot, { recursive: true, force: true });
+  const taglines = await readOgTaglines();
   for (const { locale, tagline } of taglines) {
-    const outPath = path.join(ogRoot, `og-${locale}.png`)
+    const outPath = path.join(ogRoot, `og-${locale}.png`);
     await renderBanner(browser, {
       ...OG_SIZE,
       outPath,
       lockupWidth: 360,
       tagline: escapeHtml(tagline),
       taglineFontSize: OG_TAGLINE_FONT_SIZE,
-      language: locale.replace('_', '-'),
-    })
-    await assertPngSpec(outPath, { ...OG_SIZE, maxBytes: OG_MAX_BYTES })
+      language: locale.replace("_", "-"),
+    });
+    await assertPngSpec(outPath, { ...OG_SIZE, maxBytes: OG_MAX_BYTES });
   }
 }
 
-const browser = await chromium.launch()
+const browser = await chromium.launch();
 
 try {
   for (const size of MARK_PNG_SIZES) {
-    await renderIcon(
-      browser,
-      size,
-      path.join(brandRoot, 'logo/png', `mark-${size}.png`),
-    )
+    await renderIcon(browser, size, path.join(brandRoot, "logo/png", `mark-${size}.png`));
   }
-  await renderIcon(
-    browser,
-    512,
-    path.join(repositoryRoot, 'apps/extension/assets/icon.png'),
-  )
+  await renderIcon(browser, 512, path.join(repositoryRoot, "apps/extension/assets/icon.png"));
   const faviconPngs = await Promise.all(
-    FAVICON_SIZES.map((size) =>
-      readFile(path.join(brandRoot, 'logo/png', `mark-${size}.png`)),
-    ),
-  )
-  await writeFile(path.join(brandRoot, faviconPath), encodeIco(faviconPngs))
+    FAVICON_SIZES.map((size) => readFile(path.join(brandRoot, "logo/png", `mark-${size}.png`))),
+  );
+  await writeFile(path.join(brandRoot, faviconPath), encodeIco(faviconPngs));
 
-  const storeAssets = path.join(repositoryRoot, 'docs/store/assets')
-  await renderIcon(browser, 128, path.join(storeAssets, 'store-icon-128.png'))
-  await renderIcon(browser, 300, path.join(storeAssets, 'edge-logo-300.png'))
-  await renderSmallTile(
-    browser,
-    path.join(storeAssets, 'small-tile-440x280.png'),
-  )
-  const marqueePath = path.join(storeAssets, 'marquee-1400x560.png')
-  await renderMarquee(browser, marqueePath)
-  const readmeBannerPath = path.join(
-    repositoryRoot,
-    'docs/assets/readme-banner.png',
-  )
-  await mkdir(path.dirname(readmeBannerPath), { recursive: true })
-  await copyFile(marqueePath, readmeBannerPath)
+  const storeAssets = path.join(repositoryRoot, "docs/store/assets");
+  await renderIcon(browser, 128, path.join(storeAssets, "store-icon-128.png"));
+  await renderIcon(browser, 300, path.join(storeAssets, "edge-logo-300.png"));
+  await renderSmallTile(browser, path.join(storeAssets, "small-tile-440x280.png"));
+  const marqueePath = path.join(storeAssets, "marquee-1400x560.png");
+  await renderMarquee(browser, marqueePath);
+  const readmeBannerPath = path.join(repositoryRoot, "docs/assets/readme-banner.png");
+  await mkdir(path.dirname(readmeBannerPath), { recursive: true });
+  await copyFile(marqueePath, readmeBannerPath);
 
   const githubPreviewPath = path.join(
     repositoryRoot,
-    'docs/assets/github-social-preview-1280x640.png',
-  )
+    "docs/assets/github-social-preview-1280x640.png",
+  );
 
-  await renderOgImages(browser)
+  await renderOgImages(browser);
 
-  const ogRoot = path.join(brandRoot, 'og')
-  await renderCover(browser, path.join(ogRoot, 'cover.png'), { light: false })
-  await renderCover(browser, path.join(ogRoot, 'cover-light.png'), {
+  const ogRoot = path.join(brandRoot, "og");
+  await renderCover(browser, path.join(ogRoot, "cover.png"), { light: false });
+  await renderCover(browser, path.join(ogRoot, "cover-light.png"), {
     light: true,
-  })
-  const socialPreviewPath = path.join(ogRoot, 'social-preview.png')
-  await renderGithubSocialPreview(browser, socialPreviewPath)
-  await copyFile(socialPreviewPath, githubPreviewPath)
+  });
+  const socialPreviewPath = path.join(ogRoot, "social-preview.png");
+  await renderGithubSocialPreview(browser, socialPreviewPath);
+  await copyFile(socialPreviewPath, githubPreviewPath);
   await assertPngSpec(githubPreviewPath, {
     width: 1280,
     height: 640,
     maxBytes: 1_000_000,
-  })
+  });
 
-  const youtubeRoot = path.join(brandRoot, 'youtube')
-  await renderYoutubeBanner(
-    browser,
-    path.join(youtubeRoot, 'banner-2560x1440.png'),
-  )
-  await renderYoutubeAvatar(browser, path.join(youtubeRoot, 'avatar-800.png'))
-  await renderYoutubeWatermark(
-    browser,
-    path.join(youtubeRoot, 'watermark-300.png'),
-  )
+  const youtubeRoot = path.join(brandRoot, "youtube");
+  await renderYoutubeBanner(browser, path.join(youtubeRoot, "banner-2560x1440.png"));
+  await renderYoutubeAvatar(browser, path.join(youtubeRoot, "avatar-800.png"));
+  await renderYoutubeWatermark(browser, path.join(youtubeRoot, "watermark-300.png"));
 
-  await renderLaunchAssets(browser)
+  await renderLaunchAssets(browser);
 
   for (const spec of rasterSpecs) {
-    await assertSpecFile(spec, brandRoot)
+    await assertSpecFile(spec, brandRoot);
   }
 } finally {
-  await browser.close()
+  await browser.close();
 }

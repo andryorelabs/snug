@@ -1,16 +1,14 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
 /**
  * Maps a typed Auto-export failure code to the key of its localized message.
  */
 const ERROR_MESSAGE_KEYS = {
-  'downloads-access-needed': 'autoExportError_downloadsAccessNeeded',
-} as const
+  "downloads-access-needed": "autoExportError_downloadsAccessNeeded",
+} as const;
 
-function isKnownErrorCode(
-  errorCode: string,
-): errorCode is keyof typeof ERROR_MESSAGE_KEYS {
-  return Object.hasOwn(ERROR_MESSAGE_KEYS, errorCode)
+function isKnownErrorCode(errorCode: string): errorCode is keyof typeof ERROR_MESSAGE_KEYS {
+  return Object.hasOwn(ERROR_MESSAGE_KEYS, errorCode);
 }
 
 /**
@@ -22,11 +20,8 @@ function isKnownErrorCode(
  * @param fallback The text to show when the code is absent or unknown.
  * @returns The localized message, or `fallback`.
  */
-export function getAutoExportErrorMessage(
-  errorCode: string | undefined,
-  fallback: string,
-): string {
+export function getAutoExportErrorMessage(errorCode: string | undefined, fallback: string): string {
   return errorCode !== undefined && isKnownErrorCode(errorCode)
     ? i18n.t(ERROR_MESSAGE_KEYS[errorCode])
-    : fallback
+    : fallback;
 }

@@ -1,16 +1,16 @@
-export type DayPeriod = 'am' | 'pm'
+export type DayPeriod = "am" | "pm";
 
 export interface ClockTime {
-  hour: number
-  minute: number
+  hour: number;
+  minute: number;
 }
 
 export interface TwelveHourTime {
-  hour: number
-  period: DayPeriod
+  hour: number;
+  period: DayPeriod;
 }
 
-const TIME_24H_PATTERN = /^(\d{2}):(\d{2})$/
+const TIME_24H_PATTERN = /^(\d{2}):(\d{2})$/;
 
 /**
  * Parses an `HH:MM` 24-hour string into numeric parts.
@@ -18,13 +18,13 @@ const TIME_24H_PATTERN = /^(\d{2}):(\d{2})$/
  * @returns The parsed time, or `null` when the string is malformed or out of range.
  */
 export function parseTime24(value: string): ClockTime | null {
-  const match = TIME_24H_PATTERN.exec(value)
+  const match = TIME_24H_PATTERN.exec(value);
   if (!match) {
-    return null
+    return null;
   }
-  const hour = Number(match[1])
-  const minute = Number(match[2])
-  return hour > 23 || minute > 59 ? null : { hour, minute }
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  return hour > 23 || minute > 59 ? null : { hour, minute };
 }
 
 /**
@@ -34,7 +34,7 @@ export function parseTime24(value: string): ClockTime | null {
  * @returns The zero-padded `HH:MM` string.
  */
 export function formatTime24(hour: number, minute: number): string {
-  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 /**
@@ -46,8 +46,8 @@ export function formatTime24(hour: number, minute: number): string {
 export function to12Hour(hour24: number): TwelveHourTime {
   return {
     hour: hour24 % 12 === 0 ? 12 : hour24 % 12,
-    period: hour24 < 12 ? 'am' : 'pm',
-  }
+    period: hour24 < 12 ? "am" : "pm",
+  };
 }
 
 /**
@@ -58,8 +58,8 @@ export function to12Hour(hour24: number): TwelveHourTime {
  * @returns The hour of the day, 0–23.
  */
 export function from12Hour(hour12: number, period: DayPeriod): number {
-  const base = hour12 % 12
-  return period === 'pm' ? base + 12 : base
+  const base = hour12 % 12;
+  return period === "pm" ? base + 12 : base;
 }
 
 /**
@@ -69,9 +69,9 @@ export function from12Hour(hour12: number, period: DayPeriod): number {
  */
 export function is12HourLocale(locale?: string): boolean {
   const { hourCycle } = new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
-  }).resolvedOptions()
-  return hourCycle === 'h11' || hourCycle === 'h12'
+    hour: "numeric",
+  }).resolvedOptions();
+  return hourCycle === "h11" || hourCycle === "h12";
 }
 
 /**
@@ -81,14 +81,13 @@ export function is12HourLocale(locale?: string): boolean {
  */
 export function getDayPeriodLabels(locale?: string): Record<DayPeriod, string> {
   const formatter = new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
+    hour: "numeric",
     hour12: true,
-  })
+  });
   const labelFor = (hour: number): string =>
-    formatter
-      .formatToParts(new Date(2000, 0, 1, hour))
-      .find((part) => part.type === 'dayPeriod')?.value ?? ''
-  return { am: labelFor(0) || 'AM', pm: labelFor(12) || 'PM' }
+    formatter.formatToParts(new Date(2000, 0, 1, hour)).find((part) => part.type === "dayPeriod")
+      ?.value ?? "";
+  return { am: labelFor(0) || "AM", pm: labelFor(12) || "PM" };
 }
 
 /**
@@ -98,12 +97,12 @@ export function getDayPeriodLabels(locale?: string): Record<DayPeriod, string> {
  * @returns The localized time, or `value` unchanged when it can't be parsed.
  */
 export function formatTimeForDisplay(value: string, locale?: string): string {
-  const parsed = parseTime24(value)
+  const parsed = parseTime24(value);
   if (!parsed) {
-    return value
+    return value;
   }
   return new Intl.DateTimeFormat(locale, {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(2000, 0, 1, parsed.hour, parsed.minute))
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2000, 0, 1, parsed.hour, parsed.minute));
 }

@@ -1,15 +1,4 @@
-const SHIPPED_LOCALES = [
-  'de',
-  'en',
-  'es',
-  'fr',
-  'it',
-  'ja',
-  'ko',
-  'pt_BR',
-  'ru',
-  'zh_CN',
-] as const
+const SHIPPED_LOCALES = ["de", "en", "es", "fr", "it", "ja", "ko", "pt_BR", "ru", "zh_CN"] as const;
 
 /**
  * Resolves the browser UI language to the locale Snug actually renders,
@@ -19,12 +8,10 @@ const SHIPPED_LOCALES = [
  * @returns The matching shipped locale as a BCP 47 tag (`pt-BR`), or `en`.
  */
 function resolveShippedLanguage(uiLanguage: string): string {
-  const normalized = uiLanguage.replaceAll('-', '_')
-  const [baseLanguage = ''] = normalized.split('_', 1)
-  const match = SHIPPED_LOCALES.find(
-    (locale) => locale === normalized || locale === baseLanguage,
-  )
-  return (match ?? 'en').replaceAll('_', '-')
+  const normalized = uiLanguage.replaceAll("-", "_");
+  const [baseLanguage = ""] = normalized.split("_", 1);
+  const match = SHIPPED_LOCALES.find((locale) => locale === normalized || locale === baseLanguage);
+  return (match ?? "en").replaceAll("_", "-");
 }
 
 /**
@@ -35,7 +22,7 @@ function resolveShippedLanguage(uiLanguage: string): string {
  * untouched.
  */
 export function applyDocumentLanguage(): void {
-  const language = browser.i18n.getUILanguage()
-  if (language === '') return
-  document.documentElement.lang = resolveShippedLanguage(language)
+  const language = browser.i18n.getUILanguage();
+  if (language === "") return;
+  document.documentElement.lang = resolveShippedLanguage(language);
 }

@@ -1,29 +1,29 @@
-import { i18n } from '#i18n'
-import { Button, buttonVariants } from '@workspace/ui/components/button'
+import { i18n } from "#i18n";
+import { Button, buttonVariants } from "@workspace/ui/components/button";
 import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
-} from '@workspace/ui/components/item'
-import { ExternalLinkIcon } from 'lucide-react'
-import { type MouseEvent, useId } from 'react'
+} from "@workspace/ui/components/item";
+import { ExternalLinkIcon } from "lucide-react";
+import { type MouseEvent, useId } from "react";
 
-import { useAutoExportLastRun } from '@/components/popup/auto-export-status-item'
-import { getStoreReviewsUrl } from '@/lib/brand'
-import { dismissReviewPrompt, isReviewPromptVisible } from '@/lib/review-prompt'
-import { reviewPromptStore } from '@/lib/storage'
-import { useStorageItem } from '@/lib/use-storage-item'
+import { useAutoExportLastRun } from "@/components/popup/auto-export-status-item";
+import { getStoreReviewsUrl } from "@/lib/brand";
+import { dismissReviewPrompt, isReviewPromptVisible } from "@/lib/review-prompt";
+import { reviewPromptStore } from "@/lib/storage";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 function dismiss() {
-  void dismissReviewPrompt(Date.now())
+  void dismissReviewPrompt(Date.now());
 }
 
 async function openReviewsPage(event: MouseEvent<HTMLAnchorElement>) {
-  event.preventDefault()
-  await dismissReviewPrompt(Date.now())
-  await browser.tabs.create({ url: getStoreReviewsUrl() })
+  event.preventDefault();
+  await dismissReviewPrompt(Date.now());
+  await browser.tabs.create({ url: getStoreReviewsUrl() });
 }
 
 /**
@@ -33,11 +33,11 @@ async function openReviewsPage(event: MouseEvent<HTMLAnchorElement>) {
  * @returns The Review prompt card, or `null` when hidden.
  */
 export function ReviewPromptCard() {
-  const [state] = useStorageItem(reviewPromptStore)
-  const lastRun = useAutoExportLastRun()
-  const titleId = useId()
+  const [state] = useStorageItem(reviewPromptStore);
+  const lastRun = useAutoExportLastRun();
+  const titleId = useId();
 
-  if (!isReviewPromptVisible(state, lastRun)) return null
+  if (!isReviewPromptVisible(state, lastRun)) return null;
 
   return (
     <Item
@@ -48,24 +48,24 @@ export function ReviewPromptCard() {
       data-testid="review-prompt"
     >
       <ItemContent>
-        <ItemTitle id={titleId}>{i18n.t('reviewPrompt_title')}</ItemTitle>
-        <ItemDescription>{i18n.t('reviewPrompt_description')}</ItemDescription>
+        <ItemTitle id={titleId}>{i18n.t("reviewPrompt_title")}</ItemTitle>
+        <ItemDescription>{i18n.t("reviewPrompt_description")}</ItemDescription>
       </ItemContent>
       <ItemActions>
         <a
           href={getStoreReviewsUrl()}
           target="_blank"
           rel="noopener noreferrer"
-          className={buttonVariants({ size: 'sm' })}
+          className={buttonVariants({ size: "sm" })}
           onClick={openReviewsPage}
         >
-          {i18n.t('reviewPrompt_leaveReview')}
+          {i18n.t("reviewPrompt_leaveReview")}
           <ExternalLinkIcon data-icon="inline-end" />
         </a>
         <Button variant="ghost" size="sm" onClick={dismiss}>
-          {i18n.t('reviewPrompt_notNow')}
+          {i18n.t("reviewPrompt_notNow")}
         </Button>
       </ItemActions>
     </Item>
-  )
+  );
 }

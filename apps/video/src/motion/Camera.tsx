@@ -1,25 +1,24 @@
-import type { ReactNode } from 'react'
-import { spring, useCurrentFrame, useVideoConfig } from 'remotion'
+import type { ReactNode } from "react";
+import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-import { SPRING } from './easing'
+import { SPRING } from "./easing";
 
 export type CameraKeyframe = {
   /**
    * Frame at which the move to this keyframe starts.
    */
-  frame: number
+  frame: number;
   /**
    * Point of the layer, in layer coordinates, that lands on the anchor.
    */
-  x: number
-  y: number
-  zoom: number
-}
+  x: number;
+  y: number;
+  zoom: number;
+};
 
-export type CameraState = { x: number; y: number; zoom: number }
+export type CameraState = { x: number; y: number; zoom: number };
 
-const mix = (from: number, to: number, amount: number): number =>
-  from + (to - from) * amount
+const mix = (from: number, to: number, amount: number): number => from + (to - from) * amount;
 
 /**
  * Camera state at a frame: holds each keyframe, then spring-moves to the next
@@ -31,50 +30,50 @@ export const cameraStateAt = (
   fps: number,
   moveFrames: number,
 ): CameraState => {
-  const sorted = keyframes.toSorted((a, b) => a.frame - b.frame)
-  const first = sorted[0]
-  if (!first) return { x: 0, y: 0, zoom: 1 }
-  let index = 0
+  const sorted = keyframes.toSorted((a, b) => a.frame - b.frame);
+  const first = sorted[0];
+  if (!first) return { x: 0, y: 0, zoom: 1 };
+  let index = 0;
   for (const [position, keyframe] of sorted.entries()) {
-    if (keyframe.frame <= frame) index = position
+    if (keyframe.frame <= frame) index = position;
   }
-  const current = sorted[index] ?? first
-  const previous = sorted[index - 1]
-  if (!previous) return current
+  const current = sorted[index] ?? first;
+  const previous = sorted[index - 1];
+  if (!previous) return current;
   const amount = spring({
     frame: frame - current.frame,
     fps,
     config: SPRING.settle,
     durationInFrames: moveFrames,
-  })
+  });
   return {
     x: mix(previous.x, current.x, amount),
     y: mix(previous.y, current.y, amount),
     zoom: mix(previous.zoom, current.zoom, amount),
-  }
-}
+  };
+};
 
 export type CameraProps = {
-  keyframes: readonly CameraKeyframe[]
+  keyframes: readonly CameraKeyframe[];
   /**
    * Frames a move takes. Default 24.
    */
-  moveFrames?: number
+  moveFrames?: number;
   /**
    * Screen point (viewport pixels) the focus lands on. Default: centre.
    */
-  anchor?: { x: number; y: number }
+  anchor?: { x: number; y: number };
   /**
    * Viewport size. Default: the composition size.
    */
-  width?: number
-  height?: number
+  width?: number;
+  height?: number;
   /**
    * Size of the transformed layer. Default: the viewport size.
    */
-  layer?: { width: number; height: number }
-  children: ReactNode
-}
+  layer?: { width: number; height: number };
+  children: ReactNode;
+};
 
 /**
  * Virtual camera: clips to its viewport and transforms a layer so the
@@ -89,35 +88,35 @@ export const Camera = ({
   layer,
   children,
 }: CameraProps) => {
-  const frame = useCurrentFrame()
-  const config = useVideoConfig()
-  const viewportWidth = width ?? config.width
-  const viewportHeight = height ?? config.height
-  const anchorX = anchor?.x ?? viewportWidth / 2
-  const anchorY = anchor?.y ?? viewportHeight / 2
-  const state = cameraStateAt(keyframes, frame, config.fps, moveFrames)
+  const frame = useCurrentFrame();
+  const config = useVideoConfig();
+  const viewportWidth = width ?? config.width;
+  const viewportHeight = height ?? config.height;
+  const anchorX = anchor?.x ?? viewportWidth / 2;
+  const anchorY = anchor?.y ?? viewportHeight / 2;
+  const state = cameraStateAt(keyframes, frame, config.fps, moveFrames);
   return (
     <div
       style={{
-        position: 'relative',
+        position: "relative",
         width: viewportWidth,
         height: viewportHeight,
-        overflow: 'hidden',
+        overflow: "hidden",
       }}
     >
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 0,
           top: 0,
           width: layer?.width ?? viewportWidth,
           height: layer?.height ?? viewportHeight,
-          transformOrigin: '0 0',
+          transformOrigin: "0 0",
           transform: `translate(${anchorX - state.x * state.zoom}px, ${anchorY - state.y * state.zoom}px) scale(${state.zoom})`,
         }}
       >
         {children}
       </div>
     </div>
-  )
-}
+  );
+};

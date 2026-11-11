@@ -1,4 +1,4 @@
-const WINDOWS_RESERVED_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i
+const WINDOWS_RESERVED_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
 
 /**
  * Makes one path segment acceptable to `browser.downloads.download`, which
@@ -13,9 +13,9 @@ const WINDOWS_RESERVED_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i
 export function sanitizePathSegment(segment: string): string {
   const cleaned = segment
     .trim()
-    .replace(/^\.+/, '')
-    .replace(/[. ]+$/, '')
-    .trim()
-  if (!cleaned) return ''
-  return WINDOWS_RESERVED_NAME.test(cleaned) ? `_${cleaned}` : cleaned
+    .replace(/^\.+/, "")
+    .replace(/[. ]+$/, "")
+    .trim();
+  if (!cleaned) return "";
+  return WINDOWS_RESERVED_NAME.test(cleaned) ? `_${cleaned}` : cleaned;
 }

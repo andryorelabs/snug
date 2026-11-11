@@ -1,10 +1,9 @@
 ---
 title: Domande frequenti
 sourceHash: 304e0622b68c13d7
-description:
-  'Risposte alle domande più comuni su Snug: importare più file, permessi,
-  formati e browser supportati, sicurezza e cartelle di backup.'
-seoTitle: 'FAQ di Snug: formati, browser, sicurezza e backup'
+description: "Risposte alle domande più comuni su Snug: importare più file, permessi,
+  formati e browser supportati, sicurezza e cartelle di backup."
+seoTitle: "FAQ di Snug: formati, browser, sicurezza e backup"
 ---
 
 Risposte brevi alle domande che le persone fanno più spesso su Snug.

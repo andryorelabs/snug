@@ -1,30 +1,22 @@
-import { i18n } from '#i18n'
-import { Button } from '@workspace/ui/components/button'
-import { ButtonGroup } from '@workspace/ui/components/button-group'
-import { Checkbox } from '@workspace/ui/components/checkbox'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@workspace/ui/components/input-group'
-import { Kbd } from '@workspace/ui/components/kbd'
-import {
-  ChevronsDownUpIcon,
-  ChevronsUpDownIcon,
-  SearchIcon,
-} from 'lucide-react'
-import type { RefObject } from 'react'
+import { i18n } from "#i18n";
+import { Button } from "@workspace/ui/components/button";
+import { ButtonGroup } from "@workspace/ui/components/button-group";
+import { Checkbox } from "@workspace/ui/components/checkbox";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group";
+import { Kbd } from "@workspace/ui/components/kbd";
+import { ChevronsDownUpIcon, ChevronsUpDownIcon, SearchIcon } from "lucide-react";
+import type { RefObject } from "react";
 
-import type { CheckedState } from '@/lib/types'
+import type { CheckedState } from "@/lib/types";
 
 interface ExportToolbarProperties {
-  searchTerm: string
-  onSearchChange: (value: string) => void
-  searchInputReference: RefObject<HTMLInputElement | null>
-  masterChecked: CheckedState
-  onMasterChange: () => void
-  onExpandAll: () => void
-  onCollapseAll: () => void
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  searchInputReference: RefObject<HTMLInputElement | null>;
+  masterChecked: CheckedState;
+  onMasterChange: () => void;
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
 }
 
 /**
@@ -55,7 +47,7 @@ export function ExportToolbar({
       <Checkbox
         checked={masterChecked}
         onCheckedChange={onMasterChange}
-        aria-label={i18n.t('exportPage_selectAllLabel')}
+        aria-label={i18n.t("exportPage_selectAllLabel")}
       />
       <InputGroup className="min-w-40 flex-1">
         <InputGroupAddon>
@@ -66,8 +58,8 @@ export function ExportToolbar({
           type="search"
           value={searchTerm}
           onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={i18n.t('searchBookmarks')}
-          aria-label={i18n.t('searchBookmarks')}
+          placeholder={i18n.t("searchBookmarks")}
+          aria-label={i18n.t("searchBookmarks")}
           aria-keyshortcuts="/"
         />
         <InputGroupAddon align="inline-end">
@@ -77,13 +69,13 @@ export function ExportToolbar({
       <ButtonGroup>
         <Button variant="outline" size="sm" onClick={onExpandAll}>
           <ChevronsUpDownIcon data-icon="inline-start" />
-          {i18n.t('exportPage_expandAll')}
+          {i18n.t("exportPage_expandAll")}
         </Button>
         <Button variant="outline" size="sm" onClick={onCollapseAll}>
           <ChevronsDownUpIcon data-icon="inline-start" />
-          {i18n.t('exportPage_collapseAll')}
+          {i18n.t("exportPage_collapseAll")}
         </Button>
       </ButtonGroup>
     </div>
-  )
+  );
 }

@@ -1,15 +1,10 @@
-import { i18n } from '#i18n'
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-  AlertTitle,
-} from '@workspace/ui/components/alert'
-import { Button } from '@workspace/ui/components/button'
-import { CircleAlertIcon } from 'lucide-react'
+import { i18n } from "#i18n";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
+import { Button } from "@workspace/ui/components/button";
+import { CircleAlertIcon } from "lucide-react";
 
 interface NotificationAccessAlertProperties {
-  onAllow: () => void
+  onAllow: () => void;
 }
 
 /**
@@ -19,23 +14,17 @@ interface NotificationAccessAlertProperties {
  * @param properties.onAllow Called from the button's click handler.
  * @returns The alert element.
  */
-export function NotificationAccessAlert({
-  onAllow,
-}: NotificationAccessAlertProperties) {
+export function NotificationAccessAlert({ onAllow }: NotificationAccessAlertProperties) {
   return (
     <Alert>
       <CircleAlertIcon />
-      <AlertTitle>
-        {i18n.t('autoExportPage_notificationAccessTitle')}
-      </AlertTitle>
-      <AlertDescription>
-        {i18n.t('autoExportPage_notificationAccessDescription')}
-      </AlertDescription>
+      <AlertTitle>{i18n.t("autoExportPage_notificationAccessTitle")}</AlertTitle>
+      <AlertDescription>{i18n.t("autoExportPage_notificationAccessDescription")}</AlertDescription>
       <AlertAction>
         <Button variant="outline" size="sm" onClick={onAllow}>
-          {i18n.t('autoExportPage_notificationAccessAllow')}
+          {i18n.t("autoExportPage_notificationAccessAllow")}
         </Button>
       </AlertAction>
     </Alert>
-  )
+  );
 }

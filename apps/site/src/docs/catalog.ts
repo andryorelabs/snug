@@ -1,35 +1,35 @@
-import { existsSync, readFileSync } from 'node:fs'
-import path from 'node:path'
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 
-import { DOCS_UI } from '../i18n/docs-ui'
-import { languageTag, type Locale, localePath, LOCALES } from '../i18n/locales'
-import { rewriteMarkdownLinks, splitLeadingHeading } from './markdown'
+import { DOCS_UI } from "../i18n/docs-ui";
+import { languageTag, type Locale, localePath, LOCALES } from "../i18n/locales";
+import { rewriteMarkdownLinks, splitLeadingHeading } from "./markdown";
 import {
   githubEditUrl,
   REPOSITORY_ROOT,
   TRANSLATIONS_DIRECTORY,
   TRANSLATIONS_REPOSITORY_PATH,
-} from './paths'
-import { PUBLISHED_SOURCES, type PublishedSource } from './published'
-import { parseChangelog, renderReleaseNotesMarkdown } from './release-notes'
+} from "./paths";
+import { PUBLISHED_SOURCES, type PublishedSource } from "./published";
+import { parseChangelog, renderReleaseNotesMarkdown } from "./release-notes";
 import {
   classifyTranslation,
   hashSource,
   parseTranslation,
   type TranslationStatus,
-} from './translations'
+} from "./translations";
 
 /**
  * One page of the Guide or What's new, ready for the content store.
  */
 export interface CatalogEntry {
-  id: string
-  title: string
-  description: string
-  seoTitle: string
-  body: string
-  editUrl: string
-  sourcePath: string
+  id: string;
+  title: string;
+  description: string;
+  seoTitle: string;
+  body: string;
+  editUrl: string;
+  sourcePath: string;
 }
 
 /**
@@ -37,25 +37,22 @@ export interface CatalogEntry {
  * translation carries the English text, so every locale has every page.
  */
 export interface LocalizedPage extends CatalogEntry {
-  locale: Locale
-  status: TranslationStatus
-  englishHash: string
-  englishPath: string
+  locale: Locale;
+  status: TranslationStatus;
+  englishHash: string;
+  englishPath: string;
 }
 
 /**
  * Reads a locale's translation file of a published source, or returns
  * `undefined` when that locale has none.
  */
-export type TranslationReader = (
-  locale: Locale,
-  sourcePath: string,
-) => string | undefined
+export type TranslationReader = (locale: Locale, sourcePath: string) => string | undefined;
 
 /**
  * Reads a published file's text.
  */
-export type SourceReader = (sourcePath: string) => string
+export type SourceReader = (sourcePath: string) => string;
 
 /**
  * Reads a file below the repository root.
@@ -63,7 +60,7 @@ export type SourceReader = (sourcePath: string) => string
  * @returns The file's UTF-8 text.
  */
 function readRepositorySource(sourcePath: string): string {
-  return readFileSync(path.join(REPOSITORY_ROOT, sourcePath), 'utf8')
+  return readFileSync(path.join(REPOSITORY_ROOT, sourcePath), "utf8");
 }
 
 /**
@@ -80,12 +77,12 @@ function readRepositorySource(sourcePath: string): string {
 export function buildCatalogEntry(
   source: PublishedSource,
   markdown: string,
-  locale: Locale = 'en',
+  locale: Locale = "en",
 ): CatalogEntry {
-  const editUrl = githubEditUrl(source.sourcePath)
-  const context = { sourcePath: source.sourcePath, locale }
-  if (source.kind === 'changelog') {
-    const notes = renderReleaseNotesMarkdown(parseChangelog(markdown))
+  const editUrl = githubEditUrl(source.sourcePath);
+  const context = { sourcePath: source.sourcePath, locale };
+  if (source.kind === "changelog") {
+    const notes = renderReleaseNotesMarkdown(parseChangelog(markdown));
     return {
       id: source.id,
       title: DOCS_UI.whatsNew,
@@ -94,11 +91,11 @@ export function buildCatalogEntry(
       body: rewriteMarkdownLinks(notes, context),
       editUrl,
       sourcePath: source.sourcePath,
-    }
+    };
   }
-  const { title, body } = splitLeadingHeading(markdown)
+  const { title, body } = splitLeadingHeading(markdown);
   if (!title) {
-    throw new Error(`${source.sourcePath} has no leading "# " heading`)
+    throw new Error(`${source.sourcePath} has no leading "# " heading`);
   }
   return {
     id: source.id,
@@ -108,7 +105,7 @@ export function buildCatalogEntry(
     body: rewriteMarkdownLinks(body, context),
     editUrl,
     sourcePath: source.sourcePath,
-  }
+  };
 }
 
 /**
@@ -117,20 +114,15 @@ export function buildCatalogEntry(
  * repository checkout.
  * @returns One entry per published source.
  */
-export function loadCatalog(
-  readSource: SourceReader = readRepositorySource,
-): CatalogEntry[] {
+export function loadCatalog(readSource: SourceReader = readRepositorySource): CatalogEntry[] {
   return PUBLISHED_SOURCES.map((source) =>
     buildCatalogEntry(source, readSource(source.sourcePath)),
-  )
+  );
 }
 
-function readTranslationFile(
-  locale: Locale,
-  sourcePath: string,
-): string | undefined {
-  const file = path.join(TRANSLATIONS_DIRECTORY, locale, sourcePath)
-  return existsSync(file) ? readFileSync(file, 'utf8') : undefined
+function readTranslationFile(locale: Locale, sourcePath: string): string | undefined {
+  const file = path.join(TRANSLATIONS_DIRECTORY, locale, sourcePath);
+  return existsSync(file) ? readFileSync(file, "utf8") : undefined;
 }
 
 /**
@@ -152,25 +144,25 @@ export function buildLocalizedPage(
   locale: Locale,
   translationText: string | undefined,
 ): LocalizedPage {
-  const english = buildCatalogEntry(source, englishMarkdown, locale)
-  const englishHash = hashSource(englishMarkdown)
-  const englishPath = localePath('en', `/${source.id}/`)
-  if (locale === 'en') {
+  const english = buildCatalogEntry(source, englishMarkdown, locale);
+  const englishHash = hashSource(englishMarkdown);
+  const englishPath = localePath("en", `/${source.id}/`);
+  if (locale === "en") {
     return {
       ...english,
       locale,
-      status: 'translated',
+      status: "translated",
       englishHash,
       englishPath,
-    }
+    };
   }
   const translation =
     translationText === undefined
       ? undefined
-      : parseTranslation(translationText, `${locale}/${source.sourcePath}`)
-  const status = classifyTranslation(translation, englishHash)
-  const id = `${languageTag(locale).toLowerCase()}/${source.id}`
-  if (translation && status === 'translated') {
+      : parseTranslation(translationText, `${locale}/${source.sourcePath}`);
+  const status = classifyTranslation(translation, englishHash);
+  const id = `${languageTag(locale).toLowerCase()}/${source.id}`;
+  if (translation && status === "translated") {
     return {
       id,
       title: translation.title,
@@ -180,17 +172,15 @@ export function buildLocalizedPage(
         sourcePath: source.sourcePath,
         locale,
       }),
-      editUrl: githubEditUrl(
-        `${TRANSLATIONS_REPOSITORY_PATH}/${locale}/${source.sourcePath}`,
-      ),
+      editUrl: githubEditUrl(`${TRANSLATIONS_REPOSITORY_PATH}/${locale}/${source.sourcePath}`),
       sourcePath: source.sourcePath,
       locale,
       status,
       englishHash,
       englishPath,
-    }
+    };
   }
-  return { ...english, id, locale, status, englishHash, englishPath }
+  return { ...english, id, locale, status, englishHash, englishPath };
 }
 
 /**
@@ -207,16 +197,14 @@ export function loadLocalizedCatalog(
   readTranslation: TranslationReader = readTranslationFile,
 ): LocalizedPage[] {
   return PUBLISHED_SOURCES.flatMap((source) => {
-    const englishMarkdown = readSource(source.sourcePath)
+    const englishMarkdown = readSource(source.sourcePath);
     return LOCALES.map((locale) =>
       buildLocalizedPage(
         source,
         englishMarkdown,
         locale,
-        locale === 'en'
-          ? undefined
-          : readTranslation(locale, source.sourcePath),
+        locale === "en" ? undefined : readTranslation(locale, source.sourcePath),
       ),
-    )
-  })
+    );
+  });
 }

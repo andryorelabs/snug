@@ -1,18 +1,18 @@
-import { Toaster } from '@workspace/ui/components/toast'
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { Toaster } from "@workspace/ui/components/toast";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 
-import { ThemeProvider } from '@/components/theme-provider'
-import { applyDocumentLanguage } from '@/lib/document-language'
-import { applyCachedTheme } from '@/lib/theme-cache'
+import { ThemeProvider } from "@/components/theme-provider";
+import { applyDocumentLanguage } from "@/lib/document-language";
+import { applyCachedTheme } from "@/lib/theme-cache";
 
-import App from './App'
-import './style.css'
+import App from "./App";
+import "./style.css";
 
-applyCachedTheme()
-applyDocumentLanguage()
+applyCachedTheme();
+applyDocumentLanguage();
 
-createRoot(document.querySelector('#root')!).render(
+createRoot(document.querySelector("#root")!).render(
   <StrictMode>
     <ThemeProvider>
       <Toaster>
@@ -20,4 +20,4 @@ createRoot(document.querySelector('#root')!).render(
       </Toaster>
     </ThemeProvider>
   </StrictMode>,
-)
+);

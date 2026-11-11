@@ -1,55 +1,47 @@
-import { i18n } from '#i18n'
-import { Badge } from '@workspace/ui/components/badge'
-import { Button } from '@workspace/ui/components/button'
-import { ButtonGroup } from '@workspace/ui/components/button-group'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@workspace/ui/components/input-group'
-import { Kbd } from '@workspace/ui/components/kbd'
-import {
-  ChevronsDownUpIcon,
-  ChevronsUpDownIcon,
-  SearchIcon,
-} from 'lucide-react'
-import { useCallback, useImperativeHandle, useRef, useState } from 'react'
-import type { Ref } from 'react'
+import { i18n } from "#i18n";
+import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
+import { ButtonGroup } from "@workspace/ui/components/button-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@workspace/ui/components/input-group";
+import { Kbd } from "@workspace/ui/components/kbd";
+import { ChevronsDownUpIcon, ChevronsUpDownIcon, SearchIcon } from "lucide-react";
+import { useCallback, useImperativeHandle, useRef, useState } from "react";
+import type { Ref } from "react";
 
-import { BookmarkTreeView } from '@/components/export/bookmark-tree-view'
-import { ExportTreeEmpty } from '@/components/export/export-tree-states'
-import type { BookmarkNode, BookmarkTreeViewHandle } from '@/lib/types'
-import { useSlashToFocus } from '@/lib/use-slash-to-focus'
+import { BookmarkTreeView } from "@/components/export/bookmark-tree-view";
+import { ExportTreeEmpty } from "@/components/export/export-tree-states";
+import type { BookmarkNode, BookmarkTreeViewHandle } from "@/lib/types";
+import { useSlashToFocus } from "@/lib/use-slash-to-focus";
 
-const EXPAND_ALL_ON_MOUNT_TOKEN = 1
+const EXPAND_ALL_ON_MOUNT_TOKEN = 1;
 
 function ignoreCount() {}
 
 function renderDuplicateBadge(node: BookmarkNode) {
   return node.isDisabled ? (
-    <Badge variant="outline">{i18n.t('import_duplicateBadge')}</Badge>
-  ) : null
+    <Badge variant="outline">{i18n.t("import_duplicateBadge")}</Badge>
+  ) : null;
 }
 
 /**
  * What a parent can read from {@link ImportPreviewTree}.
  */
 export interface ImportPreviewTreeHandle {
-  getCheckedIds: () => string[]
+  getCheckedIds: () => string[];
 }
 
 interface ImportPreviewTreeProperties {
-  nodes: BookmarkNode[]
+  nodes: BookmarkNode[];
   /**
    * Shows checkboxes (all new bookmarks checked by default); read-only when
    * `false`.
    */
-  isSelectable: boolean
+  isSelectable: boolean;
   /**
    * Handle to read the checked ids on submit.
    */
-  ref: Ref<ImportPreviewTreeHandle>
-  onSelectionChange: (count: number, checkedIds: string[]) => void
+  ref: Ref<ImportPreviewTreeHandle>;
+  onSelectionChange: (count: number, checkedIds: string[]) => void;
 }
 
 /**
@@ -72,19 +64,19 @@ export function ImportPreviewTree({
   ref,
   onSelectionChange,
 }: ImportPreviewTreeProperties) {
-  const [searchTerm, setSearchTerm] = useState('')
-  const treeReference = useRef<BookmarkTreeViewHandle>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const treeReference = useRef<BookmarkTreeViewHandle>(null);
   useImperativeHandle(ref, () => ({
     getCheckedIds: () => treeReference.current?.getCheckedIds() ?? [],
-  }))
+  }));
   const handleSelectionChange = useCallback(
     (count: number) => {
-      onSelectionChange(count, treeReference.current?.getCheckedIds() ?? [])
+      onSelectionChange(count, treeReference.current?.getCheckedIds() ?? []);
     },
     [onSelectionChange],
-  )
-  const searchInputReference = useRef<HTMLInputElement>(null)
-  useSlashToFocus(searchInputReference)
+  );
+  const searchInputReference = useRef<HTMLInputElement>(null);
+  useSlashToFocus(searchInputReference);
 
   return (
     <div className="flex flex-col gap-2">
@@ -98,8 +90,8 @@ export function ImportPreviewTree({
             type="search"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
-            placeholder={i18n.t('searchBookmarks')}
-            aria-label={i18n.t('searchBookmarks')}
+            placeholder={i18n.t("searchBookmarks")}
+            aria-label={i18n.t("searchBookmarks")}
             aria-keyshortcuts="/"
           />
           <InputGroupAddon align="inline-end">
@@ -114,7 +106,7 @@ export function ImportPreviewTree({
             onClick={() => treeReference.current?.expandAll()}
           >
             <ChevronsUpDownIcon data-icon="inline-start" />
-            {i18n.t('exportPage_expandAll')}
+            {i18n.t("exportPage_expandAll")}
           </Button>
           <Button
             type="button"
@@ -123,7 +115,7 @@ export function ImportPreviewTree({
             onClick={() => treeReference.current?.collapseAll()}
           >
             <ChevronsDownUpIcon data-icon="inline-start" />
-            {i18n.t('exportPage_collapseAll')}
+            {i18n.t("exportPage_collapseAll")}
           </Button>
         </ButtonGroup>
       </div>
@@ -132,7 +124,7 @@ export function ImportPreviewTree({
           ref={treeReference}
           nodes={nodes}
           searchTerm={searchTerm}
-          ariaLabel={i18n.t('import_treeLabel')}
+          ariaLabel={i18n.t("import_treeLabel")}
           isSelectable={isSelectable}
           isCheckedByDefault
           renderBadge={renderDuplicateBadge}
@@ -141,13 +133,10 @@ export function ImportPreviewTree({
           onTotalChange={ignoreCount}
           className="max-h-105"
           emptyState={
-            <ExportTreeEmpty
-              searchTerm={searchTerm}
-              onClearSearch={() => setSearchTerm('')}
-            />
+            <ExportTreeEmpty searchTerm={searchTerm} onClearSearch={() => setSearchTerm("")} />
           }
         />
       </div>
     </div>
-  )
+  );
 }

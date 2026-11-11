@@ -3,16 +3,16 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@workspace/ui/components/accordion'
+} from "@workspace/ui/components/accordion";
 
 interface FaqEntry {
-  id: string
-  question: string
-  answer: string
+  id: string;
+  question: string;
+  answer: string;
 }
 
 interface FaqAccordionProperties {
-  entries: FaqEntry[]
+  entries: FaqEntry[];
 }
 
 export default function FaqAccordion({ entries }: FaqAccordionProperties) {
@@ -31,5 +31,5 @@ export default function FaqAccordion({ entries }: FaqAccordionProperties) {
         </AccordionItem>
       ))}
     </Accordion>
-  )
+  );
 }

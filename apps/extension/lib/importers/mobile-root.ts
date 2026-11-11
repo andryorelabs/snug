@@ -1,4 +1,4 @@
-import type { ParsedBookmark } from '@/lib/types'
+import type { ParsedBookmark } from "@/lib/types";
 
 /**
  * Whether a restore-replace import clears the browser's Mobile root: true when
@@ -9,5 +9,5 @@ import type { ParsedBookmark } from '@/lib/types'
  * @returns Whether the import empties the live Mobile root.
  */
 export function shouldClearMobileRoot(mobileNode: ParsedBookmark): boolean {
-  return (mobileNode.children?.length ?? 0) > 0
+  return (mobileNode.children?.length ?? 0) > 0;
 }

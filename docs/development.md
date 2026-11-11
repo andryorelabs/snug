@@ -81,6 +81,8 @@ with `typescript` 6.x kept for tools that need the classic JS API. ESLint
 remains only for `**/*.astro`. `bun run lint:parity` compares the old ESLint
 config with Oxlint per file, line and rule.
 
+Formatting uses the Oxfmt defaults shared by every andryorelabs repository, with no style options in `.oxfmtrc.json` ([aokit standard rule E8](https://github.com/andryorelabs/aokit/tree/main/docs/standards)).
+
 `lint:oxlint` is split into shards because Oxlint runs jsPlugins on one Node
 thread, so one pass is bound by a single core. When you add a shard, list it in
 `lint:oxlint`, give it one path, and add `--ignore-pattern '<path>/**'` to the

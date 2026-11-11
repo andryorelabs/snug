@@ -1,10 +1,9 @@
 ---
 title: Uso
 sourceHash: e1c70f0d3247c344
-description:
-  'Abre la app de Snug y sigue las páginas de la guía para exportar, importar,
-  buscar duplicados, ajustar opciones y programar la auto-exportación.'
-seoTitle: 'Cómo usar Snug: exportar e importar marcadores'
+description: "Abre la app de Snug y sigue las páginas de la guía para exportar, importar,
+  buscar duplicados, ajustar opciones y programar la auto-exportación."
+seoTitle: "Cómo usar Snug: exportar e importar marcadores"
 ---
 
 ## Abrir la app

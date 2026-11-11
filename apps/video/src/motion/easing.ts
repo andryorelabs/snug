@@ -1,4 +1,4 @@
-import { Easing, interpolate, type SpringConfig } from 'remotion'
+import { Easing, interpolate, type SpringConfig } from "remotion";
 
 /**
  * Named bezier presets. `standard` for travel, `snappy` for UI that reacts,
@@ -8,7 +8,7 @@ export const EASE = {
   standard: Easing.bezier(0.4, 0, 0.2, 1),
   snappy: Easing.bezier(0.2, 0.9, 0.1, 1),
   settle: Easing.bezier(0.16, 1, 0.3, 1),
-} as const
+} as const;
 
 /**
  * Spring configs. `settle` has no overshoot (damping 200), the default for
@@ -18,7 +18,7 @@ export const SPRING = {
   settle: { damping: 200 },
   snappy: { damping: 20, stiffness: 200 },
   gentle: { damping: 30, stiffness: 90 },
-} as const satisfies Record<string, Partial<SpringConfig>>
+} as const satisfies Record<string, Partial<SpringConfig>>;
 
 /**
  * Clamped 0..1 progress of `frame` between two frames, optionally eased.
@@ -31,6 +31,6 @@ export const progressBetween = (
 ): number =>
   interpolate(frame, [from, to], [0, 1], {
     easing,
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  })
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });

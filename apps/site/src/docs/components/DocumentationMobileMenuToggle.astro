@@ -1,5 +1,5 @@
 ---
-import { DOCS_UI } from '../../i18n/docs-ui'
+import { DOCS_UI } from "../../i18n/docs-ui";
 ---
 
 <button
@@ -25,27 +25,26 @@ import { DOCS_UI } from '../../i18n/docs-ui'
 </button>
 
 <script>
-  const sidebar = document.querySelector('#starlight__sidebar')
-  const toggle = document.querySelector<HTMLElement>('[data-docs-menu-toggle]')
-  const outsideDrawer = () =>
-    document.querySelectorAll('.header, .main-frame, .sl-skip-link')
+  const sidebar = document.querySelector("#starlight__sidebar");
+  const toggle = document.querySelector<HTMLElement>("[data-docs-menu-toggle]");
+  const outsideDrawer = () => document.querySelectorAll(".header, .main-frame, .sl-skip-link");
 
   /**
    * Keeps the page out of the tab order while the drawer is open, moves focus
    * into it, and makes everything interactive again before the popover API
    * returns focus to the Guide button on close.
    */
-  sidebar?.addEventListener('beforetoggle', (event) => {
-    const isOpening = (event as ToggleEvent).newState === 'open'
+  sidebar?.addEventListener("beforetoggle", (event) => {
+    const isOpening = (event as ToggleEvent).newState === "open";
     for (const element of outsideDrawer()) {
-      element.toggleAttribute('inert', isOpening)
+      element.toggleAttribute("inert", isOpening);
     }
-    if (!isOpening) toggle?.removeAttribute('inert')
-  })
+    if (!isOpening) toggle?.removeAttribute("inert");
+  });
 
-  sidebar?.addEventListener('toggle', (event) => {
-    if ((event as ToggleEvent).newState !== 'open') return
-    sidebar.querySelector<HTMLElement>('a[href]')?.focus()
-    toggle?.setAttribute('inert', '')
-  })
+  sidebar?.addEventListener("toggle", (event) => {
+    if ((event as ToggleEvent).newState !== "open") return;
+    sidebar.querySelector<HTMLElement>("a[href]")?.focus();
+    toggle?.setAttribute("inert", "");
+  });
 </script>

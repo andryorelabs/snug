@@ -1,43 +1,35 @@
-import { fitText, measureText } from '@remotion/layout-utils'
-import { useMemo } from 'react'
-import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from 'remotion'
+import { fitText, measureText } from "@remotion/layout-utils";
+import { useMemo } from "react";
+import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig } from "remotion";
 
-import { type Locale, message, storeCaptions } from '../copy'
-import { fontStackFor } from '../fonts'
-import {
-  Camera,
-  type CameraKeyframe,
-  EASE,
-  KineticText,
-  progressBetween,
-  SPRING,
-} from '../motion'
-import type { SceneProps } from '../schema'
-import { theme } from '../theme'
-import { AppWindow, FileIcon, SegmentedControl } from '../ui'
+import { type Locale, message, storeCaptions } from "../copy";
+import { fontStackFor } from "../fonts";
+import { Camera, type CameraKeyframe, EASE, KineticText, progressBetween, SPRING } from "../motion";
+import type { SceneProps } from "../schema";
+import { theme } from "../theme";
+import { AppWindow, FileIcon, SegmentedControl } from "../ui";
 
-const needsBodyFont = (locale: Locale): boolean =>
-  ['ja', 'ko', 'zh_CN', 'ru'].includes(locale)
+const needsBodyFont = (locale: Locale): boolean => ["ja", "ko", "zh_CN", "ru"].includes(locale);
 
-const SAFE_SIDE = 80
-const SAFE_TOP = 100
-const VIEW_WIDTH = 1920 - SAFE_SIDE * 2
-const TEXT_BLOCK_HEIGHT = 250
-const VIEW_TOP = SAFE_TOP + TEXT_BLOCK_HEIGHT + 20
-const VIEW_HEIGHT = 1080 - 100 - VIEW_TOP
-const ROW_HEIGHT = 84
-const VISIBLE_BACKUPS = 3
-const SWEEP_FROM = 38
-const SWEEP_TO = 104
-const ARRIVALS = [58, 82, 106, 130] as const
-const REMOVAL_FROM = 130
-const REMOVAL_TO = 152
+const SAFE_SIDE = 80;
+const SAFE_TOP = 100;
+const VIEW_WIDTH = 1920 - SAFE_SIDE * 2;
+const TEXT_BLOCK_HEIGHT = 250;
+const VIEW_TOP = SAFE_TOP + TEXT_BLOCK_HEIGHT + 20;
+const VIEW_HEIGHT = 1080 - 100 - VIEW_TOP;
+const ROW_HEIGHT = 84;
+const VISIBLE_BACKUPS = 3;
+const SWEEP_FROM = 38;
+const SWEEP_TO = 104;
+const ARRIVALS = [58, 82, 106, 130] as const;
+const REMOVAL_FROM = 130;
+const REMOVAL_TO = 152;
 
 const CAMERA: CameraKeyframe[] = [
   { frame: 0, x: 760, y: 430, zoom: 0.68 },
   { frame: 22, x: 760, y: 330, zoom: 0.95 },
   { frame: 112, x: 760, y: 380, zoom: 1 },
-]
+];
 
 const fitSize = (
   text: string,
@@ -57,16 +49,11 @@ const fitSize = (
         validateFontIsLoaded: false,
       }).fontSize,
     ),
-  )
+  );
 
 const Clock = ({ turn }: { turn: number }) => (
   <svg width={220} height={220} viewBox="-110 -110 220 220">
-    <circle
-      r={100}
-      fill={theme.ui.surface}
-      stroke={theme.ui.borderStrong}
-      strokeWidth={3}
-    />
+    <circle r={100} fill={theme.ui.surface} stroke={theme.ui.borderStrong} strokeWidth={3} />
     {Array.from({ length: 12 }, (_, tick) => (
       <line
         key={tick}
@@ -102,39 +89,31 @@ const Clock = ({ turn }: { turn: number }) => (
     />
     <circle r={7} fill={theme.colors.accent} />
   </svg>
-)
+);
 
-const BackupRow = ({
-  index,
-  shift,
-  locale,
-}: {
-  index: number
-  shift: number
-  locale: Locale
-}) => {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
+const BackupRow = ({ index, shift, locale }: { index: number; shift: number; locale: Locale }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const arrival = spring({
     frame: frame - (ARRIVALS[index] ?? 0),
     fps,
     config: SPRING.settle,
-  })
-  const fading = index === 0 ? 1 - shift : 1
+  });
+  const fading = index === 0 ? 1 - shift : 1;
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: 0,
         right: 0,
         top: (index - shift) * ROW_HEIGHT,
         height: ROW_HEIGHT - 12,
-        display: 'flex',
-        alignItems: 'center',
+        display: "flex",
+        alignItems: "center",
         gap: 18,
-        padding: '0 18px',
+        padding: "0 18px",
         borderRadius: 14,
-        boxSizing: 'border-box',
+        boxSizing: "border-box",
         background: theme.ui.surfaceMuted,
         border: `1.5px solid ${theme.ui.border}`,
         opacity: arrival * fading,
@@ -142,23 +121,23 @@ const BackupRow = ({
         fontFamily: fontStackFor(locale).mono,
         fontSize: 22,
         color: theme.colors.text,
-        whiteSpace: 'nowrap',
+        whiteSpace: "nowrap",
       }}
     >
       <FileIcon format="json" size={40} />
       {backupFileName(index)}
     </div>
-  )
-}
+  );
+};
 
-const SCHEDULE_SEGMENT_WIDTH = 210
+const SCHEDULE_SEGMENT_WIDTH = 210;
 const backupFileName = (index: number): string =>
-  `snug-backup-${String(index + 1).padStart(4, '0')}.json`
+  `snug-backup-${String(index + 1).padStart(4, "0")}.json`;
 
-const DESTINATION_SEGMENT_WIDTH = 186
-const DESTINATION_FOLDER = 'Bookmarks backups'
-const DESTINATION_FROM = 30
-const DESTINATION_TO = 54
+const DESTINATION_SEGMENT_WIDTH = 186;
+const DESTINATION_FOLDER = "Bookmarks backups";
+const DESTINATION_FROM = 30;
+const DESTINATION_TO = 54;
 
 const scheduleFontSize = (
   labels: readonly string[],
@@ -172,32 +151,31 @@ const scheduleFontSize = (
           text: label,
           fontFamily: family,
           fontSize: 20,
-          fontWeight: '600',
+          fontWeight: "600",
           validateFontIsLoaded: false,
         }).width,
     ),
-  )
-  const available = segmentWidth - 28
-  return widest > available ? Math.floor((20 * available) / widest) : 20
-}
+  );
+  const available = segmentWidth - 28;
+  return widest > available ? Math.floor((20 * available) / widest) : 20;
+};
 
 const ScheduleColumn = ({ locale }: { locale: Locale }) => {
-  const frame = useCurrentFrame()
-  const fonts = fontStackFor(locale)
+  const frame = useCurrentFrame();
+  const fonts = fontStackFor(locale);
   const scheduleLabels = [
-    message(locale, 'autoExportPage_interval1h'),
-    message(locale, 'autoExportPage_interval1d'),
-    message(locale, 'autoExportPage_interval7d'),
-  ]
-  const scheduleLabelsKey = JSON.stringify(scheduleLabels)
+    message(locale, "autoExportPage_interval1h"),
+    message(locale, "autoExportPage_interval1d"),
+    message(locale, "autoExportPage_interval7d"),
+  ];
+  const scheduleLabelsKey = JSON.stringify(scheduleLabels);
   const scheduleSize = useMemo(
-    () =>
-      scheduleFontSize(JSON.parse(scheduleLabelsKey) as string[], fonts.body),
+    () => scheduleFontSize(JSON.parse(scheduleLabelsKey) as string[], fonts.body),
     [scheduleLabelsKey, fonts.body],
-  )
-  const sweep = progressBetween(frame, SWEEP_FROM, SWEEP_TO, EASE.standard)
+  );
+  const sweep = progressBetween(frame, SWEEP_FROM, SWEEP_TO, EASE.standard);
   return (
-    <div style={{ position: 'absolute', left: 0, top: 0, width: 640 }}>
+    <div style={{ position: "absolute", left: 0, top: 0, width: 640 }}>
       <div
         style={{
           fontSize: 26,
@@ -207,7 +185,7 @@ const ScheduleColumn = ({ locale }: { locale: Locale }) => {
           fontFamily: fonts.body,
         }}
       >
-        {message(locale, 'autoExportPage_frequency')}
+        {message(locale, "autoExportPage_frequency")}
       </div>
       <SegmentedControl
         options={scheduleLabels}
@@ -219,26 +197,21 @@ const ScheduleColumn = ({ locale }: { locale: Locale }) => {
         <Clock turn={sweep} />
       </div>
     </div>
-  )
-}
+  );
+};
 
 const DestinationCard = ({ locale }: { locale: Locale }) => {
-  const frame = useCurrentFrame()
-  const fonts = fontStackFor(locale)
-  const removal = progressBetween(frame, REMOVAL_FROM, REMOVAL_TO, EASE.settle)
-  const destination = progressBetween(
-    frame,
-    DESTINATION_FROM,
-    DESTINATION_TO,
-    EASE.standard,
-  )
-  const keepLabel = message(locale, 'autoExportPage_keepLast')
-  const saveToLabel = message(locale, 'autoExportPage_saveTo')
+  const frame = useCurrentFrame();
+  const fonts = fontStackFor(locale);
+  const removal = progressBetween(frame, REMOVAL_FROM, REMOVAL_TO, EASE.settle);
+  const destination = progressBetween(frame, DESTINATION_FROM, DESTINATION_TO, EASE.standard);
+  const keepLabel = message(locale, "autoExportPage_keepLast");
+  const saveToLabel = message(locale, "autoExportPage_saveTo");
   const destinationLabels = [
-    message(locale, 'autoExportPage_destinationDownloads'),
-    message(locale, 'autoExportPage_destinationFolder'),
-  ]
-  const destinationLabelsKey = JSON.stringify(destinationLabels)
+    message(locale, "autoExportPage_destinationDownloads"),
+    message(locale, "autoExportPage_destinationFolder"),
+  ];
+  const destinationLabelsKey = JSON.stringify(destinationLabels);
   const destinationSize = useMemo(
     () =>
       scheduleFontSize(
@@ -247,33 +220,33 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
         DESTINATION_SEGMENT_WIDTH,
       ),
     [destinationLabelsKey, fonts.body],
-  )
+  );
   const labelSize = useMemo(
     () => fitSize(keepLabel, fonts.body, 500, 300, 24),
     [keepLabel, fonts.body],
-  )
+  );
   return (
     <div
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: 690,
         top: 0,
         width: 442,
-        boxSizing: 'border-box',
+        boxSizing: "border-box",
         padding: 24,
         borderRadius: 18,
         background: theme.ui.surface,
         border: `1.5px solid ${theme.ui.border}`,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
         gap: 14,
       }}
     >
       <div
         style={{
-          display: 'flex',
-          alignItems: 'baseline',
-          justifyContent: 'space-between',
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "space-between",
           gap: 16,
         }}
       >
@@ -283,7 +256,7 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
             fontSize: 24,
             fontWeight: 600,
             color: theme.colors.secondary,
-            whiteSpace: 'nowrap',
+            whiteSpace: "nowrap",
           }}
         >
           {saveToLabel}
@@ -295,14 +268,14 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
             fontSize: 24,
             fontWeight: 600,
             color: theme.colors.accent,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           {destination > 0.5
             ? DESTINATION_FOLDER
-            : message(locale, 'autoExportPage_downloadsPrefix')}
+            : message(locale, "autoExportPage_downloadsPrefix")}
         </div>
       </div>
       <SegmentedControl
@@ -311,14 +284,14 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
         segmentWidth={DESTINATION_SEGMENT_WIDTH}
         fontSize={destinationSize}
       />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <div
           style={{
             flex: 1,
             fontSize: labelSize,
             fontWeight: 500,
             color: theme.colors.secondary,
-            whiteSpace: 'nowrap',
+            whiteSpace: "nowrap",
             fontFamily: fonts.body,
           }}
         >
@@ -328,9 +301,9 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
           style={{
             width: 64,
             height: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             borderRadius: 10,
             background: theme.ui.surfaceMuted,
             border: `1.5px solid ${theme.ui.borderStrong}`,
@@ -342,38 +315,28 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
           {VISIBLE_BACKUPS}
         </div>
       </div>
-      <div
-        style={{ position: 'relative', height: ROW_HEIGHT * VISIBLE_BACKUPS }}
-      >
+      <div style={{ position: "relative", height: ROW_HEIGHT * VISIBLE_BACKUPS }}>
         {ARRIVALS.map((_, index) => (
-          <BackupRow
-            key={index}
-            index={index}
-            shift={removal}
-            locale={locale}
-          />
+          <BackupRow key={index} index={index} shift={removal} locale={locale} />
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const Subtitle = ({ text, locale }: { text: string; locale: Locale }) => {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const fonts = fontStackFor(locale)
-  const width = VIEW_WIDTH - 200
-  const size = useMemo(
-    () => fitSize(text, fonts.body, 500, width, 38),
-    [text, fonts.body, width],
-  )
-  const enter = spring({ frame: frame - 18, fps, config: SPRING.settle })
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const fonts = fontStackFor(locale);
+  const width = VIEW_WIDTH - 200;
+  const size = useMemo(() => fitSize(text, fonts.body, 500, width, 38), [text, fonts.body, width]);
+  const enter = spring({ frame: frame - 18, fps, config: SPRING.settle });
   return (
     <div
       style={{
         width,
-        textAlign: 'center',
-        whiteSpace: 'nowrap',
+        textAlign: "center",
+        whiteSpace: "nowrap",
         fontFamily: fonts.body,
         fontSize: size,
         fontWeight: 500,
@@ -384,8 +347,8 @@ const Subtitle = ({ text, locale }: { text: string; locale: Locale }) => {
     >
       {text}
     </div>
-  )
-}
+  );
+};
 
 /**
  * Auto-export scene: the schedule sweeps hourly to weekly while the Save to
@@ -393,29 +356,29 @@ const Subtitle = ({ text, locale }: { text: string; locale: Locale }) => {
  * and retention retires the oldest.
  */
 export const AutoExportScene = ({ locale }: SceneProps) => {
-  const frame = useCurrentFrame()
-  const { fps } = useVideoConfig()
-  const captions = storeCaptions(locale).autoExport
-  const windowIn = spring({ frame, fps, config: SPRING.settle })
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const captions = storeCaptions(locale).autoExport;
+  const windowIn = spring({ frame, fps, config: SPRING.settle });
   return (
     <AbsoluteFill style={{ backgroundColor: theme.colors.ground }}>
       <AbsoluteFill
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 75%, rgba(255,162,48,0.12), transparent)',
+            "radial-gradient(ellipse 60% 50% at 50% 75%, rgba(255,162,48,0.12), transparent)",
         }}
       />
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: SAFE_SIDE,
           top: SAFE_TOP,
           width: VIEW_WIDTH,
           height: TEXT_BLOCK_HEIGHT,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
           gap: 18,
         }}
       >
@@ -430,7 +393,7 @@ export const AutoExportScene = ({ locale }: SceneProps) => {
       </div>
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: SAFE_SIDE,
           top: VIEW_TOP,
           opacity: windowIn,
@@ -450,5 +413,5 @@ export const AutoExportScene = ({ locale }: SceneProps) => {
         </Camera>
       </div>
     </AbsoluteFill>
-  )
-}
+  );
+};

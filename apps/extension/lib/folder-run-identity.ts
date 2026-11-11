@@ -1,56 +1,49 @@
-const DATABASE_NAME = 'snug-custom-folder-identities'
-const STORE_NAME = 'folders'
+const DATABASE_NAME = "snug-custom-folder-identities";
+const STORE_NAME = "folders";
 
 function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DATABASE_NAME, 1)
+    const request = indexedDB.open(DATABASE_NAME, 1);
     request.onupgradeneeded = () => {
-      request.result.createObjectStore(STORE_NAME)
-    }
-    request.onsuccess = () => resolve(request.result)
-    request.addEventListener('error', () =>
-      reject(request.error ?? new Error('IndexedDB request failed')),
-    )
-  })
+      request.result.createObjectStore(STORE_NAME);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.addEventListener("error", () =>
+      reject(request.error ?? new Error("IndexedDB request failed")),
+    );
+  });
 }
 
 async function runRequest<T>(
   mode: IDBTransactionMode,
   operation: (store: IDBObjectStore) => IDBRequest<T>,
 ): Promise<T> {
-  const database = await openDatabase()
+  const database = await openDatabase();
   try {
     return await new Promise<T>((resolve, reject) => {
-      const request = operation(
-        database.transaction(STORE_NAME, mode).objectStore(STORE_NAME),
-      )
-      request.onsuccess = () => resolve(request.result)
-      request.addEventListener('error', () =>
-        reject(request.error ?? new Error('IndexedDB request failed')),
-      )
-    })
+      const request = operation(database.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
+      request.onsuccess = () => resolve(request.result);
+      request.addEventListener("error", () =>
+        reject(request.error ?? new Error("IndexedDB request failed")),
+      );
+    });
   } finally {
-    database.close()
+    database.close();
   }
 }
 
-async function listIdentities(): Promise<
-  { id: string; handle: FileSystemDirectoryHandle }[]
-> {
+async function listIdentities(): Promise<{ id: string; handle: FileSystemDirectoryHandle }[]> {
   const [ids, handles] = await Promise.all([
-    runRequest<string[]>(
-      'readonly',
-      (store) => store.getAllKeys() as IDBRequest<string[]>,
-    ),
+    runRequest<string[]>("readonly", (store) => store.getAllKeys() as IDBRequest<string[]>),
     runRequest<FileSystemDirectoryHandle[]>(
-      'readonly',
+      "readonly",
       (store) => store.getAll() as IDBRequest<FileSystemDirectoryHandle[]>,
     ),
-  ])
+  ]);
   return ids.map((id, index) => ({
     id,
     handle: handles[index] as FileSystemDirectoryHandle,
-  }))
+  }));
 }
 
 /**
@@ -61,16 +54,14 @@ async function listIdentities(): Promise<
  * @param handle The Custom folder a run is saving into.
  * @returns The folder's identity id.
  */
-export async function registerFolderIdentity(
-  handle: FileSystemDirectoryHandle,
-): Promise<string> {
-  const knownIdentities = await listIdentities()
+export async function registerFolderIdentity(handle: FileSystemDirectoryHandle): Promise<string> {
+  const knownIdentities = await listIdentities();
   for (const known of knownIdentities) {
-    if (await known.handle.isSameEntry(handle)) return known.id
+    if (await known.handle.isSameEntry(handle)) return known.id;
   }
-  const id = crypto.randomUUID()
-  await runRequest('readwrite', (store) => store.put(handle, id))
-  return id
+  const id = crypto.randomUUID();
+  await runRequest("readwrite", (store) => store.put(handle, id));
+  return id;
 }
 
 /**
@@ -84,9 +75,9 @@ export async function isCurrentFolder(
   folderId: string,
   current: FileSystemDirectoryHandle,
 ): Promise<boolean> {
-  const identities = await listIdentities()
-  const known = identities.find(({ id }) => id === folderId)
-  return known ? known.handle.isSameEntry(current) : false
+  const identities = await listIdentities();
+  const known = identities.find(({ id }) => id === folderId);
+  return known ? known.handle.isSameEntry(current) : false;
 }
 
 /**
@@ -94,13 +85,11 @@ export async function isCurrentFolder(
  * @param keepIds The identity ids still referenced by the history.
  * @returns Resolves once the unreferenced identities are removed.
  */
-export async function pruneFolderIdentities(
-  keepIds: readonly string[],
-): Promise<void> {
-  const identities = await listIdentities()
+export async function pruneFolderIdentities(keepIds: readonly string[]): Promise<void> {
+  const identities = await listIdentities();
   for (const { id } of identities) {
     if (!keepIds.includes(id)) {
-      await runRequest('readwrite', (store) => store.delete(id))
+      await runRequest("readwrite", (store) => store.delete(id));
     }
   }
 }

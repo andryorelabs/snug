@@ -1,8 +1,8 @@
 ---
-import type { HowToSampleFormat } from '../content/how-to-pages'
-import csvSample from '../content/how-to-samples/chrome-bookmarks.csv?raw'
-import jsonSample from '../content/how-to-samples/chrome-bookmarks.json?raw'
-import { loadLocalizedCatalog } from '../docs/catalog'
+import type { HowToSampleFormat } from "../content/how-to-pages";
+import csvSample from "../content/how-to-samples/chrome-bookmarks.csv?raw";
+import jsonSample from "../content/how-to-samples/chrome-bookmarks.json?raw";
+import { loadLocalizedCatalog } from "../docs/catalog";
 import {
   getHowToContent,
   getHowToPage,
@@ -11,59 +11,58 @@ import {
   howToSources,
   howToValues,
   interpolateHowTo,
-} from '../i18n/how-to'
-import { type Locale, localePath } from '../i18n/locales'
-import Layout from '../layouts/Layout.astro'
-import { howToCrumbs, howToPageDescriptor } from '../seo/how-to-descriptor'
-import ComparisonBreadcrumb from './ComparisonBreadcrumb.astro'
-import Eyebrow from './Eyebrow.astro'
-import FinalCta from './FinalCta.astro'
-import SectionHeading from './SectionHeading.astro'
-import TextLink from './TextLink.astro'
+} from "../i18n/how-to";
+import { type Locale, localePath } from "../i18n/locales";
+import Layout from "../layouts/Layout.astro";
+import { howToCrumbs, howToPageDescriptor } from "../seo/how-to-descriptor";
+import ComparisonBreadcrumb from "./ComparisonBreadcrumb.astro";
+import Eyebrow from "./Eyebrow.astro";
+import FinalCta from "./FinalCta.astro";
+import SectionHeading from "./SectionHeading.astro";
+import TextLink from "./TextLink.astro";
 
 interface Props {
-  locale: Locale
-  slug: string
+  locale: Locale;
+  slug: string;
 }
 
-const { locale, slug } = Astro.props
-const shared = getHowToSharedContent(locale)
-const copy = getHowToContent(locale, slug)
-const definition = getHowToPage(slug)
-const page = howToPageDescriptor(locale, slug)
-const values = howToValues(locale, slug) as unknown as Record<string, string>
-const fill = (template: string) => interpolateHowTo(template, locale, values)
+const { locale, slug } = Astro.props;
+const shared = getHowToSharedContent(locale);
+const copy = getHowToContent(locale, slug);
+const definition = getHowToPage(slug);
+const page = howToPageDescriptor(locale, slug);
+const values = howToValues(locale, slug) as unknown as Record<string, string>;
+const fill = (template: string) => interpolateHowTo(template, locale, values);
 const crumbs = howToCrumbs(locale, slug).map((crumb, index, all) => ({
   name: crumb.name,
   ...(index < all.length - 1 && { href: crumb.path }),
-}))
+}));
 const guideTitles = new Map(
   loadLocalizedCatalog()
     .filter((entry) => entry.locale === locale)
     .map((entry) => [entry.id, entry.title]),
-)
+);
 const relatedGuides = definition.relatedGuide.map((id) => ({
   href: localePath(locale, `/${id}/`),
   title: guideTitles.get(id) ?? id,
-}))
+}));
 const relatedHowTos = definition.relatedHowTo.map((related) => ({
   href: howToPath(locale, related),
   title: getHowToContent(locale, related).title,
-}))
-const sources = howToSources(slug)
-const snug = 'withSnug' in copy ? copy.withSnug : undefined
+}));
+const sources = howToSources(slug);
+const snug = "withSnug" in copy ? copy.withSnug : undefined;
 const samples: Record<HowToSampleFormat, string> = {
   csv: csvSample.trimEnd(),
   json: jsonSample.trimEnd(),
-}
+};
 const sample =
   copy.sample && definition.sample
     ? { ...copy.sample, code: samples[definition.sample] }
-    : undefined
-const headingClass = 'font-heading text-2xl font-bold md:text-3xl'
-const stepsClass =
-  'mt-4 list-decimal space-y-2 pl-6 leading-prose wrap-anywhere'
-const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere'
+    : undefined;
+const headingClass = "font-heading text-2xl font-bold md:text-3xl";
+const stepsClass = "mt-4 list-decimal space-y-2 pl-6 leading-prose wrap-anywhere";
+const listClass = "mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere";
 ---
 
 <Layout locale={locale} page={page}>
@@ -85,16 +84,10 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere'
           <Eyebrow as="p" id="in-short-heading">
             {shared.shortAnswer}
           </Eyebrow>
-          <p class="mt-1 text-base leading-prose wrap-anywhere">
-            {fill(copy.directAnswer)}
-          </p>
+          <p class="mt-1 text-base leading-prose wrap-anywhere">{fill(copy.directAnswer)}</p>
         </div>
       </section>
-      <section
-        data-section="built-in"
-        aria-labelledby="built-in-heading"
-        class="mt-12 max-w-3xl"
-      >
+      <section data-section="built-in" aria-labelledby="built-in-heading" class="mt-12 max-w-3xl">
         <h2 id="built-in-heading" class={headingClass}>
           {copy.builtIn.title}
         </h2>
@@ -136,17 +129,11 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere'
               <li>{fill(step)}</li>
             ))}
           </ol>
-          <p class="mt-4 leading-prose text-muted-foreground">
-            {fill(snug.snapshot)}
-          </p>
+          <p class="mt-4 leading-prose text-muted-foreground">{fill(snug.snapshot)}</p>
         </section>
       )}
       {sample && (
-        <section
-          data-section="sample"
-          aria-labelledby="sample-heading"
-          class="mt-12 max-w-3xl"
-        >
+        <section data-section="sample" aria-labelledby="sample-heading" class="mt-12 max-w-3xl">
           <h2 id="sample-heading" class={headingClass}>
             {sample.title}
           </h2>
@@ -198,7 +185,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere'
             <>
               <h2
                 id="related-guide-heading"
-                class={`${headingClass} ${relatedHowTos.length > 0 ? 'mt-10' : ''}`}
+                class={`${headingClass} ${relatedHowTos.length > 0 ? "mt-10" : ""}`}
               >
                 {shared.relatedGuideTitle}
               </h2>
@@ -220,9 +207,7 @@ const listClass = 'mt-4 list-disc space-y-2 pl-6 leading-prose wrap-anywhere'
         class="mt-12 max-w-3xl border-t border-border pt-4 text-sm text-muted-foreground"
       >
         <p>
-          <strong class="font-medium text-foreground">
-            {fill(shared.verifiedOn)}.
-          </strong>{' '}
+          <strong class="font-medium text-foreground">{fill(shared.verifiedOn)}.</strong>{" "}
           {fill(copy.verified)}
         </p>
         <p class="mt-3">{shared.sourcesTitle}</p>

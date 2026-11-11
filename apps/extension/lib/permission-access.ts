@@ -2,20 +2,17 @@
  * The optional permissions Snug asks for at the moment a feature needs them:
  * `downloads` is Downloads access, `notifications` is Notification access.
  */
-export type AccessPermission = 'downloads' | 'notifications'
+export type AccessPermission = "downloads" | "notifications";
 
 /**
  * A change reported by {@link watchAccessChanges}.
  */
 export interface AccessChange {
-  permission: AccessPermission
-  isGranted: boolean
+  permission: AccessPermission;
+  isGranted: boolean;
 }
 
-const ACCESS_PERMISSIONS: readonly AccessPermission[] = [
-  'downloads',
-  'notifications',
-]
+const ACCESS_PERMISSIONS: readonly AccessPermission[] = ["downloads", "notifications"];
 
 /**
  * Whether every named permission is currently granted. Never throws: a missing
@@ -26,10 +23,10 @@ const ACCESS_PERMISSIONS: readonly AccessPermission[] = [
  */
 async function hasAccess(...permissions: AccessPermission[]): Promise<boolean> {
   try {
-    return await browser.permissions.contains({ permissions })
+    return await browser.permissions.contains({ permissions });
   } catch (error) {
-    console.error(error)
-    return false
+    console.error(error);
+    return false;
   }
 }
 
@@ -38,7 +35,7 @@ async function hasAccess(...permissions: AccessPermission[]): Promise<boolean> {
  * @returns `true` when the `downloads` permission is held.
  */
 export function hasDownloadsAccess(): Promise<boolean> {
-  return hasAccess('downloads')
+  return hasAccess("downloads");
 }
 
 /**
@@ -46,7 +43,7 @@ export function hasDownloadsAccess(): Promise<boolean> {
  * @returns `true` when the `notifications` permission is held.
  */
 export function hasNotificationAccess(): Promise<boolean> {
-  return hasAccess('notifications')
+  return hasAccess("notifications");
 }
 
 /**
@@ -57,14 +54,12 @@ export function hasNotificationAccess(): Promise<boolean> {
  * @param permissions The permissions to request together.
  * @returns `true` when the user approved all of them.
  */
-export async function didUserGrantAccess(
-  ...permissions: AccessPermission[]
-): Promise<boolean> {
+export async function didUserGrantAccess(...permissions: AccessPermission[]): Promise<boolean> {
   try {
-    return await browser.permissions.request({ permissions })
+    return await browser.permissions.request({ permissions });
   } catch (error) {
-    console.error(error)
-    return false
+    console.error(error);
+    return false;
   }
 }
 
@@ -74,23 +69,20 @@ export async function didUserGrantAccess(
  * @param listener Called once per affected access permission.
  * @returns A function that removes both subscriptions.
  */
-export function watchAccessChanges(
-  listener: (change: AccessChange) => void,
-): () => void {
-  const report =
-    (isGranted: boolean) => (changed: { permissions?: string[] }) => {
-      for (const permission of ACCESS_PERMISSIONS) {
-        if (changed.permissions?.includes(permission)) {
-          listener({ permission, isGranted })
-        }
+export function watchAccessChanges(listener: (change: AccessChange) => void): () => void {
+  const report = (isGranted: boolean) => (changed: { permissions?: string[] }) => {
+    for (const permission of ACCESS_PERMISSIONS) {
+      if (changed.permissions?.includes(permission)) {
+        listener({ permission, isGranted });
       }
     }
-  const onAdded = report(true)
-  const onRemoved = report(false)
-  browser.permissions.onAdded.addListener(onAdded)
-  browser.permissions.onRemoved.addListener(onRemoved)
+  };
+  const onAdded = report(true);
+  const onRemoved = report(false);
+  browser.permissions.onAdded.addListener(onAdded);
+  browser.permissions.onRemoved.addListener(onRemoved);
   return () => {
-    browser.permissions.onAdded.removeListener(onAdded)
-    browser.permissions.onRemoved.removeListener(onRemoved)
-  }
+    browser.permissions.onAdded.removeListener(onAdded);
+    browser.permissions.onRemoved.removeListener(onRemoved);
+  };
 }

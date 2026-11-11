@@ -1,37 +1,34 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from "vitest";
 
-import wxtConfig from '../wxt.config'
+import wxtConfig from "../wxt.config";
 
 interface ManifestNameMessages {
-  extensionManifestName: { message: string }
+  extensionManifestName: { message: string };
 }
 
-const localeMessages = import.meta.glob<ManifestNameMessages>(
-  '../locales/*.json',
-  { eager: true, import: 'default' },
-)
-const listingSources = import.meta.glob<string>(
-  '../../../docs/store/listings/*.md',
-  {
-    eager: true,
-    import: 'default',
-    query: '?raw',
-  },
-)
+const localeMessages = import.meta.glob<ManifestNameMessages>("../locales/*.json", {
+  eager: true,
+  import: "default",
+});
+const listingSources = import.meta.glob<string>("../../../docs/store/listings/*.md", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
 const storeReadme = Object.values(
-  import.meta.glob<string>('../../../docs/store/README.md', {
+  import.meta.glob<string>("../../../docs/store/README.md", {
     eager: true,
-    import: 'default',
-    query: '?raw',
+    import: "default",
+    query: "?raw",
   }),
-)[0]
+)[0];
 
 /**
  * @param path A glob key such as `../locales/pt_BR.json`.
  * @returns The locale code, such as `pt_BR`.
  */
 function localeCode(path: string): string {
-  return path.replace(/^.*\//, '').replace(/\.(json|md)$/, '')
+  return path.replace(/^.*\//, "").replace(/\.(json|md)$/, "");
 }
 
 /**
@@ -39,9 +36,8 @@ function localeCode(path: string): string {
  * @returns That locale's `extensionManifestName` message.
  */
 function manifestName(code: string): string | undefined {
-  return Object.entries(localeMessages).find(
-    ([path]) => localeCode(path) === code,
-  )?.[1].extensionManifestName.message
+  return Object.entries(localeMessages).find(([path]) => localeCode(path) === code)?.[1]
+    .extensionManifestName.message;
 }
 
 /**
@@ -49,88 +45,81 @@ function manifestName(code: string): string | undefined {
  * @returns The first line under its `## Title` heading.
  */
 function listingTitle(markdown: string): string | undefined {
-  return /^## Title\s+(.+)$/m.exec(markdown)?.[1]
+  return /^## Title\s+(.+)$/m.exec(markdown)?.[1];
 }
 
 type TestManifest = Record<string, unknown> & {
-  permissions: string[]
-  optional_permissions?: string[]
-}
-type ManifestFactory = (environment: { browser: string }) => TestManifest
+  permissions: string[];
+  optional_permissions?: string[];
+};
+type ManifestFactory = (environment: { browser: string }) => TestManifest;
 
-const buildManifest = wxtConfig.manifest as ManifestFactory
-const manifest = buildManifest({ browser: 'chrome' })
+const buildManifest = wxtConfig.manifest as ManifestFactory;
+const manifest = buildManifest({ browser: "chrome" });
 
-describe('manifest', () => {
-  it('uses the full description on the default build', () => {
-    expect(manifest.description).toBe('__MSG_extensionDescription__')
-  })
+describe("manifest", () => {
+  it("uses the full description on the default build", () => {
+    expect(manifest.description).toBe("__MSG_extensionDescription__");
+  });
 
-  it('uses the browser-neutral description on the Edge build', () => {
-    expect(buildManifest({ browser: 'edge' }).description).toBe(
-      '__MSG_extensionDescriptionEdge__',
-    )
-  })
+  it("uses the browser-neutral description on the Edge build", () => {
+    expect(buildManifest({ browser: "edge" }).description).toBe("__MSG_extensionDescriptionEdge__");
+  });
 
-  it('has no tabs permission', () => {
-    expect(manifest.permissions).not.toContain('tabs')
-  })
+  it("has no tabs permission", () => {
+    expect(manifest.permissions).not.toContain("tabs");
+  });
 
-  it('keeps Downloads and Notification access optional', () => {
-    expect(manifest.permissions).not.toContain('downloads')
-    expect(manifest.permissions).not.toContain('notifications')
-    expect(manifest.optional_permissions).toEqual([
-      'downloads',
-      'notifications',
-    ])
-    expect(buildManifest({ browser: 'edge' }).optional_permissions).toEqual([
-      'downloads',
-      'notifications',
-    ])
-  })
+  it("keeps Downloads and Notification access optional", () => {
+    expect(manifest.permissions).not.toContain("downloads");
+    expect(manifest.permissions).not.toContain("notifications");
+    expect(manifest.optional_permissions).toEqual(["downloads", "notifications"]);
+    expect(buildManifest({ browser: "edge" }).optional_permissions).toEqual([
+      "downloads",
+      "notifications",
+    ]);
+  });
 
-  it('requires both permissions on the e2e build', () => {
-    vi.stubEnv('SNUG_E2E_REQUIRED_PERMISSIONS', '1')
-    const e2eManifest = buildManifest({ browser: 'chrome' })
-    vi.unstubAllEnvs()
+  it("requires both permissions on the e2e build", () => {
+    vi.stubEnv("SNUG_E2E_REQUIRED_PERMISSIONS", "1");
+    const e2eManifest = buildManifest({ browser: "chrome" });
+    vi.unstubAllEnvs();
 
-    expect(e2eManifest.permissions).toEqual(
-      expect.arrayContaining(['downloads', 'notifications']),
-    )
-    expect(e2eManifest.optional_permissions).toBeUndefined()
-  })
+    expect(e2eManifest.permissions).toEqual(expect.arrayContaining(["downloads", "notifications"]));
+    expect(e2eManifest.optional_permissions).toBeUndefined();
+  });
 
-  it('requires Chrome 119 and links the live site', () => {
-    expect(manifest.minimum_chrome_version).toBe('119')
-    expect(manifest.homepage_url).toBe('https://snug.andryore.dev/')
-  })
+  it("requires Chrome 119 and links the live site", () => {
+    expect(manifest.minimum_chrome_version).toBe("119");
+    expect(manifest.homepage_url).toBe("https://snug.andryore.dev/");
+  });
 
-  it('names the extension with the manifest-only message', () => {
-    expect(manifest.name).toBe('__MSG_extensionManifestName__')
-  })
-})
+  it("names the extension with the manifest-only message", () => {
+    expect(manifest.name).toBe("__MSG_extensionManifestName__");
+  });
+});
 
-describe('extensionManifestName', () => {
+describe("extensionManifestName", () => {
   it.each(Object.keys(localeMessages).map((path) => localeCode(path)))(
-    'is defined in %s',
+    "is defined in %s",
     (code) => {
-      expect(manifestName(code)?.length).toBeGreaterThan(0)
+      expect(manifestName(code)?.length).toBeGreaterThan(0);
     },
-  )
+  );
 
   it.each(
     Object.entries(listingSources)
       .map(([path, markdown]) => [localeCode(path), markdown] as const)
-      .filter(([code]) => code !== 'TEMPLATE'),
-  )('matches the store listing title in %s', (code, markdown) => {
-    expect(manifestName(code)).toBe(listingTitle(markdown))
-  })
+      .filter(([code]) => code !== "TEMPLATE"),
+  )("matches the store listing title in %s", (code, markdown) => {
+    expect(manifestName(code)).toBe(listingTitle(markdown));
+  });
 
   it.each([
-    ['en', 'Snug: Bookmark Export, Import & Backup'],
-    ['es', 'Snug: exporta, importa y respalda marcadores'],
-  ])('matches the store README title for %s', (code, title) => {
-    expect(storeReadme).toContain(title)
-    expect(manifestName(code)).toBe(title)
-  })
-})
+    ["en", "Snug: Bookmark Export, Import & Backup"],
+    ["es", "Snug: exporta, importa y respalda marcadores"],
+  ])("matches the store README title for %s", (code, title) => {
+    expect(storeReadme).toContain(title);
+    expect(manifestName(code)).toBe(title);
+  });
+});

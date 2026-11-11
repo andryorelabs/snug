@@ -1,4 +1,4 @@
-import { COMPETITORS } from '../content/competitors'
+import { COMPETITORS } from "../content/competitors";
 import {
   alternativesPath,
   COMPARISON_PAGE_LOCALES,
@@ -7,23 +7,12 @@ import {
   getComparisonContent,
   getComparisonMeta,
   interpolateComparison,
-} from '../i18n/comparisons'
-import {
-  DEFAULT_LOCALE,
-  hreflangAlternates,
-  SITE_ORIGIN,
-} from '../i18n/locales'
-import type {
-  LlmsComparisonPage,
-  LlmsFullSection,
-  SitemapEntry,
-} from './crawlers'
-import { lastCommitDate } from './last-modified'
+} from "../i18n/comparisons";
+import { DEFAULT_LOCALE, hreflangAlternates, SITE_ORIGIN } from "../i18n/locales";
+import type { LlmsComparisonPage, LlmsFullSection, SitemapEntry } from "./crawlers";
+import { lastCommitDate } from "./last-modified";
 
-const PAGE_SLUGS: readonly (ComparisonSlug | undefined)[] = [
-  undefined,
-  ...COMPARISON_SLUGS,
-]
+const PAGE_SLUGS: readonly (ComparisonSlug | undefined)[] = [undefined, ...COMPARISON_SLUGS];
 
 /**
  * One sitemap entry per Alternatives and Comparison page in every locale that
@@ -32,25 +21,22 @@ const PAGE_SLUGS: readonly (ComparisonSlug | undefined)[] = [
  * locale.
  */
 export function comparisonSitemapEntries(): SitemapEntry[] {
-  const lastmod = lastCommitDate([
-    'src/content/comparisons',
-    'src/content/competitors.ts',
-  ])
+  const lastmod = lastCommitDate(["src/content/comparisons", "src/content/competitors.ts"]);
   return PAGE_SLUGS.flatMap((slug) => {
     const alternates = hreflangAlternates(
       alternativesPath(DEFAULT_LOCALE, slug),
       COMPARISON_PAGE_LOCALES,
-    )
+    );
     return COMPARISON_PAGE_LOCALES.map((locale) => ({
       loc: `${SITE_ORIGIN}${alternativesPath(locale, slug)}`,
       ...(lastmod !== undefined && { lastmod }),
       alternates,
-    }))
-  })
+    }));
+  });
 }
 
 function bulleted(items: readonly string[]): string {
-  return items.map((item) => `- ${item}`).join('\n')
+  return items.map((item) => `- ${item}`).join("\n");
 }
 
 /**
@@ -59,16 +45,12 @@ function bulleted(items: readonly string[]): string {
  * @returns The Alternatives page, then each comparison.
  */
 export function comparisonLlmsFullSections(): LlmsFullSection[] {
-  const { shared, alternatives, pages } = getComparisonContent(DEFAULT_LOCALE)
+  const { shared, alternatives, pages } = getComparisonContent(DEFAULT_LOCALE);
   const latest = COMPARISON_SLUGS.map((slug) => COMPETITORS[slug].verifiedOn)
     .toSorted((a, b) => a.localeCompare(b))
-    .at(-1)
+    .at(-1);
   const fillAlternatives = (template: string) =>
-    interpolateComparison(
-      template,
-      DEFAULT_LOCALE,
-      latest === undefined ? {} : { date: latest },
-    )
+    interpolateComparison(template, DEFAULT_LOCALE, latest === undefined ? {} : { date: latest });
   const overview: LlmsFullSection = {
     title: alternatives.title,
     url: `${SITE_ORIGIN}${alternativesPath(DEFAULT_LOCALE)}`,
@@ -77,16 +59,16 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
       `### ${alternatives.whatToLookFor.title}`,
       bulleted(alternatives.whatToLookFor.items),
       fillAlternatives(shared.checkedNote),
-    ].join('\n\n'),
-  }
+    ].join("\n\n"),
+  };
   const comparisons = COMPARISON_SLUGS.map((slug) => {
-    const facts = COMPETITORS[slug]
-    const copy = pages[slug]
+    const facts = COMPETITORS[slug];
+    const copy = pages[slug];
     const fill = (template: string) =>
       interpolateComparison(template, DEFAULT_LOCALE, {
         users: facts.userCount,
         rating: facts.ratingValue,
-        ...(facts.languageCount !== 'not-listed' && {
+        ...(facts.languageCount !== "not-listed" && {
           languages: facts.languageCount,
         }),
         ...(facts.historyLimitMonths !== undefined && {
@@ -94,7 +76,7 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
         }),
         date: facts.verifiedOn,
         name: facts.shortName,
-      })
+      });
     return {
       title: copy.title,
       url: `${SITE_ORIGIN}${alternativesPath(DEFAULT_LOCALE, slug)}`,
@@ -107,14 +89,12 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
         `### ${fill(shared.pickOther)}`,
         bulleted(copy.pickOther.map((item) => fill(item))),
         `### ${shared.switching}`,
-        copy.switching.steps
-          .map((step, index) => `${index + 1}. ${fill(step)}`)
-          .join('\n'),
+        copy.switching.steps.map((step, index) => `${index + 1}. ${fill(step)}`).join("\n"),
         fill(shared.checkedNote),
-      ].join('\n\n'),
-    }
-  })
-  return [overview, ...comparisons]
+      ].join("\n\n"),
+    };
+  });
+  return [overview, ...comparisons];
 }
 
 /**
@@ -123,14 +103,11 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
  */
 export function comparisonLlmsPages(): LlmsComparisonPage[] {
   return PAGE_SLUGS.map((slug) => {
-    const { title, description } = getComparisonMeta(
-      DEFAULT_LOCALE,
-      slug ?? 'alternatives',
-    )
+    const { title, description } = getComparisonMeta(DEFAULT_LOCALE, slug ?? "alternatives");
     return {
       title,
       description,
       url: `${SITE_ORIGIN}${alternativesPath(DEFAULT_LOCALE, slug)}`,
-    }
-  })
+    };
+  });
 }

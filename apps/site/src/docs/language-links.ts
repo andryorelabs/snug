@@ -1,11 +1,11 @@
-import { languageTag, type Locale } from '../i18n/locales'
-import type { HeadEntry } from './page-meta'
+import { languageTag, type Locale } from "../i18n/locales";
+import type { HeadEntry } from "./page-meta";
 
 function toPath(href: string): string {
   try {
-    return new URL(href, 'https://placeholder.invalid').pathname
+    return new URL(href, "https://placeholder.invalid").pathname;
   } catch {
-    return href
+    return href;
   }
 }
 
@@ -22,15 +22,15 @@ export function documentationLanguageHref(
   head: readonly HeadEntry[],
   fallback: (locale: Locale) => string,
 ): (locale: Locale) => string {
-  const alternates = new Map<string, string>()
+  const alternates = new Map<string, string>();
   for (const entry of head) {
-    if (entry.tag !== 'link' || entry.attrs?.rel !== 'alternate') continue
-    const { hreflang, href } = entry.attrs
-    if (typeof hreflang !== 'string' || typeof href !== 'string') continue
-    alternates.set(hreflang, href)
+    if (entry.tag !== "link" || entry.attrs?.rel !== "alternate") continue;
+    const { hreflang, href } = entry.attrs;
+    if (typeof hreflang !== "string" || typeof href !== "string") continue;
+    alternates.set(hreflang, href);
   }
   return (locale) => {
-    const href = alternates.get(languageTag(locale))
-    return href ? toPath(href) : fallback(locale)
-  }
+    const href = alternates.get(languageTag(locale));
+    return href ? toPath(href) : fallback(locale);
+  };
 }

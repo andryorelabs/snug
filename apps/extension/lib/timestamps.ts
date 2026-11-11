@@ -4,7 +4,7 @@
  * @returns The timestamp in whole seconds.
  */
 export function millisecondsToSeconds(milliseconds: number): number {
-  return Math.floor(milliseconds / 1000)
+  return Math.floor(milliseconds / 1000);
 }
 
 /**
@@ -13,5 +13,5 @@ export function millisecondsToSeconds(milliseconds: number): number {
  * @returns The timestamp in milliseconds.
  */
 export function secondsToMilliseconds(seconds: number): number {
-  return seconds * 1000
+  return seconds * 1000;
 }

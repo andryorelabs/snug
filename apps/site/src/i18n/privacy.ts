@@ -1,14 +1,12 @@
-import { DEFAULT_LOCALE, languageTag, type Locale, LOCALES } from './locales'
+import { DEFAULT_LOCALE, languageTag, type Locale, LOCALES } from "./locales";
 
 /**
  * Site-relative path of the canonical English privacy policy, which store
  * listings and every locale without a translation point to.
  */
-export const ENGLISH_PRIVACY_PATH = '/privacy/'
+export const ENGLISH_PRIVACY_PATH = "/privacy/";
 
-const translationFiles = new Set(
-  Object.keys(import.meta.glob('../content/privacy/*.md')),
-)
+const translationFiles = new Set(Object.keys(import.meta.glob("../content/privacy/*.md")));
 
 /**
  * Locales that have a translated policy file in `src/content/privacy/`. The
@@ -17,19 +15,17 @@ const translationFiles = new Set(
 export const TRANSLATED_PRIVACY_LOCALES: ReadonlySet<Locale> = new Set(
   LOCALES.filter(
     (locale) =>
-      locale !== DEFAULT_LOCALE &&
-      translationFiles.has(`../content/privacy/${locale}.md`),
+      locale !== DEFAULT_LOCALE && translationFiles.has(`../content/privacy/${locale}.md`),
   ),
-)
+);
 
 /**
  * Locales that have a privacy page, English first: the canonical policy plus
  * every translation. These are the hreflang and sitemap alternates.
  */
 export const PRIVACY_PAGE_LOCALES: readonly Locale[] = LOCALES.filter(
-  (locale) =>
-    locale === DEFAULT_LOCALE || TRANSLATED_PRIVACY_LOCALES.has(locale),
-)
+  (locale) => locale === DEFAULT_LOCALE || TRANSLATED_PRIVACY_LOCALES.has(locale),
+);
 
 /**
  * Site-relative path of a locale's privacy policy, always with a trailing
@@ -44,5 +40,5 @@ export function privacyPath(
 ): string {
   return locale !== DEFAULT_LOCALE && translated.has(locale)
     ? `/${languageTag(locale).toLowerCase()}${ENGLISH_PRIVACY_PATH}`
-    : ENGLISH_PRIVACY_PATH
+    : ENGLISH_PRIVACY_PATH;
 }

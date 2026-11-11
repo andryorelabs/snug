@@ -1,43 +1,43 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fakeBrowser } from 'wxt/testing/fake-browser'
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { fakeBrowser } from "wxt/testing/fake-browser";
 
-import { applyDocumentLanguage } from './document-language'
+import { applyDocumentLanguage } from "./document-language";
 
-describe('applyDocumentLanguage', () => {
+describe("applyDocumentLanguage", () => {
   afterEach(() => {
-    document.documentElement.lang = 'en'
-    vi.restoreAllMocks()
-  })
+    document.documentElement.lang = "en";
+    vi.restoreAllMocks();
+  });
 
-  it.each(['ja', 'ko', 'zh-CN', 'ru'])('sets lang to %s', (language) => {
-    vi.spyOn(fakeBrowser.i18n, 'getUILanguage').mockReturnValue(language)
+  it.each(["ja", "ko", "zh-CN", "ru"])("sets lang to %s", (language) => {
+    vi.spyOn(fakeBrowser.i18n, "getUILanguage").mockReturnValue(language);
 
-    applyDocumentLanguage()
+    applyDocumentLanguage();
 
-    expect(document.documentElement.lang).toBe(language)
-  })
+    expect(document.documentElement.lang).toBe(language);
+  });
 
   it.each([
-    ['de-AT', 'de'],
-    ['pt-BR', 'pt-BR'],
-    ['zh-CN', 'zh-CN'],
-    ['pl', 'en'],
-    ['pt-PT', 'en'],
-    ['zh-TW', 'en'],
-  ])('resolves UI language %s to %s', (language, expected) => {
-    vi.spyOn(fakeBrowser.i18n, 'getUILanguage').mockReturnValue(language)
+    ["de-AT", "de"],
+    ["pt-BR", "pt-BR"],
+    ["zh-CN", "zh-CN"],
+    ["pl", "en"],
+    ["pt-PT", "en"],
+    ["zh-TW", "en"],
+  ])("resolves UI language %s to %s", (language, expected) => {
+    vi.spyOn(fakeBrowser.i18n, "getUILanguage").mockReturnValue(language);
 
-    applyDocumentLanguage()
+    applyDocumentLanguage();
 
-    expect(document.documentElement.lang).toBe(expected)
-  })
+    expect(document.documentElement.lang).toBe(expected);
+  });
 
-  it('keeps the current lang when the UI language is empty', () => {
-    vi.spyOn(fakeBrowser.i18n, 'getUILanguage').mockReturnValue('')
+  it("keeps the current lang when the UI language is empty", () => {
+    vi.spyOn(fakeBrowser.i18n, "getUILanguage").mockReturnValue("");
 
-    applyDocumentLanguage()
+    applyDocumentLanguage();
 
-    expect(document.documentElement.lang).toBe('en')
-  })
-})
+    expect(document.documentElement.lang).toBe("en");
+  });
+});

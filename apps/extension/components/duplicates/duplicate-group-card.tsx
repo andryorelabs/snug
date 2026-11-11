@@ -1,53 +1,44 @@
-import { i18n } from '#i18n'
-import { Badge } from '@workspace/ui/components/badge'
+import { i18n } from "#i18n";
+import { Badge } from "@workspace/ui/components/badge";
 import {
   Card,
   CardAction,
   CardContent,
   CardHeader,
   CardTitle,
-} from '@workspace/ui/components/card'
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from '@workspace/ui/components/radio-group'
-import { useId } from 'react'
+} from "@workspace/ui/components/card";
+import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
+import { useId } from "react";
 
-import { getKeptCopyId } from '@/lib/duplicate-selection'
-import type { KeptCopyIds } from '@/lib/duplicate-selection'
-import type { DuplicateGroup } from '@/lib/duplicates'
+import { getKeptCopyId } from "@/lib/duplicate-selection";
+import type { KeptCopyIds } from "@/lib/duplicate-selection";
+import type { DuplicateGroup } from "@/lib/duplicates";
 
-type DuplicateCopy = DuplicateGroup['copies'][number]
+type DuplicateCopy = DuplicateGroup["copies"][number];
 
 function formatDateAdded(dateAdded: number | undefined): string {
-  if (dateAdded === undefined) return ''
-  return i18n.t('duplicates_added', [
-    new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
-      new Date(dateAdded),
-    ),
-  ])
+  if (dateAdded === undefined) return "";
+  return i18n.t("duplicates_added", [
+    new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(dateAdded)),
+  ]);
 }
 
 interface DuplicateCopyRowProperties {
-  copy: DuplicateCopy
-  isKept: boolean
-  normalizedUrl: string
+  copy: DuplicateCopy;
+  isKept: boolean;
+  normalizedUrl: string;
 }
 
-function DuplicateCopyRow({
-  copy,
-  isKept,
-  normalizedUrl,
-}: DuplicateCopyRowProperties) {
-  const titleId = useId()
-  const folder = copy.folderPath.join(' / ')
+function DuplicateCopyRow({ copy, isKept, normalizedUrl }: DuplicateCopyRowProperties) {
+  const titleId = useId();
+  const folder = copy.folderPath.join(" / ");
   const details = [
-    copy.url === normalizedUrl ? '' : copy.url,
+    copy.url === normalizedUrl ? "" : copy.url,
     folder,
     formatDateAdded(copy.dateAdded),
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(" · ");
 
   return (
     <div
@@ -59,21 +50,19 @@ function DuplicateCopyRow({
         <span id={titleId} className="truncate text-sm font-medium">
           {copy.title || copy.url}
         </span>
-        <span className="truncate text-xs text-muted-foreground">
-          {details}
-        </span>
+        <span className="truncate text-xs text-muted-foreground">{details}</span>
       </div>
-      <Badge variant={isKept ? 'secondary' : 'destructive'}>
-        {isKept ? i18n.t('duplicates_keep') : i18n.t('duplicates_delete')}
+      <Badge variant={isKept ? "secondary" : "destructive"}>
+        {isKept ? i18n.t("duplicates_keep") : i18n.t("duplicates_delete")}
       </Badge>
     </div>
-  )
+  );
 }
 
 interface DuplicateGroupCardProperties {
-  group: DuplicateGroup
-  keptCopyIds: KeptCopyIds
-  onKeepChange: (normalizedUrl: string, copyId: string) => void
+  group: DuplicateGroup;
+  keptCopyIds: KeptCopyIds;
+  onKeepChange: (normalizedUrl: string, copyId: string) => void;
 }
 
 /**
@@ -91,7 +80,7 @@ export function DuplicateGroupCard({
   keptCopyIds,
   onKeepChange,
 }: DuplicateGroupCardProperties) {
-  const keptId = getKeptCopyId(group, keptCopyIds)
+  const keptId = getKeptCopyId(group, keptCopyIds);
 
   return (
     <Card>
@@ -101,17 +90,15 @@ export function DuplicateGroupCard({
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
-            {i18n.t('duplicates_copiesBadge', [group.copies.length.toString()])}
+            {i18n.t("duplicates_copiesBadge", [group.copies.length.toString()])}
           </Badge>
         </CardAction>
       </CardHeader>
       <CardContent>
         <RadioGroup
           value={keptId}
-          onValueChange={(value) =>
-            onKeepChange(group.normalizedUrl, String(value))
-          }
-          aria-label={i18n.t('duplicates_groupLabel', [group.normalizedUrl])}
+          onValueChange={(value) => onKeepChange(group.normalizedUrl, String(value))}
+          aria-label={i18n.t("duplicates_groupLabel", [group.normalizedUrl])}
         >
           {group.copies.map((copy) => (
             <DuplicateCopyRow
@@ -124,5 +111,5 @@ export function DuplicateGroupCard({
         </RadioGroup>
       </CardContent>
     </Card>
-  )
+  );
 }

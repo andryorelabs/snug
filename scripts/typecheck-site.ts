@@ -1,30 +1,30 @@
-import { spawnSync } from 'node:child_process'
-import path from 'node:path'
+import { spawnSync } from "node:child_process";
+import path from "node:path";
 
-const DIAGNOSTIC_START = /^(?:(\S.*)\((\d+),(\d+)\): )?error (TS\d+): (.*)$/
+const DIAGNOSTIC_START = /^(?:(\S.*)\((\d+),(\d+)\): )?error (TS\d+): (.*)$/;
 
 const STARLIGHT_SEARCH_COMPONENT =
-  /[\\/]@astrojs[\\/]starlight[\\/]dist[\\/]components[\\/]Search\.astro$/
+  /[\\/]@astrojs[\\/]starlight[\\/]dist[\\/]components[\\/]Search\.astro$/;
 
 /**
  * Virtual modules that starlight 0.42.6 imports from `Search.astro` without
  * shipping type declarations for them.
  */
 const UNTYPED_STARLIGHT_MODULES = new Set([
-  'virtual:starlight/project-context',
-  'virtual:starlight/pagefind-config',
-])
+  "virtual:starlight/project-context",
+  "virtual:starlight/pagefind-config",
+]);
 
 export type DiagnosticBlock = {
-  headline: string
-  lines: string[]
-}
+  headline: string;
+  lines: string[];
+};
 
 export type SiteTypecheckVerdict = {
-  remaining: DiagnosticBlock[]
-  ignored: DiagnosticBlock[]
-  exitCode: number
-}
+  remaining: DiagnosticBlock[];
+  ignored: DiagnosticBlock[];
+  exitCode: number;
+};
 
 /**
  * Splits `tsc` output into diagnostics, attaching indented continuation lines
@@ -33,15 +33,15 @@ export type SiteTypecheckVerdict = {
  * @returns One block per `error TSxxxx` diagnostic.
  */
 export function parseDiagnostics(output: string): DiagnosticBlock[] {
-  const blocks: DiagnosticBlock[] = []
+  const blocks: DiagnosticBlock[] = [];
   for (const line of output.split(/\r?\n/)) {
     if (DIAGNOSTIC_START.test(line)) {
-      blocks.push({ headline: line, lines: [line] })
+      blocks.push({ headline: line, lines: [line] });
     } else if (/^\s+\S/.test(line) && blocks.length > 0) {
-      blocks.at(-1)?.lines.push(line)
+      blocks.at(-1)?.lines.push(line);
     }
   }
-  return blocks
+  return blocks;
 }
 
 /**
@@ -53,17 +53,16 @@ export function parseDiagnostics(output: string): DiagnosticBlock[] {
  * @returns Whether the diagnostic is a known, harmless one.
  */
 export function isKnownStarlightDiagnostic(block: DiagnosticBlock): boolean {
-  const match = DIAGNOSTIC_START.exec(block.headline)
-  if (!match) return false
-  const file = match[1] ?? ''
-  const code = match[4]
-  if (code !== 'TS2307' || !STARLIGHT_SEARCH_COMPONENT.test(file)) return false
-  const message = match[5] ?? ''
-  const moduleName =
-    /^Cannot find module '([^']+)' or its corresponding type declarations\.$/.exec(
-      message,
-    )?.[1]
-  return moduleName !== undefined && UNTYPED_STARLIGHT_MODULES.has(moduleName)
+  const match = DIAGNOSTIC_START.exec(block.headline);
+  if (!match) return false;
+  const file = match[1] ?? "";
+  const code = match[4];
+  if (code !== "TS2307" || !STARLIGHT_SEARCH_COMPONENT.test(file)) return false;
+  const message = match[5] ?? "";
+  const moduleName = /^Cannot find module '([^']+)' or its corresponding type declarations\.$/.exec(
+    message,
+  )?.[1];
+  return moduleName !== undefined && UNTYPED_STARLIGHT_MODULES.has(moduleName);
 }
 
 /**
@@ -73,16 +72,13 @@ export function isKnownStarlightDiagnostic(block: DiagnosticBlock): boolean {
  * @param tscExitCode - Exit status of that run.
  * @returns The diagnostics to show, the ones ignored, and the exit code.
  */
-export function evaluateSiteTypecheck(
-  output: string,
-  tscExitCode: number,
-): SiteTypecheckVerdict {
-  const blocks = parseDiagnostics(output)
-  const ignored = blocks.filter((block) => isKnownStarlightDiagnostic(block))
-  const remaining = blocks.filter((block) => !isKnownStarlightDiagnostic(block))
-  const isCrashWithoutDiagnostics = tscExitCode !== 0 && blocks.length === 0
-  const isFailure = remaining.length > 0 || isCrashWithoutDiagnostics
-  return { remaining, ignored, exitCode: isFailure ? 1 : 0 }
+export function evaluateSiteTypecheck(output: string, tscExitCode: number): SiteTypecheckVerdict {
+  const blocks = parseDiagnostics(output);
+  const ignored = blocks.filter((block) => isKnownStarlightDiagnostic(block));
+  const remaining = blocks.filter((block) => !isKnownStarlightDiagnostic(block));
+  const isCrashWithoutDiagnostics = tscExitCode !== 0 && blocks.length === 0;
+  const isFailure = remaining.length > 0 || isCrashWithoutDiagnostics;
+  return { remaining, ignored, exitCode: isFailure ? 1 : 0 };
 }
 
 /**
@@ -91,29 +87,26 @@ export function evaluateSiteTypecheck(
  * @returns The process exit code.
  */
 function main(): number {
-  const siteDirectory = path.resolve(import.meta.dirname, '../apps/site')
-  const tsc = path.resolve(
-    import.meta.dirname,
-    '../node_modules/typescript7/bin/tsc',
-  )
-  const sync = spawnSync('bun', ['run', 'astro', 'sync'], {
+  const siteDirectory = path.resolve(import.meta.dirname, "../apps/site");
+  const tsc = path.resolve(import.meta.dirname, "../node_modules/typescript7/bin/tsc");
+  const sync = spawnSync("bun", ["run", "astro", "sync"], {
     cwd: siteDirectory,
-    stdio: 'inherit',
-  })
-  if (sync.status !== 0) return sync.status ?? 1
+    stdio: "inherit",
+  });
+  if (sync.status !== 0) return sync.status ?? 1;
 
   const result = spawnSync(
     process.execPath,
-    [tsc, '--noEmit', '--runExternalCode', '--pretty', 'false'],
-    { cwd: siteDirectory, encoding: 'utf8' },
-  )
-  const output = `${result.stdout}${result.stderr}`
-  const verdict = evaluateSiteTypecheck(output, result.status ?? 1)
-  for (const block of verdict.remaining) console.error(block.lines.join('\n'))
+    [tsc, "--noEmit", "--runExternalCode", "--pretty", "false"],
+    { cwd: siteDirectory, encoding: "utf8" },
+  );
+  const output = `${result.stdout}${result.stderr}`;
+  const verdict = evaluateSiteTypecheck(output, result.status ?? 1);
+  for (const block of verdict.remaining) console.error(block.lines.join("\n"));
   if (verdict.exitCode !== 0 && verdict.remaining.length === 0) {
-    console.error(output)
+    console.error(output);
   }
-  return verdict.exitCode
+  return verdict.exitCode;
 }
 
-if (import.meta.main) process.exitCode = main()
+if (import.meta.main) process.exitCode = main();

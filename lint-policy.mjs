@@ -20,50 +20,43 @@
  */
 export const shadcnNoRestyleContracts = [
   {
-    pattern: '^Input$',
-    allow: ['layout', 'text-sm', 'pl-8'],
+    pattern: "^Input$",
+    allow: ["layout", "text-sm", "pl-8"],
   },
   {
-    pattern: '^Label$',
-    allow: ['layout', 'text-xs', 'text-muted-foreground'],
+    pattern: "^Label$",
+    allow: ["layout", "text-xs", "text-muted-foreground"],
   },
   {
-    pattern: '^Card$',
-    allow: ['layout', 'ring-primary/50', 'ring-destructive/40'],
+    pattern: "^Card$",
+    allow: ["layout", "ring-primary/50", "ring-destructive/40"],
   },
   {
-    pattern: '^CardTitle$',
-    allow: [
-      'layout',
-      'text-sm',
-      'font-semibold',
-      'text-2xl',
-      'leading-tight',
-      'hyphens-auto',
-    ],
+    pattern: "^CardTitle$",
+    allow: ["layout", "text-sm", "font-semibold", "text-2xl", "leading-tight", "hyphens-auto"],
   },
   {
-    pattern: '^Badge$',
-    allow: ['layout', 'font-mono'],
+    pattern: "^Badge$",
+    allow: ["layout", "font-mono"],
   },
   {
-    pattern: '^Button$',
-    allow: ['layout', 'focus-ring-solid'],
+    pattern: "^Button$",
+    allow: ["layout", "focus-ring-solid"],
   },
   {
-    pattern: '^DropdownMenuRadioItem$',
-    allow: ['layout', 'focus-ring-solid'],
+    pattern: "^DropdownMenuRadioItem$",
+    allow: ["layout", "focus-ring-solid"],
   },
   {
-    pattern: '^AccordionTrigger$',
-    allow: ['layout', 'focus-ring-solid', 'accordion-icon-sync'],
+    pattern: "^AccordionTrigger$",
+    allow: ["layout", "focus-ring-solid", "accordion-icon-sync"],
   },
   {
-    pattern: '^CardFooter$',
-    allow: ['layout', 'border-t-0', 'bg-transparent', 'pt-0'],
+    pattern: "^CardFooter$",
+    allow: ["layout", "border-t-0", "bg-transparent", "pt-0"],
   },
   {
-    pattern: '^CardDescription$',
-    allow: ['layout', 'text-xs', 'text-base'],
+    pattern: "^CardDescription$",
+    allow: ["layout", "text-xs", "text-base"],
   },
-]
+];

@@ -1,34 +1,32 @@
-import { i18n } from '#i18n'
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { toast } from '@workspace/ui/components/toast'
-import { useRef, useState } from 'react'
+import { i18n } from "#i18n";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { toast } from "@workspace/ui/components/toast";
+import { useRef, useState } from "react";
 
-import { ExportOptionsPanel } from '@/components/export-options-panel'
-import { BookmarkTree } from '@/components/export/bookmark-tree'
-import { ExportBar } from '@/components/export/export-bar'
-import { ExportToolbar } from '@/components/export/export-toolbar'
+import { ExportOptionsPanel } from "@/components/export-options-panel";
+import { BookmarkTree } from "@/components/export/bookmark-tree";
+import { ExportBar } from "@/components/export/export-bar";
+import { ExportToolbar } from "@/components/export/export-toolbar";
 import {
   ExportTreeEmpty,
   ExportTreeError,
   ExportTreeNoBookmarks,
   ExportTreeSkeleton,
-} from '@/components/export/export-tree-states'
-import { OperationProgressCard } from '@/components/operation-progress-card'
-import { APP_ROUTES } from '@/lib/app-url'
-import { exportBookmarks } from '@/lib/export-all-bookmarks'
-import { ExportCanceledError } from '@/lib/export-control'
-import { formatCount } from '@/lib/format-count'
-import { markReviewPromptEligible } from '@/lib/review-prompt'
-import { lastExportFormatStore } from '@/lib/storage'
-import type { BookmarkTreeHandle, CheckedState } from '@/lib/types'
-import { useOperationProgress } from '@/lib/use-operation-progress'
-import { useSlashToFocus } from '@/lib/use-slash-to-focus'
-import { useStorageItem } from '@/lib/use-storage-item'
+} from "@/components/export/export-tree-states";
+import { OperationProgressCard } from "@/components/operation-progress-card";
+import { APP_ROUTES } from "@/lib/app-url";
+import { exportBookmarks } from "@/lib/export-all-bookmarks";
+import { ExportCanceledError } from "@/lib/export-control";
+import { formatCount } from "@/lib/format-count";
+import { markReviewPromptEligible } from "@/lib/review-prompt";
+import { lastExportFormatStore } from "@/lib/storage";
+import type { BookmarkTreeHandle, CheckedState } from "@/lib/types";
+import { useOperationProgress } from "@/lib/use-operation-progress";
+import { useSlashToFocus } from "@/lib/use-slash-to-focus";
+import { useStorageItem } from "@/lib/use-storage-item";
 
 function getMasterState(selected: number, total: number): CheckedState {
-  return (
-    selected !== 0 && total !== 0 && (selected === total || 'indeterminate')
-  )
+  return selected !== 0 && total !== 0 && (selected === total || "indeterminate");
 }
 
 /**
@@ -39,89 +37,85 @@ function getMasterState(selected: number, total: number): CheckedState {
  * @returns The Export view.
  */
 export function ExportRoute() {
-  const treeReference = useRef<BookmarkTreeHandle>(null)
-  const searchInputReference = useRef<HTMLInputElement>(null)
-  const { q: searchTerm = '' } = useSearch({
+  const treeReference = useRef<BookmarkTreeHandle>(null);
+  const searchInputReference = useRef<HTMLInputElement>(null);
+  const { q: searchTerm = "" } = useSearch({
     from: APP_ROUTES.export,
     select: (search: { q?: string }) => search,
-  })
-  const navigate = useNavigate({ from: APP_ROUTES.export })
-  const [selectedCount, setSelectedCount] = useState(0)
-  const [totalCount, setTotalCount] = useState(0)
-  const [isExporting, setIsExporting] = useState(false)
-  const progress = useOperationProgress()
-  const [format, setFormat] = useStorageItem(lastExportFormatStore)
+  });
+  const navigate = useNavigate({ from: APP_ROUTES.export });
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const progress = useOperationProgress();
+  const [format, setFormat] = useStorageItem(lastExportFormatStore);
 
-  useSlashToFocus(searchInputReference)
+  useSlashToFocus(searchInputReference);
 
   const setSearchTerm = (value: string) => {
     void navigate({
-      search: { q: value === '' ? undefined : value },
+      search: { q: value === "" ? undefined : value },
       replace: true,
-    })
-  }
+    });
+  };
 
   const handleMasterChange = () => {
-    const tree = treeReference.current
-    if (!tree) return
-    if (tree.areAllVisibleSelected()) tree.deselectAll()
-    else tree.selectAll()
-  }
+    const tree = treeReference.current;
+    if (!tree) return;
+    if (tree.areAllVisibleSelected()) tree.deselectAll();
+    else tree.selectAll();
+  };
 
   const handleExport = async () => {
-    const tree = treeReference.current
-    if (!tree) return
+    const tree = treeReference.current;
+    if (!tree) return;
 
-    setIsExporting(true)
-    const signal = progress.begin()
+    setIsExporting(true);
+    const signal = progress.begin();
     try {
-      const selected = await tree.getSelectedBookmarks()
+      const selected = await tree.getSelectedBookmarks();
       if (selected.length === 0) {
         toast.add({
-          type: 'error',
-          title: i18n.t('exportPage_failedTitle'),
-          description: i18n.t('exportSelectionGone'),
-        })
-        return
+          type: "error",
+          title: i18n.t("exportPage_failedTitle"),
+          description: i18n.t("exportSelectionGone"),
+        });
+        return;
       }
       const { fileName, count } = await exportBookmarks(format, selected, {
         signal,
         onProgress: progress.report,
-      })
-      await markReviewPromptEligible(Date.now())
+      });
+      await markReviewPromptEligible(Date.now());
       toast.add({
-        type: 'success',
-        title: i18n.t('exportPage_successTitle', count, [formatCount(count)]),
+        type: "success",
+        title: i18n.t("exportPage_successTitle", count, [formatCount(count)]),
         description: fileName,
-      })
+      });
     } catch (error) {
       toast.add(
         error instanceof ExportCanceledError
           ? {
-              title: i18n.t('progress_exportCanceledTitle'),
-              description: i18n.t('progress_exportCanceledDescription'),
+              title: i18n.t("progress_exportCanceledTitle"),
+              description: i18n.t("progress_exportCanceledDescription"),
             }
           : {
-              type: 'error',
-              title: i18n.t('exportPage_failedTitle'),
+              type: "error",
+              title: i18n.t("exportPage_failedTitle"),
               description: (error as Error).message,
             },
-      )
+      );
     } finally {
-      progress.end()
-      setIsExporting(false)
+      progress.end();
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <div className="flex min-h-full flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <h2 className="font-heading text-lg font-medium">
-          {i18n.t('exportPage_title')}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {i18n.t('exportPage_description')}
-        </p>
+        <h2 className="font-heading text-lg font-medium">{i18n.t("exportPage_title")}</h2>
+        <p className="text-sm text-muted-foreground">{i18n.t("exportPage_description")}</p>
       </div>
 
       <div className="flex flex-1 flex-col gap-4 lg:flex-row lg:items-start">
@@ -145,10 +139,7 @@ export function ExportRoute() {
               noBookmarksState={<ExportTreeNoBookmarks />}
               errorState={(retry) => <ExportTreeError onRetry={retry} />}
               emptyState={
-                <ExportTreeEmpty
-                  searchTerm={searchTerm}
-                  onClearSearch={() => setSearchTerm('')}
-                />
+                <ExportTreeEmpty searchTerm={searchTerm} onClearSearch={() => setSearchTerm("")} />
               }
             />
           </div>
@@ -174,5 +165,5 @@ export function ExportRoute() {
         onExport={() => void handleExport()}
       />
     </div>
-  )
+  );
 }

@@ -1,8 +1,4 @@
-import {
-  buildExportTree,
-  type ExportNode,
-  type TreeExportOptions,
-} from './export-tree'
+import { buildExportTree, type ExportNode, type TreeExportOptions } from "./export-tree";
 
 /**
  * Exports bookmarks as a Markdown nested bullet list: every bookmark is a
@@ -11,12 +7,10 @@ import {
  * @param options Which bookmarks to export and which folders to hide.
  * @returns The Markdown text, ending with a newline (empty for an empty tree).
  */
-export async function exportToMarkdown(
-  options: TreeExportOptions,
-): Promise<string> {
-  const lines: string[] = []
-  renderNodes(await buildExportTree(options), 0, lines)
-  return lines.length === 0 ? '' : `${lines.join('\n')}\n`
+export async function exportToMarkdown(options: TreeExportOptions): Promise<string> {
+  const lines: string[] = [];
+  renderNodes(await buildExportTree(options), 0, lines);
+  return lines.length === 0 ? "" : `${lines.join("\n")}\n`;
 }
 
 /**
@@ -25,19 +19,15 @@ export async function exportToMarkdown(
  * @param depth The current nesting depth.
  * @param lines The accumulator lines are pushed onto.
  */
-function renderNodes(
-  nodes: ExportNode[],
-  depth: number,
-  lines: string[],
-): void {
-  const indent = '  '.repeat(depth)
+function renderNodes(nodes: ExportNode[], depth: number, lines: string[]): void {
+  const indent = "  ".repeat(depth);
   for (const node of nodes) {
-    if (node.kind === 'bookmark') {
-      const label = escapeText(node.title.trim() === '' ? node.url : node.title)
-      lines.push(`${indent}- [${label}](${escapeDestination(node.url)})`)
+    if (node.kind === "bookmark") {
+      const label = escapeText(node.title.trim() === "" ? node.url : node.title);
+      lines.push(`${indent}- [${label}](${escapeDestination(node.url)})`);
     } else {
-      lines.push(`${indent}- ${escapeText(node.title)}`)
-      renderNodes(node.children, depth + 1, lines)
+      lines.push(`${indent}- ${escapeText(node.title)}`);
+      renderNodes(node.children, depth + 1, lines);
     }
   }
 }
@@ -50,10 +40,10 @@ function renderNodes(
  */
 function escapeText(text: string): string {
   return text
-    .replaceAll(/\s*[\r\n]+\s*/g, ' ')
+    .replaceAll(/\s*[\r\n]+\s*/g, " ")
     .replaceAll(/[\\`*_[\]<>#|]/g, (character) => `\\${character}`)
     .replace(/^(\s*)([-+])(?=\s)/, String.raw`$1\$2`)
-    .replace(/^(\s*\d+)([.)])(?=\s)/, String.raw`$1\$2`)
+    .replace(/^(\s*\d+)([.)])(?=\s)/, String.raw`$1\$2`);
 }
 
 /**
@@ -64,9 +54,9 @@ function escapeText(text: string): string {
  */
 function escapeDestination(url: string): string {
   const escaped = url
-    .replaceAll(/[\r\n]+/g, '')
-    .replaceAll('\\', '%5C')
-    .replaceAll('<', '%3C')
-    .replaceAll('>', '%3E')
-  return /[\s()]/.test(escaped) ? `<${escaped}>` : escaped
+    .replaceAll(/[\r\n]+/g, "")
+    .replaceAll("\\", "%5C")
+    .replaceAll("<", "%3C")
+    .replaceAll(">", "%3E");
+  return /[\s()]/.test(escaped) ? `<${escaped}>` : escaped;
 }

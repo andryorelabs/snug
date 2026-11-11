@@ -1,23 +1,23 @@
-import { linearTiming, TransitionSeries } from '@remotion/transitions'
-import { fade } from '@remotion/transitions/fade'
+import { linearTiming, TransitionSeries } from "@remotion/transitions";
+import { fade } from "@remotion/transitions/fade";
 
-import { Soundtrack } from './audio/Soundtrack'
-import { FontGate } from './FontGate'
-import { AutoExportScene } from './scenes/auto-export'
-import { CtaScene } from './scenes/cta'
-import { ExportScene } from './scenes/export'
-import { HookScene } from './scenes/hook'
-import { ImportScene } from './scenes/import'
-import { LocalScene } from './scenes/local'
-import type { PromoProps } from './schema'
-import { TRANSITION_FRAMES } from './timing'
+import { Soundtrack } from "./audio/Soundtrack";
+import { FontGate } from "./FontGate";
+import { AutoExportScene } from "./scenes/auto-export";
+import { CtaScene } from "./scenes/cta";
+import { ExportScene } from "./scenes/export";
+import { HookScene } from "./scenes/hook";
+import { ImportScene } from "./scenes/import";
+import { LocalScene } from "./scenes/local";
+import type { PromoProps } from "./schema";
+import { TRANSITION_FRAMES } from "./timing";
 
 const transition = (
   <TransitionSeries.Transition
     presentation={fade()}
     timing={linearTiming({ durationInFrames: TRANSITION_FRAMES })}
   />
-)
+);
 
 export const Promo = ({ locale, music, sfx }: PromoProps) => (
   <FontGate locale={locale}>
@@ -48,4 +48,4 @@ export const Promo = ({ locale, music, sfx }: PromoProps) => (
       </TransitionSeries.Sequence>
     </TransitionSeries>
   </FontGate>
-)
+);

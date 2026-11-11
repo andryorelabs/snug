@@ -1,34 +1,26 @@
 ---
-import { Folder } from 'lucide-react'
+import { Folder } from "lucide-react";
 
-import { getLandingCopy } from '../i18n/landing'
-import type { Locale } from '../i18n/locales'
+import { getLandingCopy } from "../i18n/landing";
+import type { Locale } from "../i18n/locales";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { hero, folders: roots } = getLandingCopy(Astro.props.locale)
+const { hero, folders: roots } = getLandingCopy(Astro.props.locale);
 const rows = [
   { name: roots.bookmarksBar, nested: false },
   { name: hero.folders.research, nested: true },
   { name: hero.folders.jobSearch, nested: true },
   { name: roots.otherBookmarks, nested: false },
-]
+];
 ---
 
 <ul class="flex flex-col gap-2">
   {rows.map(({ name, nested }) => (
-    <li
-      class:list={[
-        'flex min-w-0 items-center gap-2 text-sm break-words',
-        nested && 'ps-4',
-      ]}
-    >
-      <Folder
-        className="size-4 shrink-0 fill-current text-primary-text"
-        aria-hidden="true"
-      />
+    <li class:list={["flex min-w-0 items-center gap-2 text-sm break-words", nested && "ps-4"]}>
+      <Folder className="size-4 shrink-0 fill-current text-primary-text" aria-hidden="true" />
       {name}
     </li>
   ))}

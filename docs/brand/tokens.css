@@ -11,9 +11,9 @@
  */
 
 :root {
-  --font-display: 'Space Grotesk', Geist, system-ui, sans-serif;
+  --font-display: "Space Grotesk", Geist, system-ui, sans-serif;
   --font-sans: Geist, system-ui, sans-serif;
-  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
   --background: oklch(0.977 0.01 81.8);
   --foreground: oklch(0.186 0.017 79.1);
   --card: oklch(1 0 0);

@@ -1,61 +1,55 @@
 ---
-import { buttonVariants } from '@workspace/ui/components/button'
-import { cn } from '@workspace/ui/lib/utils'
+import { buttonVariants } from "@workspace/ui/components/button";
+import { cn } from "@workspace/ui/lib/utils";
 
-import { DOCS_PATHS, DOCS_UI } from '../i18n/docs-ui'
-import { FOOTER_LINK_HREFS, getClosingCopy } from '../i18n/landing'
-import {
-  languageTag,
-  LOCALE_NAMES,
-  localePath,
-  LOCALES,
-  type Locale,
-} from '../i18n/locales'
-import HeaderMenus from './HeaderMenus'
+import { DOCS_PATHS, DOCS_UI } from "../i18n/docs-ui";
+import { FOOTER_LINK_HREFS, getClosingCopy } from "../i18n/landing";
+import { languageTag, LOCALE_NAMES, localePath, LOCALES, type Locale } from "../i18n/locales";
+import HeaderMenus from "./HeaderMenus";
 
 interface Props {
-  as?: 'header' | 'div'
-  locale: Locale
-  markCurrent?: boolean
-  pageHref?: (locale: Locale) => string
-  skipLink?: boolean
+  as?: "header" | "div";
+  locale: Locale;
+  markCurrent?: boolean;
+  pageHref?: (locale: Locale) => string;
+  skipLink?: boolean;
 }
 
 const {
-  as: Element = 'header',
+  as: Element = "header",
   locale,
   markCurrent = true,
   pageHref = localePath,
   skipLink = true,
-} = Astro.props
-const { footer, header } = getClosingCopy(locale)
+} = Astro.props;
+const { footer, header } = getClosingCopy(locale);
 const siteLinks = [
   {
-    key: 'guide',
+    key: "guide",
     href: localePath(locale, DOCS_PATHS.guide),
     label: DOCS_UI.guide,
   },
   {
-    key: 'how-to',
+    key: "how-to",
     href: FOOTER_LINK_HREFS.howTo(locale),
     label: footer.howTo,
   },
   {
-    key: 'whats-new',
+    key: "whats-new",
     href: localePath(locale, DOCS_PATHS.whatsNew),
     label: DOCS_UI.whatsNew,
   },
-]
+];
 const options = LOCALES.map((code) => ({
   code,
   href: pageHref(code),
   tag: languageTag(code),
   name: LOCALE_NAMES[code],
-}))
+}));
 ---
 
 <Element data-section="header" class="sticky top-0 z-10">
-  {Element === 'header' && (
+  {Element === "header" && (
     <div
       aria-hidden="true"
       data-header-surface
@@ -67,8 +61,8 @@ const options = LOCALES.map((code) => ({
       href="#main"
       class={cn(
         buttonVariants(),
-        'sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50',
-        'focus-ring-solid hover:bg-primary-hover',
+        "sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50",
+        "focus-ring-solid hover:bg-primary-hover",
       )}
     >
       {header.skipLink}
@@ -80,12 +74,7 @@ const options = LOCALES.map((code) => ({
       aria-label={header.homeLabel}
       class="flex min-h-11 shrink-0 items-center gap-2 rounded-md focus-ring-solid"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 84 84"
-        class="size-6"
-        focusable="false"
-      >
+      <svg aria-hidden="true" viewBox="0 0 84 84" class="size-6" focusable="false">
         <defs>
           <linearGradient id="header-tag" x1="0" y1="0" x2="1" y2="1">
             <stop offset="0" style="stop-color: #ffa230"></stop>
@@ -110,7 +99,7 @@ const options = LOCALES.map((code) => ({
         <a
           href={link.href}
           data-header-link={link.key}
-          aria-current={Astro.url.pathname === link.href ? 'page' : undefined}
+          aria-current={Astro.url.pathname === link.href ? "page" : undefined}
           class="flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-muted-foreground focus-ring-solid hover:text-foreground aria-[current=page]:text-foreground"
         >
           {link.label}

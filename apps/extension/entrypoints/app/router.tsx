@@ -6,22 +6,18 @@ import {
   Navigate,
   redirect,
   RouterProvider,
-} from '@tanstack/react-router'
+} from "@tanstack/react-router";
 
-import {
-  APP_ROUTES,
-  SETTINGS_SECTIONS,
-  type SettingsSection,
-} from '@/lib/app-url'
+import { APP_ROUTES, SETTINGS_SECTIONS, type SettingsSection } from "@/lib/app-url";
 
-import { AppShell } from './app-shell'
-import { AutoExportRoute } from './routes/auto-export'
-import { DuplicatesRoute } from './routes/duplicates'
-import { ExportRoute } from './routes/export'
-import { ImportRoute } from './routes/import'
-import { SettingsRoute } from './routes/settings'
-import { WelcomeRoute } from './routes/welcome'
-import { WhatsNewRoute } from './routes/whats-new'
+import { AppShell } from "./app-shell";
+import { AutoExportRoute } from "./routes/auto-export";
+import { DuplicatesRoute } from "./routes/duplicates";
+import { ExportRoute } from "./routes/export";
+import { ImportRoute } from "./routes/import";
+import { SettingsRoute } from "./routes/settings";
+import { WelcomeRoute } from "./routes/welcome";
+import { WhatsNewRoute } from "./routes/whats-new";
 
 /**
  * Sends any unknown hash route to the Export page so the page content and the
@@ -29,21 +25,21 @@ import { WhatsNewRoute } from './routes/whats-new'
  * @returns A replace-navigation to the Export route.
  */
 function RedirectToExport() {
-  return <Navigate to={APP_ROUTES.export} replace />
+  return <Navigate to={APP_ROUTES.export} replace />;
 }
 
 const rootRoute = createRootRoute({
   component: AppShell,
   notFoundComponent: RedirectToExport,
-})
+});
 
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: "/",
   beforeLoad: () => {
-    throw redirect({ to: APP_ROUTES.export, replace: true })
+    throw redirect({ to: APP_ROUTES.export, replace: true });
   },
-})
+});
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -52,7 +48,7 @@ const routeTree = rootRoute.addChildren([
     path: APP_ROUTES.export,
     component: ExportRoute,
     validateSearch: (search: Record<string, unknown>): { q?: string } =>
-      typeof search.q === 'string' && search.q !== '' ? { q: search.q } : {},
+      typeof search.q === "string" && search.q !== "" ? { q: search.q } : {},
   }),
   createRoute({
     getParentRoute: () => rootRoute,
@@ -73,13 +69,9 @@ const routeTree = rootRoute.addChildren([
     getParentRoute: () => rootRoute,
     path: APP_ROUTES.settings,
     component: SettingsRoute,
-    validateSearch: (
-      search: Record<string, unknown>,
-    ): { section?: SettingsSection } => {
-      const section = SETTINGS_SECTIONS.find(
-        (candidate) => candidate === search.section,
-      )
-      return section === undefined ? {} : { section }
+    validateSearch: (search: Record<string, unknown>): { section?: SettingsSection } => {
+      const section = SETTINGS_SECTIONS.find((candidate) => candidate === search.section);
+      return section === undefined ? {} : { section };
     },
   }),
   createRoute({
@@ -92,18 +84,18 @@ const routeTree = rootRoute.addChildren([
     path: APP_ROUTES.welcome,
     component: WelcomeRoute,
   }),
-])
+]);
 
 const router = createRouter({
   routeTree,
   history: createHashHistory(),
   scrollRestoration: true,
-  scrollToTopSelectors: ['[data-app-scroll]'],
-})
+  scrollToTopSelectors: ["[data-app-scroll]"],
+});
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: typeof router
+    router: typeof router;
   }
 }
 
@@ -113,5 +105,5 @@ declare module '@tanstack/react-router' {
  * @returns The router provider.
  */
 export function AppRouter() {
-  return <RouterProvider router={router} />
+  return <RouterProvider router={router} />;
 }

@@ -1,46 +1,46 @@
 ---
-import brave from '../assets/browsers/brave.svg'
-import chrome from '../assets/browsers/chrome.svg'
-import edge from '../assets/browsers/edge.svg'
-import firefox from '../assets/browsers/firefox.svg'
-import opera from '../assets/browsers/opera.svg'
-import safari from '../assets/browsers/safari.svg'
-import { countUpParts, getLandingCopy } from '../i18n/landing'
-import type { Locale } from '../i18n/locales'
-import Section from './Section.astro'
+import brave from "../assets/browsers/brave.svg";
+import chrome from "../assets/browsers/chrome.svg";
+import edge from "../assets/browsers/edge.svg";
+import firefox from "../assets/browsers/firefox.svg";
+import opera from "../assets/browsers/opera.svg";
+import safari from "../assets/browsers/safari.svg";
+import { countUpParts, getLandingCopy } from "../i18n/landing";
+import type { Locale } from "../i18n/locales";
+import Section from "./Section.astro";
 
 interface Props {
-  locale: Locale
+  locale: Locale;
 }
 
-const { stats, marquee } = getLandingCopy(Astro.props.locale)
-const statKeys = ['users', 'rating', 'formats', 'network'] as const
+const { stats, marquee } = getLandingCopy(Astro.props.locale);
+const statKeys = ["users", "rating", "formats", "network"] as const;
 const groups = [
   {
-    key: 'browsers',
+    key: "browsers",
     label: marquee.browsers,
     logos: [
-      { name: 'Chrome', src: chrome.src },
-      { name: 'Edge', src: edge.src },
-      { name: 'Brave', src: brave.src },
-      { name: 'Opera', src: opera.src },
+      { name: "Chrome", src: chrome.src },
+      { name: "Edge", src: edge.src },
+      { name: "Brave", src: brave.src },
+      { name: "Opera", src: opera.src },
     ],
   },
   {
-    key: 'sources',
+    key: "sources",
     label: marquee.sources,
     logos: [
-      { name: 'Firefox', src: firefox.src },
-      { name: 'Safari', src: safari.src },
+      { name: "Firefox", src: firefox.src },
+      { name: "Safari", src: safari.src },
     ],
   },
-]
+];
 ---
 
 <Section section="stats" class="border-y">
   <dl class="grid grid-cols-2 md:grid-cols-4">
     {statKeys.map((key) => {
-      const { target, format, separator } = countUpParts(stats[key].value)
+      const { target, format, separator } = countUpParts(stats[key].value);
       return (
         <div class="flex flex-col-reverse gap-2 border-r px-5 py-5.5 last:border-r-0 max-md:even:border-r-0 max-md:nth-[n+3]:border-t">
           <dt class="font-mono text-xs tracking-eyebrow text-muted-foreground uppercase">
@@ -49,15 +49,15 @@ const groups = [
           <dd
             data-stat={format}
             style={{
-              '--stat-target': target,
-              '--stat-separator': `"${separator}"`,
+              "--stat-target": target,
+              "--stat-separator": `"${separator}"`,
             }}
             class="font-heading leading-none font-bold text-primary-text tabular-nums"
           >
             <span data-stat-text>{stats[key].value}</span>
           </dd>
         </div>
-      )
+      );
     })}
   </dl>
 </Section>
@@ -74,7 +74,7 @@ const groups = [
     >
       <div data-marquee-track>
         {[false, true].map((isClone) => (
-          <div data-marquee-row aria-hidden={isClone ? 'true' : undefined}>
+          <div data-marquee-row aria-hidden={isClone ? "true" : undefined}>
             {groups.map((group) => (
               <div data-marquee-group>
                 <p data-marquee-label>{group.label}</p>
@@ -96,19 +96,19 @@ const groups = [
 </section>
 
 <script>
-  import { marqueeDurationSeconds } from '../scripts/marquee'
+  import { marqueeDurationSeconds } from "../scripts/marquee";
 
-  const track = document.querySelector<HTMLElement>('[data-marquee-track]')
+  const track = document.querySelector<HTMLElement>("[data-marquee-track]");
   if (track) {
     const applyDuration = () => {
-      const rowWidth = track.scrollWidth / 2
-      if (rowWidth <= 0) return
+      const rowWidth = track.scrollWidth / 2;
+      if (rowWidth <= 0) return;
       track.style.setProperty(
-        '--marquee-duration',
+        "--marquee-duration",
         `${marqueeDurationSeconds(rowWidth).toFixed(2)}s`,
-      )
-    }
-    applyDuration()
-    new ResizeObserver(applyDuration).observe(track)
+      );
+    };
+    applyDuration();
+    new ResizeObserver(applyDuration).observe(track);
   }
 </script>

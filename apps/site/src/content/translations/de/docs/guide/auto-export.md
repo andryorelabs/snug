@@ -1,10 +1,9 @@
 ---
 title: Auto-Export
 sourceHash: 91674afc656322e9
-description:
-  'Plane den automatischen Export deiner Lesezeichen in Chrome. Wähle Formate,
-  Intervall und Ordner, Snug speichert die Dateien ohne Speicherdialog.'
-seoTitle: 'Automatischen Lesezeichen-Export in Chrome planen'
+description: "Plane den automatischen Export deiner Lesezeichen in Chrome. Wähle Formate,
+  Intervall und Ordner, Snug speichert die Dateien ohne Speicherdialog."
+seoTitle: "Automatischen Lesezeichen-Export in Chrome planen"
 ---
 
 Snug kann deine Lesezeichen nach Zeitplan exportieren, ganz ohne manuelles

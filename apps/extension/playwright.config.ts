@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test'
+import { defineConfig } from "@playwright/test";
 
 /**
  * Stays at one worker: every spec launches a persistent Chromium context with
@@ -7,13 +7,13 @@ import { defineConfig } from '@playwright/test'
  * auto-export now) that pass serially.
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: process.env.CI ? [['html', { open: 'never' }]] : 'list',
+  reporter: process.env.CI ? [["html", { open: "never" }]] : "list",
   use: {
-    trace: 'retain-on-failure',
+    trace: "retain-on-failure",
   },
-})
+});

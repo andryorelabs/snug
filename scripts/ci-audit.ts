@@ -1,45 +1,45 @@
-import { execFileSync } from 'node:child_process'
+import { execFileSync } from "node:child_process";
 
 export type AuditStep = {
-  name: string
-  startedAt: string
-  completedAt: string
-}
+  name: string;
+  startedAt: string;
+  completedAt: string;
+};
 
 export type AuditJob = {
-  name: string
-  conclusion?: string
-  createdAt?: string
-  startedAt: string
-  completedAt: string
-  steps?: AuditStep[]
-}
+  name: string;
+  conclusion?: string;
+  createdAt?: string;
+  startedAt: string;
+  completedAt: string;
+  steps?: AuditStep[];
+};
 
 export type JobSummary = {
-  waitSeconds: number
-  setupSeconds: number
-  runSeconds: number
-}
+  waitSeconds: number;
+  setupSeconds: number;
+  runSeconds: number;
+};
 
-export type JobRow = JobSummary & { name: string; samples: number }
+export type JobRow = JobSummary & { name: string; samples: number };
 
 const SETUP_STEP_PATTERN =
-  /^(Set up job|Run [^\s]+@[^\s]+|Install |Setup |Set up |Restore |Cache |Download |Prepare |Read the )/i
+  /^(Set up job|Run [^\s]+@[^\s]+|Install |Setup |Set up |Restore |Cache |Download |Prepare |Read the )/i;
 
 export type ApiJobStep = {
-  name: string
-  started_at: string | null
-  completed_at: string | null
-}
+  name: string;
+  started_at: string | null;
+  completed_at: string | null;
+};
 
 export type ApiJob = {
-  name: string
-  conclusion: string | null
-  created_at: string
-  started_at: string | null
-  completed_at: string | null
-  steps?: ApiJobStep[]
-}
+  name: string;
+  conclusion: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  steps?: ApiJobStep[];
+};
 
 /**
  * Maps a job from the REST `actions/runs/<id>/jobs` payload, which carries the
@@ -48,30 +48,30 @@ export type ApiJob = {
  * @returns The audit shape; steps that never started are dropped.
  */
 export function fromApiJob(job: ApiJob): AuditJob {
-  const steps: AuditStep[] = []
-  const apiSteps = job.steps ?? []
+  const steps: AuditStep[] = [];
+  const apiSteps = job.steps ?? [];
   for (const step of apiSteps) {
     if (step.started_at && step.completed_at) {
       steps.push({
         name: step.name,
         startedAt: step.started_at,
         completedAt: step.completed_at,
-      })
+      });
     }
   }
   return {
     name: job.name,
     ...(job.conclusion != null && { conclusion: job.conclusion }),
     createdAt: job.created_at,
-    startedAt: job.started_at ?? '',
-    completedAt: job.completed_at ?? '',
+    startedAt: job.started_at ?? "",
+    completedAt: job.completed_at ?? "",
     steps,
-  }
+  };
 }
 
 function secondsBetween(from: string, to: string): number {
-  const difference = (Date.parse(to) - Date.parse(from)) / 1000
-  return Number.isFinite(difference) ? Math.max(0, difference) : 0
+  const difference = (Date.parse(to) - Date.parse(from)) / 1000;
+  return Number.isFinite(difference) ? Math.max(0, difference) : 0;
 }
 
 /**
@@ -81,20 +81,18 @@ function secondsBetween(from: string, to: string): number {
  * steps) and run (everything after the setup steps) in seconds.
  */
 export function summarizeJob(job: AuditJob): JobSummary {
-  const waitSeconds = job.createdAt
-    ? secondsBetween(job.createdAt, job.startedAt)
-    : 0
-  const totalSeconds = secondsBetween(job.startedAt, job.completedAt)
-  const steps = job.steps ?? []
-  const firstMain = steps.find((step) => !SETUP_STEP_PATTERN.test(step.name))
+  const waitSeconds = job.createdAt ? secondsBetween(job.createdAt, job.startedAt) : 0;
+  const totalSeconds = secondsBetween(job.startedAt, job.completedAt);
+  const steps = job.steps ?? [];
+  const firstMain = steps.find((step) => !SETUP_STEP_PATTERN.test(step.name));
   const setupSeconds = firstMain
     ? secondsBetween(job.startedAt, firstMain.startedAt)
-    : totalSeconds
+    : totalSeconds;
   return {
     waitSeconds,
     setupSeconds,
     runSeconds: Math.max(0, totalSeconds - setupSeconds),
-  }
+  };
 }
 
 /**
@@ -103,12 +101,12 @@ export function summarizeJob(job: AuditJob): JobSummary {
  * @returns The median, or 0 for an empty list.
  */
 export function median(values: number[]): number {
-  if (values.length === 0) return 0
-  const sorted = values.toSorted((a, b) => a - b)
-  const middle = Math.floor(sorted.length / 2)
-  const upper = sorted[middle] ?? 0
-  const lower = sorted[middle - 1] ?? upper
-  return sorted.length % 2 === 0 ? (lower + upper) / 2 : upper
+  if (values.length === 0) return 0;
+  const sorted = values.toSorted((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const upper = sorted[middle] ?? 0;
+  const lower = sorted[middle - 1] ?? upper;
+  return sorted.length % 2 === 0 ? (lower + upper) / 2 : upper;
 }
 
 /**
@@ -117,18 +115,18 @@ export function median(values: number[]): number {
  * @returns Rows sorted by job name.
  */
 export function aggregateJobs(jobs: AuditJob[]): JobRow[] {
-  const byName = new Map<string, JobSummary[]>()
+  const byName = new Map<string, JobSummary[]>();
   for (const job of jobs) {
     if (
-      job.conclusion === 'skipped' ||
+      job.conclusion === "skipped" ||
       !(Date.parse(job.startedAt) > 0) ||
       !(Date.parse(job.completedAt) > 0)
     ) {
-      continue
+      continue;
     }
-    const samples = byName.get(job.name) ?? []
-    samples.push(summarizeJob(job))
-    byName.set(job.name, samples)
+    const samples = byName.get(job.name) ?? [];
+    samples.push(summarizeJob(job));
+    byName.set(job.name, samples);
   }
   return byName
     .entries()
@@ -140,7 +138,7 @@ export function aggregateJobs(jobs: AuditJob[]): JobRow[] {
       runSeconds: median(samples.map((sample) => sample.runSeconds)),
     }))
     .toArray()
-    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .toSorted((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -149,23 +147,23 @@ export function aggregateJobs(jobs: AuditJob[]): JobRow[] {
  * @returns The table, one line per job plus a header.
  */
 export function formatTable(rows: JobRow[]): string {
-  const header = ['job', 'n', 'wait_s', 'setup_s', 'run_s']
+  const header = ["job", "n", "wait_s", "setup_s", "run_s"];
   const body = rows.map((row) => [
     row.name,
     String(row.samples),
     row.waitSeconds.toFixed(0),
     row.setupSeconds.toFixed(0),
     row.runSeconds.toFixed(0),
-  ])
+  ]);
   const widths = header.map((title, column) =>
     Math.max(title.length, ...body.map((line) => line[column]?.length ?? 0)),
-  )
+  );
   const render = (cells: string[]) =>
-    cells.map((cell, column) => cell.padEnd(widths[column] ?? 0)).join('  ')
-  return [render(header), ...body.map((cells) => render(cells))].join('\n')
+    cells.map((cell, column) => cell.padEnd(widths[column] ?? 0)).join("  ");
+  return [render(header), ...body.map((cells) => render(cells))].join("\n");
 }
 
-export type AuditOptions = { runs: number; workflow: string }
+export type AuditOptions = { runs: number; workflow: string };
 
 /**
  * Parses `--runs N` and `--workflow file` from argv.
@@ -173,71 +171,54 @@ export type AuditOptions = { runs: number; workflow: string }
  * @returns Options with defaults of 20 runs of `ci.yml`.
  */
 export function parseArguments(argv: string[]): AuditOptions {
-  const options: AuditOptions = { runs: 20, workflow: 'ci.yml' }
+  const options: AuditOptions = { runs: 20, workflow: "ci.yml" };
   for (let index = 0; index < argv.length; index += 1) {
-    const flag = argv[index]
-    const value = argv[index + 1]
-    if (flag === '--runs' || flag === '--workflow') {
-      if (value === undefined) throw new Error(`Missing value for ${flag}`)
-      if (flag === '--workflow') options.workflow = value
+    const flag = argv[index];
+    const value = argv[index + 1];
+    if (flag === "--runs" || flag === "--workflow") {
+      if (value === undefined) throw new Error(`Missing value for ${flag}`);
+      if (flag === "--workflow") options.workflow = value;
       else {
-        const runs = Number(value)
+        const runs = Number(value);
         if (!Number.isSafeInteger(runs) || runs < 1) {
-          throw new Error(`--runs must be a positive integer, got ${value}`)
+          throw new Error(`--runs must be a positive integer, got ${value}`);
         }
-        options.runs = runs
+        options.runs = runs;
       }
-      index += 1
-    } else if (flag !== '--') {
-      throw new Error(`Unknown argument: ${flag}`)
+      index += 1;
+    } else if (flag !== "--") {
+      throw new Error(`Unknown argument: ${flag}`);
     }
   }
-  return options
+  return options;
 }
 
 function runGh(ghArguments: string[]): string {
-  return execFileSync('gh', ghArguments, {
-    encoding: 'utf8',
+  return execFileSync("gh", ghArguments, {
+    encoding: "utf8",
     maxBuffer: 64 << 20,
-  })
+  });
 }
 
 function main(): void {
-  const { runs, workflow } = parseArguments(process.argv.slice(2))
+  const { runs, workflow } = parseArguments(process.argv.slice(2));
   const listed = JSON.parse(
-    runGh([
-      'run',
-      'list',
-      '--workflow',
-      workflow,
-      '--limit',
-      String(runs),
-      '--json',
-      'databaseId',
-    ]),
-  ) as { databaseId: number }[]
+    runGh(["run", "list", "--workflow", workflow, "--limit", String(runs), "--json", "databaseId"]),
+  ) as { databaseId: number }[];
   const jobs = listed.flatMap(({ databaseId }) =>
     runGh([
-      'api',
-      [
-        'repos',
-        '{owner}',
-        '{repo}',
-        'actions',
-        'runs',
-        databaseId,
-        'jobs',
-      ].join('/'),
-      '--paginate',
-      '--jq',
-      '.jobs[]',
+      "api",
+      ["repos", "{owner}", "{repo}", "actions", "runs", databaseId, "jobs"].join("/"),
+      "--paginate",
+      "--jq",
+      ".jobs[]",
     ])
-      .split('\n')
-      .filter((line) => line.trim() !== '')
+      .split("\n")
+      .filter((line) => line.trim() !== "")
       .map((line) => fromApiJob(JSON.parse(line) as ApiJob)),
-  )
-  console.log(`${workflow}: ${listed.length} runs`)
-  console.log(formatTable(aggregateJobs(jobs)))
+  );
+  console.log(`${workflow}: ${listed.length} runs`);
+  console.log(formatTable(aggregateJobs(jobs)));
 }
 
-if (import.meta.main) main()
+if (import.meta.main) main();

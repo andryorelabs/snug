@@ -1,27 +1,25 @@
 ---
-import Bento from '../../components/Bento.astro'
-import Faq from '../../components/Faq.astro'
-import FinalCta from '../../components/FinalCta.astro'
-import Hero from '../../components/Hero.astro'
-import HowItWorks from '../../components/HowItWorks.astro'
-import InstallDock from '../../components/InstallDock.astro'
-import RealInterface from '../../components/RealInterface.astro'
-import SocialProof from '../../components/SocialProof.astro'
-import TrustProof from '../../components/TrustProof.astro'
-import { DEFAULT_LOCALE, languageTag, LOCALES } from '../../i18n/locales'
-import Layout from '../../layouts/Layout.astro'
+import Bento from "../../components/Bento.astro";
+import Faq from "../../components/Faq.astro";
+import FinalCta from "../../components/FinalCta.astro";
+import Hero from "../../components/Hero.astro";
+import HowItWorks from "../../components/HowItWorks.astro";
+import InstallDock from "../../components/InstallDock.astro";
+import RealInterface from "../../components/RealInterface.astro";
+import SocialProof from "../../components/SocialProof.astro";
+import TrustProof from "../../components/TrustProof.astro";
+import { DEFAULT_LOCALE, languageTag, LOCALES } from "../../i18n/locales";
+import Layout from "../../layouts/Layout.astro";
 
 export function getStaticPaths() {
-  return LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map(
-    (locale) => ({ params: { locale: languageTag(locale).toLowerCase() } }),
-  )
+  return LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale: languageTag(locale).toLowerCase() },
+  }));
 }
 
-const segment = Astro.params.locale
-const locale = LOCALES.find(
-  (candidate) => languageTag(candidate).toLowerCase() === segment,
-)
-if (!locale) throw new Error(`Unknown locale "${segment}"`)
+const segment = Astro.params.locale;
+const locale = LOCALES.find((candidate) => languageTag(candidate).toLowerCase() === segment);
+if (!locale) throw new Error(`Unknown locale "${segment}"`);
 ---
 
 <Layout locale={locale}>

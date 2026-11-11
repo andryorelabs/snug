@@ -1,8 +1,8 @@
-import { defineConfig } from '@playwright/test'
+import { defineConfig } from "@playwright/test";
 
-import { LAYOUT_SPECS, LEAN_LAYOUT_SPECS } from './playwright.layout-specs'
+import { LAYOUT_SPECS, LEAN_LAYOUT_SPECS } from "./playwright.layout-specs";
 
-const isLeanTier = process.env.BROWSERSTACK_TIER === 'lean'
+const isLeanTier = process.env.BROWSERSTACK_TIER === "lean";
 
 /**
  * Runs the layout specs on the real platforms listed in `browserstack.yml`.
@@ -22,24 +22,20 @@ const isLeanTier = process.env.BROWSERSTACK_TIER === 'lean'
  * finish. Each job still runs a single worker, so tests execute one at a time.
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: "./e2e",
   fullyParallel: true,
   testMatch: isLeanTier ? LEAN_LAYOUT_SPECS : LAYOUT_SPECS,
   forbidOnly: !!process.env.CI,
   timeout: 60_000,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI
-    ? [
-        ['list'],
-        ['html', { open: 'never' }],
-        ['./browserstack-timing-reporter.ts'],
-      ]
-    : 'list',
-  use: { baseURL: 'http://localhost:4399', navigationTimeout: 45_000 },
-  projects: [{ name: 'browserstack' }],
+    ? [["list"], ["html", { open: "never" }], ["./browserstack-timing-reporter.ts"]]
+    : "list",
+  use: { baseURL: "http://localhost:4399", navigationTimeout: 45_000 },
+  projects: [{ name: "browserstack" }],
   webServer: {
-    command: 'bun run preview --port 4399 --ignore-lock',
-    url: 'http://localhost:4399',
+    command: "bun run preview --port 4399 --ignore-lock",
+    url: "http://localhost:4399",
     reuseExistingServer: !process.env.CI,
   },
-})
+});

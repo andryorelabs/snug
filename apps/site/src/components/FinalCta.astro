@@ -1,29 +1,25 @@
 ---
-import { getClosingCopy } from '../i18n/landing'
-import type { Locale } from '../i18n/locales'
-import InstallButton from './InstallButton.astro'
-import SectionHeading from './SectionHeading.astro'
+import { getClosingCopy } from "../i18n/landing";
+import type { Locale } from "../i18n/locales";
+import InstallButton from "./InstallButton.astro";
+import SectionHeading from "./SectionHeading.astro";
 
 interface Props {
-  locale: Locale
-  heading?: string
-  line?: string
-  button?: string
+  locale: Locale;
+  heading?: string;
+  line?: string;
+  button?: string;
 }
 
-const { locale, heading, line, button } = Astro.props
-const { closing } = getClosingCopy(locale)
+const { locale, heading, line, button } = Astro.props;
+const { closing } = getClosingCopy(locale);
 ---
 
 <section data-section="final" aria-labelledby="final-heading">
   <div class="mx-auto max-w-site px-4 py-14 md:px-14 md:py-24">
     <div data-final-panel class="bg-final-cta-glow scroll-reveal">
-      <SectionHeading id="final-heading">
-        {heading ?? closing.heading}
-      </SectionHeading>
-      <p class="mt-5 max-w-2xl text-lead text-muted-foreground">
-        {line ?? closing.line}
-      </p>
+      <SectionHeading id="final-heading">{heading ?? closing.heading}</SectionHeading>
+      <p class="mt-5 max-w-2xl text-lead text-muted-foreground">{line ?? closing.line}</p>
       <div class="mt-8">
         <InstallButton placement="final" label={button ?? closing.button} />
       </div>

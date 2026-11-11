@@ -1,6 +1,6 @@
-import { i18n } from '#i18n'
+import { i18n } from "#i18n";
 
-import { APP_ROUTES, getAppUrl } from '@/lib/app-url'
+import { APP_ROUTES, getAppUrl } from "@/lib/app-url";
 import {
   ALARM_NAME,
   RUN_MANUAL_EXPORT_MESSAGE_TYPE,
@@ -9,18 +9,14 @@ import {
   type RunManualExportResponse,
   syncAlarm,
   type SyncAlarmTrigger,
-} from '@/lib/auto-export'
-import { handleNotificationClick } from '@/lib/auto-export-notification'
-import { checkFolderAccessAtStartup } from '@/lib/folder-access-startup'
-import { watchAccessChanges } from '@/lib/permission-access'
-import {
-  autoExportConfigStore,
-  autoExportNextRunStore,
-  lastSeenVersionStore,
-} from '@/lib/storage'
-import type { AutoExportConfig } from '@/lib/types'
-import { registerUninstallUrl } from '@/lib/uninstall-url'
-import { isMinorOrMajorUpdate } from '@/lib/version'
+} from "@/lib/auto-export";
+import { handleNotificationClick } from "@/lib/auto-export-notification";
+import { checkFolderAccessAtStartup } from "@/lib/folder-access-startup";
+import { watchAccessChanges } from "@/lib/permission-access";
+import { autoExportConfigStore, autoExportNextRunStore, lastSeenVersionStore } from "@/lib/storage";
+import type { AutoExportConfig } from "@/lib/types";
+import { registerUninstallUrl } from "@/lib/uninstall-url";
+import { isMinorOrMajorUpdate } from "@/lib/version";
 
 /**
  * Runs `syncAlarm(trigger)`, logging (never throwing) on failure — every
@@ -32,9 +28,9 @@ import { isMinorOrMajorUpdate } from '@/lib/version'
  */
 async function syncAlarmSafely(trigger: SyncAlarmTrigger): Promise<void> {
   try {
-    await syncAlarm(trigger)
+    await syncAlarm(trigger);
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }
 
@@ -50,17 +46,14 @@ async function syncAlarmSafely(trigger: SyncAlarmTrigger): Promise<void> {
  * @param next The config after the change.
  * @returns Whether `syncAlarm('config-change')` should run for this change.
  */
-function isScheduleRelevantChange(
-  previous: AutoExportConfig,
-  next: AutoExportConfig,
-): boolean {
+function isScheduleRelevantChange(previous: AutoExportConfig, next: AutoExportConfig): boolean {
   return (
     previous.enabled !== next.enabled ||
     previous.interval !== next.interval ||
     previous.preferredTime !== next.preferredTime ||
     previous.dayOfWeek !== next.dayOfWeek ||
     (previous.formats.length === 0) !== (next.formats.length === 0)
-  )
+  );
 }
 
 /**
@@ -73,21 +66,19 @@ function isScheduleRelevantChange(
  * @param message The "Export now" request.
  * @returns The run's outcome, to reply to the sender with.
  */
-async function runManualExport(
-  message: RunManualExportMessage,
-): Promise<RunManualExportResponse> {
+async function runManualExport(message: RunManualExportMessage): Promise<RunManualExportResponse> {
   try {
-    await runAutoExport('manual', {
+    await runAutoExport("manual", {
       formats: message.formats,
       path: message.path,
       ...(message.destination !== undefined && {
         destination: message.destination,
       }),
-    })
-    return { ok: true }
+    });
+    return { ok: true };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    return { ok: false, error: errorMessage }
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: errorMessage };
   }
 }
 
@@ -99,16 +90,12 @@ async function runManualExport(
  */
 async function restoreMissingAlarm(): Promise<void> {
   try {
-    const config = await autoExportConfigStore.getValue()
-    if (
-      !config.enabled ||
-      config.formats.length === 0 ||
-      (await browser.alarms.get(ALARM_NAME))
-    )
-      return
-    await syncAlarm('startup')
+    const config = await autoExportConfigStore.getValue();
+    if (!config.enabled || config.formats.length === 0 || (await browser.alarms.get(ALARM_NAME)))
+      return;
+    await syncAlarm("startup");
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
 }
 
@@ -122,18 +109,18 @@ async function restoreMissingAlarm(): Promise<void> {
  * without Notification access starts cleanly.
  */
 function attachNotificationClickListenerWhenGranted(): void {
-  let isAttached = false
+  let isAttached = false;
   const attach = () => {
-    if (isAttached || !browser.notifications) return
-    isAttached = true
+    if (isAttached || !browser.notifications) return;
+    isAttached = true;
     browser.notifications.onClicked.addListener((notificationId) => {
-      void handleNotificationClick(notificationId).catch(console.error)
-    })
-  }
-  attach()
+      void handleNotificationClick(notificationId).catch(console.error);
+    });
+  };
+  attach();
   watchAccessChanges(({ permission, isGranted }) => {
-    if (permission === 'notifications' && isGranted) attach()
-  })
+    if (permission === "notifications" && isGranted) attach();
+  });
 }
 
 /**
@@ -152,78 +139,77 @@ function attachNotificationClickListenerWhenGranted(): void {
  * {@link registerUninstallUrl}).
  */
 export default defineBackground(() => {
-  void restoreMissingAlarm()
-  void registerUninstallUrl()
+  void restoreMissingAlarm();
+  void registerUninstallUrl();
 
   browser.runtime.onInstalled.addListener(({ reason, previousVersion }) => {
-    void registerUninstallUrl()
+    void registerUninstallUrl();
     switch (reason) {
-      case 'install': {
-        console.log(i18n.t('extensionInstalled'))
-        void browser.tabs.create({ url: getAppUrl(APP_ROUTES.welcome) })
+      case "install": {
+        console.log(i18n.t("extensionInstalled"));
+        void browser.tabs.create({ url: getAppUrl(APP_ROUTES.welcome) });
         void lastSeenVersionStore
           .setValue(browser.runtime.getManifest().version)
-          .catch(console.error)
-        void syncAlarmSafely('install')
-        break
+          .catch(console.error);
+        void syncAlarmSafely("install");
+        break;
       }
 
-      case 'update': {
-        const version = browser.runtime.getManifest().version
-        console.log(i18n.t('extensionUpdated', [version]))
+      case "update": {
+        const version = browser.runtime.getManifest().version;
+        console.log(i18n.t("extensionUpdated", [version]));
         if (isMinorOrMajorUpdate(previousVersion, version)) {
-          void browser.tabs.create({ url: getAppUrl(APP_ROUTES.whatsNew) })
+          void browser.tabs.create({ url: getAppUrl(APP_ROUTES.whatsNew) });
         }
-        void syncAlarmSafely('update')
-        break
+        void syncAlarmSafely("update");
+        break;
       }
 
-      case 'chrome_update':
-      case 'shared_module_update': {
-        void syncAlarmSafely('update')
-        break
+      case "chrome_update":
+      case "shared_module_update": {
+        void syncAlarmSafely("update");
+        break;
       }
     }
-  })
+  });
 
   browser.runtime.onStartup.addListener(() => {
-    void syncAlarmSafely('startup')
-    void checkFolderAccessAtStartup()
-  })
+    void syncAlarmSafely("startup");
+    void checkFolderAccessAtStartup();
+  });
 
   autoExportConfigStore.watch((next, previous) => {
-    if (!isScheduleRelevantChange(previous, next)) return
-    void registerUninstallUrl()
-    void syncAlarmSafely('config-change')
-  })
+    if (!isScheduleRelevantChange(previous, next)) return;
+    void registerUninstallUrl();
+    void syncAlarmSafely("config-change");
+  });
 
   browser.alarms.onAlarm.addListener((alarm) => {
-    if (alarm.name !== ALARM_NAME) return
+    if (alarm.name !== ALARM_NAME) return;
 
     void (async () => {
       try {
-        const storedNextRun = await autoExportNextRunStore.getValue()
-        const isCatchUp =
-          storedNextRun !== null && alarm.scheduledTime > storedNextRun + 2000
-        await runAutoExport(isCatchUp ? 'catch-up' : 'scheduled')
+        const storedNextRun = await autoExportNextRunStore.getValue();
+        const isCatchUp = storedNextRun !== null && alarm.scheduledTime > storedNextRun + 2000;
+        await runAutoExport(isCatchUp ? "catch-up" : "scheduled");
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
-    })()
-  })
+    })();
+  });
 
-  attachNotificationClickListenerWhenGranted()
+  attachNotificationClickListenerWhenGranted();
 
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (
-      typeof message !== 'object' ||
+      typeof message !== "object" ||
       message === null ||
       (message as { type?: unknown }).type !== RUN_MANUAL_EXPORT_MESSAGE_TYPE
     ) {
-      return
+      return;
     }
 
-    void runManualExport(message as RunManualExportMessage).then(sendResponse)
-    return true
-  })
-})
+    void runManualExport(message as RunManualExportMessage).then(sendResponse);
+    return true;
+  });
+});

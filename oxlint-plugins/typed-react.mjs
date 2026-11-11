@@ -1,15 +1,16 @@
-import eslintReact from '@eslint-react/eslint-plugin'
-import path from 'node:path'
-import ts from 'typescript'
+import path from "node:path";
 
-import { forwardWith } from './forward-with.mjs'
+import eslintReact from "@eslint-react/eslint-plugin";
+import ts from "typescript";
+
+import { forwardWith } from "./forward-with.mjs";
 
 /**
  * Compiler programs already built, keyed by the absolute path of the
  * `tsconfig.json` they were created from, so each project is type-checked
  * once per lint run.
  */
-const programsByConfigPath = new Map()
+const programsByConfigPath = new Map();
 
 /**
  * Parse-time host for `ts.getParsedCommandLineOfConfigFile`. An
@@ -20,10 +21,10 @@ const parseConfigHost = {
   ...ts.sys,
   onUnRecoverableConfigFileDiagnostic(diagnostic) {
     throw new Error(
-      `typed-react: cannot read tsconfig: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')}`,
-    )
+      `typed-react: cannot read tsconfig: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`,
+    );
   },
-}
+};
 
 /**
  * Parses a `tsconfig.json` into its file list, options and project
@@ -32,15 +33,11 @@ const parseConfigHost = {
  * @returns The parsed command line.
  */
 function parseConfig(configPath) {
-  const parsed = ts.getParsedCommandLineOfConfigFile(
-    configPath,
-    {},
-    parseConfigHost,
-  )
+  const parsed = ts.getParsedCommandLineOfConfigFile(configPath, {}, parseConfigHost);
   if (!parsed) {
-    throw new Error(`typed-react: cannot parse ${configPath}`)
+    throw new Error(`typed-react: cannot parse ${configPath}`);
   }
-  return parsed
+  return parsed;
 }
 
 /**
@@ -49,19 +46,19 @@ function parseConfig(configPath) {
  * @returns The program and the parsed config it came from.
  */
 function programForConfig(configPath) {
-  const cached = programsByConfigPath.get(configPath)
+  const cached = programsByConfigPath.get(configPath);
   if (cached) {
-    return cached
+    return cached;
   }
-  const parsed = parseConfig(configPath)
+  const parsed = parseConfig(configPath);
   const program = ts.createProgram({
     rootNames: parsed.fileNames,
     options: { ...parsed.options, noEmit: true },
     projectReferences: parsed.projectReferences,
-  })
-  const entry = { program, parsed }
-  programsByConfigPath.set(configPath, entry)
-  return entry
+  });
+  const entry = { program, parsed };
+  programsByConfigPath.set(configPath, entry);
+  return entry;
 }
 
 /**
@@ -71,7 +68,7 @@ function programForConfig(configPath) {
  * @returns Absolute path of the referenced config file.
  */
 function referenceConfigPath(reference) {
-  return ts.resolveProjectReferencePath(reference)
+  return ts.resolveProjectReferencePath(reference);
 }
 
 /**
@@ -84,33 +81,29 @@ function referenceConfigPath(reference) {
  *   a file the shim cannot type must fail the lint rather than be skipped.
  */
 function resolveProgram(fileName) {
-  const configPath = ts.findConfigFile(
-    path.dirname(fileName),
-    ts.sys.fileExists,
-    'tsconfig.json',
-  )
+  const configPath = ts.findConfigFile(path.dirname(fileName), ts.sys.fileExists, "tsconfig.json");
   if (!configPath) {
     throw new Error(
       `typed-react: no tsconfig.json found above ${fileName}; the type-aware rule cannot run on it.`,
-    )
+    );
   }
-  const { program, parsed } = programForConfig(path.resolve(configPath))
-  const direct = program.getSourceFile(fileName)
+  const { program, parsed } = programForConfig(path.resolve(configPath));
+  const direct = program.getSourceFile(fileName);
   if (direct) {
-    return { program, sourceFile: direct }
+    return { program, sourceFile: direct };
   }
-  const projectReferences = parsed.projectReferences ?? []
+  const projectReferences = parsed.projectReferences ?? [];
   for (const reference of projectReferences) {
-    const referenced = programForConfig(referenceConfigPath(reference))
-    const sourceFile = referenced.program.getSourceFile(fileName)
+    const referenced = programForConfig(referenceConfigPath(reference));
+    const sourceFile = referenced.program.getSourceFile(fileName);
     if (!sourceFile) {
-      continue
+      continue;
     }
-    return { program: referenced.program, sourceFile }
+    return { program: referenced.program, sourceFile };
   }
   throw new Error(
     `typed-react: ${fileName} is not part of the TypeScript program of ${configPath} or of any project it references; add it to a tsconfig "include".`,
-  )
+  );
 }
 
 /**
@@ -127,31 +120,31 @@ function resolveProgram(fileName) {
  * @returns The matching TypeScript node, or `undefined`.
  */
 function findTypeScriptNode(sourceFile, start, end) {
-  let exact
-  let prefix
-  let enclosing
+  let exact;
+  let prefix;
+  let enclosing;
   function visit(node) {
-    const nodeStart = node.getStart(sourceFile)
-    const nodeEnd = node.getEnd()
+    const nodeStart = node.getStart(sourceFile);
+    const nodeEnd = node.getEnd();
     if (nodeStart > start || nodeEnd < start) {
-      return
+      return;
     }
     if (nodeStart === start && nodeEnd === end) {
-      exact = node
+      exact = node;
     } else if (
       nodeStart === start &&
       nodeEnd < end &&
       (prefix === undefined || nodeEnd >= prefix.getEnd())
     ) {
-      prefix = node
+      prefix = node;
     }
     if (nodeEnd >= end) {
-      enclosing = node
+      enclosing = node;
     }
-    ts.forEachChild(node, visit)
+    ts.forEachChild(node, visit);
   }
-  visit(sourceFile)
-  return exact ?? prefix ?? enclosing
+  visit(sourceFile);
+  return exact ?? prefix ?? enclosing;
 }
 
 /**
@@ -162,36 +155,30 @@ function findTypeScriptNode(sourceFile, start, end) {
  *   `getSymbolAtLocation` as well as the node maps type-aware rules read.
  */
 function createParserServices(fileName) {
-  const { program, sourceFile } = resolveProgram(fileName)
-  const checker = program.getTypeChecker()
+  const { program, sourceFile } = resolveProgram(fileName);
+  const checker = program.getTypeChecker();
   const esTreeNodeToTSNodeMap = {
     get(node) {
-      const tsNode = findTypeScriptNode(
-        sourceFile,
-        node.range[0],
-        node.range[1],
-      )
+      const tsNode = findTypeScriptNode(sourceFile, node.range[0], node.range[1]);
       if (!tsNode) {
         throw new Error(
           `typed-react: no TypeScript node for ${node.type} at ${fileName}:${node.range[0]}`,
-        )
+        );
       }
-      return tsNode
+      return tsNode;
     },
-  }
+  };
   return {
     program,
     hasFullTypeInformation: true,
     esTreeNodeToTSNodeMap,
     tsNodeToESTreeNodeMap: new WeakMap(),
-    getTypeAtLocation: (node) =>
-      checker.getTypeAtLocation(esTreeNodeToTSNodeMap.get(node)),
-    getSymbolAtLocation: (node) =>
-      checker.getSymbolAtLocation(esTreeNodeToTSNodeMap.get(node)),
+    getTypeAtLocation: (node) => checker.getTypeAtLocation(esTreeNodeToTSNodeMap.get(node)),
+    getSymbolAtLocation: (node) => checker.getSymbolAtLocation(esTreeNodeToTSNodeMap.get(node)),
     emitDecoratorMetadata: false,
     experimentalDecorators: false,
     isolatedDeclarations: false,
-  }
+  };
 }
 
 /**
@@ -204,20 +191,20 @@ export function withTypeInformation(rule) {
   return {
     meta: rule.meta,
     create(context) {
-      const fileName = context.physicalFilename ?? context.filename
-      const parserServices = createParserServices(fileName)
-      const sourceCode = forwardWith(context.sourceCode, { parserServices })
+      const fileName = context.physicalFilename ?? context.filename;
+      const parserServices = createParserServices(fileName);
+      const sourceCode = forwardWith(context.sourceCode, { parserServices });
       const typedContext = forwardWith(context, {
         sourceCode,
         parserServices,
         getSourceCode: () => sourceCode,
-      })
-      return rule.create(typedContext)
+      });
+      return rule.create(typedContext);
     },
-  }
+  };
 }
 
-const originalRule = eslintReact.rules['no-leaked-conditional-rendering']
+const originalRule = eslintReact.rules["no-leaked-conditional-rendering"];
 
 /**
  * Local Oxlint plugin running `@eslint-react/no-leaked-conditional-rendering`
@@ -228,10 +215,10 @@ const originalRule = eslintReact.rules['no-leaked-conditional-rendering']
  * 7.x line has no classic JS compiler API.
  */
 const typedReactPlugin = {
-  meta: { name: 'typed-react' },
+  meta: { name: "typed-react" },
   rules: {
-    'no-leaked-conditional-rendering': withTypeInformation(originalRule),
+    "no-leaked-conditional-rendering": withTypeInformation(originalRule),
   },
-}
+};
 
-export default typedReactPlugin
+export default typedReactPlugin;

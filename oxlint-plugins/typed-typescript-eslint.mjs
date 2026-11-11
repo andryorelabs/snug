@@ -1,6 +1,6 @@
-import tseslint from 'typescript-eslint'
+import tseslint from "typescript-eslint";
 
-import { withTypeInformation } from './typed-react.mjs'
+import { withTypeInformation } from "./typed-react.mjs";
 
 /**
  * Local Oxlint plugin running `@typescript-eslint/no-unsafe-assignment` as
@@ -10,12 +10,10 @@ import { withTypeInformation } from './typed-react.mjs'
  * reports. Registered as `typescript-eslint-js` in `oxlint.config.ts`.
  */
 const typedTypescriptEslintPlugin = {
-  meta: { name: 'typescript-eslint-js' },
+  meta: { name: "typescript-eslint-js" },
   rules: {
-    'no-unsafe-assignment': withTypeInformation(
-      tseslint.plugin.rules['no-unsafe-assignment'],
-    ),
+    "no-unsafe-assignment": withTypeInformation(tseslint.plugin.rules["no-unsafe-assignment"]),
   },
-}
+};
 
-export default typedTypescriptEslintPlugin
+export default typedTypescriptEslintPlugin;

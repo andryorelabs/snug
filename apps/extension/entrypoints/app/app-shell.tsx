@@ -1,5 +1,5 @@
-import { i18n } from '#i18n'
-import { Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { i18n } from "#i18n";
+import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -15,37 +15,28 @@ import {
   SidebarRail,
   SidebarTrigger,
   useSidebar,
-} from '@workspace/ui/components/sidebar'
-import { cn } from 'cn'
-import type { LucideIcon } from 'lucide-react'
-import {
-  BookOpenIcon,
-  ExternalLinkIcon,
-  GlobeIcon,
-  ShieldCheckIcon,
-} from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+} from "@workspace/ui/components/sidebar";
+import { cn } from "cn";
+import type { LucideIcon } from "lucide-react";
+import { BookOpenIcon, ExternalLinkIcon, GlobeIcon, ShieldCheckIcon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { Wordmark } from '@/components/wordmark'
-import { APP_ROUTES } from '@/lib/app-url'
-import { getSiteGuideUrl, getSitePrivacyUrl, getSiteUrl } from '@/lib/brand'
-import {
-  autoExportConfigStore,
-  autoExportLastRunStore,
-  lastSeenVersionStore,
-} from '@/lib/storage'
-import { useStorageItem } from '@/lib/use-storage-item'
-import { isWhatsNewUnseen } from '@/lib/version'
+import { Wordmark } from "@/components/wordmark";
+import { APP_ROUTES } from "@/lib/app-url";
+import { getSiteGuideUrl, getSitePrivacyUrl, getSiteUrl } from "@/lib/brand";
+import { autoExportConfigStore, autoExportLastRunStore, lastSeenVersionStore } from "@/lib/storage";
+import { useStorageItem } from "@/lib/use-storage-item";
+import { isWhatsNewUnseen } from "@/lib/version";
 
-import { getTitleKey, isKnownRoute, NAV_ITEMS } from './nav'
+import { getTitleKey, isKnownRoute, NAV_ITEMS } from "./nav";
 
-type NavStatus = 'none' | 'success' | 'destructive' | 'primary'
+type NavStatus = "none" | "success" | "destructive" | "primary";
 
-const STATUS_DOT_CLASS: Record<Exclude<NavStatus, 'none'>, string> = {
-  success: 'bg-success',
-  destructive: 'bg-destructive',
-  primary: 'bg-primary',
-}
+const STATUS_DOT_CLASS: Record<Exclude<NavStatus, "none">, string> = {
+  success: "bg-success",
+  destructive: "bg-destructive",
+  primary: "bg-primary",
+};
 
 /**
  * Derives the Auto-export nav dot: destructive when the last run failed,
@@ -53,14 +44,14 @@ const STATUS_DOT_CLASS: Record<Exclude<NavStatus, 'none'>, string> = {
  * @returns The status for the Auto-export nav item and its accessible label.
  */
 function useAutoExportStatus(): { status: NavStatus; label?: string } {
-  const [config] = useStorageItem(autoExportConfigStore)
-  const [lastRun] = useStorageItem(autoExportLastRunStore)
-  if (typeof lastRun === 'object' && lastRun !== null && !lastRun.ok) {
-    return { status: 'destructive', label: i18n.t('shell_autoExportFailed') }
+  const [config] = useStorageItem(autoExportConfigStore);
+  const [lastRun] = useStorageItem(autoExportLastRunStore);
+  if (typeof lastRun === "object" && lastRun !== null && !lastRun.ok) {
+    return { status: "destructive", label: i18n.t("shell_autoExportFailed") };
   }
   return config.enabled
-    ? { status: 'success', label: i18n.t('shell_autoExportOn') }
-    : { status: 'none' }
+    ? { status: "success", label: i18n.t("shell_autoExportOn") }
+    : { status: "none" };
 }
 
 /**
@@ -71,28 +62,17 @@ function useAutoExportStatus(): { status: NavStatus; label?: string } {
  * unseen major or minor changelog entry.
  */
 function useIsWhatsNewUnseen(pathname: string): boolean {
-  const [lastSeenVersion, setLastSeenVersion, isLoaded] =
-    useStorageItem(lastSeenVersionStore)
-  const installedVersion = browser.runtime.getManifest().version
-  const isOnWhatsNew = pathname === APP_ROUTES.whatsNew
+  const [lastSeenVersion, setLastSeenVersion, isLoaded] = useStorageItem(lastSeenVersionStore);
+  const installedVersion = browser.runtime.getManifest().version;
+  const isOnWhatsNew = pathname === APP_ROUTES.whatsNew;
 
   useEffect(() => {
     if (isOnWhatsNew && isLoaded && lastSeenVersion !== installedVersion) {
-      void setLastSeenVersion(installedVersion)
+      void setLastSeenVersion(installedVersion);
     }
-  }, [
-    isOnWhatsNew,
-    isLoaded,
-    lastSeenVersion,
-    installedVersion,
-    setLastSeenVersion,
-  ])
+  }, [isOnWhatsNew, isLoaded, lastSeenVersion, installedVersion, setLastSeenVersion]);
 
-  return (
-    isLoaded &&
-    !isOnWhatsNew &&
-    isWhatsNewUnseen(lastSeenVersion, installedVersion)
-  )
+  return isLoaded && !isOnWhatsNew && isWhatsNewUnseen(lastSeenVersion, installedVersion);
 }
 
 /**
@@ -106,27 +86,27 @@ function useIsWhatsNewUnseen(pathname: string): boolean {
  * @returns A ref for the page `h1` and the text to render in the live region.
  */
 function usePageChangeFocus(pathname: string, title: string) {
-  const headingReference = useRef<HTMLHeadingElement>(null)
-  const previousPathname = useRef(pathname)
-  const [announcement, setAnnouncement] = useState('')
+  const headingReference = useRef<HTMLHeadingElement>(null);
+  const previousPathname = useRef(pathname);
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
-    const fromPathname = previousPathname.current
-    if (fromPathname === pathname) return
-    previousPathname.current = pathname
-    if (!isKnownRoute(fromPathname)) return
-    headingReference.current?.focus()
-    setAnnouncement(title)
-  }, [pathname, title])
+    const fromPathname = previousPathname.current;
+    if (fromPathname === pathname) return;
+    previousPathname.current = pathname;
+    if (!isKnownRoute(fromPathname)) return;
+    headingReference.current?.focus();
+    setAnnouncement(title);
+  }, [pathname, title]);
 
-  return { headingReference, announcement }
+  return { headingReference, announcement };
 }
 
 interface NavLinkButtonProperties {
-  route: string
-  title: string
-  isActive: boolean
-  icon: LucideIcon
+  route: string;
+  title: string;
+  isActive: boolean;
+  icon: LucideIcon;
 }
 
 /**
@@ -136,27 +116,27 @@ interface NavLinkButtonProperties {
  * @returns The link button for the entry.
  */
 function NavLinkButton(properties: NavLinkButtonProperties) {
-  const { route, title, isActive, icon: Icon } = properties
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { route, title, isActive, icon: Icon } = properties;
+  const { isMobile, setOpenMobile } = useSidebar();
   return (
     <SidebarMenuButton
       tooltip={title}
       isActive={isActive}
       render={<Link to={route} />}
       onClick={() => {
-        if (isMobile) setOpenMobile(false)
+        if (isMobile) setOpenMobile(false);
       }}
     >
       <Icon />
       <span>{title}</span>
     </SidebarMenuButton>
-  )
+  );
 }
 
 interface SiteLinkButtonProperties {
-  href: string
-  label: string
-  icon: LucideIcon
+  href: string;
+  label: string;
+  icon: LucideIcon;
 }
 
 /**
@@ -166,7 +146,7 @@ interface SiteLinkButtonProperties {
  * @returns The external link button.
  */
 function SiteLinkButton(properties: SiteLinkButtonProperties) {
-  const { href, label, icon: Icon } = properties
+  const { href, label, icon: Icon } = properties;
   return (
     <SidebarMenuButton
       tooltip={label}
@@ -180,7 +160,7 @@ function SiteLinkButton(properties: SiteLinkButtonProperties) {
         className="ml-auto size-3 text-muted-foreground group-data-[collapsible=icon]:hidden"
       />
     </SidebarMenuButton>
-  )
+  );
 }
 
 /**
@@ -192,21 +172,18 @@ function SiteLinkButton(properties: SiteLinkButtonProperties) {
 export function AppShell() {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
-  })
-  const autoExport = useAutoExportStatus()
-  const isWhatsNewUnseen = useIsWhatsNewUnseen(pathname)
-  const pageTitle = i18n.t(getTitleKey(pathname))
-  const { headingReference, announcement } = usePageChangeFocus(
-    pathname,
-    pageTitle,
-  )
+  });
+  const autoExport = useAutoExportStatus();
+  const isWhatsNewUnseen = useIsWhatsNewUnseen(pathname);
+  const pageTitle = i18n.t(getTitleKey(pathname));
+  const { headingReference, announcement } = usePageChangeFocus(pathname, pageTitle);
 
   const statusByRoute: Record<string, { status: NavStatus; label?: string }> = {
     [APP_ROUTES.autoExport]: autoExport,
     [APP_ROUTES.whatsNew]: isWhatsNewUnseen
-      ? { status: 'primary', label: i18n.t('shell_whatsNewUnseen') }
-      : { status: 'none' },
-  }
+      ? { status: "primary", label: i18n.t("shell_whatsNewUnseen") }
+      : { status: "none" },
+  };
 
   return (
     <SidebarProvider className="h-svh">
@@ -214,22 +191,16 @@ export function AppShell() {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                className="pointer-events-none"
-                render={<div />}
-              >
+              <SidebarMenuButton size="lg" className="pointer-events-none" render={<div />}>
                 <img
-                  src={browser.runtime.getURL('/icons/48.png')}
+                  src={browser.runtime.getURL("/icons/48.png")}
                   alt=""
                   className="aspect-square size-8 rounded-lg"
                 />
                 <div className="grid flex-1 text-left leading-tight">
                   <Wordmark className="truncate text-sm" />
                   <span className="truncate text-xs text-muted-foreground">
-                    {i18n.t('shell_version', [
-                      browser.runtime.getManifest().version,
-                    ])}
+                    {i18n.t("shell_version", [browser.runtime.getManifest().version])}
                   </span>
                 </div>
               </SidebarMenuButton>
@@ -239,11 +210,11 @@ export function AppShell() {
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>
-              <nav aria-label={i18n.t('shell_navLabel')}>
+              <nav aria-label={i18n.t("shell_navLabel")}>
                 <SidebarMenu>
                   {NAV_ITEMS.map((item) => {
-                    const title = i18n.t(item.titleKey)
-                    const itemStatus = statusByRoute[item.route]
+                    const title = i18n.t(item.titleKey);
+                    const itemStatus = statusByRoute[item.route];
                     return (
                       <SidebarMenuItem key={item.route}>
                         <NavLinkButton
@@ -252,19 +223,19 @@ export function AppShell() {
                           isActive={pathname === item.route}
                           icon={item.icon}
                         />
-                        {itemStatus && itemStatus.status !== 'none' && (
+                        {itemStatus && itemStatus.status !== "none" && (
                           <span
                             role="img"
                             aria-label={itemStatus.label}
                             data-status={itemStatus.status}
                             className={cn(
-                              'pointer-events-none absolute top-1/2 right-2 size-2 -translate-y-1/2 rounded-full group-data-[collapsible=icon]:top-1.5 group-data-[collapsible=icon]:right-1.5 group-data-[collapsible=icon]:translate-y-0',
+                              "pointer-events-none absolute top-1/2 right-2 size-2 -translate-y-1/2 rounded-full group-data-[collapsible=icon]:top-1.5 group-data-[collapsible=icon]:right-1.5 group-data-[collapsible=icon]:translate-y-0",
                               STATUS_DOT_CLASS[itemStatus.status],
                             )}
                           />
                         )}
                       </SidebarMenuItem>
-                    )
+                    );
                   })}
                 </SidebarMenu>
               </nav>
@@ -276,21 +247,21 @@ export function AppShell() {
             <SidebarMenuItem>
               <SiteLinkButton
                 href={getSiteGuideUrl()}
-                label={i18n.t('shell_guideLink')}
+                label={i18n.t("shell_guideLink")}
                 icon={BookOpenIcon}
               />
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SiteLinkButton
                 href={getSiteUrl()}
-                label={i18n.t('shell_siteLink')}
+                label={i18n.t("shell_siteLink")}
                 icon={GlobeIcon}
               />
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SiteLinkButton
                 href={getSitePrivacyUrl()}
-                label={i18n.t('shell_privacyLink')}
+                label={i18n.t("shell_privacyLink")}
                 icon={ShieldCheckIcon}
               />
             </SidebarMenuItem>
@@ -300,7 +271,7 @@ export function AppShell() {
       </Sidebar>
       <SidebarInset className="h-svh overflow-hidden">
         <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger aria-label={i18n.t('shell_toggleSidebar')} />
+          <SidebarTrigger aria-label={i18n.t("shell_toggleSidebar")} />
           <h1
             ref={headingReference}
             tabIndex={-1}
@@ -317,5 +288,5 @@ export function AppShell() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

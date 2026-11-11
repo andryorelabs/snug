@@ -1,11 +1,12 @@
-/// <reference types="chrome" />
-import type { Page, Worker } from '@playwright/test'
-import { stat } from 'node:fs/promises'
-import type { Server } from 'node:http'
-import { createServer } from 'node:http'
+import { stat } from "node:fs/promises";
+import type { Server } from "node:http";
+import { createServer } from "node:http";
 
-import { expect, test } from './fixtures'
-import type { SeedBookmark } from './fixtures'
+/// <reference types="chrome" />
+import type { Page, Worker } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
+import type { SeedBookmark } from "./fixtures";
 
 /**
  * A real, tiny (1x1) but valid PNG — decodable by Chrome's favicon system,
@@ -14,9 +15,9 @@ import type { SeedBookmark } from './fixtures'
  * it serves for an uncached page (see {@link DEFAULT_CHROME_FAVICON}).
  */
 const ICON_PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-  'base64',
-)
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64",
+);
 
 /**
  * Copied from `lib/favicon.ts`'s `DEFAULT_CHROME_FAVICON` — the exact data
@@ -26,13 +27,13 @@ const ICON_PNG = Buffer.from(
  * cached, before seeding bookmarks that depend on it.
  */
 const DEFAULT_CHROME_FAVICON =
-  'data:image/bmp;base64,Qk06AAAAAAAAADYAAAAoAAAAEAAAABAAAAABABgAAAAAAA' +
-  'QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAArwCv' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA' +
-  'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+  "data:image/bmp;base64,Qk06AAAAAAAAADYAAAAoAAAAEAAAABAAAAABABgAAAAAAA" +
+  "QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAArwCv" +
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+  "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
 /**
  * How many bookmarks {@link buildIconHeavyBookmarks} creates, all pointing
@@ -45,7 +46,7 @@ const DEFAULT_CHROME_FAVICON =
  * to get around, even if a real cached favicon turns out smaller than the
  * default placeholder's ~300 bytes.
  */
-const ICON_HEAVY_BOOKMARK_COUNT = 12_000
+const ICON_HEAVY_BOOKMARK_COUNT = 12_000;
 
 /**
  * Starts a local HTTP server serving a minimal page whose favicon is a real,
@@ -58,23 +59,23 @@ const ICON_HEAVY_BOOKMARK_COUNT = 12_000
 function startFaviconServer(): Promise<{ server: Server; pageUrl: string }> {
   return new Promise((resolve) => {
     const server = createServer((request, response) => {
-      if (request.url?.startsWith('/icon.png')) {
-        response.writeHead(200, { 'Content-Type': 'image/png' })
-        response.end(ICON_PNG)
-        return
+      if (request.url?.startsWith("/icon.png")) {
+        response.writeHead(200, { "Content-Type": "image/png" });
+        response.end(ICON_PNG);
+        return;
       }
-      response.writeHead(200, { 'Content-Type': 'text/html' })
+      response.writeHead(200, { "Content-Type": "text/html" });
       response.end(
         '<!doctype html><html><head><link rel="icon" href="/icon.png"></head>' +
-          '<body>Icon-heavy auto-export fixture</body></html>',
-      )
-    })
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address()
-      const port = typeof address === 'object' && address ? address.port : 0
-      resolve({ server, pageUrl: `http://127.0.0.1:${port}/` })
-    })
-  })
+          "<body>Icon-heavy auto-export fixture</body></html>",
+      );
+    });
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      const port = typeof address === "object" && address ? address.port : 0;
+      resolve({ server, pageUrl: `http://127.0.0.1:${port}/` });
+    });
+  });
 }
 
 /**
@@ -97,30 +98,26 @@ async function waitForFaviconCached(
         page.evaluate(
           /* eslint-disable unicorn-js/isolated-functions -- this callback runs in the page's own browser context, where URL/fetch/FileReader are real globals, not the Node/ES-only set this rule checks against */
           async ({ extensionId, pageUrl }) => {
-            const faviconUrl = new URL(
-              `chrome-extension://${extensionId}/_favicon/?`,
-            )
-            faviconUrl.searchParams.set('pageUrl', pageUrl)
-            faviconUrl.searchParams.set('size', '16')
-            const response = await fetch(faviconUrl.href)
-            const blob = await response.blob()
+            const faviconUrl = new URL(`chrome-extension://${extensionId}/_favicon/?`);
+            faviconUrl.searchParams.set("pageUrl", pageUrl);
+            faviconUrl.searchParams.set("size", "16");
+            const response = await fetch(faviconUrl.href);
+            const blob = await response.blob();
             return new Promise<string>((resolve, reject) => {
-              const reader = new FileReader()
-              reader.addEventListener('loadend', () =>
-                resolve(reader.result as string),
-              )
-              reader.addEventListener('error', () =>
-                reject(reader.error ?? new Error('FileReader failed')),
-              )
-              reader.readAsDataURL(blob)
-            })
+              const reader = new FileReader();
+              reader.addEventListener("loadend", () => resolve(reader.result as string));
+              reader.addEventListener("error", () =>
+                reject(reader.error ?? new Error("FileReader failed")),
+              );
+              reader.readAsDataURL(blob);
+            });
           },
           /* eslint-enable unicorn-js/isolated-functions -- scoped to the callback above only */
           { extensionId, pageUrl },
         ),
       { timeout: 20_000, intervals: [250, 500, 1000] },
     )
-    .not.toBe(DEFAULT_CHROME_FAVICON)
+    .not.toBe(DEFAULT_CHROME_FAVICON);
 }
 
 /**
@@ -133,7 +130,7 @@ function buildIconHeavyBookmarks(pageUrl: string): SeedBookmark[] {
   return Array.from({ length: ICON_HEAVY_BOOKMARK_COUNT }, (_, index) => ({
     title: `Icon Heavy Bookmark ${index}`,
     url: pageUrl,
-  }))
+  }));
 }
 
 /**
@@ -141,10 +138,10 @@ function buildIconHeavyBookmarks(pageUrl: string): SeedBookmark[] {
  * reads.
  */
 interface DownloadItem {
-  state: string
-  filename: string
-  mime: string
-  startTime: string
+  state: string;
+  filename: string;
+  mime: string;
+  startTime: string;
 }
 
 /**
@@ -159,54 +156,49 @@ interface DownloadItem {
  * @param serviceWorker The background service worker fixture.
  * @returns The newest `state: 'complete'` `text/html` download.
  */
-async function latestCompletedHtmlDownload(
-  serviceWorker: Worker,
-): Promise<DownloadItem> {
+async function latestCompletedHtmlDownload(serviceWorker: Worker): Promise<DownloadItem> {
   const downloads = (await serviceWorker.evaluate(() =>
-    chrome.downloads.search({ orderBy: ['-startTime'], limit: 10 }),
-  )) as DownloadItem[]
+    chrome.downloads.search({ orderBy: ["-startTime"], limit: 10 }),
+  )) as DownloadItem[];
   const match = downloads.find(
-    (download) =>
-      download.state === 'complete' && download.mime === 'text/html',
-  )
+    (download) => download.state === "complete" && download.mime === "text/html",
+  );
   if (!match) {
-    throw new Error(
-      `No completed text/html download found in: ${JSON.stringify(downloads)}`,
-    )
+    throw new Error(`No completed text/html download found in: ${JSON.stringify(downloads)}`);
   }
-  return match
+  return match;
 }
 
-test('Export now downloads an icon-data-heavy export and shows success', async ({
+test("Export now downloads an icon-data-heavy export and shows success", async ({
   context,
   extensionId,
   openExtensionPage,
   seedBookmarks,
   serviceWorker,
 }) => {
-  test.setTimeout(300_000)
+  test.setTimeout(300_000);
 
-  const { server, pageUrl } = await startFaviconServer()
+  const { server, pageUrl } = await startFaviconServer();
   try {
-    const warmupPage = await context.newPage()
-    await warmupPage.goto(pageUrl, { waitUntil: 'load' })
-    await warmupPage.close()
+    const warmupPage = await context.newPage();
+    await warmupPage.goto(pageUrl, { waitUntil: "load" });
+    await warmupPage.close();
 
-    const page = await openExtensionPage('app.html#/auto-export')
-    await waitForFaviconCached(page, extensionId, pageUrl)
+    const page = await openExtensionPage("app.html#/auto-export");
+    await waitForFaviconCached(page, extensionId, pageUrl);
 
-    await seedBookmarks(buildIconHeavyBookmarks(pageUrl))
+    await seedBookmarks(buildIconHeavyBookmarks(pageUrl));
 
-    await page.getByRole('button', { name: 'Export now' }).click()
+    await page.getByRole("button", { name: "Export now" }).click();
 
-    await expect(page.getByText('Export completed')).toBeVisible({
+    await expect(page.getByText("Export completed")).toBeVisible({
       timeout: 180_000,
-    })
+    });
 
-    const download = await latestCompletedHtmlDownload(serviceWorker)
-    const { size } = await stat(download.filename)
-    expect(size).toBeGreaterThan(2 * 1024 * 1024)
+    const download = await latestCompletedHtmlDownload(serviceWorker);
+    const { size } = await stat(download.filename);
+    expect(size).toBeGreaterThan(2 * 1024 * 1024);
   } finally {
-    server.close()
+    server.close();
   }
-})
+});
