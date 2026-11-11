@@ -5,6 +5,31 @@
 > copy, the shipped copy wins: see `docs/store/README.md` and the
 > `locales/*.json` files.
 
+## Approved copy
+
+The lines below are the source for the README, the `package.json` descriptions
+and the GitHub About text. `scripts/copy-drift.test.ts` fails when the README
+slogan or the root and extension `package.json` descriptions differ from them.
+
+| Line                 | Text                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Slogan               | Export, import, and back up your bookmarks — entirely on your device.                                                                                  |
+| One-line description | Export, import, and schedule automatic exports of your bookmarks — six formats, duplicate cleanup, and undo, all on your device, no account, no cloud. |
+
+## Claims checked
+
+Each public claim, the evidence behind it and the date it was last checked.
+
+| Claim                            | Evidence                                                                            | Checked    |
+| -------------------------------- | ----------------------------------------------------------------------------------- | ---------- |
+| Six export formats               | `apps/extension/lib/exporters/`: HTML, JSON, CSV, Markdown, OPML and XBEL exporters | 2026-11-11 |
+| Everything stays on your device  | No network calls in the extension; favicons use the browser's local `_favicon` API  | 2026-11-11 |
+| No account, no cloud             | No sign-in or sync code in `apps/extension`; see `PRIVACY_POLICY.md`                | 2026-11-11 |
+| Duplicate cleanup and undo       | `docs/guide/` pages for Duplicates and the Safety snapshot that backs a replace     | 2026-11-11 |
+| Scheduled automatic exports      | Auto-export in `docs/guide/`; off until the user sets a schedule                    | 2026-11-11 |
+| Available in 10 languages        | 10 files in `apps/extension/locales/`                                               | 2026-11-11 |
+| Built by AndryOre (maker credit) | Decision of 2026-11-11 in `docs/brand/README.md`; ADR 0036                          | 2026-11-11 |
+
 Generated via `brand-voice:brand-voice-enforcement`, applying `voice.md`. All
 claims grounded in the live product (`docs/usage.md`, `docs/guide/`,
 `CHANGELOG.md` in the main repo) — see the "Facts corrected before writing this"

@@ -1,7 +1,24 @@
-import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
+import {
+  copyFile,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
+
+import {
+  assertSpecFile,
+  encodeIco,
+  FAVICON_SIZES,
+  faviconPath,
+  MARK_PNG_SIZES,
+  rasterSpecs,
+} from './export-spec.ts'
 
 /**
  * Regenerates the derived raster assets of the Snug brand kit from the SVG
@@ -25,6 +42,12 @@ import { chromium } from 'playwright'
  * screenshots, uncropped, on the brand background) and the X header (1500x500,
  * lockup checked to sit inside a 1200x300 centered safe area). Each is checked
  * for exact dimensions and a 3 MB budget; the script throws on any miss.
+ *
+ * The brand-kit rasters listed in `export-spec.ts` are written here too: PNG
+ * marks from 16 to 512 px, `logo/png/favicon.ico`, and `docs/brand/og/` with
+ * `cover.png`, `cover-light.png` and `social-preview.png`. The slogan on the
+ * covers is read from `docs/brand/copy.md`. After the run every file is
+ * checked against `rasterSpecs`.
  *
  * Icons are drawn at 75% of a transparent canvas: the SVG's fixed size is forced
  * to fill its container, sized so the painted bookmark spans 96 of 128 px.
@@ -65,6 +88,26 @@ const lockupSvg = await readFile(
   path.join(brandRoot, 'logo/lockup-horizontal.svg'),
   'utf8',
 )
+
+const copyMarkdown = await readFile(path.join(brandRoot, 'copy.md'), 'utf8')
+const SLOGAN = /^\| Slogan\s+\| (.+?)\s+\|$/m.exec(copyMarkdown)?.[1]
+if (SLOGAN === undefined) {
+  throw new Error('docs/brand/copy.md has no Slogan row')
+}
+const LIGHT_GROUND = '#FAF7F0'
+const LIGHT_INK = '#17120A'
+const WORDMARK_GRADIENT_STOPS =
+  '<stop offset="0" stop-color="#FFA230"/><stop offset="1" stop-color="#FFD37A"/>'
+const LIGHT_WORDMARK_GRADIENT_STOPS =
+  '<stop offset="0" stop-color="#9A4A00"/><stop offset="1" stop-color="#A35200"/>'
+const lightLockupSvg = lockupSvg
+  .replaceAll('#F3EBDE', () => LIGHT_INK)
+  .replace(
+    new RegExp(
+      `(<linearGradient id="snug-gradient-lockup-wordmark"[^>]*>)${WORDMARK_GRADIENT_STOPS}`,
+    ),
+    (_match, opening) => opening + LIGHT_WORDMARK_GRADIENT_STOPS,
+  )
 
 const auroraGlow = `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.22), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.14), transparent 70%), ${GROUND}`
 
@@ -128,6 +171,22 @@ async function finishPage(page, outPath) {
     `${path.relative(repositoryRoot, outPath)} ${(size / 1024).toFixed(0)} KB`,
   )
   return size
+}
+
+async function renderCover(browser, outPath, { light }) {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } })
+  const ground = light
+    ? `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.16), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.1), transparent 70%), ${LIGHT_GROUND}`
+    : auroraGlow
+  const lockup = light ? lightLockupSvg : lockupSvg
+  const sloganColor = light ? '#5E5240' : '#DCC8A6'
+  await page.setContent(`
+    <style>${fontFaces}svg{display:block;width:100%;height:auto}</style>
+    <body style="margin:0;width:1280px;height:640px;background:${ground};display:flex;align-items:center;justify-content:center;flex-direction:column">
+      <div style="width:520px">${lockup}</div>
+      <div style="font-family:Geist,system-ui,sans-serif;font-size:36px;color:${sloganColor};max-width:900px;text-align:center;line-height:1.4;margin-top:44px">${escapeHtml(SLOGAN)}</div>
+    </body>`)
+  return finishPage(page, outPath)
 }
 
 async function renderSmallTile(browser, outPath) {
@@ -468,7 +527,7 @@ async function renderOgImages(browser) {
 const browser = await chromium.launch()
 
 try {
-  for (const size of [16, 32, 48, 128]) {
+  for (const size of MARK_PNG_SIZES) {
     await renderIcon(
       browser,
       size,
@@ -480,6 +539,12 @@ try {
     512,
     path.join(repositoryRoot, 'apps/extension/assets/icon.png'),
   )
+  const faviconPngs = await Promise.all(
+    FAVICON_SIZES.map((size) =>
+      readFile(path.join(brandRoot, 'logo/png', `mark-${size}.png`)),
+    ),
+  )
+  await writeFile(path.join(brandRoot, faviconPath), encodeIco(faviconPngs))
 
   const storeAssets = path.join(repositoryRoot, 'docs/store/assets')
   await renderIcon(browser, 128, path.join(storeAssets, 'store-icon-128.png'))
@@ -501,14 +566,22 @@ try {
     repositoryRoot,
     'docs/assets/github-social-preview-1280x640.png',
   )
-  await renderGithubSocialPreview(browser, githubPreviewPath)
+
+  await renderOgImages(browser)
+
+  const ogRoot = path.join(brandRoot, 'og')
+  await renderCover(browser, path.join(ogRoot, 'cover.png'), { light: false })
+  await renderCover(browser, path.join(ogRoot, 'cover-light.png'), {
+    light: true,
+  })
+  const socialPreviewPath = path.join(ogRoot, 'social-preview.png')
+  await renderGithubSocialPreview(browser, socialPreviewPath)
+  await copyFile(socialPreviewPath, githubPreviewPath)
   await assertPngSpec(githubPreviewPath, {
     width: 1280,
     height: 640,
     maxBytes: 1_000_000,
   })
-
-  await renderOgImages(browser)
 
   const youtubeRoot = path.join(brandRoot, 'youtube')
   await renderYoutubeBanner(
@@ -522,6 +595,10 @@ try {
   )
 
   await renderLaunchAssets(browser)
+
+  for (const spec of rasterSpecs) {
+    await assertSpecFile(spec, brandRoot)
+  }
 } finally {
   await browser.close()
 }

@@ -291,11 +291,14 @@ brand-kit render; left for the `/forge` application pass. Current locations:
   run applies the resulting `apply-spec.md` and ships v2.0.0.
 - English-first copy; Spanish adapted for meaning and tone, not a literal mirror
   (this repo's existing i18n convention).
-- **Fully independent brand** — overrides AO-1016's original "endorsed-brand"
-  framing (user decision, 2026-10-01). No AndryOre palette/grid inheritance, no
-  "by Andry Orellana" signature on the mark, listing, or logo. Authorship stays
-  visible only where a repo normally shows it (LICENSE, GitHub profile, commit
-  history) — never as brand furniture.
+- **Independent palette, type and mark, with a discreet maker credit** (revised
+  2026-11-11, [ADR 0036](../adr/0036-brand-kit-and-maker-credit.md)). Snug keeps
+  its own palette, type, mark and voice, with no AndryOre palette or grid
+  inheritance. The earlier rule of "fully independent brand, no signature" (user
+  decision, 2026-10-01, which overrode AO-1016's "endorsed-brand" framing) is
+  replaced by a single shared credit line, "Built by AndryOre", linking to
+  <https://andryore.dev>: the README's last line and the site footer. The credit
+  never appears on the mark, the logo, the store listing or the covers.
 - The official homepage is the live landing site at <https://snug.andryore.dev/>
   (privacy page: <https://snug.andryore.dev/privacy/>), served from an
   `andryore.dev` subdomain. No separate domain is bought for this product.

@@ -13,6 +13,7 @@
     "eslint-rules",
     "oxlint-plugins",
     "docs/adr",
+    "docs/brand/tools",
     "oxlint.config.ts",
     "vitest.config.ts"
   ]

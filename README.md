@@ -1,17 +1,26 @@
-![Snug](docs/assets/readme-banner.png)
-
 # Snug
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/og/cover.png">
+    <img src="docs/brand/og/cover-light.png" alt="Snug, a bookmark mark above the line: export, import, and back up your bookmarks, entirely on your device" width="720">
+  </picture>
+</p>
+
+**Export, import, and back up your bookmarks — entirely on your device.**
+
+[![CI][CI]][CI-url] [![Release][Release]][Release-url]
+[![License][License]][License-url]
+[![OpenSSF Scorecard][OpenSSF Scorecard]][OpenSSF Scorecard-url]
 [![Chrome Web Store Version][Chrome Web Store Version]][Chrome Web Store-url]
 [![Chrome Web Store Users][Chrome Web Store Users]][Chrome Web Store-url]
-[![CI][CI]][CI-url] [![License][License]][License-url]
-[![OpenSSF Scorecard][OpenSSF Scorecard]][OpenSSF Scorecard-url]
 [![OpenSSF Best Practices][OpenSSF Best Practices]][OpenSSF Best Practices-url]
 
-Export, import, and back up your bookmarks — entirely on your device.
+[Website](https://snug.andryore.dev/) ·
+[Documentation](https://github.com/andryorelabs/snug/tree/main/docs) ·
+[Privacy policy](https://snug.andryore.dev/privacy/)
 
-Website: <https://snug.andryore.dev/> · Privacy policy:
-<https://snug.andryore.dev/privacy/>
+## Features
 
 Snug is a browser extension that moves your bookmarks between browsers, exactly
 as you left them. Export your whole tree or just a folder, in six formats.
@@ -23,8 +32,6 @@ Downloads or a folder you choose on its own.
 Snug makes no network calls. Every operation reads and writes your browser's own
 bookmarks tree, locally — no account, no cloud, no server to trust. See the
 [Privacy Policy](PRIVACY_POLICY.md) for details.
-
-## Features
 
 - Export bookmarks as HTML, JSON, CSV, Markdown, OPML, or XBEL.
 - Import HTML, JSON, CSV, and XBEL files, a Chrome profile `Bookmarks` file, or
@@ -59,9 +66,12 @@ Install from the Chrome Web Store or Microsoft Edge Add-ons:
 Snug also works on other Chromium-based browsers (Opera, Brave) through the
 Chrome Web Store listing.
 
-## Privacy
+## Usage
 
-The [Privacy Policy](PRIVACY_POLICY.md) covers the permissions Snug requests and
+Open Snug from the toolbar popup or its full-page app. A guide page covers each
+task: exporting, importing, finding duplicates, settings, and Auto-export, all
+indexed in [`docs/usage.md`](docs/usage.md). The
+[Privacy Policy](PRIVACY_POLICY.md) covers the permissions Snug requests and
 why.
 
 ## Documentation
@@ -87,20 +97,18 @@ why.
 [![Shadcn/UI][Shadcn/UI]][Shadcn/UI-url] [![Lucide][Lucide]][Lucide-url]
 [![TypeScript][TypeScript]][TypeScript-url]
 
-## Local Development
+## Contributing
 
 Snug is a bun-workspaces monorepo: the extension lives in `apps/extension` and
 the shared UI in `packages/ui`. Run every script from the repo root. See
 [`docs/development.md`](docs/development.md) for the rest.
 
 ```bash
-git clone https://github.com/AndryOre/snug.git
+git clone https://github.com/andryorelabs/snug.git
 cd snug
 bun install
 bun run dev
 ```
-
-## Contributors
 
 Contributions are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup,
 branch naming, and commit/PR conventions. Agent instructions live in
@@ -109,9 +117,9 @@ branch naming, and commit/PR conventions. Agent instructions live in
 [`packages/ui/AGENTS.md`](packages/ui/AGENTS.md) and
 [`apps/video/AGENTS.md`](apps/video/AGENTS.md).
 
-[![Contributors](https://contrib.rocks/image?repo=AndryOre/snug)](https://github.com/AndryOre/snug/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=andryorelabs/snug)](https://github.com/andryorelabs/snug/graphs/contributors)
 
-## Testing
+### Testing
 
 This project is tested with BrowserStack.
 
@@ -149,14 +157,16 @@ for details.
 [Microsoft Edge Add-ons-url]:
   https://microsoftedge.microsoft.com/addons/detail/efknehclgcncocgochoibgiiagklcnho
 [CI]:
-  https://img.shields.io/github/actions/workflow/status/AndryOre/snug/ci.yml?branch=main&style=flat
-[CI-url]: https://github.com/AndryOre/snug/actions/workflows/ci.yml
-[License]: https://img.shields.io/github/license/AndryOre/snug?style=flat
+  https://img.shields.io/github/actions/workflow/status/andryorelabs/snug/ci.yml?branch=main&style=flat
+[CI-url]: https://github.com/andryorelabs/snug/actions/workflows/ci.yml
+[License]: https://img.shields.io/github/license/andryorelabs/snug?style=flat
 [License-url]: LICENSE
+[Release]: https://img.shields.io/github/v/release/andryorelabs/snug?style=flat
+[Release-url]: https://github.com/andryorelabs/snug/releases/latest
 [OpenSSF Scorecard]:
-  https://api.securityscorecards.dev/projects/github.com/AndryOre/snug/badge
+  https://api.scorecard.dev/projects/github.com/andryorelabs/snug/badge
 [OpenSSF Scorecard-url]:
-  https://scorecard.dev/viewer/?uri=github.com/AndryOre/snug
+  https://scorecard.dev/viewer/?uri=github.com/andryorelabs/snug
 [OpenSSF Best Practices]: https://www.bestpractices.dev/projects/15093/badge
 [OpenSSF Best Practices-url]: https://www.bestpractices.dev/projects/15093
 [WXT]:
@@ -177,3 +187,5 @@ for details.
 [TypeScript]:
   https://img.shields.io/badge/TypeScript-3178C6.svg?style=for-the-badge&logo=TypeScript&logoColor=white
 [TypeScript-url]: https://www.typescriptlang.org/
+
+Built by [AndryOre](https://andryore.dev)
