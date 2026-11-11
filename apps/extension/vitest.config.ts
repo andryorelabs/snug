@@ -21,7 +21,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       include: ['lib/**'],
-      thresholds: { lines: 93, statements: 93, branches: 86, functions: 93 },
+      thresholds: { lines: 94, statements: 93, branches: 86, functions: 93 },
     },
   },
 })
