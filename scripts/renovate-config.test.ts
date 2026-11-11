@@ -12,7 +12,7 @@ interface PackageRule {
   matchDepTypes?: string[];
 }
 
-const config = JSON5.parse<{ packageRules: PackageRule[] }>(
+const config = JSON5.parse<{ baseBranchPatterns?: string[]; packageRules: PackageRule[] }>(
   readFileSync(new URL("../renovate.json5", import.meta.url), "utf8"),
 );
 
@@ -20,6 +20,10 @@ const OXC_PACKAGES = ["oxlint", "oxlint-tsgolint", "oxfmt", "typescript7"];
 
 describe("renovate.json5", () => {
   const oxcRule = config.packageRules.find((rule) => rule.groupName === "oxc");
+
+  test("targets develop as the base branch", () => {
+    expect(config.baseBranchPatterns).toEqual(["develop"]);
+  });
 
   test("groups the Oxc toolchain, exact-pinned and without automerge", () => {
     expect(oxcRule?.matchDepNames).toEqual(OXC_PACKAGES);

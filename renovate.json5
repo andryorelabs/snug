@@ -11,6 +11,8 @@
     ":preserveSemverRanges",
   ],
 
+  baseBranchPatterns: ["develop"],
+
   timezone: "UTC",
   schedule: ["before 12pm on monday"],
 
@@ -20,8 +22,8 @@
   branchConcurrentLimit: 5,
 
   rangeStrategy: "bump",
-  // Main requires the PR branch to be up to date before merging
-  // (strict_required_status_checks_policy in the main branch ruleset),
+  // Develop requires the PR branch to be up to date before merging
+  // (strict_required_status_checks_policy in the develop branch ruleset),
   // so automerge branches must be kept current, not just conflict-free
   rebaseWhen: "behind-base-branch",
 
@@ -141,7 +143,7 @@
     },
 
     // OPT-IN AUTOMERGE — active: branch protection + required "CI passed" status check
-    // are now enforced on main (AO-827, docs/adr/0001-public-repo-security-posture.md)
+    // are now enforced on develop (AO-827, docs/adr/0001-public-repo-security-posture.md)
     // Uses 7-day release age (stricter than global 3-day) as extra supply-chain buffer
     {
       matchDepTypes: ["devDependencies"],
