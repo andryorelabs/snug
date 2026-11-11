@@ -35,6 +35,7 @@
     "@types/react": "catalog:",
     "@types/web": "0.0.359",
     "typescript": "catalog:",
+    "@vitest/coverage-v8": "^5.0.4",
     "vitest": "catalog:"
   },
   "scripts": {
@@ -43,6 +44,7 @@
     "render": "bun scripts/render-all.ts",
     "thumbnails": "bun scripts/render-thumbnails.ts",
     "check": "node ../../node_modules/typescript7/bin/tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   }
 }
