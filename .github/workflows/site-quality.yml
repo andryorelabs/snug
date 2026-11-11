@@ -305,7 +305,7 @@ jobs:
 
       - name: Install the Playwright 1.63 Chromium for Lighthouse
         working-directory: apps/site
-        run: bunx playwright@1.63.0 install chromium
+        run: bunx playwright@1.63.0 install --with-deps chromium
 
       - name: Enforce the Lighthouse budget
         working-directory: apps/site
