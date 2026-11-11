@@ -19,7 +19,8 @@ what gets merged.
    Every PR must pass CI (formatting, linting, type-checking, unused-code
    detection, and tests — see [`CONTRIBUTING.md`](CONTRIBUTING.md)) before it
    can be merged. Pull requests are merged via **squash merge only**, keeping a
-   linear history on `develop`. `main` receives only promotions of `develop`.
+   linear history on `develop`. `main` receives only promotions of `develop`
+   ([ADR 0040](docs/adr/0040-develop-branch-promoted-by-merge-commit.md)).
 3. **ADR for hard-to-reverse choices.** Decisions that are expensive to reverse
    — architecture, security posture, or anything that changes how contributors
    work — are recorded as an Architecture Decision Record under

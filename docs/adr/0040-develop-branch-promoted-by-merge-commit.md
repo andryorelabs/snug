@@ -72,5 +72,6 @@ requests from a squashed branch can repeat commits and conflicts.
 - A `Closes #N` line does not close a GitHub issue on merge into `develop`,
   because it is not the default branch. Tickets live in Linear, whose GitHub
   integration follows the pull request.
-- A pull request opened without `--base develop` targets `main` and is refused
-  by its ruleset unless it is a promotion.
+- A pull request opened without `--base develop` targets `main`. The `main`
+  ruleset limits the merge method, not the head branch, so "`main` receives
+  promotions only" is a convention that no ruleset enforces.

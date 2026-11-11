@@ -217,9 +217,10 @@ Open work against `develop`:
 gh pr create --base develop
 ```
 
-A pull request opened without `--base develop` targets `main` and its ruleset
-refuses it. To promote, open a pull request from `develop` to `main` and merge
-it with a merge commit, not a squash:
+A pull request opened without `--base develop` targets `main`, the default
+branch. No ruleset refuses it: that `main` receives promotions only is a
+convention, so check the base before you merge. To promote, open a pull request
+from `develop` to `main` and merge it with a merge commit, not a squash:
 
 ```
 gh pr create --base main --head develop --title "chore: 🔀 promote develop to main"
