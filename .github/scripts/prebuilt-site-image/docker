@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Stands in for `docker` in the Site Quality jobs that fan out from one build.
+# apps/site/docker/smoke.sh and apps/site/scripts/visual.sh each run their own
+# `docker build`; with this directory first on PATH that build becomes a tag of
+# PREBUILT_SITE_IMAGE (the image the build job shared), so the site is built
+# once per run. Every other docker command goes to the real docker unchanged.
+set -euo pipefail
+
+shim_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+remaining_path=""
+IFS=':' read -ra path_entries <<<"${PATH}"
+for entry in "${path_entries[@]}"; do
+  if [[ "${entry}" != "${shim_directory}" ]]; then
+    remaining_path+="${remaining_path:+:}${entry}"
+  fi
+done
+export PATH="${remaining_path}"
+
+if [[ "${1:-}" != "build" ]]; then
+  exec docker "$@"
+fi
+
+if [[ -z "${PREBUILT_SITE_IMAGE:-}" ]]; then
+  echo "::error::PREBUILT_SITE_IMAGE is not set, so there is no image to reuse." >&2
+  exit 1
+fi
+
+tag=""
+shift
+while (($# > 0)); do
+  case "$1" in
+    -t | --tag)
+      tag="${2:-}"
+      shift
+      ;;
+  esac
+  shift
+done
+
+if [[ -z "${tag}" ]]; then
+  echo "::error::The docker build to replace has no -t <tag>." >&2
+  exit 1
+fi
+
+exec docker tag "${PREBUILT_SITE_IMAGE}" "${tag}"

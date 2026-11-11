@@ -6,6 +6,7 @@ on:
       - 'apps/site/**'
       - 'packages/ui/**'
       - 'PRIVACY_POLICY.md'
+      - '.github/scripts/prebuilt-site-image/**'
       - '.github/workflows/site-quality.yml'
 
 concurrency:
@@ -16,8 +17,189 @@ permissions:
   contents: read
 
 jobs:
-  site-quality:
-    name: Smoke, accessibility and Lighthouse budget
+  build:
+    name: Build the site image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+
+      - name: Build and save the site image
+        run: |
+          docker build -f apps/site/Dockerfile \
+            --build-arg LAST_MODIFIED_DATES="$(bash apps/site/docker/last-modified.sh)" \
+            -t snug-site:ci .
+          docker save --output "${RUNNER_TEMP}/site-image.tar" snug-site:ci
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-image
+          path: ${{ runner.temp }}/site-image.tar
+          if-no-files-found: error
+          retention-days: 1
+
+  smoke:
+    name: Smoke (nginx) and distribution audit
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          filter: blob:none
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-image
+          path: ${{ runner.temp }}
+
+      - name: Load the site image
+        run: docker load --input "${RUNNER_TEMP}/site-image.tar"
+
+      # smoke.sh builds its own image; the shim turns that build into a tag of
+      # the image the build job shared.
+      - name: Run the nginx smoke script
+        env:
+          PREBUILT_SITE_IMAGE: snug-site:ci
+        run: |
+          export PATH="${GITHUB_WORKSPACE}/.github/scripts/prebuilt-site-image:${PATH}"
+          bash apps/site/docker/smoke.sh
+
+      - name: Audit the build output distribution
+        env:
+          REQUIRE_DIST: '1'
+        run: |
+          container="$(docker create snug-site:ci)"
+          docker cp "${container}:/usr/share/nginx/html" apps/site/dist
+          docker rm "${container}"
+          cd apps/site
+          bun run test src/seo/distribution-audit.test.ts
+
+  e2e:
+    name: E2E (container ${{ matrix.shard }}/2)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-image
+          path: ${{ runner.temp }}
+
+      - name: Load the site image
+        run: docker load --input "${RUNNER_TEMP}/site-image.tar"
+
+      - name: Start the container
+        run: |
+          docker run -d --name snug-site -p 127.0.0.1:8080:80 snug-site:ci
+          for _ in $(seq 1 30); do
+            curl -fs -o /dev/null http://127.0.0.1:8080/ && exit 0
+            sleep 1
+          done
+          docker logs snug-site
+          exit 1
+
+      - name: Read the Playwright version
+        id: playwright-version
+        working-directory: apps/site
+        run: |
+          version="$(bunx playwright --version)"
+          echo "version=${version#Version }" >> "$GITHUB_OUTPUT"
+
+      # System libraries are not cached, so a hit still runs install-deps.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key:
+            ${{ runner.os }}-playwright-${{
+            steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: apps/site
+        run: bunx playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: apps/site
+        run: bunx playwright install-deps chromium
+
+      # --fully-parallel lets a shard split inside a spec file; without it
+      # quality-gates.spec.ts lands whole in one shard.
+      - name: Run the smoke and accessibility spec
+        working-directory: apps/site
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: bun run test:container --fully-parallel --shard="${SHARD}/2"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: site-container-report-${{ matrix.shard }}
+          path: |
+            apps/site/playwright-report/
+            apps/site/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  visual:
+    name: Visual regression
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -46,11 +228,73 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Build and start the container
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-image
+          path: ${{ runner.temp }}
+
+      - name: Load the site image
+        run: docker load --input "${RUNNER_TEMP}/site-image.tar"
+
+      # visual.sh builds its own image; the shim turns that build into a tag of
+      # the image the build job shared.
+      - name: Run the visual regression suite
+        working-directory: apps/site
+        env:
+          PREBUILT_SITE_IMAGE: snug-site:ci
         run: |
-          docker build -f apps/site/Dockerfile \
-            --build-arg LAST_MODIFIED_DATES="$(bash apps/site/docker/last-modified.sh)" \
-            -t snug-site:ci .
+          export PATH="${GITHUB_WORKSPACE}/.github/scripts/prebuilt-site-image:${PATH}"
+          bun run test:visual
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: site-visual-report
+          path: |
+            apps/site/playwright-report/
+            apps/site/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  lighthouse:
+    name: Lighthouse budget
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-image
+          path: ${{ runner.temp }}
+
+      - name: Load the site image
+        run: docker load --input "${RUNNER_TEMP}/site-image.tar"
+
+      - name: Start the container
+        run: |
           docker run -d --name snug-site -p 127.0.0.1:8080:80 snug-site:ci
           for _ in $(seq 1 30); do
             curl -fs -o /dev/null http://127.0.0.1:8080/ && exit 0
@@ -58,51 +302,6 @@ jobs:
           done
           docker logs snug-site
           exit 1
-
-      - name: Run the nginx smoke script
-        run: bash apps/site/docker/smoke.sh
-
-      - name: Read the Playwright version
-        id: playwright-version
-        working-directory: apps/site
-        run: |
-          version="$(bunx playwright --version)"
-          echo "version=${version#Version }" >> "$GITHUB_OUTPUT"
-
-      # System libraries are not cached, so a hit still runs install-deps.
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key:
-            ${{ runner.os }}-playwright-${{
-            steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browser
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: apps/site
-        run: bunx playwright install --with-deps chromium
-
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: apps/site
-        run: bunx playwright install-deps chromium
-
-      - name: Run the smoke and accessibility spec
-        working-directory: apps/site
-        run: bun run test:container
-
-      - name: Run the visual regression suite
-        working-directory: apps/site
-        run: bun run test:visual
-
-      - name: Audit the build output distribution
-        working-directory: apps/site
-        env:
-          REQUIRE_DIST: '1'
-        run: |
-          bun run build
-          bun run test src/seo/distribution-audit.test.ts
 
       - name: Install the Playwright 1.63 Chromium for Lighthouse
         working-directory: apps/site
@@ -115,12 +314,22 @@ jobs:
           export CHROME_PATH
           bun run lighthouse
 
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: failure()
-        with:
-          name: site-playwright-report
-          path: |
-            apps/site/playwright-report/
-            apps/site/test-results/
-          if-no-files-found: ignore
-          retention-days: 7
+  site-quality-passed:
+    name: Site quality passed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    needs: [build, smoke, e2e, visual, lighthouse]
+    if: always()
+    steps:
+      - name: Check job results
+        env:
+          FAILED:
+            ${{ contains(needs.*.result, 'failure') || contains(needs.*.result,
+            'cancelled') }}
+        run: |
+          if [[ "${FAILED}" == "true" ]]; then
+            echo "One or more Site Quality jobs failed or were cancelled."
+            exit 1
+          fi
