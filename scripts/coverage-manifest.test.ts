@@ -20,32 +20,10 @@ const ENDPOINT_REASON =
   'Thin Astro endpoint that feeds a tested builder, verified through the site build output.'
 const SITE_MODULE_REASON =
   'Site module exercised through the tests of its consumers and the site build output; a colocated test retires this exemption on the ramp toward 95/95/90/95.'
-const EXTENSION_LIB_REASON =
-  'Extension module exercised through the tests of its consumers in apps/extension/lib; a colocated test retires this exemption on the ramp toward 95/95/90/95.'
 const TEST_SUPPORT_REASON =
   'Test-support helper shared by the extension tests, with no behavior of its own.'
 
 const EXEMPTIONS: Readonly<Record<string, string>> = {
-  'apps/extension/lib/bookmark-tree-nodes.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/csv-escaping.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/custom-folder-writer.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-all-bookmarks.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-control.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/export-formats.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/exporters/export-tree.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/folder-run-identity.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/format-snapshot-date.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-control.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-duplicates.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/import-mode-items.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-chrome.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-safari.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/import-xbel.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/mobile-root.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/importers/parse-import.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/parse-json-once.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/render-export.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/root-folders.ts': EXTENSION_LIB_REASON,
   'apps/extension/lib/testing/dom-harness.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/testing/fake-bookmarks.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/testing/fake-directory-handle.ts': TEST_SUPPORT_REASON,
@@ -56,8 +34,6 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
   'apps/extension/lib/testing/setup-locks.ts': TEST_SUPPORT_REASON,
   'apps/extension/lib/types.ts':
     'Type-only module with the shared extension types, no runtime behavior to test.',
-  'apps/extension/lib/use-operation-progress.ts': EXTENSION_LIB_REASON,
-  'apps/extension/lib/use-slash-to-focus.ts': EXTENSION_LIB_REASON,
   'apps/site/src/components/AlternativesPage.astro': ASTRO_REASON,
   'apps/site/src/components/Bento.astro': ASTRO_REASON,
   'apps/site/src/components/ComparisonBreadcrumb.astro': ASTRO_REASON,
