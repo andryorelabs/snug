@@ -578,10 +578,11 @@ on the zip instead (`scripts/check-zip-size.ts`).
 Renovate (`renovate.json5`) opens the update pull requests, on Mondays before
 12:00 UTC, and tracks them in the Dependency Dashboard issue. Updates wait three
 days after publication, and a lockfile maintenance PR refreshes the bun
-workspaces weekly. Vulnerabilities come from OSV alerts only; Dependabot alerts
-are disabled ([ADR 0001](adr/0001-public-repo-security-posture.md)). Custom
-managers also pin the tool versions the workflows download, such as actionlint,
-whose SHA-256 must be updated by hand in the same PR.
+workspaces weekly. Vulnerabilities come from OSV and Dependabot alerts; Renovate
+stays the only version updater
+([ADR 0001](adr/0001-public-repo-security-posture.md)). Custom managers also pin
+the tool versions the workflows download, such as actionlint, whose SHA-256 must
+be updated by hand in the same PR.
 
 ## Repository settings
 
