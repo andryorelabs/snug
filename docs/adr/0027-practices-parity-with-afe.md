@@ -21,6 +21,9 @@ the aokit page
 (formerly `docs-and-forge.md`); see
 [0035](0035-adopt-andryorelabs-standard-v1.md).
 
+Revised: 2026-11-11, the import-sort row drops Snug's extra `astro` group: Snug
+now uses the shared Oxfmt groups (standard v1 rule E8).
+
 ## Context
 
 Snug and Animated Fluent Emojis (AFE) are maintained by the same person and
@@ -55,7 +58,7 @@ other.
 | Umami analytics                           | Applies                   | N/A        | AFE has no analytics, same reason as the privacy page                                                                                                                                |
 | Cross-browser library tests               | N/A                       | Applies    | Snug is Chromium-only; AFE is a multi-browser library                                                                                                                                |
 | `jsx-no-literals` lint rule               | Applies                   | N/A        | Snug's UI copy is translatable; `@eslint-react` has no equivalent, so `eslint-plugin-react` stays for this one rule, loaded as an Oxlint jsPlugin                                    |
-| Import sort (Oxfmt `sortImports`)         | Applies                   | Applies    | Both repos sort imports with Oxfmt (ADR 0028): third-party, then `@/`, then relative, with Snug's extra group for `astro`                                                            |
+| Import sort (Oxfmt `sortImports`)         | Applies                   | Applies    | Both repos sort imports with Oxfmt (ADR 0028): builtin, third-party, then `@/`, then relative                                                                                        |
 | `llms.txt` generator                      | Applies                   | Equivalent | AFE keeps `starlight-llms-txt` for the docs text and composes `llms.txt` and `llms-full.txt` with landing and emoji pages in `src/seo/llms.ts`                                       |
 | Style lint (no `<style>` in `.astro`)     | `shadcn/no-inline-styles` | Equivalent | Equivalent: Snug's `@shadcn/lint` rule reports `<style>` in `.astro`; AFE bans the blocks with `local/no-astro-style-blocks`, and also runs `shadcn/no-inline-styles` on `apps/site` |
 | Style lint (@shadcn/lint)                 | Applies                   | Applies    | Both repos enforce the same rule set; AFE scopes it to `apps/site` and exempts the generated ui layer                                                                                |
