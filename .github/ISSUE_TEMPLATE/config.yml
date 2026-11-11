@@ -1,10 +1,9 @@
 blank_issues_enabled: false
 
 contact_links:
-  - name: 💬 Questions & Discussions
-    url: https://github.com/AndryOre/snug/discussions
-    about:
-      Ask questions, share ideas, or get help — use Discussions, not issues.
+  - name: 📖 Documentation
+    url: https://snug.andryore.dev/
+    about: Read the guides first — most questions are answered there.
   - name: 🚨 Security Vulnerability
-    url: https://github.com/AndryOre/snug/security/advisories/new
+    url: https://github.com/andryorelabs/snug/security/advisories/new
     about: Report vulnerabilities privately via GitHub Security Advisories.
