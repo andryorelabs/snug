@@ -4,7 +4,9 @@ The GitHub settings of `andryorelabs/snug` live in this folder as reviewable
 files. The live repository is brought to match the files, never edited by hand
 first.
 
-- [`main.json`](main.json): the ruleset on the default branch.
+- [`develop.json`](develop.json): the ruleset on the `develop` branch.
+- [`main.json`](main.json): the ruleset on the default branch, which only
+  accepts promotions from `develop`.
 - [`tags.json`](tags.json): the ruleset on `v*` tags.
 - The table below: every other repository setting this project depends on.
 
@@ -21,14 +23,19 @@ repository; without it those rows are reported as absent.
 
 ## Rulesets
 
-Both files use the import format of the
+The files use the import format of the
 [repository rulesets API](https://docs.github.com/en/rest/repos/rules), so each
 file is the request body as is.
 
-| File        | Target                       | Rules                                                                                                                                                                                                              | Bypass actors |
-| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| `main.json` | Default branch               | No deletion, no force push, linear history, signed commits, pull request required (squash only, threads resolved, 0 approvals), strict required checks `CI passed`, `Validate PR title` and `Check markdown links` | None          |
-| `tags.json` | Tags matching `refs/tags/v*` | No deletion, no force push, no update                                                                                                                                                                              | None          |
+| File           | Target                       | Rules                                                                                                                                                                                                              | Bypass actors |
+| -------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| `develop.json` | Branch `refs/heads/develop`  | No deletion, no force push, linear history, signed commits, pull request required (squash only, threads resolved, 0 approvals), strict required checks `CI passed`, `Validate PR title` and `Check markdown links` | None          |
+| `main.json`    | Default branch               | No deletion, no force push, signed commits, pull request required (merge commit only, threads resolved, 0 approvals), non-strict required checks `CI passed`, `Validate PR title` and `Check markdown links`       | None          |
+| `tags.json`    | Tags matching `refs/tags/v*` | No deletion, no force push, no update                                                                                                                                                                              | None          |
+
+`main` drops linear history and the strict policy because a promotion is a
+merge commit from `develop`, which `main` never has to be rebased onto. See
+[ADR 0040](../../docs/adr/0040-develop-branch-promoted-by-merge-commit.md).
 
 `scripts/rulesets.test.ts` fails when a required check names no workflow job.
 
@@ -43,6 +50,10 @@ Apply a ruleset file to the existing ruleset of the same name:
 
 ```sh
 gh api --method PUT \
+  "repos/andryorelabs/snug/rulesets/$(gh api repos/andryorelabs/snug/rulesets --jq '.[] | select(.name == "develop") | .id')" \
+  --input .github/rulesets/develop.json
+
+gh api --method PUT \
   "repos/andryorelabs/snug/rulesets/$(gh api repos/andryorelabs/snug/rulesets --jq '.[] | select(.name == "main") | .id')" \
   --input .github/rulesets/main.json
 
@@ -51,9 +62,20 @@ gh api --method PUT \
   --input .github/rulesets/tags.json
 ```
 
+Create the `develop` ruleset, then update `main` to promotion-only:
+
+```sh
+gh api --method POST repos/andryorelabs/snug/rulesets --input .github/rulesets/develop.json
+
+gh api --method PUT \
+  "repos/andryorelabs/snug/rulesets/$(gh api repos/andryorelabs/snug/rulesets --jq '.[] | select(.name == "main") | .id')" \
+  --input .github/rulesets/main.json
+```
+
 Create a ruleset that does not exist yet:
 
 ```sh
+gh api --method POST repos/andryorelabs/snug/rulesets --input .github/rulesets/develop.json
 gh api --method POST repos/andryorelabs/snug/rulesets --input .github/rulesets/main.json
 gh api --method POST repos/andryorelabs/snug/rulesets --input .github/rulesets/tags.json
 ```
@@ -66,10 +88,12 @@ output, the second is its expected JSON value. Keep both in backticks.
 | Setting                                                        | Expected     | Meaning                                 |
 | -------------------------------------------------------------- | ------------ | --------------------------------------- |
 | `allow_squash_merge`                                           | `true`       | Squash merging is allowed               |
-| `allow_merge_commit`                                           | `false`      | Merge commits are off                   |
+| `allow_merge_commit`                                           | `true`       | Merge commits are on, for promotions    |
 | `allow_rebase_merge`                                           | `false`      | Rebase merging is off                   |
 | `squash_merge_commit_title`                                    | `"PR_TITLE"` | The squash commit title is the PR title |
 | `squash_merge_commit_message`                                  | `"PR_BODY"`  | The squash commit body is the PR body   |
+| `merge_commit_title`                                           | `"PR_TITLE"` | The merge commit title is the PR title  |
+| `merge_commit_message`                                         | `"PR_BODY"`  | The merge commit body is the PR body    |
 | `delete_branch_on_merge`                                       | `true`       | Head branches are deleted on merge      |
 | `allow_auto_merge`                                             | `true`       | Auto-merge is available                 |
 | `allow_update_branch`                                          | `true`       | PRs offer "Update branch"               |
@@ -90,7 +114,7 @@ endpoints, listed under "Read back" below.
 
 ```sh
 gh api repos/andryorelabs/snug \
-  --jq '{allow_squash_merge, allow_merge_commit, allow_rebase_merge, squash_merge_commit_title, squash_merge_commit_message, delete_branch_on_merge, allow_auto_merge, allow_update_branch, has_wiki, has_projects, has_discussions, security_and_analysis}'
+  --jq '{allow_squash_merge, allow_merge_commit, allow_rebase_merge, squash_merge_commit_title, squash_merge_commit_message, merge_commit_title, merge_commit_message, delete_branch_on_merge, allow_auto_merge, allow_update_branch, has_wiki, has_projects, has_discussions, security_and_analysis}'
 
 gh api repos/andryorelabs/snug/private-vulnerability-reporting
 
@@ -106,7 +130,9 @@ Merge, feature and security-analysis settings:
 gh api --method PATCH repos/andryorelabs/snug --input - <<'JSON'
 {
   "allow_squash_merge": true,
-  "allow_merge_commit": false,
+  "allow_merge_commit": true,
+  "merge_commit_title": "PR_TITLE",
+  "merge_commit_message": "PR_BODY",
   "allow_rebase_merge": false,
   "squash_merge_commit_title": "PR_TITLE",
   "squash_merge_commit_message": "PR_BODY",
