@@ -1,6 +1,6 @@
 # AO-801: repo-wide reformat with Prettier — skip in `git blame`
-d0049d40aee7a2d8f0aac80c52b22022097bd3f0
+10efa684d3c6ac3f74d388aa9051c84d5691ceea
 # AO-2609: repo-wide reformat with Oxfmt — skip in `git blame`
-ca5278c40726dd2eff24965711635591df5d73a0
+0566e4a97fc7da6f89dce7c1b623b4aaec265043
 # AO-3043: repo-wide reformat with Oxfmt defaults — skip in `git blame`
 68d1aaa540ea91a3e815df550d596559a59fe0b5
