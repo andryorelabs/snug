@@ -48,10 +48,12 @@
     "selfCheck": ["bun run check", "bun run test"]
   },
   "models": {
+    "worker": { "model": "sonnet", "effort": "medium" },
     "reviewer": {
       "medium": { "model": "fable", "effort": "medium" },
       "high": { "model": "fable", "effort": "medium" }
     },
+    "triage": "haiku",
     "escalation": { "sonnet": "fable" }
   }
 }
