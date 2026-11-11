@@ -34,7 +34,10 @@ const headingId = heading === undefined ? labelledBy : `${section}-heading`
       <Eyebrow class="mb-3 scroll-reveal">{eyebrow}</Eyebrow>
     )}
     {heading !== undefined && (
-      <SectionHeading id={headingId} class="scroll-reveal">
+      <SectionHeading
+        {...(headingId !== undefined && { id: headingId })}
+        class="scroll-reveal"
+      >
         {heading}
       </SectionHeading>
     )}

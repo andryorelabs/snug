@@ -43,7 +43,7 @@ export function comparisonSitemapEntries(): SitemapEntry[] {
     )
     return COMPARISON_PAGE_LOCALES.map((locale) => ({
       loc: `${SITE_ORIGIN}${alternativesPath(locale, slug)}`,
-      lastmod,
+      ...(lastmod !== undefined && { lastmod }),
       alternates,
     }))
   })
@@ -64,7 +64,11 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
     .toSorted((a, b) => a.localeCompare(b))
     .at(-1)
   const fillAlternatives = (template: string) =>
-    interpolateComparison(template, DEFAULT_LOCALE, { date: latest })
+    interpolateComparison(
+      template,
+      DEFAULT_LOCALE,
+      latest === undefined ? {} : { date: latest },
+    )
   const overview: LlmsFullSection = {
     title: alternatives.title,
     url: `${SITE_ORIGIN}${alternativesPath(DEFAULT_LOCALE)}`,
@@ -82,11 +86,12 @@ export function comparisonLlmsFullSections(): LlmsFullSection[] {
       interpolateComparison(template, DEFAULT_LOCALE, {
         users: facts.userCount,
         rating: facts.ratingValue,
-        languages:
-          facts.languageCount === 'not-listed'
-            ? undefined
-            : facts.languageCount,
-        historyMonths: facts.historyLimitMonths,
+        ...(facts.languageCount !== 'not-listed' && {
+          languages: facts.languageCount,
+        }),
+        ...(facts.historyLimitMonths !== undefined && {
+          historyMonths: facts.historyLimitMonths,
+        }),
         date: facts.verifiedOn,
         name: facts.shortName,
       })

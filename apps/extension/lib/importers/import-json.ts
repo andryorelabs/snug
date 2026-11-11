@@ -620,7 +620,11 @@ async function createBookmarks(
       : isAllowedBookmarkUrl(node.url)
     try {
       if (hasWritableUrl) {
-        await writer.create({ parentId, title: node.title, url: node.url })
+        await writer.create({
+          parentId,
+          title: node.title,
+          ...(node.url !== undefined && { url: node.url }),
+        })
       } else if (node.children) {
         const folder = await createFolderOrSkipSubtree(
           node,

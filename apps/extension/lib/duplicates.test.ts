@@ -97,7 +97,7 @@ const bookmark = (
   title: `Title ${id}`,
   url,
   syncing: false,
-  dateAdded,
+  ...(dateAdded !== undefined && { dateAdded }),
 })
 
 const folder = (

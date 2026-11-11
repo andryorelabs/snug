@@ -8,6 +8,7 @@ import { ImportLockHeldError, withImportLock } from './import-lock'
 import {
   addSnapshotToList,
   captureSafetySnapshot,
+  hasRewrittenRootsFully,
   MAX_SAFETY_SNAPSHOTS,
   readLatestSafetySnapshot,
   readSafetySnapshots,
@@ -292,6 +293,23 @@ describe('Mobile root and non-web URLs', () => {
 
     expect(snapshot.roots.map((root) => root.id)).toEqual(['1', '2', '3'])
     expect(snapshot.roots[2]?.children?.[0]?.title).toBe('On phone')
+  })
+
+  it('rewrites the roots without an onClearingExisting callback', async () => {
+    seedSample()
+    const { roots } = await captureSafetySnapshot()
+
+    await expect(hasRewrittenRootsFully(roots)).resolves.toBe(true)
+  })
+
+  it('calls onClearingExisting before the existing content is deleted', async () => {
+    seedSample()
+    const { roots } = await captureSafetySnapshot()
+    const onClearingExisting = vi.fn()
+
+    await hasRewrittenRootsFully(roots, onClearingExisting)
+
+    expect(onClearingExisting).toHaveBeenCalledOnce()
   })
 
   it('captures only two roots when there is no Mobile root', async () => {

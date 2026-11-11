@@ -238,7 +238,9 @@ const ExportContent = ({
               kind={entry.kind}
               label={entry.label}
               depth={entry.depth}
-              expanded={entry.expanded}
+              {...(entry.expanded !== undefined && {
+                expanded: entry.expanded,
+              })}
               checkProgress={checked}
               highlight={isDevelopment ? highlight : 0}
             />

@@ -57,8 +57,8 @@ export const test = base.extend<ExtensionFixtures>({
 
     const context = await chromium.launchPersistentContext(userDataDirectory, {
       channel: 'chromium',
-      locale: browserLocale,
-      deviceScaleFactor,
+      ...(browserLocale !== undefined && { locale: browserLocale }),
+      ...(deviceScaleFactor !== undefined && { deviceScaleFactor }),
       viewport,
       headless: !process.env.PWDEBUG,
       args: [
@@ -66,9 +66,9 @@ export const test = base.extend<ExtensionFixtures>({
         `--load-extension=${EXTENSION_DIR}`,
         ...(browserLocale ? [`--lang=${browserLocale}`] : []),
       ],
-      env: browserLocale
-        ? { ...process.env, LANGUAGE: browserLocale }
-        : undefined,
+      ...(browserLocale && {
+        env: { ...process.env, LANGUAGE: browserLocale },
+      }),
     })
 
     await use(context)
@@ -103,9 +103,9 @@ export const test = base.extend<ExtensionFixtures>({
           parentId?: string,
         ): Promise<void> => {
           const created = await chrome.bookmarks.create({
-            parentId,
+            ...(parentId !== undefined && { parentId }),
             title: node.title,
-            url: node.url,
+            ...(node.url !== undefined && { url: node.url }),
           })
           const children = node.children ?? []
           for (const child of children) {

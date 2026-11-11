@@ -24,7 +24,7 @@ const page = howToIndexDescriptor(locale)
 const groups = howToIndexGroups(locale)
 const crumbs = howToIndexCrumbs(locale).map((crumb, index, all) => ({
   name: crumb.name,
-  href: index < all.length - 1 ? crumb.path : undefined,
+  ...(index < all.length - 1 && { href: crumb.path }),
 }))
 ---
 

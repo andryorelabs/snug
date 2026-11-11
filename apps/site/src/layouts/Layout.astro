@@ -148,13 +148,13 @@ const switcherHref = page && hasAlternates ? page.path : undefined
     <Header
       locale={locale}
       markCurrent={hasAlternates}
-      pageHref={switcherHref}
+      {...(switcherHref !== undefined && { pageHref: switcherHref })}
     />
     <slot />
     <Footer
       locale={locale}
       markCurrent={hasAlternates}
-      pageHref={switcherHref}
+      {...(switcherHref !== undefined && { pageHref: switcherHref })}
     />
   </body>
 </html>

@@ -61,7 +61,7 @@ export function fromApiJob(job: ApiJob): AuditJob {
   }
   return {
     name: job.name,
-    conclusion: job.conclusion ?? undefined,
+    ...(job.conclusion != null && { conclusion: job.conclusion }),
     createdAt: job.created_at,
     startedAt: job.started_at ?? '',
     completedAt: job.completed_at ?? '',

@@ -3,8 +3,8 @@
  */
 export interface HeadEntry {
   tag: string
-  attrs?: Record<string, string | boolean | undefined>
-  content?: string
+  attrs?: Record<string, string | boolean | undefined> | undefined
+  content?: string | undefined
 }
 
 /**

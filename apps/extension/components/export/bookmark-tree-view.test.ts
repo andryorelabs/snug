@@ -47,8 +47,8 @@ async function mountView({ isSelectable, renderBadge }: MountOptions = {}) {
       nodes: NODES,
       searchTerm: '',
       ariaLabel: 'Import preview',
-      isSelectable,
-      renderBadge,
+      ...(isSelectable !== undefined && { isSelectable }),
+      ...(renderBadge !== undefined && { renderBadge }),
       autoExpandToken: 0,
       onSelectionChange: (count: number) => {
         selectedCount = count

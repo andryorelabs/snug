@@ -35,7 +35,7 @@ const values = howToValues(locale, slug) as unknown as Record<string, string>
 const fill = (template: string) => interpolateHowTo(template, locale, values)
 const crumbs = howToCrumbs(locale, slug).map((crumb, index, all) => ({
   name: crumb.name,
-  href: index < all.length - 1 ? crumb.path : undefined,
+  ...(index < all.length - 1 && { href: crumb.path }),
 }))
 const guideTitles = new Map(
   loadLocalizedCatalog()

@@ -32,7 +32,7 @@ const date = [
 ]
   .toSorted((a, b) => a.localeCompare(b))
   .at(-1)
-const values = { date }
+const values = date === undefined ? {} : { date }
 const lede = interpolateComparison(alternatives.lede, locale, values)
 const caption = interpolateComparison(shared.checkedNote, locale, values)
 const crumbs = [
@@ -47,9 +47,11 @@ const cards = COMPARISON_SLUGS.map((slug) => {
     slug,
     name: facts.shortName,
     href: alternativesPath(locale, slug),
-    pickWhen: interpolateComparison(alternatives.cards[slug].pickWhen, locale, {
-      languages,
-    }),
+    pickWhen: interpolateComparison(
+      alternatives.cards[slug].pickWhen,
+      locale,
+      languages === undefined ? {} : { languages },
+    ),
   }
 })
 ---

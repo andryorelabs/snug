@@ -32,9 +32,12 @@ const page = comparisonPageDescriptor(locale, slug)
 const values = {
   users: facts.userCount,
   rating: facts.ratingValue,
-  languages:
-    facts.languageCount === 'not-listed' ? undefined : facts.languageCount,
-  historyMonths: facts.historyLimitMonths,
+  ...(facts.languageCount !== 'not-listed' && {
+    languages: facts.languageCount,
+  }),
+  ...(facts.historyLimitMonths !== undefined && {
+    historyMonths: facts.historyLimitMonths,
+  }),
   date: facts.verifiedOn,
   name: facts.shortName,
 }

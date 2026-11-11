@@ -152,7 +152,7 @@ export function BookmarkTree(properties: BookmarkTreeProperties) {
       autoExpandToken={autoExpandToken}
       onSelectionChange={onSelectionChange}
       onTotalChange={onTotalChange}
-      className={className}
+      {...(className !== undefined && { className })}
       placeholder={resolvePlaceholder()}
       emptyState={emptyState}
     />
@@ -175,9 +175,11 @@ function addParentIds(
   return nodes.map((node) => ({
     id: node.id,
     title: node.title,
-    url: node.url,
-    parentId: parentId ?? node.parentId,
-    children: node.children ? addParentIds(node.children, node.id) : undefined,
+    ...(node.url !== undefined && { url: node.url }),
+    ...((parentId ?? node.parentId) !== undefined && {
+      parentId: parentId ?? node.parentId,
+    }),
+    ...(node.children && { children: addParentIds(node.children, node.id) }),
   }))
 }
 
