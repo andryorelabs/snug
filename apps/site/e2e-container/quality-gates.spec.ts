@@ -29,7 +29,7 @@ test("/install redirects with the three UTM tags", async ({ request }) => {
   const response = await request.get("/install", { maxRedirects: 0 });
   expect(response.status()).toBe(302);
 
-  const location = new URL(response.headers()["location"] ?? "");
+  const location = new URL(response.headers().location ?? "");
   expect(location.hostname).toBe("chromewebstore.google.com");
   expect(location.pathname).toBe(STORE_LISTING_PATH);
   expect(location.searchParams.get("utm_source")).toBe("landing");
@@ -41,14 +41,14 @@ test("/install/ answers exactly like /install", async ({ request }) => {
   const plain = await request.get("/install", { maxRedirects: 0 });
   const slashed = await request.get("/install/", { maxRedirects: 0 });
   expect(slashed.status()).toBe(302);
-  expect(slashed.headers()["location"]).toBe(plain.headers()["location"]);
+  expect(slashed.headers().location).toBe(plain.headers().location);
 });
 
 test("/reviews redirects to the store reviews with the UTM tags", async ({ request }) => {
   const response = await request.get("/reviews?c=proof", { maxRedirects: 0 });
   expect(response.status()).toBe(302);
 
-  const location = new URL(response.headers()["location"] ?? "");
+  const location = new URL(response.headers().location ?? "");
   expect(location.hostname).toBe("chromewebstore.google.com");
   expect(location.pathname).toBe(`${STORE_LISTING_PATH}/reviews`);
   expect(location.searchParams.get("utm_source")).toBe("landing");
@@ -80,7 +80,7 @@ for (const { alias, canonical } of ALIASES) {
   test(`${alias} redirects to ${canonical}`, async ({ request }) => {
     const response = await request.get(alias, { maxRedirects: 0 });
     expect(response.status()).toBe(301);
-    expect(response.headers()["location"]).toBe(canonical);
+    expect(response.headers().location).toBe(canonical);
   });
 }
 
@@ -359,7 +359,7 @@ for (const { duplicate, canonical } of [
   test(`${duplicate} redirects to ${canonical}`, async ({ request }) => {
     const response = await request.get(duplicate, { maxRedirects: 0 });
     expect(response.status()).toBe(301);
-    expect(response.headers()["location"]).toBe(canonical);
+    expect(response.headers().location).toBe(canonical);
   });
 }
 

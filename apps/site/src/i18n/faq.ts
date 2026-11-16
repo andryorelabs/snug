@@ -33,9 +33,9 @@ export function getLandingFaqCopy(locale: Locale): LandingFaqCopy {
     heading: content.landing.faq.heading,
     more: content.landing.faq.more,
     moreHref: localePath(locale, "/guide/faq/"),
-    entries: LANDING_FAQ_KEYS.map((id) => ({
-      id,
-      ...content.faq.items[id],
-    })),
+    entries: LANDING_FAQ_KEYS.map((id) => {
+      const { question, answer } = content.faq.items[id];
+      return { id, question, answer };
+    }),
   };
 }

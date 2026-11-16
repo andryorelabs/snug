@@ -250,7 +250,9 @@ export const BROWSER_FACTS: Record<BrowserSlug, BrowserFacts> = {
 /**
  * Every browser the facts module covers, in a stable order.
  */
-export const BROWSER_SLUGS = Object.keys(BROWSER_FACTS) as BrowserSlug[];
+export const BROWSER_SLUGS = Object.keys(BROWSER_FACTS).filter((key): key is BrowserSlug =>
+  Object.hasOwn(BROWSER_FACTS, key),
+);
 
 /**
  * Every sourced fact of one browser, flattened for validation and for the

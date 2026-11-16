@@ -57,5 +57,5 @@ test("the promo video iframe loads under the production CSP", async ({ page }) =
 test("/de redirects with a 301 to /de/", async ({ request }) => {
   const response = await request.get("/de", { maxRedirects: 0 });
   expect(response.status()).toBe(301);
-  expect(response.headers()["location"]).toBe("/de/");
+  expect(response.headers().location).toBe("/de/");
 });

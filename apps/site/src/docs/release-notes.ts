@@ -8,8 +8,6 @@ const RELEASE_HEADING =
   /^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)\] - (\d{4}-\d{2}-\d{2})$/;
 const NUMERIC_IDENTIFIER = /^\d+$/;
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i;
-const SECOND_LEVEL_HEADING = /^## /;
-const THIRD_LEVEL_HEADING = /^### /;
 const GROUP_HEADING = /^### (?:Added|Changed|Fixed)\s*$/;
 const LINK_REFERENCE_DEFINITION = /^\[[^\]]+\]:\s+\S+$/;
 
@@ -99,8 +97,8 @@ export function parseChangelog(markdown: string): ReleaseNote[] {
   const lines = markdown.split(/\r?\n/);
   for (const [index, line] of lines.entries()) {
     if (LINK_REFERENCE_DEFINITION.test(line)) continue;
-    if (!SECOND_LEVEL_HEADING.test(line)) {
-      if (THIRD_LEVEL_HEADING.test(line) && !GROUP_HEADING.test(line)) {
+    if (!line.startsWith("## ")) {
+      if (line.startsWith("### ") && !GROUP_HEADING.test(line)) {
         throw new Error(
           `CHANGELOG.md line ${index + 1}: unknown group heading "${line}"; expected "### Added", "### Changed" or "### Fixed"`,
         );

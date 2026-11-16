@@ -1,6 +1,6 @@
 import { buttonVariants } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
-import { type MouseEvent, useRef, useState } from "react";
+import React, { type MouseEvent, useRef, useState } from "react";
 
 import { youtubeEmbedUrl, youtubeWatchUrl } from "../i18n/landing";
 
@@ -46,7 +46,7 @@ export default function VideoFacade({
   posterWidth,
   posterHeight,
   posterPriority = false,
-}: VideoFacadeProperties) {
+}: VideoFacadeProperties): React.JSX.Element {
   const [active, setActive] = useState(false);
   const frameReference = useRef<HTMLIFrameElement>(null);
 

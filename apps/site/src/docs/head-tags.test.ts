@@ -32,9 +32,7 @@ const input: DocumentationHeadInput = {
 };
 
 function contents(head: HeadEntry[], key: "name" | "property", value: string) {
-  return head
-    .filter((entry) => entry.attrs?.[key] === value)
-    .map((entry) => entry.attrs?.["content"]);
+  return head.filter((entry) => entry.attrs?.[key] === value).map((entry) => entry.attrs?.content);
 }
 
 describe("buildDocumentationHead", () => {

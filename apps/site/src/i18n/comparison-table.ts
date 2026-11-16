@@ -1,4 +1,4 @@
-import { COMPETITORS, type CompetitorSlug, SNUG_FACTS } from "../content/competitors";
+import { COMPETITORS, SNUG_FACTS } from "../content/competitors";
 import { COMPARISON_SLUGS, type ComparisonSlug } from "./comparisons";
 import { languageTag, type Locale } from "./locales";
 
@@ -116,6 +116,9 @@ export function factCell(key: CriterionKey, facts: TableFacts, locale: Locale): 
         ? { kind: "none-declared" }
         : listCell(facts.dataDisclosure, true);
     }
+    default: {
+      throw new Error(`Unknown comparison criterion "${String(key)}"`);
+    }
   }
 }
 
@@ -136,11 +139,11 @@ export interface ComparisonSubject {
  * @returns The table rows, Snug first.
  */
 export function comparisonSubjects(): ComparisonSubject[] {
-  const competitors = COMPARISON_SLUGS.map((slug: CompetitorSlug) => {
+  const competitors = COMPARISON_SLUGS.map((slug) => {
     const facts = COMPETITORS[slug];
     return {
       isSnug: false,
-      slug: slug as ComparisonSlug,
+      slug,
       name: facts.name,
       shortName: facts.shortName,
       storeUrl: facts.storeUrl,

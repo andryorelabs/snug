@@ -1,6 +1,6 @@
 import type enComparisons from "../content/comparisons/en.json";
-import { COMPETITORS, type CompetitorSlug } from "../content/competitors";
-import { assertSameKeys, type ContentTree } from "./content";
+import { COMPARISON_PAGE_SLUGS, COMPETITORS, type CompetitorSlug } from "../content/competitors";
+import { assertSameKeys } from "./content";
 import { DEFAULT_LOCALE, languageTag, type Locale, localePath, LOCALES } from "./locales";
 
 /**
@@ -64,11 +64,7 @@ export function loadComparisonContent(
   for (const locale of LOCALES) {
     const content = byLocale[locale];
     if (content && locale !== DEFAULT_LOCALE) {
-      assertSameKeys(
-        reference as unknown as ContentTree,
-        locale,
-        content as unknown as ContentTree,
-      );
+      assertSameKeys(reference, locale, content);
     }
   }
   return byLocale;
@@ -92,21 +88,21 @@ export const COMPARISON_PAGE_LOCALES: readonly Locale[] = LOCALES.filter(
   (locale) => locale === DEFAULT_LOCALE || TRANSLATED_COMPARISON_LOCALES.has(locale),
 );
 
+function hasEnglishComparisonCopy(slug: CompetitorSlug): slug is ComparisonSlug {
+  const english = loadedContent[DEFAULT_LOCALE];
+  return english !== undefined && Object.keys(english.pages).includes(slug);
+}
+
 /**
  * Competitors that have a comparison page, in the order of `COMPETITORS`.
  * Each one must also have English copy, or the build fails.
  */
-export const COMPARISON_SLUGS: readonly ComparisonSlug[] = (
-  Object.entries(COMPETITORS) as [CompetitorSlug, { comparisonPage: boolean }][]
-)
-  .filter(([, facts]) => facts.comparisonPage)
-  .map(([slug]) => {
-    const english = loadedContent[DEFAULT_LOCALE];
-    if (!english || !Object.keys(english.pages).includes(slug)) {
-      throw new Error(`Competitor "${slug}" has no English comparison copy`);
-    }
-    return slug as ComparisonSlug;
-  });
+export const COMPARISON_SLUGS: readonly ComparisonSlug[] = COMPARISON_PAGE_SLUGS.map((slug) => {
+  if (!hasEnglishComparisonCopy(slug)) {
+    throw new Error(`Competitor "${slug}" has no English comparison copy`);
+  }
+  return slug;
+});
 
 /**
  * The locale whose copy a page renders: the locale itself when it has a
@@ -161,6 +157,19 @@ export interface ComparisonValues {
   name?: string;
 }
 
+const PLACEHOLDER_KEYS = [
+  "users",
+  "rating",
+  "languages",
+  "historyMonths",
+  "date",
+  "name",
+] as const satisfies readonly (keyof ComparisonValues)[];
+
+function isPlaceholderKey(key: string): key is keyof ComparisonValues {
+  return (PLACEHOLDER_KEYS as readonly string[]).includes(key);
+}
+
 function formatValue(key: string, value: string | number, tag: string): string {
   if (typeof value === "string" && key !== "date") return value;
   if (key === "date") {
@@ -194,7 +203,7 @@ export function interpolateComparison(
 ): string {
   const tag = languageTag(locale);
   return template.replaceAll(/\{(\w+)\}/g, (_match, key: string) => {
-    const value = (values as Record<string, string | number | undefined>)[key];
+    const value = isPlaceholderKey(key) ? values[key] : undefined;
     if (value === undefined) {
       throw new Error(`No value for placeholder "{${key}}" in "${template}"`);
     }

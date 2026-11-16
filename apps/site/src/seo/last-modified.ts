@@ -74,6 +74,6 @@ export function lastCommitDate(
   relativePaths: readonly string[],
   options: LastModifiedOptions = {},
 ): string | undefined {
-  const { cwd = process.cwd(), passedDates = process.env["LAST_MODIFIED_DATES"] } = options;
+  const { cwd = process.cwd(), passedDates = process.env.LAST_MODIFIED_DATES } = options;
   return gitDate(relativePaths, cwd) ?? passedDate(relativePaths, passedDates);
 }

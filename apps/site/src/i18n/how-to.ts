@@ -14,7 +14,7 @@ import {
 import type enMoveFirefoxToChrome from "../content/how-to/move-bookmarks-from-firefox-to-chrome/en.json";
 import type enShared from "../content/how-to/shared/en.json";
 import { PUBLISHED_SOURCES } from "../docs/published";
-import { assertSameKeys, type ContentTree } from "./content";
+import { assertSameKeys } from "./content";
 import { DEFAULT_LOCALE, languageTag, type Locale, localePath, LOCALES } from "./locales";
 
 /**
@@ -30,7 +30,9 @@ export type HowToPageContent = typeof enMoveFirefoxToChrome & {
  */
 export type HowToSharedContent = typeof enShared;
 
-type CopyFile<T> = { default: T };
+interface CopyFile<T> {
+  default: T;
+}
 
 /**
  * Copy modules keyed by `../content/how-to/<slug>/<locale>.json`. The `shared`
@@ -86,15 +88,23 @@ function readFolders(files: HowToFiles): Record<string, Partial<Record<Locale, u
   return folders;
 }
 
+function isSharedContent(value: unknown): value is HowToSharedContent {
+  return typeof value === "object" && value !== null;
+}
+
+function isPageContent(value: unknown): value is HowToPageContent {
+  return typeof value === "object" && value !== null;
+}
+
 function assertParity(label: string, byLocale: Partial<Record<Locale, unknown>>): void {
   const reference = byLocale[DEFAULT_LOCALE];
-  if (reference === undefined) {
+  if (typeof reference !== "object" || reference === null) {
     throw new Error(`Missing English How-to copy file for "${label}"`);
   }
   for (const locale of LOCALES) {
     const content = byLocale[locale];
-    if (content !== undefined && locale !== DEFAULT_LOCALE) {
-      assertSameKeys(reference as ContentTree, `${label}/${locale}`, content as ContentTree);
+    if (typeof content === "object" && content !== null && locale !== DEFAULT_LOCALE) {
+      assertSameKeys(reference, `${label}/${locale}`, content);
     }
   }
 }
@@ -141,10 +151,21 @@ export function loadHowToContent(sources: HowToSources = DEFAULT_SOURCES): Loade
       }
     }
   }
-  return {
-    shared: sharedByLocale as LoadedHowToContent["shared"],
-    pages: Object.fromEntries(folders) as LoadedHowToContent["pages"],
-  };
+  const shared: LoadedHowToContent["shared"] = {};
+  for (const locale of LOCALES) {
+    const copy = sharedByLocale[locale];
+    if (isSharedContent(copy)) shared[locale] = copy;
+  }
+  const pages: LoadedHowToContent["pages"] = {};
+  for (const [slug, byLocale] of folders) {
+    const pageCopy: Partial<Record<Locale, HowToPageContent>> = {};
+    for (const locale of LOCALES) {
+      const copy = byLocale[locale];
+      if (isPageContent(copy)) pageCopy[locale] = copy;
+    }
+    pages[slug] = pageCopy;
+  }
+  return { shared, pages };
 }
 
 const loaded = loadHowToContent();
@@ -372,16 +393,28 @@ function sentenceList(items: readonly string[], locale: Locale): string {
 }
 
 /**
+ * The placeholder values of a page as a plain string table.
+ * @param locale - A supported locale code.
+ * @param slug - A How-to page slug.
+ * @returns Every placeholder value, keyed by placeholder name.
+ */
+export function howToPlaceholderValues(locale: Locale, slug: string): Record<string, string> {
+  return Object.fromEntries(Object.entries(howToValues(locale, slug)));
+}
+
+/**
  * Latest `verifiedOn` of the browsers a page uses.
  * @param slug - A How-to page slug.
  * @returns An ISO date.
  */
 function howToVerifiedOn(slug: string): string {
   const { from, to } = getHowToPage(slug);
-  return [BROWSER_FACTS[from], BROWSER_FACTS[to]]
+  const latest = [BROWSER_FACTS[from], BROWSER_FACTS[to]]
     .map((facts: BrowserFacts) => facts.verifiedOn)
     .toSorted((a, b) => a.localeCompare(b))
-    .at(-1) as string;
+    .at(-1);
+  if (latest === undefined) throw new Error(`How-to page "${slug}" has no browser facts`);
+  return latest;
 }
 
 /**
@@ -457,11 +490,11 @@ export function interpolateHowTo(
  */
 export function getHowToMeta(locale: Locale, slug: string): { title: string; description: string } {
   const { title, description } = getHowToContent(locale, slug).meta;
-  const values = howToValues(locale, slug);
+  const values = howToPlaceholderValues(locale, slug);
   const tag = copyLocale(locale, slug);
   return {
-    title: interpolateHowTo(title, tag, values as unknown as Record<string, string>),
-    description: interpolateHowTo(description, tag, values as unknown as Record<string, string>),
+    title: interpolateHowTo(title, tag, values),
+    description: interpolateHowTo(description, tag, values),
   };
 }
 

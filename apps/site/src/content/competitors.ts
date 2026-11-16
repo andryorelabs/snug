@@ -184,9 +184,9 @@ export const COMPETITORS: Record<CompetitorSlug, CompetitorFacts> = {
 /**
  * Slugs that get their own Comparison page under `/alternatives/`.
  */
-export const COMPARISON_PAGE_SLUGS = (Object.keys(COMPETITORS) as CompetitorSlug[]).filter(
-  (slug) => COMPETITORS[slug].comparisonPage,
-);
+export const COMPARISON_PAGE_SLUGS = Object.keys(COMPETITORS)
+  .filter((key): key is CompetitorSlug => Object.hasOwn(COMPETITORS, key))
+  .filter((slug) => COMPETITORS[slug].comparisonPage);
 
 /**
  * Snug's own facts. Users, rating and license come from `STORE_FACTS`; formats,
