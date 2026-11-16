@@ -2,7 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/al
 import { buttonVariants } from "@workspace/ui/components/button";
 import { cn } from "@workspace/ui/lib/utils";
 import { CheckIcon, TriangleAlertIcon } from "lucide-react";
-import { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import React, { Fragment, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import {
   GOODBYE_BUG_REPORT_HREF,
@@ -25,7 +25,9 @@ interface GoodbyeReasonsProperties {
   privacyHref: string;
 }
 
-function noop(): void {}
+function noop(): void {
+  return;
+}
 
 function subscribeToNothing(): () => void {
   return noop;
@@ -143,7 +145,11 @@ function Reply({ reason, copy }: ReplyProperties) {
   );
 }
 
-export default function GoodbyeReasons({ locale, copy, privacyHref }: GoodbyeReasonsProperties) {
+export default function GoodbyeReasons({
+  locale,
+  copy,
+  privacyHref,
+}: GoodbyeReasonsProperties): React.JSX.Element {
   const search = useSyncExternalStore(subscribeToNothing, readSearch, readServerSearch);
   const parameters = useMemo(() => parseGoodbyeParameters(search), [search]);
   const [selected, setSelected] = useState<GoodbyeReasonId | null>(null);

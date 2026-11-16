@@ -26,6 +26,10 @@ function themeBlock(selector: string): string {
   return themeCss.slice(start, themeCss.indexOf("\n}", start));
 }
 
+function clamp(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
 function oklchToLinearRgb(lightness: number, chroma: number, hue: number): Rgb {
   const hueRadians = (hue * Math.PI) / 180;
   const a = chroma * Math.cos(hueRadians);
@@ -33,7 +37,6 @@ function oklchToLinearRgb(lightness: number, chroma: number, hue: number): Rgb {
   const l = (lightness + 0.3963377774 * a + 0.2158037573 * b) ** 3;
   const m = (lightness - 0.1055613458 * a - 0.0638541728 * b) ** 3;
   const s = (lightness - 0.0894841775 * a - 1.291485548 * b) ** 3;
-  const clamp = (value: number) => Math.min(1, Math.max(0, value));
   return [
     clamp(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s),
     clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s),
@@ -62,10 +65,17 @@ function contrast(first: Rgb, second: Rgb): number {
   return (light + 0.05) / (dark + 0.05);
 }
 
+function blend(channel: number, background: number | undefined, alpha: number): number {
+  return channel * alpha + (background ?? 0) * (1 - alpha);
+}
+
 function over(top: { rgb: Rgb; alpha: number }, bottom: Rgb): Rgb {
-  return top.rgb.map(
-    (channel, index) => channel * top.alpha + (bottom[index] ?? 0) * (1 - top.alpha),
-  ) as Rgb;
+  const [red, green, blue] = top.rgb;
+  return [
+    blend(red, bottom[0], top.alpha),
+    blend(green, bottom[1], top.alpha),
+    blend(blue, bottom[2], top.alpha),
+  ];
 }
 
 describe.each([
@@ -111,8 +121,8 @@ describe("card borders", () => {
   const sourceRoot = new URL("../", import.meta.url);
 
   it("never draws border-border on a bg-card element", () => {
-    const offenders = listSources(sourceRoot).filter((path) =>
-      readFileSync(path, "utf8")
+    const offenders = listSources(sourceRoot).filter((sourcePath) =>
+      readFileSync(sourcePath, "utf8")
         .split("\n")
         .some((line) => /\bborder-border\b/.test(line) && /\bbg-card\b/.test(line)),
     );

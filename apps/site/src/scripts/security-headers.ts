@@ -16,7 +16,7 @@ const META_CSP = /<meta http-equiv="content-security-policy" content="(?<policy>
  * @returns The quoted hash sources, or an empty list without a CSP meta tag.
  */
 export function collectMetaScriptHashes(html: string): string[] {
-  const policy = META_CSP.exec(html)?.groups?.["policy"] ?? "";
+  const policy = META_CSP.exec(html)?.groups?.policy ?? "";
   const scriptDirective = policy
     .split(";")
     .map((directive) => directive.trim())
@@ -33,13 +33,13 @@ export function findInlineScriptHashes(html: string): string[] {
   return html
     .matchAll(INLINE_SCRIPT)
     .filter(({ groups }) => {
-      const attributes = groups?.["attributes"] ?? "";
+      const attributes = groups?.attributes ?? "";
       const type = /\btype="([^"]*)"/.exec(attributes)?.[1];
       return !/\bsrc=/.test(attributes) && (!type || type === "module");
     })
     .map(({ groups }) => {
       const digest = createHash("sha256")
-        .update(groups?.["body"] ?? "")
+        .update(groups?.body ?? "")
         .digest("base64");
       return `'sha256-${digest}'`;
     })

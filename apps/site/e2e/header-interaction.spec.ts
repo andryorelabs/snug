@@ -35,7 +35,9 @@ for (const stored of ["light", "dark"] as const) {
     await page.emulateMedia({
       colorScheme: stored === "dark" ? "light" : "dark",
     });
-    await page.addInitScript((value) => localStorage.setItem("snug:theme", value), stored);
+    await page.addInitScript((value) => {
+      localStorage.setItem("snug:theme", value);
+    }, stored);
     await page.goto("/");
     const expected = stored === "dark" ? "#17120a" : "#f1ece4";
     const colors = await page
@@ -46,7 +48,9 @@ for (const stored of ["light", "dark"] as const) {
 }
 
 test("choosing System restores the media-specific theme-color metas", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/");
   await page.getByRole("button", { name: "Theme" }).click();
   await page.getByRole("menuitemradio", { name: "System" }).click();

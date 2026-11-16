@@ -10,7 +10,9 @@ async function surfaceOpacity(page: Page) {
 }
 
 async function scrollToOffset(page: Page, offset: number) {
-  await page.evaluate((top) => globalThis.scrollTo(0, top), offset);
+  await page.evaluate((top) => {
+    globalThis.scrollTo(0, top);
+  }, offset);
   await page.evaluate(
     () =>
       new Promise((resolve) => {

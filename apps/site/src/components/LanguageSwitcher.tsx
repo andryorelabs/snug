@@ -1,5 +1,6 @@
 import { Button, buttonVariants } from "@workspace/ui/components/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
+import React from "react";
 
 interface LanguageOption {
   code: string;
@@ -40,7 +41,7 @@ export default function LanguageSwitcher({
   separator,
   options,
   markCurrent,
-}: LanguageSwitcherProperties) {
+}: LanguageSwitcherProperties): React.JSX.Element {
   const accessibleLabel = `${label}${separator}`;
   return (
     <div className="min-w-0" data-language-switcher>

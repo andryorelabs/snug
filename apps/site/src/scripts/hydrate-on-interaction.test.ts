@@ -3,16 +3,23 @@ import { describe, expect, it, vi } from "vitest";
 import { hydrateOnInteraction, INTERACTION_EVENTS } from "./hydrate-on-interaction";
 
 class FakeRoot extends EventTarget {
-  click = vi.fn();
+  click = vi.fn<() => void>();
 }
 
 function setup() {
   const root = new FakeRoot();
-  const hydrate = vi.fn(() => Promise.resolve());
+  const hydrate = vi.fn<() => Promise<void>>(() => Promise.resolve());
   const loading = Promise.withResolvers<() => Promise<void>>();
-  const load = vi.fn(() => loading.promise);
+  const load = vi.fn<() => Promise<() => Promise<void>>>(() => loading.promise);
   hydrateOnInteraction(root, load);
-  return { root, load, hydrate, finishLoading: () => loading.resolve(hydrate) };
+  return {
+    root,
+    load,
+    hydrate,
+    finishLoading: () => {
+      loading.resolve(hydrate);
+    },
+  };
 }
 
 describe("hydrateOnInteraction", () => {
@@ -35,7 +42,9 @@ describe("hydrateOnInteraction", () => {
     root.dispatchEvent(new Event("click"));
     expect(root.click).not.toHaveBeenCalled();
     finishLoading();
-    await vi.waitFor(() => expect(root.click).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => {
+      expect(root.click).toHaveBeenCalledTimes(1);
+    });
     expect(hydrate).toHaveBeenCalledTimes(1);
   });
 
@@ -43,7 +52,9 @@ describe("hydrateOnInteraction", () => {
     const { root, hydrate, finishLoading } = setup();
     root.dispatchEvent(new Event("focusin"));
     finishLoading();
-    await vi.waitFor(() => expect(hydrate).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => {
+      expect(hydrate).toHaveBeenCalledTimes(1);
+    });
     expect(root.click).not.toHaveBeenCalled();
   });
 });

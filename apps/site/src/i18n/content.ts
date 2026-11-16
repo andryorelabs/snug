@@ -1,7 +1,5 @@
 import type enContent from "../content/en.json";
-import { DEFAULT_LOCALE, type Locale, LOCALES } from "./locales";
-
-export type ContentTree = { [key: string]: string | ContentTree };
+import { buildLocaleRecord, DEFAULT_LOCALE, type Locale, LOCALES } from "./locales";
 
 /**
  * Shape of every locale's content, taken from the English source file.
@@ -16,11 +14,12 @@ type ContentFiles = Record<string, { default: SiteContent }>;
  * @param prefix - Dotted path of the parent node.
  * @returns Sorted dotted key paths.
  */
-export function flattenKeys(tree: ContentTree, prefix = ""): string[] {
+export function flattenKeys(tree: object, prefix = ""): string[] {
   return Object.entries(tree)
-    .flatMap(([key, value]) => {
+    .flatMap(([key, value]: [string, unknown]) => {
       const path = prefix === "" ? key : `${prefix}.${key}`;
-      return typeof value === "string" ? path : flattenKeys(value, path);
+      if (typeof value === "string") return path;
+      return typeof value === "object" && value !== null ? flattenKeys(value, path) : [];
     })
     .toSorted((a, b) => a.localeCompare(b));
 }
@@ -32,7 +31,7 @@ export function flattenKeys(tree: ContentTree, prefix = ""): string[] {
  * @param locale - Locale being checked.
  * @param content - Content of that locale.
  */
-export function assertSameKeys(reference: ContentTree, locale: string, content: ContentTree): void {
+export function assertSameKeys(reference: object, locale: string, content: object): void {
   const expected = new Set(flattenKeys(reference));
   const actual = new Set(flattenKeys(content));
   const missing = [...expected.difference(actual)];
@@ -51,13 +50,11 @@ const bundledFiles = import.meta.glob<{ default: SiteContent }>("../content/*.js
 const validatedByFiles = new WeakMap<ContentFiles, Record<Locale, SiteContent>>();
 
 function readAllContent(files: ContentFiles): Record<Locale, SiteContent> {
-  const byLocale = Object.fromEntries(
-    LOCALES.map((locale) => {
-      const file = files[`../content/${locale}.json`];
-      if (!file) throw new Error(`Missing content file for "${locale}"`);
-      return [locale, file.default];
-    }),
-  ) as Record<Locale, SiteContent>;
+  const byLocale = buildLocaleRecord((locale) => {
+    const file = files[`../content/${locale}.json`];
+    if (!file) throw new Error(`Missing content file for "${locale}"`);
+    return file.default;
+  });
   const reference = byLocale[DEFAULT_LOCALE];
   for (const locale of LOCALES) {
     assertSameKeys(reference, locale, byLocale[locale]);

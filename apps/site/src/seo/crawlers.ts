@@ -237,6 +237,24 @@ export interface SitemapEntry {
   alternates?: readonly { hreflang: string; href: string }[];
 }
 
+/**
+ * Builds a sitemap entry without a `lastmod` key when the date is unknown.
+ * @param loc - The absolute page URL.
+ * @param lastmod - The last change date, or `undefined` when none is known.
+ * @param alternates - The hreflang alternates, when the page has translations.
+ * @returns The entry, with keys in `loc`, `lastmod`, `alternates` order.
+ */
+export function sitemapEntry(
+  loc: string,
+  lastmod: string | undefined,
+  alternates?: SitemapEntry["alternates"],
+): SitemapEntry {
+  const entry: SitemapEntry = { loc };
+  if (lastmod !== undefined) entry.lastmod = lastmod;
+  if (alternates !== undefined) entry.alternates = alternates;
+  return entry;
+}
+
 function lastmodLine(lastmod: string | undefined): string {
   return lastmod ? `    <lastmod>${lastmod}</lastmod>\n` : "";
 }

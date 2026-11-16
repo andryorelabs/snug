@@ -1,15 +1,19 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { COMPARISON_PATHS } from "../e2e/comparison-paths";
 import { hydratedFaq } from "../e2e/faq-helpers";
 import { HOW_TO_INDEX_PATHS, HOW_TO_PATHS } from "../e2e/how-to-paths";
+import { requireValue } from "../e2e/require";
+import { parseJson } from "../e2e/require";
+import { forEachSequentially } from "../e2e/sequential";
 import { blockUmami, UMAMI_ORIGINS } from "../e2e/umami-helpers";
 import { languageTag, localePath, LOCALES } from "../src/i18n/locales";
 import { UMAMI_COLLECT_ORIGIN, UMAMI_SCRIPT_ORIGIN } from "../src/seo/umami";
+import { isRecord } from "../src/testing/guards";
 
 const LOCALE_PATHS = LOCALES.map((locale) => localePath(locale));
 
@@ -29,7 +33,7 @@ test("/install redirects with the three UTM tags", async ({ request }) => {
   const response = await request.get("/install", { maxRedirects: 0 });
   expect(response.status()).toBe(302);
 
-  const location = new URL(response.headers()["location"] ?? "");
+  const location = new URL(response.headers().location ?? "");
   expect(location.hostname).toBe("chromewebstore.google.com");
   expect(location.pathname).toBe(STORE_LISTING_PATH);
   expect(location.searchParams.get("utm_source")).toBe("landing");
@@ -41,14 +45,14 @@ test("/install/ answers exactly like /install", async ({ request }) => {
   const plain = await request.get("/install", { maxRedirects: 0 });
   const slashed = await request.get("/install/", { maxRedirects: 0 });
   expect(slashed.status()).toBe(302);
-  expect(slashed.headers()["location"]).toBe(plain.headers()["location"]);
+  expect(slashed.headers().location).toBe(plain.headers().location);
 });
 
 test("/reviews redirects to the store reviews with the UTM tags", async ({ request }) => {
   const response = await request.get("/reviews?c=proof", { maxRedirects: 0 });
   expect(response.status()).toBe(302);
 
-  const location = new URL(response.headers()["location"] ?? "");
+  const location = new URL(response.headers().location ?? "");
   expect(location.hostname).toBe("chromewebstore.google.com");
   expect(location.pathname).toBe(`${STORE_LISTING_PATH}/reviews`);
   expect(location.searchParams.get("utm_source")).toBe("landing");
@@ -60,11 +64,11 @@ test("/reviews redirects to the store reviews with the UTM tags", async ({ reque
 });
 
 test("no raw store URL remains in the page, JSON-LD or llms.txt", async ({ request }) => {
-  for (const path of ["/", "/llms.txt"]) {
+  await forEachSequentially(["/", "/llms.txt"], async (path) => {
     const response = await request.get(path);
     const body = await response.text();
     expect(body).not.toContain("chromewebstore.google.com");
-  }
+  });
 });
 
 const ALIASES = LOCALES.flatMap((locale) => {
@@ -80,16 +84,18 @@ for (const { alias, canonical } of ALIASES) {
   test(`${alias} redirects to ${canonical}`, async ({ request }) => {
     const response = await request.get(alias, { maxRedirects: 0 });
     expect(response.status()).toBe(301);
-    expect(response.headers()["location"]).toBe(canonical);
+    expect(response.headers().location).toBe(canonical);
   });
 }
 
 for (const locale of LOCALES) {
   const prefix = localePath(locale);
   const contentFile = fileURLToPath(new URL(`../src/content/${locale}.json`, import.meta.url));
-  const { notFound } = JSON.parse(readFileSync(contentFile, "utf8")) as {
-    notFound: { title: string };
-  };
+  const { notFound } = parseJson(
+    readFileSync(contentFile, "utf8"),
+    (value): value is { notFound: { title: string } } =>
+      isRecord(value) && isRecord(value.notFound),
+  );
 
   test(`an unknown path under ${prefix} gets the ${locale} 404`, async ({ page }) => {
     const missing = `${prefix}no-such-page/`;
@@ -106,10 +112,10 @@ test("/og/* is cross-origin readable and every other path is not", async ({ requ
   expect(image.status()).toBe(200);
   expect(image.headers()["cross-origin-resource-policy"]).toBe("cross-origin");
 
-  for (const path of ["/", "/llms.txt", "/privacy/", "/nope/"]) {
+  await forEachSequentially(["/", "/llms.txt", "/privacy/", "/nope/"], async (path) => {
     const response = await request.get(path);
     expect(response.headers()["cross-origin-resource-policy"]).toBe("same-origin");
-  }
+  });
 });
 
 for (const path of LOCALE_PATHS) {
@@ -153,7 +159,7 @@ for (const path of [
 }
 
 test("the served CSP allows exactly the Umami script and connect origins", async ({ request }) => {
-  for (const path of ["/", "/privacy/", "/nope/", "/de/nope/"]) {
+  await forEachSequentially(["/", "/privacy/", "/nope/", "/de/nope/"], async (path) => {
     const response = await request.get(path);
     const policy = response.headers()["content-security-policy"] ?? "";
     const origins = policy
@@ -175,11 +181,11 @@ test("the served CSP allows exactly the Umami script and connect origins", async
     expect(directives.find((directive) => directive.startsWith("connect-src "))).toBe(
       `connect-src 'self' ${UMAMI_COLLECT_ORIGIN}`,
     );
-  }
+  });
 });
 
 test("the served CSP allows scripts by hash only", async ({ request }) => {
-  for (const path of ["/", "/privacy/", "/nope/", "/de/nope/"]) {
+  await forEachSequentially(["/", "/privacy/", "/nope/", "/de/nope/"], async (path) => {
     const response = await request.get(path);
     const policy = response.headers()["content-security-policy"] ?? "";
     const scriptSource = policy
@@ -188,7 +194,7 @@ test("the served CSP allows scripts by hash only", async ({ request }) => {
       .find((directive) => directive.startsWith("script-src "));
     expect(scriptSource, path).toMatch(/'sha256-[^']+'/);
     expect(scriptSource, path).not.toContain("'unsafe-inline'");
-  }
+  });
 });
 
 const EXECUTABLE_INLINE_SCRIPT =
@@ -280,9 +286,11 @@ test("the speculation rules resolve with the right MIME type", async ({ request 
   const rules = await request.get("/speculation-rules.json");
   expect(rules.status()).toBe(200);
   expect(rules.headers()["content-type"]).toContain("application/speculationrules+json");
-  const parsed = (await rules.json()) as {
-    prefetch: { eagerness: string; where: unknown }[];
-  };
+  const parsed = parseJson(
+    JSON.stringify(await rules.json()),
+    (value): value is { prefetch: { eagerness: string; where: unknown }[] } =>
+      isRecord(value) && Array.isArray(value.prefetch),
+  );
   expect(parsed).not.toHaveProperty("prerender");
   expect(parsed.prefetch[0]?.eagerness).toBe("moderate");
   const serialized = JSON.stringify(parsed.prefetch[0]?.where);
@@ -298,11 +306,11 @@ test("og images, favicons and the manifest are cached for a day", async ({ reque
     "/apple-touch-icon.png",
     "/manifest.webmanifest",
   ];
-  for (const path of paths) {
+  await forEachSequentially(paths, async (path) => {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);
     expect(response.headers()["cache-control"], path).toBe("public, max-age=86400");
-  }
+  });
 });
 
 test("activating the video raises no CSP or Trusted Types violation", async ({ page }) => {
@@ -359,7 +367,7 @@ for (const { duplicate, canonical } of [
   test(`${duplicate} redirects to ${canonical}`, async ({ request }) => {
     const response = await request.get(duplicate, { maxRedirects: 0 });
     expect(response.status()).toBe(301);
-    expect(response.headers()["location"]).toBe(canonical);
+    expect(response.headers().location).toBe(canonical);
   });
 }
 
@@ -369,11 +377,11 @@ test("the locale 404 routes are internal", async ({ request }) => {
 });
 
 test("every 404 sends Cache-Control: no-cache", async ({ request }) => {
-  for (const path of ["/nope/", "/ja/nope/"]) {
+  await forEachSequentially(["/nope/", "/ja/nope/"], async (path) => {
     const response = await request.get(path);
     expect(response.status()).toBe(404);
     expect(response.headers()["cache-control"]).toBe("no-cache");
-  }
+  });
 });
 
 test("HSTS includes subdomains and is not preload", async ({ request }) => {
@@ -389,24 +397,24 @@ test("the served sitemap stamps every url with a valid lastmod", async ({ reques
   const urls = xml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
   expect(urls.length).toBeGreaterThan(LOCALES.length);
   for (const url of urls) {
-    const lastmod = url.match(/<lastmod>([^<]*)<\/lastmod>/)?.[1];
+    const lastmod = /<lastmod>([^<]*)<\/lastmod>/.exec(url)?.[1];
     expect(lastmod, url).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(Number.isNaN(Date.parse(`${lastmod}T00:00:00Z`)), url).toBe(false);
   }
 });
 
 test("the container gzips text and leaves binaries alone", async ({ request }) => {
-  for (const path of ["/", "/llms.txt", "/sitemap.xml"]) {
+  await forEachSequentially(["/", "/llms.txt", "/sitemap.xml"], async (path) => {
     const response = await request.get(path, {
       headers: { "accept-encoding": "gzip" },
     });
     expect(response.headers()["content-encoding"]).toBe("gzip");
-  }
+  });
   const page = await request.get("/");
   const html = await page.text();
-  const font = html.match(/\/_astro\/[^"']+\.woff2/)?.[0];
+  const font = /\/_astro\/[^"']+\.woff2/.exec(html)?.[0];
   expect(font).toBeDefined();
-  const response = await request.get(font!, {
+  const response = await request.get(requireValue(font), {
     headers: { "accept-encoding": "gzip" },
   });
   expect(response.headers()["content-encoding"]).toBeUndefined();

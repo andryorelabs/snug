@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "../i18n/locales";
+import { isRecord } from "../testing/guards";
 import {
   buildDocumentationHead,
   buildPaginationHead,
@@ -17,8 +18,14 @@ interface JsonLdGraph {
   }[];
 }
 
+function isJsonLdGraph(value: unknown): value is JsonLdGraph {
+  return isRecord(value) && typeof value["@context"] === "string" && Array.isArray(value["@graph"]);
+}
+
 function parseGraph(content: string | undefined): JsonLdGraph {
-  return JSON.parse(content ?? "{}") as JsonLdGraph;
+  const parsed: unknown = JSON.parse(content ?? "{}");
+  if (!isJsonLdGraph(parsed)) throw new Error("Missing JSON-LD graph");
+  return parsed;
 }
 
 const input: DocumentationHeadInput = {
@@ -32,9 +39,7 @@ const input: DocumentationHeadInput = {
 };
 
 function contents(head: HeadEntry[], key: "name" | "property", value: string) {
-  return head
-    .filter((entry) => entry.attrs?.[key] === value)
-    .map((entry) => entry.attrs?.["content"]);
+  return head.filter((entry) => entry.attrs?.[key] === value).map((entry) => entry.attrs?.content);
 }
 
 describe("buildDocumentationHead", () => {

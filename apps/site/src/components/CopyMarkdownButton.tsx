@@ -1,6 +1,6 @@
 import { Button } from "@workspace/ui/components/button";
 import { CheckIcon, CopyIcon, TriangleAlertIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { COPY_FEEDBACK_MILLISECONDS, copyMarkdownTwin } from "../docs/copy-markdown";
 
@@ -30,12 +30,20 @@ const STATE_LABEL_KEYS = {
   failed: "copyFailed",
 } as const;
 
-export default function CopyMarkdownButton({ twinHref, copy }: CopyMarkdownButtonProperties) {
+export default function CopyMarkdownButton({
+  twinHref,
+  copy,
+}: CopyMarkdownButtonProperties): React.JSX.Element {
   type CopyState = "idle" | "copied" | "failed";
   const [state, setState] = useState<CopyState>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  useEffect(() => () => clearTimeout(timer.current), []);
+  useEffect(
+    () => () => {
+      clearTimeout(timer.current);
+    },
+    [],
+  );
 
   async function handleClick() {
     clearTimeout(timer.current);
@@ -43,7 +51,9 @@ export default function CopyMarkdownButton({ twinHref, copy }: CopyMarkdownButto
       navigator.clipboard.writeText(text),
     );
     setState(result);
-    timer.current = setTimeout(() => setState("idle"), COPY_FEEDBACK_MILLISECONDS);
+    timer.current = setTimeout(() => {
+      setState("idle");
+    }, COPY_FEEDBACK_MILLISECONDS);
   }
 
   const Icon = STATE_ICONS[state];
@@ -59,9 +69,7 @@ export default function CopyMarkdownButton({ twinHref, copy }: CopyMarkdownButto
         <Icon aria-hidden="true" />
         <span>{copy[STATE_LABEL_KEYS[state]]}</span>
       </Button>
-      <span role="status" className="sr-only">
-        {state === "idle" ? "" : copy[STATE_LABEL_KEYS[state]]}
-      </span>
+      <output className="sr-only">{state === "idle" ? "" : copy[STATE_LABEL_KEYS[state]]}</output>
     </>
   );
 }

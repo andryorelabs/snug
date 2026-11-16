@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isRecord } from "../testing/guards";
 import { onRequest } from "./route-middleware";
 
 interface FakeEntry {
@@ -24,11 +25,16 @@ interface FakeRoute {
   pagination: { prev?: { href: string }; next?: { href: string } };
 }
 
+type MiddlewareContext = Parameters<typeof onRequest>[0];
+
+function isMiddlewareContext(value: unknown): value is MiddlewareContext {
+  return isRecord(value) && isRecord(value.locals);
+}
+
 const runMiddleware = async (route: FakeRoute) => {
-  await onRequest(
-    { locals: { starlightRoute: route } } as never,
-    (() => Promise.resolve(new Response())) as never,
-  );
+  const context: unknown = { locals: { starlightRoute: route } };
+  if (!isMiddlewareContext(context)) throw new Error("The fake middleware context is invalid");
+  await onRequest(context, () => Promise.resolve());
   return route;
 };
 
@@ -67,7 +73,7 @@ describe("Guide route middleware", () => {
     expect(attributesOf(route, "property", "og:image")).toHaveLength(1);
     expect(
       route.head.some(
-        (entry) => entry.tag === "script" && entry.attrs?.["type"] === "application/ld+json",
+        (entry) => entry.tag === "script" && entry.attrs?.type === "application/ld+json",
       ),
     ).toBe(true);
   });
@@ -75,7 +81,7 @@ describe("Guide route middleware", () => {
   it("falls back to the locale description only when the page has none", async () => {
     const without = await runMiddleware(baseRoute());
     expect(attributesOf(without, "name", "description")).toHaveLength(1);
-    expect(without.head.some((entry) => entry.attrs?.["property"] === "og:description")).toBe(true);
+    expect(without.head.some((entry) => entry.attrs?.property === "og:description")).toBe(true);
 
     const own = await runMiddleware(
       baseRoute({
@@ -85,7 +91,7 @@ describe("Guide route middleware", () => {
         ],
       }),
     );
-    expect(attributesOf(own, "name", "description")[0]?.attrs?.["content"]).toBe("Own text");
+    expect(attributesOf(own, "name", "description")[0]?.attrs?.content).toBe("Own text");
   });
 
   it("links the previous and next pages", async () => {
@@ -98,8 +104,8 @@ describe("Guide route middleware", () => {
       }),
     );
 
-    expect(attributesOf(route, "rel", "prev")[0]?.attrs?.["href"]).toMatch(/\/guide\/$/);
-    expect(attributesOf(route, "rel", "next")[0]?.attrs?.["href"]).toMatch(/\/guide\/importing\/$/);
+    expect(attributesOf(route, "rel", "prev")[0]?.attrs?.href).toMatch(/\/guide\/$/);
+    expect(attributesOf(route, "rel", "next")[0]?.attrs?.href).toMatch(/\/guide\/importing\/$/);
   });
 
   it("leaves a translated page in its own language", async () => {

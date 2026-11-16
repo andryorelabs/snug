@@ -31,16 +31,19 @@ export function chromeTranslationsLoader(): Loader {
     async load(context) {
       const { store } = context;
       const content = loadAllContent();
-      for (const locale of LOCALES) {
-        const id = languageTag(locale);
-        const data = await context.parseData({
-          id,
-          data: {
-            "pagefind.zero_results": formatZeroResults(content[locale].docsSearch),
-          },
-        });
-        store.set({ id, data });
-      }
+      const prepared = await Promise.all(
+        LOCALES.map(async (locale) => {
+          const id = languageTag(locale);
+          const data = await context.parseData({
+            id,
+            data: {
+              "pagefind.zero_results": formatZeroResults(content[locale].docsSearch),
+            },
+          });
+          return { id, data };
+        }),
+      );
+      for (const item of prepared) store.set(item);
     },
   };
 }

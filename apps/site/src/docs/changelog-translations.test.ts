@@ -38,8 +38,8 @@ describe("translated CHANGELOG", () => {
     );
     expect(translated.size).toBeGreaterThan(0);
     for (const [version, shape] of translated) {
-      expect(english.has(version), `${locale} has ${version}, English does not`).toBe(true);
-      expect(shape, `${locale} ${version}`).toEqual(english.get(version));
+      expect(english.has(version)).toBe(true);
+      expect(shape).toEqual(english.get(version));
     }
   });
 });
