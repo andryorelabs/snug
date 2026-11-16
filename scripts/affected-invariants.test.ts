@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { afterEach, describe, expect, it } from "vitest";
 
 const repositoryRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");

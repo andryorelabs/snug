@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import type { AstroIntegration } from "astro";
 
 const COLLAPSED_PANEL = /<div\b[^>]*\bdata-slot="accordion-content"[^>]*>/g;

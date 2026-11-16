@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-
 import type { Page } from "@playwright/test";
 import { ChartNoAxesCombined, CloudOff, Code, UserX } from "lucide-react";
 import { createElement } from "react";

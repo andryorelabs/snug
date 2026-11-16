@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-
 import JSON5 from "json5";
 import { describe, expect, test } from "vitest";
 

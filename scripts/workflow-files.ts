@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { parse } from "yaml";
 
 const DEFAULT_WORKFLOWS_DIRECTORY = path.join(

@@ -1,5 +1,4 @@
 import path from "node:path";
-
 import eslintReact from "@eslint-react/eslint-plugin";
 import ts from "typescript";
 

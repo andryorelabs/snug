@@ -1,5 +1,4 @@
 import { runInNewContext } from "node:vm";
-
 import { describe, expect, it } from "vitest";
 
 import { THEME_COLORS } from "./theme-color";

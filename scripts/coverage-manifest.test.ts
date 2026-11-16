@@ -1,6 +1,5 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
-
 import { expect, test } from "vitest";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..");

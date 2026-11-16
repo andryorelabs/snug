@@ -3,7 +3,6 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 

@@ -1,6 +1,5 @@
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
-
 import { bundle } from "@remotion/bundler";
 import { renderMedia, selectComposition } from "@remotion/renderer";
 
