@@ -956,6 +956,7 @@ export default defineConfig({
     "**/coverage/**",
     ".claude/skills/**",
     ".claude/worktrees/**",
+    "scripts/oxlint-baseline-plugin.ts",
   ],
   rules: {
     ...jsxA11yRules,
