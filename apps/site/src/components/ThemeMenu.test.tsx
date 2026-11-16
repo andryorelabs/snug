@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import { THEME_COLORS } from "../scripts/theme-color";
 import ThemeMenu from "./ThemeMenu";
 
@@ -19,11 +20,11 @@ const environment: {
   container?: HTMLElement;
   root?: Root;
   isDarkPreferred: boolean;
-  mediaListeners: Array<() => void>;
+  mediaListeners: (() => void)[];
 } = { isDarkPreferred: false, mediaListeners: [] };
 
 function currentContainer() {
-  return environment.container as HTMLElement;
+  return requireValue(environment.container);
 }
 
 function stubMatchMedia() {
@@ -50,7 +51,7 @@ function mount() {
 }
 
 function trigger() {
-  return currentContainer().querySelector<HTMLButtonElement>("button")!;
+  return requireValue(currentContainer().querySelector<HTMLButtonElement>("button"));
 }
 
 function openMenu() {
@@ -155,7 +156,9 @@ describe("ThemeMenu", () => {
   });
 
   it("uses a view transition when available and motion is allowed", () => {
-    const startViewTransition = vi.fn((update: () => void) => update());
+    const startViewTransition = vi.fn((update: () => void) => {
+      update();
+    });
     Object.defineProperty(document, "startViewTransition", {
       configurable: true,
       value: startViewTransition,

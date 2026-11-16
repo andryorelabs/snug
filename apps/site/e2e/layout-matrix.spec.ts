@@ -6,6 +6,7 @@ import {
   MIN_TOUCH_TARGET,
   setViewportOrSkip,
 } from "./layout-helpers";
+import { requireValue } from "./require";
 import { forEachSequentially, indexRange } from "./sequential";
 
 const PATHS = LOCALES.map((locale) => localePath(locale));
@@ -84,8 +85,12 @@ test.describe("touch targets", () => {
         await target.scrollIntoViewIfNeeded();
         const box = await target.boundingBox();
         expect(box, `${label} #${index} has a box`).not.toBeNull();
-        expect(box!.height, `${label} #${index} height`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-        expect(box!.width, `${label} #${index} width`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+        expect(requireValue(box).height, `${label} #${index} height`).toBeGreaterThanOrEqual(
+          MIN_TOUCH_TARGET,
+        );
+        expect(requireValue(box).width, `${label} #${index} width`).toBeGreaterThanOrEqual(
+          MIN_TOUCH_TARGET,
+        );
       });
     });
   }

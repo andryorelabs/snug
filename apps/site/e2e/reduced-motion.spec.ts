@@ -32,7 +32,9 @@ for (const path of PATHS) {
     expect(
       await page.evaluate(() => globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches),
     ).toBe(true);
-    await page.evaluate(() => globalThis.scrollTo(0, globalThis.document.body.scrollHeight));
+    await page.evaluate(() => {
+      globalThis.scrollTo(0, globalThis.document.body.scrollHeight);
+    });
     await page.waitForLoadState("networkidle");
 
     expect(problems).toEqual([]);

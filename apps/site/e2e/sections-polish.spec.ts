@@ -59,9 +59,9 @@ test("bento glow follows the pointer by transform on desktop hover", async ({ pa
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/");
   const card = page.locator('[data-bento-card] [data-slot="card"]').nth(1);
-  await card.evaluate((element) =>
-    element.scrollIntoView({ block: "center", behavior: "instant" }),
-  );
+  await card.evaluate((element) => {
+    element.scrollIntoView({ block: "center", behavior: "instant" });
+  });
   const glow = card.locator("[data-bento-glow]");
   const box = await card.boundingBox();
   if (!box) throw new Error("bento card has no box");
@@ -80,17 +80,17 @@ test("bento glow is invisible under reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const card = page.locator('[data-bento-card] [data-slot="card"]').nth(1);
-  await card.evaluate((element) =>
-    element.scrollIntoView({ block: "center", behavior: "instant" }),
-  );
+  await card.evaluate((element) => {
+    element.scrollIntoView({ block: "center", behavior: "instant" });
+  });
   const glow = card.locator("[data-bento-glow]");
   const box = await card.boundingBox();
   if (!box) throw new Error("bento card has no box");
   await page.mouse.move(box.x + 60, box.y + 50);
   expect(await glow.evaluate((element) => element.style.transform)).toBe("");
-  expect(await glow.evaluate((element) => getComputedStyle(element.parentElement!).display)).toBe(
-    "none",
-  );
+  expect(
+    await glow.evaluate((element) => getComputedStyle(element.parentElement ?? element).display),
+  ).toBe("none");
 });
 
 test("open FAQ answers use the lead size with a 4px top offset", async ({ page }) => {

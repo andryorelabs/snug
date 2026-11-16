@@ -26,6 +26,7 @@ import {
   howToIndexPath,
   howToLocales,
 } from "./how-to-paths";
+import { requireValue } from "./require";
 import { docsString, translatedTitle } from "./translated-guide";
 
 const siteRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -253,7 +254,7 @@ test.describe("root files", () => {
       expect(file).toContain(`${SITE_ORIGIN}/install`);
       expect(file).not.toContain("chromewebstore.google.com");
     }
-    expect(llmsFull).toContain(REVIEWS[0]!.quote);
+    expect(llmsFull).toContain(requireValue(REVIEWS[0]).quote);
     expect(llmsFull).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=[\w-]+/);
     expect(llmsFull.match(/^## Move your bookmarks to any browser\.$/gm)).toHaveLength(1);
     const lastmods = readBuilt("sitemap.xml")
@@ -601,11 +602,11 @@ test.describe("site stylesheet", () => {
   });
 
   test("keeps Cyrillic out of the Space Grotesk fallback face", () => {
-    const face = stylesheet.match(
-      /@font-face\{[^}]*font-family:"?Space Grotesk Fallback"?[^}]*\}/,
+    const face = /@font-face\{[^}]*font-family:"?Space Grotesk Fallback"?[^}]*\}/.exec(
+      stylesheet,
     )?.[0];
     expect(face).toBeDefined();
-    const range = face!.match(/unicode-range:([^;}]+)/)?.[1];
+    const range = /unicode-range:([^;}]+)/.exec(requireValue(face))?.[1];
     expect(range).toBeDefined();
     expect(range).not.toMatch(/U\+04/i);
   });

@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import { GOODBYE_COPY_EN, GOODBYE_REASON_IDS, GOODBYE_REINSTALL_HREF } from "../i18n/goodbye";
 import type { Locale } from "../i18n/locales";
 import GoodbyeReasons from "./GoodbyeReasons";
@@ -11,7 +12,7 @@ import GoodbyeReasons from "./GoodbyeReasons";
 const mounted: { container?: HTMLElement; root?: Root } = {};
 
 function currentContainer() {
-  return mounted.container as HTMLElement;
+  return requireValue(mounted.container);
 }
 
 function mount(search: string, locale: Locale = "en") {
@@ -36,7 +37,7 @@ function reasonButton(reason: string) {
   const buttons = [
     ...currentContainer().querySelectorAll<HTMLButtonElement>("button[data-umami-event-reason]"),
   ];
-  return buttons.find((button) => button.dataset.umamiEventReason === reason) as HTMLButtonElement;
+  return requireValue(buttons.find((button) => button.dataset.umamiEventReason === reason));
 }
 
 function click(element: HTMLElement) {
@@ -46,7 +47,7 @@ function click(element: HTMLElement) {
 }
 
 function replyRegion() {
-  return currentContainer().querySelector("[data-goodbye-reply-region]") as HTMLElement;
+  return requireValue(currentContainer().querySelector("[data-goodbye-reply-region]"));
 }
 
 describe("GoodbyeReasons", () => {

@@ -9,7 +9,7 @@ describe("interactionDirective integration", () => {
   });
 
   it("registers client:interaction with the directive entrypoint", () => {
-    const addClientDirective = vi.fn();
+    const addClientDirective = vi.fn<(directive: unknown) => void>();
     const setup = interactionDirective().hooks["astro:config:setup"];
 
     void setup?.({ addClientDirective } as never);

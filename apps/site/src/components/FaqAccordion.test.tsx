@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import FaqAccordion from "./FaqAccordion";
 
 const ENTRIES = [
@@ -14,7 +15,7 @@ const ENTRIES = [
 const mounted: { container?: HTMLElement; root?: Root } = {};
 
 function currentContainer() {
-  return mounted.container as HTMLElement;
+  return requireValue(mounted.container);
 }
 
 function triggers() {
@@ -72,16 +73,16 @@ describe("FaqAccordion", () => {
 
   it("expands on click and collapses on a second click", () => {
     const [first] = triggers();
-    click(first as HTMLButtonElement);
+    click(requireValue(first));
     expect(first?.getAttribute("aria-expanded")).toBe("true");
-    click(first as HTMLButtonElement);
+    click(requireValue(first));
     expect(first?.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("opens a single entry at a time", () => {
     const [first, second] = triggers();
-    click(first as HTMLButtonElement);
-    click(second as HTMLButtonElement);
+    click(requireValue(first));
+    click(requireValue(second));
     expect(first?.getAttribute("aria-expanded")).toBe("false");
     expect(second?.getAttribute("aria-expanded")).toBe("true");
   });

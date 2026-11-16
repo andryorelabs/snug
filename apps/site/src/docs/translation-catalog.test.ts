@@ -92,7 +92,7 @@ describe("the real translations", () => {
         .filter((file) => file.endsWith(".md"))
         .map((file) => file.replaceAll(path.sep, "/"));
       for (const file of files) {
-        expect(findPublishedSource(file), `${locale}/${file}`).toBeDefined();
+        expect(findPublishedSource(file)).toBeDefined();
       }
     }
   });
@@ -110,9 +110,7 @@ describe("the real translations", () => {
       const english = pages.find(
         (item) => item.locale === "en" && item.sourcePath === page.sourcePath,
       );
-      expect(countHeadings(page.body), `${page.locale}/${page.sourcePath}`).toBe(
-        countHeadings(english?.body ?? ""),
-      );
+      expect(countHeadings(page.body)).toBe(countHeadings(english?.body ?? ""));
     }
   });
 });

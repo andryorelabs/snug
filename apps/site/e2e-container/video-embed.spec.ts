@@ -41,7 +41,7 @@ test("the promo video iframe loads under the production CSP", async ({ page }) =
   await expect
     .poll(async () => {
       const handle = await frame.elementHandle();
-      const content = await handle?.contentFrame();
+      const content = await handle.contentFrame();
       return content?.title();
     })
     .toBe("mock player");

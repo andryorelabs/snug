@@ -1,12 +1,13 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { COMPARISON_PATHS } from "../e2e/comparison-paths";
 import { hydratedFaq } from "../e2e/faq-helpers";
 import { HOW_TO_INDEX_PATHS, HOW_TO_PATHS } from "../e2e/how-to-paths";
+import { requireValue } from "../e2e/require";
 import { forEachSequentially } from "../e2e/sequential";
 import { blockUmami, UMAMI_ORIGINS } from "../e2e/umami-helpers";
 import { languageTag, localePath, LOCALES } from "../src/i18n/locales";
@@ -390,7 +391,7 @@ test("the served sitemap stamps every url with a valid lastmod", async ({ reques
   const urls = xml.match(/<url>[\s\S]*?<\/url>/g) ?? [];
   expect(urls.length).toBeGreaterThan(LOCALES.length);
   for (const url of urls) {
-    const lastmod = url.match(/<lastmod>([^<]*)<\/lastmod>/)?.[1];
+    const lastmod = /<lastmod>([^<]*)<\/lastmod>/.exec(url)?.[1];
     expect(lastmod, url).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(Number.isNaN(Date.parse(`${lastmod}T00:00:00Z`)), url).toBe(false);
   }
@@ -405,9 +406,9 @@ test("the container gzips text and leaves binaries alone", async ({ request }) =
   });
   const page = await request.get("/");
   const html = await page.text();
-  const font = html.match(/\/_astro\/[^"']+\.woff2/)?.[0];
+  const font = /\/_astro\/[^"']+\.woff2/.exec(html)?.[0];
   expect(font).toBeDefined();
-  const response = await request.get(font!, {
+  const response = await request.get(requireValue(font), {
     headers: { "accept-encoding": "gzip" },
   });
   expect(response.headers()["content-encoding"]).toBeUndefined();

@@ -22,21 +22,27 @@ function flattenValues(node: unknown, prefix = ""): [string, string][] {
   return entries;
 }
 
+function codePointLength(text: string): number {
+  return text.match(/./gsu)?.length ?? 0;
+}
+
 describe("content", () => {
   it("flattens nested keys", () => {
     expect(flattenKeys({ b: "x", a: { c: "y" } })).toEqual(["a.c", "b"]);
   });
 
   it("fails on a missing key", () => {
-    expect(() =>
+    expect(() => {
       assertSameKeys({ meta: { title: "a", description: "b" } }, "es", {
         meta: { title: "a" },
-      }),
-    ).toThrow(/missing \[meta\.description\]/);
+      });
+    }).toThrow(/missing \[meta\.description\]/);
   });
 
   it("fails on an unexpected key", () => {
-    expect(() => assertSameKeys({ a: "x" }, "es", { a: "x", b: "y" })).toThrow(/unexpected \[b\]/);
+    expect(() => {
+      assertSameKeys({ a: "x" }, "es", { a: "x", b: "y" });
+    }).toThrow(/unexpected \[b\]/);
   });
 
   it("fails when a locale file is absent", () => {
@@ -92,8 +98,8 @@ describe("content", () => {
     for (const locale of LOCALES) {
       if (CJK_LOCALES.has(locale)) continue;
       const { description } = getContent(locale).meta;
-      expect([...description].length).toBeGreaterThanOrEqual(140);
-      expect([...description].length).toBeLessThanOrEqual(160);
+      expect(codePointLength(description)).toBeGreaterThanOrEqual(140);
+      expect(codePointLength(description)).toBeLessThanOrEqual(160);
     }
   });
 

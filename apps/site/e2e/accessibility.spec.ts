@@ -1,9 +1,10 @@
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { type Page } from "@playwright/test";
 
 import { firstFaqTrigger } from "./faq-helpers";
 import { expect, test } from "./fixtures";
 import { expectNoHorizontalOverflow, openLanguageMenu, setViewportOrSkip } from "./layout-helpers";
+import { requireValue } from "./require";
 import { CONTENT_PATHS, SCANNED_PATHS, WIDTH_CHECK_PATHS } from "./routes";
 import { forEachSequentially } from "./sequential";
 
@@ -94,7 +95,7 @@ for (const path of CONTENT_PATHS) {
     expect(levels.filter((level) => level === 1)).toHaveLength(1);
     expect(levels[0]).toBe(1);
     for (const [index, level] of levels.entries()) {
-      if (index > 0) expect(level - levels[index - 1]!).toBeLessThanOrEqual(1);
+      if (index > 0) expect(level - requireValue(levels[index - 1])).toBeLessThanOrEqual(1);
     }
   });
 }

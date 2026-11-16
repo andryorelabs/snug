@@ -37,7 +37,9 @@ test("the Guide keeps its own language in the header switcher", async ({ page })
 
 test("the Guide follows the stored theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/guide/");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
@@ -136,7 +138,9 @@ test("the Guide heading order starts at the page title", async ({ page }) => {
 
 test("the Guide keeps data-theme in step with the stored theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/guide/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });

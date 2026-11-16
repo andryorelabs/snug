@@ -15,7 +15,9 @@ for (const colorScheme of SCHEMES) {
 
 test("a stored light theme beats a dark system", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "light"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "light");
+  });
   await page.goto("/");
   await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
   await expect(page.locator("html")).toHaveCSS("color-scheme", "light");
@@ -23,7 +25,9 @@ test("a stored light theme beats a dark system", async ({ page }) => {
 
 test("a stored dark theme beats a light system", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
@@ -31,7 +35,9 @@ test("a stored dark theme beats a light system", async ({ page }) => {
 
 test("an invalid stored theme falls back to the system", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "blue"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "blue");
+  });
   await page.goto("/");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 });

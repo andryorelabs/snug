@@ -13,6 +13,7 @@ import {
   openLanguageMenu,
   setViewportOrSkip,
 } from "./layout-helpers";
+import { requireValue } from "./require";
 import { forEachSequentially } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
@@ -128,9 +129,9 @@ test.describe("reduced motion", () => {
     await page.goto("/");
     const dock = page.locator("[data-dock]");
     await expect(dock).toBeHidden();
-    await page
-      .locator('[data-section="how"]')
-      .evaluate((element) => element.scrollIntoView({ block: "start" }));
+    await page.locator('[data-section="how"]').evaluate((element) => {
+      element.scrollIntoView({ block: "start" });
+    });
     if (await isMissingScrollTimelines(page)) {
       await expectDockStaysOutOfTheWay(page);
       return;
@@ -155,7 +156,7 @@ test("install dock is hidden over the hero and the closing panel and visible bet
   await expect(dock).toBeVisible();
   const link = dock.locator('a[data-install="dock"]');
   await expect(link).toHaveAttribute("href", "/install?c=dock");
-  expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+  expect(requireValue(await link.boundingBox()).height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
   await page.locator('[data-section="final"]').scrollIntoViewIfNeeded();
   await expect(dock).toBeHidden();
 });
@@ -249,7 +250,7 @@ test("language menu items are at least 44px tall", async ({ page }) => {
   await expect(links).toHaveCount(LOCALES.length);
   const items = await links.all();
   await forEachSequentially(items, async (link) => {
-    expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+    expect(requireValue(await link.boundingBox()).height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
   });
 });
 
@@ -261,13 +262,13 @@ for (const width of [320, 375, 768, 1240, 1280, 1300, 1400]) {
     await openLanguageMenu(page);
     const box = await page.locator(MENU).boundingBox();
     expect(box).not.toBeNull();
-    expect(box!.x).toBeGreaterThanOrEqual(0);
-    expect(box!.x + box!.width).toBeLessThanOrEqual(width);
-    const triggerBox = (await trigger.boundingBox())!;
-    expect(Math.abs(box!.x + box!.width - (triggerBox.x + triggerBox.width))).toBeLessThanOrEqual(
-      1,
-    );
-    expect(box!.y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height);
+    expect(requireValue(box).x).toBeGreaterThanOrEqual(0);
+    expect(requireValue(box).x + requireValue(box).width).toBeLessThanOrEqual(width);
+    const triggerBox = requireValue(await trigger.boundingBox());
+    expect(
+      Math.abs(requireValue(box).x + requireValue(box).width - (triggerBox.x + triggerBox.width)),
+    ).toBeLessThanOrEqual(1);
+    expect(requireValue(box).y).toBeGreaterThanOrEqual(triggerBox.y + triggerBox.height);
     await expectNoHorizontalOverflow(page);
   });
 }
@@ -278,9 +279,11 @@ test("header keeps brand and switcher on one row at 320px", async ({ page }) => 
   const header = page.locator("header");
   const brand = await header.getByRole("link", { name: "Snug" }).boundingBox();
   const trigger = await languageTrigger(page).boundingBox();
-  expect(brand!.y).toBeLessThan(trigger!.y + trigger!.height);
-  expect(trigger!.y).toBeLessThan(brand!.y + brand!.height);
-  expect((await header.boundingBox())!.height).toBeLessThanOrEqual(64);
+  expect(requireValue(brand).y).toBeLessThan(
+    requireValue(trigger).y + requireValue(trigger).height,
+  );
+  expect(requireValue(trigger).y).toBeLessThan(requireValue(brand).y + requireValue(brand).height);
+  expect(requireValue(await header.boundingBox()).height).toBeLessThanOrEqual(64);
 });
 
 test("skip link is first in tab order and reaches main", async ({ page }) => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import { HOW_TO_PAGES, type HowToPageDefinition } from "../content/how-to-pages";
 import { PUBLISHED_SOURCES } from "../docs/published";
 import { flattenKeys } from "./content";
@@ -50,7 +51,7 @@ function files(entries: Record<string, Record<string, unknown>>): HowToFiles {
   );
 }
 
-const firstPageOnly = { [SLUG]: HOW_TO_PAGES[SLUG] as HowToPageDefinition };
+const firstPageOnly = { [SLUG]: requireValue(HOW_TO_PAGES[SLUG]) };
 
 function load(
   entries: Record<string, Record<string, unknown>>,
@@ -80,6 +81,10 @@ function placeholdersIn(node: unknown): string[] {
           .toArray()
       : [];
   return [...own, ...children.flatMap((child) => placeholdersIn(child))];
+}
+
+function codePointLength(text: string): number {
+  return text.match(/./gsu)?.length ?? 0;
 }
 
 describe("loadHowToContent", () => {
@@ -184,7 +189,7 @@ describe("bundled copy", () => {
           ...placeholdersIn(getHowToSharedContent(locale)),
         ];
         for (const key of keys) {
-          expect(known, `${locale}/${slug} {${key}}`).toContain(key);
+          expect(known).toContain(key);
         }
       }
     }
@@ -196,9 +201,9 @@ describe("bundled copy", () => {
       for (const locale of LOCALES) {
         const { title, description } = getHowToMeta(locale, slug);
         const label = `${locale}/${slug}`;
-        const length = [...description].length;
+        const length = codePointLength(description);
         const checks: [string, boolean][] = [
-          ["title suffix", / \| Snug$/u.test(title)],
+          ["title suffix", title.endsWith(" | Snug")],
           ["title starts with Snug", !title.startsWith("Snug")],
           ["title width", visualWidth(title) <= 60],
           [
@@ -370,12 +375,12 @@ describe("remove-duplicate-bookmarks-in-chrome", () => {
 
 describe("howToSlugsForGuideEntry", () => {
   const pages: Record<string, HowToPageDefinition> = {
-    a: { ...HOW_TO_PAGES[SLUG]!, relatedGuide: ["guide/importing"] },
+    a: { ...requireValue(HOW_TO_PAGES[SLUG]), relatedGuide: ["guide/importing"] },
     b: {
-      ...HOW_TO_PAGES[SLUG]!,
+      ...requireValue(HOW_TO_PAGES[SLUG]),
       relatedGuide: ["guide/importing", "guide/duplicates"],
     },
-    c: { ...HOW_TO_PAGES[SLUG]!, relatedGuide: ["guide"] },
+    c: { ...requireValue(HOW_TO_PAGES[SLUG]), relatedGuide: ["guide"] },
   };
 
   it("inverts the related Guide pages in registry order", () => {

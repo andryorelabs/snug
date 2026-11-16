@@ -14,8 +14,10 @@ const PATHS = LOCALES.map((locale) => localePath(locale));
 async function scrollThroughPage(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const step = globalThis.innerHeight * 0.6;
-    const end = () => globalThis.document.documentElement.scrollHeight - globalThis.innerHeight;
-    const nextFrame = () => new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
+    const root = globalThis.document.documentElement;
+    const view = globalThis;
+    const end = () => root.scrollHeight - view.innerHeight;
+    const nextFrame = () => new Promise((resolve) => view.requestAnimationFrame(resolve));
     const scrollFrom = async (top: number): Promise<void> => {
       if (top >= end()) return;
       globalThis.scrollTo(0, top);
@@ -161,9 +163,9 @@ test.describe("stats count-up", () => {
     await page.goto("/");
     const before = await sampleStatValues(page, 300);
     expect(new Set(before.values)).toEqual(new Set([0]));
-    await page
-      .locator('[data-section="stats"]')
-      .evaluate((element) => element.scrollIntoView({ block: "center" }));
+    await page.locator('[data-section="stats"]').evaluate((element) => {
+      element.scrollIntoView({ block: "center" });
+    });
     const { values, target } = await sampleStatValues(page, 2400);
     expect(values.some((value) => value > 0 && value < target)).toBe(true);
     expect(values.at(-1)).toBe(target);
@@ -211,23 +213,29 @@ test.describe("layout stability", () => {
   test("home page records zero layout shift while scrolling", async ({ page }) => {
     await page.addInitScript(() => {
       const shifts: number[] = [];
-      Object.assign(globalThis, { __layoutShifts: shifts });
+      Object.assign(globalThis, { snugLayoutShifts: shifts });
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const shift = entry as PerformanceEntry & {
-            hadRecentInput: boolean;
-            value: number;
-          };
-          if (!shift.hadRecentInput) shifts.push(shift.value);
+          if (
+            "hadRecentInput" in entry &&
+            "value" in entry &&
+            !entry.hadRecentInput &&
+            typeof entry.value === "number"
+          ) {
+            shifts.push(entry.value);
+          }
         }
       }).observe({ type: "layout-shift", buffered: true });
     });
     await page.goto("/");
     await scrollThroughPage(page);
     await page.waitForLoadState("networkidle");
-    const shifts = await page.evaluate(
-      () => (globalThis as unknown as { __layoutShifts: number[] }).__layoutShifts,
-    );
+    const shifts = await page.evaluate(() => {
+      const recorded: unknown = Reflect.get(globalThis, "snugLayoutShifts");
+      return Array.isArray(recorded)
+        ? recorded.filter((item): item is number => typeof item === "number")
+        : [];
+    });
     expect(shifts.filter((value) => value > 0)).toEqual([]);
   });
 });

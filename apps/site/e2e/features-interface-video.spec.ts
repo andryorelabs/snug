@@ -1,7 +1,8 @@
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
+import { requireValue } from "./require";
 import { forEachSequentially, indexRange } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
@@ -13,13 +14,15 @@ const SHOT_IMAGES = '[data-section="interface"] img';
 
 const measureSizes = (image: Locator) =>
   image.evaluate((element: HTMLImageElement) => {
-    const entries = element.sizes.split(/,(?![^(]*\))/).map((entry) => {
-      const match = /^\s*(\([^)]*\))?\s*(.+?)\s*$/.exec(entry)!;
-      return { media: match[1], length: match[2]! };
+    const entries = element.sizes.split(/,(?![^(]*\))/).flatMap((entry) => {
+      const match = /^\s*(\([^)]*\))?\s*(.+?)\s*$/.exec(entry);
+      const length = match?.[2];
+      return match === null || length === undefined ? [] : { media: match[1], length };
     });
     const chosen = entries.find(
       (entry) => entry.media === undefined || matchMedia(entry.media).matches,
-    )!;
+    );
+    if (chosen === undefined) throw new Error("No sizes entry matches the viewport");
     const probe = document.createElement("div");
     probe.style.position = "absolute";
     probe.style.width = chosen.length;
@@ -125,7 +128,10 @@ test("poster serves a smaller file on phones", async ({ page }) => {
   await expect(poster).toHaveJSProperty("complete", true);
   const { current, smallest } = await poster.evaluate((image: HTMLImageElement) => ({
     current: image.currentSrc,
-    smallest: new URL(image.srcset.split(",", 1)[0]!.trim().split(" ", 1)[0]!, image.baseURI).href,
+    smallest: new URL(
+      (image.srcset.split(",", 1)[0] ?? "").trim().split(" ", 1)[0] ?? "",
+      image.baseURI,
+    ).href,
   }));
   expect(current).toBe(smallest);
 });
@@ -159,13 +165,15 @@ for (const width of [768, 900, 1024]) {
     const poster = page.locator("[data-video-poster] img");
     await poster.scrollIntoViewIfNeeded();
     const { declared, rendered } = await poster.evaluate((image: HTMLImageElement) => {
-      const entries = image.sizes.split(/,(?![^(]*\))/).map((entry) => {
-        const match = /^\s*(\([^)]*\))?\s*(.+?)\s*$/.exec(entry)!;
-        return { media: match[1], length: match[2]! };
+      const entries = image.sizes.split(/,(?![^(]*\))/).flatMap((entry) => {
+        const match = /^\s*(\([^)]*\))?\s*(.+?)\s*$/.exec(entry);
+        const length = match?.[2];
+        return match === null || length === undefined ? [] : { media: match[1], length };
       });
       const chosen = entries.find(
         (entry) => entry.media === undefined || matchMedia(entry.media).matches,
-      )!;
+      );
+      if (chosen === undefined) throw new Error("No sizes entry matches the viewport");
       const probe = document.createElement("div");
       probe.style.position = "absolute";
       probe.style.width = chosen.length;
@@ -215,7 +223,9 @@ for (const colorScheme of SCHEMES) {
       elements.flatMap((element) =>
         (element as HTMLImageElement).srcset
           .split(",")
-          .map((candidate) => new URL(candidate.trim().split(" ", 1)[0]!, document.baseURI).href),
+          .map(
+            (candidate) => new URL(candidate.trim().split(" ", 1)[0] ?? "", document.baseURI).href,
+          ),
       ),
     );
     expect(hiddenUrls.length).toBeGreaterThan(0);
@@ -271,8 +281,11 @@ const SHOWCASE_STEPS = ["export", "import", "autoExport", "popup"] as const;
 const scrollToShowcaseStep = (page: Page, index: number) =>
   page.evaluate((stepIndex) => {
     const { document, getComputedStyle, innerHeight, scrollY } = globalThis;
-    const track = document.querySelector("[data-showcase]")!;
-    const panel = track.querySelector("[data-showcase-panel]")!;
+    const track = document.querySelector("[data-showcase]");
+    const panel = track?.querySelector("[data-showcase-panel]");
+    if (track === null || panel === null || panel === undefined) {
+      throw new Error("The showcase track or panel is missing");
+    }
     const pinTop = Number(getComputedStyle(panel).top.replace("px", ""));
     const stepDistance = innerHeight * 0.75;
     const pinStart = track.getBoundingClientRect().top + scrollY - pinTop;
@@ -288,7 +301,9 @@ test("showcase pins its panel and switches one screenshot per step on scroll", a
   const panel = section.locator("[data-showcase-panel]");
   const steps = await section.locator("[data-step]").first().boundingBox();
   const stage = await section.locator("[data-showcase-stage]").boundingBox();
-  expect(stage!.x).toBeGreaterThan(steps!.x + steps!.width - 1);
+  expect(requireValue(stage).x).toBeGreaterThan(
+    requireValue(steps).x + requireValue(steps).width - 1,
+  );
   const visibleShots = () =>
     section.locator("[data-shot]").evaluateAll((shots) =>
       shots
@@ -302,12 +317,12 @@ test("showcase pins its panel and switches one screenshot per step on scroll", a
     const pinTop = await scrollToShowcaseStep(page, index);
     await expect.poll(visibleShots).toEqual([step]);
     const box = await panel.boundingBox();
-    expect(Math.abs(box!.y - pinTop)).toBeLessThanOrEqual(1);
+    expect(Math.abs(requireValue(box).y - pinTop)).toBeLessThanOrEqual(1);
     const heading = await section.locator("h2").boundingBox();
     const shot = await section.locator(`[data-shot="${step}"] img:visible`).boundingBox();
-    expect(heading!.y).toBeGreaterThanOrEqual(0);
-    expect(shot!.y).toBeGreaterThanOrEqual(0);
-    expect(shot!.y + shot!.height).toBeLessThanOrEqual(800);
+    expect(requireValue(heading).y).toBeGreaterThanOrEqual(0);
+    expect(requireValue(shot).y).toBeGreaterThanOrEqual(0);
+    expect(requireValue(shot).y + requireValue(shot).height).toBeLessThanOrEqual(800);
   });
 
   await expect(section.locator('[data-step="popup"] h3')).toHaveCSS("opacity", "1");
