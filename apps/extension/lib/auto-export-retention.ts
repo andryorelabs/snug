@@ -1,6 +1,7 @@
 import { loadFolderHandle, queryFolderAccess } from "@/lib/folder-handle";
 import { isCurrentFolder, pruneFolderIdentities } from "@/lib/folder-run-identity";
 import { hasDownloadsAccess } from "@/lib/permission-access";
+import { forEachSequentially, reduceSequentially } from "@/lib/sequential";
 import { type AutoExportFolderRun, type AutoExportRun, autoExportRunsStore } from "@/lib/storage";
 
 const writeQueue: { tail: Promise<void> } = { tail: Promise.resolve() };
@@ -15,7 +16,7 @@ async function updateRuns(
   update: (runs: AutoExportRun[]) => Promise<AutoExportRun[]> | AutoExportRun[],
 ): Promise<void> {
   const previous = writeQueue.tail;
-  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>();
+  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<undefined>();
   writeQueue.tail = gate;
 
   try {
@@ -23,7 +24,7 @@ async function updateRuns(
     const runs = await autoExportRunsStore.getValue();
     await autoExportRunsStore.setValue(await update(runs));
   } finally {
-    releaseGate();
+    releaseGate(undefined);
   }
 }
 
@@ -125,10 +126,9 @@ async function removeSavedFolderFile(root: FileSystemDirectoryHandle, path: stri
   const fileName = segments.pop();
   if (!fileName) return;
   try {
-    let directory = root;
-    for (const segment of segments) {
-      directory = await directory.getDirectoryHandle(segment);
-    }
+    const directory = await reduceSequentially(segments, root, (parent, segment) =>
+      parent.getDirectoryHandle(segment),
+    );
     await directory.removeEntry(fileName);
   } catch {}
 }
@@ -170,17 +170,17 @@ async function dropStaleFolderRuns(
 ): Promise<AutoExportRun[]> {
   if (!context) return runs;
   const kept: AutoExportRun[] = [];
-  for (const run of runs) {
+  await forEachSequentially(runs, async (run) => {
     if (run.destination === "downloads") {
       kept.push(run);
-      continue;
+      return;
     }
     let isCurrent = false;
     try {
       isCurrent = await isCurrentFolder(run.folderId, context.handle);
     } catch {}
     if (isCurrent) kept.push(run);
-  }
+  });
   return kept;
 }
 
@@ -213,23 +213,19 @@ export async function applyRetention(keepLast: number): Promise<void> {
       .slice(0, excessCount)
       .some((run) => run.destination === "downloads");
     const hasDownloads = hasDownloadsRuns && (await hasDownloadsAccess());
-    for (const run of runs.slice(0, excessCount)) {
+    await forEachSequentially(runs.slice(0, excessCount), async (run) => {
       if (run.destination === "downloads") {
         if (hasDownloads) {
-          for (const downloadId of run.ids) {
-            await removeSavedDownload(downloadId);
-          }
+          await forEachSequentially(run.ids, (downloadId) => removeSavedDownload(downloadId));
         } else {
           skipped.push(run);
         }
       } else if (context?.hasAccess) {
-        for (const path of run.paths) {
-          await removeSavedFolderFile(context.handle, path);
-        }
+        await forEachSequentially(run.paths, (path) => removeSavedFolderFile(context.handle, path));
       } else {
         skipped.push(run);
       }
-    }
+    });
 
     const nextRuns = [...skipped, ...remaining];
     if (hasFolderRuns) {

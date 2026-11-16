@@ -28,7 +28,7 @@ export interface BookmarkNode {
  * `browser.bookmarks.BookmarkTreeNode` as actually returned at runtime,
  * widened with the extra fields browsers attach that aren't part of the
  * WebExtension type declarations (`dateGroupModified`, `dateLastUsed`,
- * `iconData`) plus an index signature for any other vendor-specific field.
+ * `iconData`).
  * Kept distinct from {@link BookmarkNode}: this type is the live API
  * object, while `BookmarkNode` is this codebase's own normalized shape.
  */
@@ -36,7 +36,6 @@ export interface ExtendedBookmarkTreeNode extends Browser.bookmarks.BookmarkTree
   dateGroupModified?: number;
   dateLastUsed?: number;
   iconData?: string;
-  [key: string]: unknown;
 }
 
 /**

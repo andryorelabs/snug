@@ -1,5 +1,7 @@
 import { i18n } from "#i18n";
 
+import { forEachSequentially } from "@/lib/sequential";
+
 import { countBookmarks, countImportableBookmarks } from "./count-bookmarks";
 import { ImportWriter, withImportRollback } from "./import-control";
 import { withImportLock } from "./import-lock";
@@ -137,10 +139,10 @@ async function importBatchUnlocked(
 
   try {
     await withImportRollback(writer, async () => {
-      for (const file of prepared) {
+      await forEachSequentially(prepared, async (file) => {
         if (file.isCsv) {
           await writeCsvTree(file.tree, writer);
-          continue;
+          return;
         }
         if (!bookmarksBarId || !otherBookmarksId) {
           throw new Error("PROCESS_ERROR");
@@ -159,7 +161,7 @@ async function importBatchUnlocked(
             folderTitle: file.folderTitle,
           }),
         });
-      }
+      });
     });
   } catch (error) {
     throw toImportError(error);

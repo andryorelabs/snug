@@ -33,7 +33,7 @@ function parseEntries(parent: Element): ParsedBookmark[] {
   const entries: ParsedBookmark[] = [];
   for (const element of parent.children) {
     const title =
-      [...element.children].find((child) => child.localName === "title")?.textContent?.trim() ?? "";
+      [...element.children].find((child) => child.localName === "title")?.textContent.trim() ?? "";
     if (element.localName === "folder") {
       entries.push({
         title,

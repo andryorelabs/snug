@@ -6,6 +6,7 @@ import { escapeFolderSegment } from "@/lib/csv-escaping";
 import { createExportTicker, type ExportControl, type ExportTicker } from "@/lib/export-control";
 import { getFaviconBase64 } from "@/lib/favicon";
 import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { forEachSequentially } from "@/lib/sequential";
 import { millisecondsToSeconds } from "@/lib/timestamps";
 import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
@@ -55,7 +56,7 @@ export async function exportToCSV(options: ExportCSVOptions): Promise<string> {
 
   const ticker = createExportTicker(options, countBookmarks(nodesToExport));
 
-  await flattenToRows(nodesToExport as ExtendedBookmarkTreeNode[], rows, "", {
+  await flattenToRows(nodesToExport, rows, "", {
     ticker,
     includeIconData,
     includeDateAdded,
@@ -98,7 +99,7 @@ async function flattenToRows(
     ticker: ExportTicker;
   },
 ): Promise<void> {
-  for (const node of nodes) {
+  await forEachSequentially(nodes, async (node) => {
     if (node.url) {
       options.ticker.tick();
       const row: CSVRow = {
@@ -128,9 +129,9 @@ async function flattenToRows(
           : parentPath
         : folderLabel;
 
-      await flattenToRows(node.children as ExtendedBookmarkTreeNode[], rows, childPath, options);
+      await flattenToRows(node.children, rows, childPath, options);
     }
-  }
+  });
 }
 
 /**

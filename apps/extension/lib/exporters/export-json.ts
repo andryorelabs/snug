@@ -2,6 +2,7 @@ import { countBookmarks } from "@/lib/count-bookmarks";
 import { createExportTicker, type ExportControl, type ExportTicker } from "@/lib/export-control";
 import { getFaviconBase64 } from "@/lib/favicon";
 import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { forEachSequentially } from "@/lib/sequential";
 import { millisecondsToSeconds } from "@/lib/timestamps";
 import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
@@ -41,11 +42,12 @@ export async function exportToJSON(
   } = options;
 
   const rootNodes = await browser.bookmarks.getTree();
-  const rootNode = rootNodes[0] as ExtendedBookmarkTreeNode;
+  const rootNode = rootNodes[0];
+  if (!rootNode) throw new Error("The bookmarks tree has no root node");
   const nodesToExport = selectedBookmarks ?? rootNode.children ?? [];
 
   const ticker = createExportTicker(options, countBookmarks(nodesToExport));
-  const options_: NodeOptions = {
+  const nodeOptions: NodeOptions = {
     ticker,
     includeIconData,
     includeDateAdded,
@@ -55,10 +57,7 @@ export async function exportToJSON(
     hideParentFolder,
   };
 
-  const processedChildren = await processNodes(
-    nodesToExport as ExtendedBookmarkTreeNode[],
-    options_,
-  );
+  const processedChildren = await processNodes(nodesToExport, nodeOptions);
 
   ticker.finish();
 
@@ -108,10 +107,10 @@ async function processNodes(
   options: NodeOptions,
 ): Promise<ExtendedBookmarkTreeNode[]> {
   const result: ExtendedBookmarkTreeNode[] = [];
-  for (const node of nodes) {
+  await forEachSequentially(nodes, async (node) => {
     const processed = await processNode(node, options);
     result.push(...processed);
-  }
+  });
   return result;
 }
 
@@ -149,7 +148,7 @@ async function processNode(
   }
   if (node.children !== undefined) {
     if (isOtherBookmarks(node) && options.hideOtherBookmarks) {
-      return processNodes(node.children as ExtendedBookmarkTreeNode[], options);
+      return processNodes(node.children, options);
     }
 
     if (
@@ -159,13 +158,10 @@ async function processNode(
       !isOtherBookmarks(node) &&
       !isPreservedRoot(node)
     ) {
-      return processNodes(node.children as ExtendedBookmarkTreeNode[], options);
+      return processNodes(node.children, options);
     }
 
-    const processedChildren = await processNodes(
-      node.children as ExtendedBookmarkTreeNode[],
-      options,
-    );
+    const processedChildren = await processNodes(node.children, options);
 
     const folder: ExtendedBookmarkTreeNode = {
       ...node,

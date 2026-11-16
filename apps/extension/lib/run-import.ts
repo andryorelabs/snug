@@ -53,7 +53,7 @@ async function runImportUnlocked(
   options: ImportOptions,
 ): Promise<RunImportResult> {
   let snapshot: SafetySnapshot | undefined;
-  let hasClearedExisting = false;
+  const progress = { hasClearedExisting: false };
   try {
     const result = await importWithSnapshot(
       text,
@@ -63,7 +63,7 @@ async function runImportUnlocked(
       {
         ...options,
         onClearingExisting: () => {
-          hasClearedExisting = true;
+          progress.hasClearedExisting = true;
           options.onClearingExisting?.();
         },
       },
@@ -74,7 +74,8 @@ async function runImportUnlocked(
     return snapshot ? { ...result, snapshot } : result;
   } catch (error) {
     const wasCleared =
-      hasClearedExisting || (error instanceof ImportCanceledError && error.hasClearedExisting);
+      progress.hasClearedExisting ||
+      (error instanceof ImportCanceledError && error.hasClearedExisting);
     if (snapshot && wasCleared) {
       await restoreSnapshot(snapshot, error);
     }

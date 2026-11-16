@@ -88,7 +88,7 @@ const offscreenState: {
  */
 async function runLifecycleStep<T>(step: () => Promise<T>): Promise<T> {
   const previous = offscreenState.lifecycle;
-  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<void>();
+  const { promise: gate, resolve: releaseGate } = Promise.withResolvers<undefined>();
   offscreenState.lifecycle = gate;
 
   try {
@@ -97,7 +97,7 @@ async function runLifecycleStep<T>(step: () => Promise<T>): Promise<T> {
   try {
     return await step();
   } finally {
-    releaseGate();
+    releaseGate(undefined);
   }
 }
 
@@ -216,7 +216,7 @@ async function readDownloadState(downloadId: number): Promise<string | undefined
     const [item] = await browser.downloads.search({ id: downloadId });
     return item?.state;
   } catch {
-    return;
+    return undefined;
   }
 }
 
@@ -252,7 +252,9 @@ function watchDownload(downloadId: number, timeoutMs: number | null): Promise<Do
       settle(delta.state?.current);
     };
     if (timeoutMs !== null) {
-      timeoutHandle = setTimeout(() => finish("timeout"), timeoutMs);
+      timeoutHandle = setTimeout(() => {
+        finish("timeout");
+      }, timeoutMs);
     }
     browser.downloads.onChanged.addListener(listener);
     void readDownloadState(downloadId).then(settle);

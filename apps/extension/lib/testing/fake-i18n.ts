@@ -67,9 +67,9 @@ function resolveMessage(entry: MessageEntry, substitutions?: string[]): string {
  * Installs a `locales/<locale>.json`-backed `browser.i18n.getMessage` fake.
  * @param locale The locale file to serve, `en` by default.
  */
-export function resetFakeI18n(locale: string = DEFAULT_LOCALE): void {
+export function resetFakeI18n(locale = DEFAULT_LOCALE): void {
   const messages = loadLocale(locale);
-  fakeBrowser.i18n.getMessage = ((messageName: string, substitutions?: string | string[]) => {
+  const getMessage = (messageName: string, substitutions?: string | string[]) => {
     const entry = messages[messageName];
     if (!entry) return "";
     const subs = substitutions
@@ -78,5 +78,6 @@ export function resetFakeI18n(locale: string = DEFAULT_LOCALE): void {
         : [substitutions]
       : undefined;
     return isMessageEntry(entry) ? resolveMessage(entry, subs) : resolvePlural(entry, subs);
-  }) as typeof fakeBrowser.i18n.getMessage;
+  };
+  Reflect.set(fakeBrowser.i18n, "getMessage", getMessage);
 }

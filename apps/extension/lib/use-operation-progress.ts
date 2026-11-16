@@ -49,9 +49,15 @@ export function useOperationProgress(): OperationProgressControls {
   const controllerReference = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (phase === "idle") return;
-    const timer = setTimeout(() => setHasDelayPassed(true), PROGRESS_CARD_DELAY_MS);
-    return () => clearTimeout(timer);
+    const timer =
+      phase === "idle"
+        ? undefined
+        : setTimeout(() => {
+            setHasDelayPassed(true);
+          }, PROGRESS_CARD_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [phase]);
 
   const begin = useCallback(() => {
@@ -64,7 +70,9 @@ export function useOperationProgress(): OperationProgressControls {
   }, []);
 
   const report = useCallback<OperationProgressControls["report"]>(
-    ({ done, total, skippedDuplicates = 0 }) => setCounts({ done, total, skippedDuplicates }),
+    ({ done, total, skippedDuplicates = 0 }) => {
+      setCounts({ done, total, skippedDuplicates });
+    },
     [],
   );
 

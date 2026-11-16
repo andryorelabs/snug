@@ -1,3 +1,5 @@
+import { findSequentially, reduceSequentially } from "@/lib/sequential";
+
 /**
  * Highest ` (n)` suffix tried before giving up, so a pathological folder
  * cannot loop forever.
@@ -31,11 +33,16 @@ async function resolveFreeName(
 ): Promise<string> {
   const plain = `${baseName}.${extension}`;
   if (!(await hasFile(directory, plain))) return plain;
-  for (let suffix = 1; suffix <= MAX_NAME_COLLISIONS; suffix++) {
-    const candidate = `${baseName} (${suffix}).${extension}`;
-    if (!(await hasFile(directory, candidate))) return candidate;
-  }
-  throw new Error(`No free file name for ${plain}`);
+  const candidates = Array.from(
+    { length: MAX_NAME_COLLISIONS },
+    (_unused, index) => `${baseName} (${index + 1}).${extension}`,
+  );
+  const free = await findSequentially(
+    candidates,
+    async (candidate) => !(await hasFile(directory, candidate)),
+  );
+  if (free === undefined) throw new Error(`No free file name for ${plain}`);
+  return free;
 }
 
 /**
@@ -58,11 +65,10 @@ export async function writeToCustomFolder(
   extension: string,
   content: string,
 ): Promise<string> {
-  let directory = root;
   const segments = subfolderPath.split("/").filter(Boolean);
-  for (const segment of segments) {
-    directory = await directory.getDirectoryHandle(segment, { create: true });
-  }
+  const directory = await reduceSequentially(segments, root, (parent, segment) =>
+    parent.getDirectoryHandle(segment, { create: true }),
+  );
   const name = await resolveFreeName(directory, baseName, extension);
   const fileHandle = await directory.getFileHandle(name, { create: true });
   const writable = await fileHandle.createWritable();

@@ -11,7 +11,9 @@ import {
 import { shouldClearMobileRoot } from "@/lib/importers/mobile-root";
 import { resolveImportRoots, resolveSplitRootTargets } from "@/lib/importers/resolve-roots";
 import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import { isRecord } from "@/lib/is-record";
 import { ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { forEachSequentially } from "@/lib/sequential";
 import { applySkipDuplicates } from "@/lib/skip-duplicates";
 import type { ImportMode, ImportOptions, ImportResult, ParsedBookmark } from "@/lib/types";
 
@@ -81,8 +83,14 @@ export function toImportError(error: unknown): unknown {
   return new Error(
     isProcessError
       ? i18n.t("importFromJSONProcessError")
-      : i18n.t("importFromJSONImportError", [(error as Error).message]),
+      : i18n.t("importFromJSONImportError", [
+          error instanceof Error ? error.message : String(error),
+        ]),
   );
+}
+
+function isParsedBookmark(value: unknown): value is ParsedBookmark {
+  return isRecord(value);
 }
 
 /**
@@ -93,7 +101,11 @@ export function toImportError(error: unknown): unknown {
  * @returns The root as an array of nodes.
  */
 export function normalizeJsonRoot(raw: unknown): ParsedBookmark[] {
-  return (Array.isArray(raw) ? raw : [raw]) as ParsedBookmark[];
+  const nodes: unknown[] = Array.isArray(raw) ? raw : [raw];
+  if (!nodes.every(isParsedBookmark)) {
+    throw new TypeError("Bookmark nodes must be objects");
+  }
+  return nodes;
 }
 
 /**
@@ -173,22 +185,21 @@ function preprocessLevel(level: ParsedBookmark[]): PreprocessLevelResult {
   let virtualRootChildren: ParsedBookmark[] | undefined;
 
   for (const bookmark of level) {
-    switch (resolveRootId(bookmark)) {
-      case ROOT_FOLDER_IDS.bookmarksBar: {
-        bookmark.isBookmarksBar = true;
-        result.unshift(bookmark);
-        continue;
-      }
-      case ROOT_FOLDER_IDS.otherBookmarks: {
-        bookmark.isOtherBookmarks = true;
-        result.push(bookmark);
-        continue;
-      }
-      case ROOT_FOLDER_IDS.mobileBookmarks: {
-        bookmark.isMobileBookmarks = true;
-        result.push(bookmark);
-        continue;
-      }
+    const rootId = resolveRootId(bookmark);
+    if (rootId === ROOT_FOLDER_IDS.bookmarksBar) {
+      bookmark.isBookmarksBar = true;
+      result.unshift(bookmark);
+      continue;
+    }
+    if (rootId === ROOT_FOLDER_IDS.otherBookmarks) {
+      bookmark.isOtherBookmarks = true;
+      result.push(bookmark);
+      continue;
+    }
+    if (rootId === ROOT_FOLDER_IDS.mobileBookmarks) {
+      bookmark.isMobileBookmarks = true;
+      result.push(bookmark);
+      continue;
     }
 
     if (bookmark.parentId === ROOT_FOLDER_IDS.otherBookmarks) {
@@ -372,7 +383,7 @@ export async function writeParsedTree(request: WriteParsedTreeRequest): Promise<
       title: folderTitle,
     });
 
-    for (const bookmark of parsed) {
+    await forEachSequentially(parsed, async (bookmark) => {
       if (bookmark.isBookmarksBar && bookmark.children && bookmark.children.length > 0) {
         const importedBar = await writer.create({
           parentId: importedFolder.id,
@@ -396,7 +407,7 @@ export async function writeParsedTree(request: WriteParsedTreeRequest): Promise<
       } else if (!bookmark.children) {
         result.skippedInvalidUrl++;
       }
-    }
+    });
   } else {
     const hasMobileContent = parsed.some(
       (bookmark) =>
@@ -416,12 +427,10 @@ export async function writeParsedTree(request: WriteParsedTreeRequest): Promise<
           clearedIds.add(targetId);
         }
       }
-      for (const clearedId of clearedIds) {
-        await removeAllChildren(clearedId, root);
-      }
+      await forEachSequentially(clearedIds, (clearedId) => removeAllChildren(clearedId, root));
     }
 
-    for (const bookmark of parsed) {
+    await forEachSequentially(parsed, async (bookmark) => {
       if (bookmark.isBookmarksBar && bookmark.children) {
         await createBookmarks(
           bookmark.children,
@@ -456,7 +465,7 @@ export async function writeParsedTree(request: WriteParsedTreeRequest): Promise<
       } else if (!bookmark.children) {
         result.skippedInvalidUrl++;
       }
-    }
+    });
   }
 }
 
@@ -476,9 +485,7 @@ async function removeAllChildren(
 ): Promise<void> {
   const rootNode = treeRoot?.children?.find((node) => node.id === rootId);
   const children = rootNode?.children ?? [];
-  for (const child of children) {
-    await browser.bookmarks.removeTree(child.id);
-  }
+  await forEachSequentially(children, (child) => browser.bookmarks.removeTree(child.id));
 }
 
 /**
@@ -516,7 +523,7 @@ async function writeMobileBookmarks(
  * @param result The running import result, updated when the create fails.
  * @param writer The writer that creates and journals the node.
  * @param isTrusted Whether a failed create is counted instead of thrown.
- * @returns The created folder, or `undefined` when its subtree was skipped.
+ * @returns The created folder, or `null` when its subtree was skipped.
  */
 async function createFolderOrSkipSubtree(
   node: ParsedBookmark,
@@ -530,7 +537,7 @@ async function createFolderOrSkipSubtree(
   } catch (error) {
     if (!isTrusted || error instanceof ImportCanceledError) throw error;
     result.skippedInvalidUrl += Math.max(1, countBookmarks(node.children ?? []));
-    return;
+    return null;
   }
 }
 
@@ -556,7 +563,7 @@ async function createBookmarks(
   writer: ImportWriter,
   isTrusted: boolean,
 ): Promise<void> {
-  for (const node of nodes) {
+  await forEachSequentially(nodes, async (node) => {
     const hasWritableUrl = isTrusted ? node.url !== undefined : isAllowedBookmarkUrl(node.url);
     try {
       if (hasWritableUrl) {
@@ -567,7 +574,7 @@ async function createBookmarks(
         });
       } else if (node.children) {
         const folder = await createFolderOrSkipSubtree(node, parentId, result, writer, isTrusted);
-        if (!folder) continue;
+        if (!folder) return;
         await createBookmarks(node.children, folder.id, result, writer, isTrusted);
       } else {
         result.skippedInvalidUrl++;
@@ -576,5 +583,5 @@ async function createBookmarks(
       if (!isTrusted || error instanceof ImportCanceledError) throw error;
       result.skippedInvalidUrl++;
     }
-  }
+  });
 }
