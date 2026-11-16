@@ -20,13 +20,13 @@ const EXTENSIONS: Record<ExportFormat, string> = {
   xbel: ".xbel",
 };
 
-export type FileIconProps = {
+export interface FileIconProps {
   format: ExportFormat;
   /**
    * Width in px; height is 1.25x. Default 96.
    */
   size?: number;
-};
+}
 
 /**
  * Document silhouette with a folded corner and the format extension on it.

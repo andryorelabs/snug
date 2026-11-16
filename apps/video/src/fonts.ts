@@ -7,11 +7,11 @@ import { staticFile } from "remotion";
 
 import type { Locale } from "./copy";
 
-export type FontStack = {
+export interface FontStack {
   display: string;
   body: string;
   mono: string;
-};
+}
 
 type CjkLocale = "ja" | "ko" | "zh_CN";
 
@@ -44,7 +44,7 @@ export const fontStackFor = (locale: Locale): FontStack => {
   return stack(locale === "ru" ? GEIST : SPACE_GROTESK, GEIST);
 };
 
-const loadBrandFonts = (): Promise<void[]> =>
+const loadBrandFonts = () =>
   Promise.all([
     loadFont({
       family: GEIST,

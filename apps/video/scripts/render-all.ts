@@ -5,6 +5,7 @@ import { renderMedia, selectComposition } from "@remotion/renderer";
 
 import { type Locale, LOCALES } from "../src/copy";
 import { FPS, HEIGHT, TOTAL_FRAMES, WIDTH } from "../src/timing";
+import { runInSequence } from "./run-in-sequence";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, "out");
@@ -12,18 +13,18 @@ const MUSIC_TRACK = path.join(ROOT, "public", "music", "track.wav");
 const DURATION_TOLERANCE_SECONDS = 0.1;
 const EXPECTED_SECONDS = TOTAL_FRAMES / FPS;
 
-type ProbeStream = {
+interface ProbeStream {
   codec_type: string;
   codec_name?: string;
   width?: number;
   height?: number;
   r_frame_rate?: string;
-};
+}
 
-type ProbeResult = {
+interface ProbeResult {
   streams: ProbeStream[];
   format: { duration: string };
-};
+}
 
 const isLocale = (value: string): value is Locale => (LOCALES as readonly string[]).includes(value);
 
@@ -60,8 +61,13 @@ const parseConcurrency = (argv: string[]): number => {
 
 const parseFrameRate = (rate: string | undefined): number => {
   const [numerator, denominator] = (rate ?? "0/1").split("/").map(Number);
-  return (numerator ?? 0) / (denominator || 1);
+  const hasUsableDenominator =
+    denominator !== undefined && denominator !== 0 && !Number.isNaN(denominator);
+  return (numerator ?? 0) / (hasUsableDenominator ? denominator : 1);
 };
+
+const isProbeResult = (value: unknown): value is ProbeResult =>
+  typeof value === "object" && value !== null;
 
 const probe = async (file: string): Promise<ProbeResult> => {
   const process = Bun.spawn(
@@ -74,7 +80,9 @@ const probe = async (file: string): Promise<ProbeResult> => {
     process.exited,
   ]);
   if (exitCode !== 0) throw new Error(`ffprobe failed on ${file}: ${stderr}`);
-  return JSON.parse(stdout) as ProbeResult;
+  const parsed: unknown = JSON.parse(stdout);
+  if (!isProbeResult(parsed)) throw new TypeError(`ffprobe printed unexpected output for ${file}`);
+  return parsed;
 };
 
 const SILENCE_FLOOR_DB = -50;
@@ -149,7 +157,7 @@ const main = async () => {
   });
 
   const failures: string[] = [];
-  for (const locale of locales) {
+  await runInSequence(locales, async (locale) => {
     const outputLocation = path.join(OUT_DIR, `snug-promo-${locale}.mp4`);
     const inputProps = { locale };
     const composition = await selectComposition({
@@ -174,7 +182,7 @@ const main = async () => {
     } else {
       console.log(`${locale}: ok -> ${outputLocation}`);
     }
-  }
+  });
 
   if (failures.length > 0) {
     throw new Error(`Verification failed:\n${failures.join("\n")}`);

@@ -260,7 +260,7 @@ export const LocalScene = ({ locale }: SceneProps) => {
         >
           <DeviceOutline />
           {captions.claims.map((claim, index) => (
-            <ClaimRow key={index} index={index} text={claim} locale={locale} />
+            <ClaimRow key={claim} index={index} text={claim} locale={locale} />
           ))}
         </div>
       </Camera>

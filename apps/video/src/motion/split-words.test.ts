@@ -12,7 +12,9 @@ import ru from "../../../extension/locales/ru.json";
 import zhCN from "../../../extension/locales/zh_CN.json";
 import { splitWords } from "./split-words";
 
-type LocaleFile = { extensionManifestName: { message: string } };
+interface LocaleFile {
+  extensionManifestName: { message: string };
+}
 
 const title = (locale: LocaleFile) => locale.extensionManifestName.message;
 

@@ -1,6 +1,6 @@
 import { theme } from "../theme";
 
-export type SegmentedControlProps = {
+export interface SegmentedControlProps {
   /**
    * Option labels, e.g. merge / replace / new folder, already localized.
    */
@@ -17,7 +17,7 @@ export type SegmentedControlProps = {
    * Label font size in px. Default 20.
    */
   fontSize?: number;
-};
+}
 
 const HEIGHT = 56;
 const INSET = 5;

@@ -7,14 +7,14 @@ const CLAMP = {
   extrapolateRight: "clamp",
 } as const;
 
-export type Waypoint = {
+export interface Waypoint {
   /**
    * Frame the cursor arrives at this point.
    */
   frame: number;
   x: number;
   y: number;
-};
+}
 
 const RIPPLE_FRAMES = 16;
 const PRESS_FRAMES = 6;
@@ -50,7 +50,7 @@ export const cursorPositionAt = (
 export const clicksBy = (clicks: readonly number[], frame: number): number =>
   clicks.filter((click) => click <= frame).length;
 
-export type CursorProps = {
+export interface CursorProps {
   waypoints: readonly Waypoint[];
   /**
    * Frames at which a click lands.
@@ -60,13 +60,15 @@ export type CursorProps = {
    * Arrow scale, 1 is 20x28 px. Default 1.4.
    */
   scale?: number;
-};
+}
+
+const NO_CLICKS: readonly number[] = [];
 
 /**
  * Arrow cursor on a waypoint path with a ripple per click. Absolutely
  * positioned in its parent's coordinates; render it inside the Camera layer.
  */
-export const Cursor = ({ waypoints, clicks = [], scale = 1.4 }: CursorProps) => {
+export const Cursor = ({ waypoints, clicks = NO_CLICKS, scale = 1.4 }: CursorProps) => {
   const frame = useCurrentFrame();
   const position = cursorPositionAt(waypoints, frame);
   const pressing = clicks.some((click) => frame >= click && frame < click + PRESS_FRAMES);

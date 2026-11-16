@@ -54,13 +54,13 @@ const PANEL_LEFT = 640;
 const CHIP_SCALE = 1.25;
 const CHIP_TOP = 56;
 
-type TreeEntry = {
+interface TreeEntry {
   label: string;
   kind: "folder" | "bookmark";
   depth: number;
   expanded?: boolean;
   cascadeIndex?: number;
-};
+}
 
 const TREE: readonly TreeEntry[] = [
   { label: "Bookmarks bar", kind: "folder", depth: 0, expanded: true },

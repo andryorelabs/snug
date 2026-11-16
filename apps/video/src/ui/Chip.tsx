@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import { theme } from "../theme";
 import { type ExportFormat, FORMAT_LABELS } from "./FileIcon";
 
-export type ChipProps = {
+export interface ChipProps {
   format: ExportFormat;
   /**
    * `active` is the amber selected state.
    */
   tone?: "default" | "active";
-};
+}
 
 const ChipRoot = ({ tone, children }: { tone: "default" | "active"; children: ReactNode }) => (
   <div

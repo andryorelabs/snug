@@ -9,16 +9,19 @@ export const MATCH_POINTS = {
   center: { x: 960, y: 540 },
 } as const;
 
-export type MatchPoint = { x: number; y: number };
+export interface MatchPoint {
+  x: number;
+  y: number;
+}
 
-export type MatchCutProps = {
+export interface MatchCutProps {
   /**
    * Screen position (1920x1080 space) of the element's centre.
    */
   at: MatchPoint;
   scale?: number;
   children: ReactNode;
-};
+}
 
 /**
  * Pins its children's centre to a fixed screen position. Render the same
