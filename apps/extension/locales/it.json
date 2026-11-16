@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Esporta, importa e fai il backup dei segnalibri in formati comuni, da Chrome o Safari. Tutto in locale.",
+    "message": "Esporta, importa e fai il backup dei segnalibri — interamente sul tuo dispositivo.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Esporta, importa e salva i tuoi segnalibri nei formati comuni, con pianificazione. Tutto resta in locale.",
+    "message": "Esporta, importa e fai il backup dei segnalibri — interamente sul tuo dispositivo.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

@@ -4,11 +4,11 @@
     "description": "Nombre de la extensión."
   },
   "extensionDescription": {
-    "message": "Exporta, importa y respalda tus marcadores en formatos comunes, desde Chrome o Safari, con horario. Todo local.",
+    "message": "Exporta, importa y respalda tus marcadores — todo en tu dispositivo.",
     "description": "Descripción de la extensión"
   },
   "extensionDescriptionEdge": {
-    "message": "Exporta, importa y respalda tus marcadores en formatos comunes, con programación. Todo se queda en local.",
+    "message": "Exporta, importa y respalda tus marcadores — todo en tu dispositivo.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

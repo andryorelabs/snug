@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Exporte, importe e faça backup dos favoritos em formatos comuns, do Chrome ou Safari. Tudo local.",
+    "message": "Exporte, importe e faça backup dos seus favoritos — tudo no seu dispositivo.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Exporte, importe e faça backup dos seus favoritos em formatos comuns, com agendamento. Tudo fica local.",
+    "message": "Exporte, importe e faça backup dos seus favoritos — tudo no seu dispositivo.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {
