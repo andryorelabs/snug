@@ -100,6 +100,18 @@ describe("catalogLoader", () => {
     });
   });
 
+  it("limits the table of contents of the changelog pages to the version headings", async () => {
+    catalog.entries = [entry("changelog"), entry("es/changelog"), entry("guide")];
+    const { context, store } = createContext();
+
+    await load(context);
+
+    const tableOfContents = { minHeadingLevel: 2, maxHeadingLevel: 2 };
+    expect(store.set.mock.calls[0]?.[0].data).toMatchObject({ tableOfContents });
+    expect(store.set.mock.calls[1]?.[0].data).toMatchObject({ tableOfContents });
+    expect(store.set.mock.calls[2]?.[0].data).not.toHaveProperty("tableOfContents");
+  });
+
   it("marks external links in the rendered html", async () => {
     catalog.entries = [{ ...entry("guide"), body: "x" }];
     const { context, store } = createContext();
