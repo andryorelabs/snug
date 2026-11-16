@@ -43,7 +43,7 @@ export const navItemCenter = (id: NavId): { x: number; y: number } => ({
     NAV_ITEM / 2,
 });
 
-export type AppWindowProps = {
+export interface AppWindowProps {
   locale: Locale;
   /**
    * Highlighted nav entry; its label is also the page heading.
@@ -57,13 +57,15 @@ export type AppWindowProps = {
    * Content area, laid out below the page heading.
    */
   children?: ReactNode;
-};
+}
+
+const NO_HOVER: Partial<Record<NavId, number>> = {};
 
 /**
  * Snug app shell: title bar, localized left nav, and a content area. Fixed at
  * 1520x860 in layer coordinates; scale it with a Camera.
  */
-export const AppWindow = ({ locale, active, hover = {}, children }: AppWindowProps) => {
+export const AppWindow = ({ locale, active, hover = NO_HOVER, children }: AppWindowProps) => {
   const fonts = fontStackFor(locale);
   return (
     <div

@@ -19,7 +19,7 @@ function dependencies(overrides: Partial<PrePushDependencies> = {}): PrePushDepe
   return {
     hasRemoteRef: () => true,
     runAffectedCheck: () => 0,
-    log: vi.fn(),
+    log: vi.fn<(message: string) => void>(),
     ...overrides,
   };
 }
@@ -104,13 +104,13 @@ describe("decidePush", () => {
 
 describe("runPrePush", () => {
   it("exits 1 and logs when pushing to a protected branch", () => {
-    const log = vi.fn();
+    const log = vi.fn<(message: string) => void>();
     expect(runPrePush(pushLine("refs/heads/main"), dependencies({ log }))).toBe(1);
     expect(log).toHaveBeenCalledOnce();
   });
 
   it("exits 0 for delete-only pushes without running the check", () => {
-    const runAffectedCheck = vi.fn(() => 1);
+    const runAffectedCheck = vi.fn<(base: string) => number>(() => 1);
     expect(
       runPrePush(pushLine("refs/heads/feat/x", ZERO), dependencies({ runAffectedCheck })),
     ).toBe(0);
@@ -118,8 +118,8 @@ describe("runPrePush", () => {
   });
 
   it("skips with a message when neither origin/develop nor origin/main exists", () => {
-    const log = vi.fn();
-    const runAffectedCheck = vi.fn(() => 1);
+    const log = vi.fn<(message: string) => void>();
+    const runAffectedCheck = vi.fn<(base: string) => number>(() => 1);
     const code = runPrePush(
       pushLine("refs/heads/feat/x"),
       dependencies({ hasRemoteRef: () => false, log, runAffectedCheck }),
@@ -130,13 +130,13 @@ describe("runPrePush", () => {
   });
 
   it("uses origin/develop as the base when it exists", () => {
-    const runAffectedCheck = vi.fn(() => 0);
+    const runAffectedCheck = vi.fn<(base: string) => number>(() => 0);
     runPrePush(pushLine("refs/heads/feat/x"), dependencies({ runAffectedCheck }));
     expect(runAffectedCheck).toHaveBeenCalledWith("origin/develop");
   });
 
   it("falls back to origin/main when origin/develop is missing", () => {
-    const runAffectedCheck = vi.fn(() => 0);
+    const runAffectedCheck = vi.fn<(base: string) => number>(() => 0);
     runPrePush(
       pushLine("refs/heads/feat/x"),
       dependencies({ hasRemoteRef: (reference) => reference === "origin/main", runAffectedCheck }),
@@ -145,7 +145,7 @@ describe("runPrePush", () => {
   });
 
   it("prints what it runs and returns the check exit code", () => {
-    const log = vi.fn();
+    const log = vi.fn<(message: string) => void>();
     const code = runPrePush(
       pushLine("refs/heads/feat/x"),
       dependencies({ log, runAffectedCheck: () => 3 }),

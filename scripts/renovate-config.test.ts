@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import JSON5 from "json5";
 import { describe, expect, test } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 interface PackageRule {
   groupName?: string;
   matchDepNames?: string[];
@@ -200,18 +201,21 @@ describe("renovate.json5", () => {
 });
 
 describe("toolchain pins", () => {
-  const manifest = JSON.parse(
+  const manifest = parseJsonAs(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-  ) as {
-    devDependencies: Record<string, string>;
-    workspaces: { catalog: Record<string, string> };
-  };
+    (
+      value,
+    ): value is {
+      devDependencies: Record<string, string>;
+      workspaces: { catalog: Record<string, string> };
+    } => isRecord(value) && isRecord(value.devDependencies) && isRecord(value.workspaces),
+  );
 
   test.each(["oxlint", "oxlint-tsgolint", "oxfmt"])("%s is pinned to an exact version", (name) => {
     expect(manifest.devDependencies[name]).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   test("typescript7 is pinned to an exact version", () => {
-    expect(manifest.workspaces.catalog["typescript7"]).toMatch(/^npm:typescript@\d+\.\d+\.\d+/);
+    expect(manifest.workspaces.catalog.typescript7).toMatch(/^npm:typescript@\d+\.\d+\.\d+/);
   });
 });

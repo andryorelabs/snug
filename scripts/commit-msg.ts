@@ -31,6 +31,8 @@ if (import.meta.main) {
         stdout: "inherit",
         stderr: "inherit",
       }).exitCode,
-    log: (message) => console.error(message),
+    log: (message) => {
+      console.error(message);
+    },
   });
 }

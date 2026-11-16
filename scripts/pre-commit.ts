@@ -1,5 +1,3 @@
-const KEY_FILE_PATTERN = /\.env\.keys$/;
-
 /**
  * Side effects the hook needs, injectable so the policy stays testable.
  */
@@ -15,7 +13,7 @@ export interface PreCommitDependencies {
  * @returns The paths that must never be committed.
  */
 export function findKeyFiles(paths: readonly string[]): string[] {
-  return paths.filter((stagedPath) => KEY_FILE_PATTERN.test(stagedPath));
+  return paths.filter((stagedPath) => stagedPath.endsWith(".env.keys"));
 }
 
 /**
@@ -58,6 +56,8 @@ function readStagedPaths(): string[] {
 if (import.meta.main) {
   process.exitCode = runPreCommit({
     listStagedPaths: readStagedPaths,
-    log: (message) => console.error(message),
+    log: (message) => {
+      console.error(message);
+    },
   });
 }

@@ -124,7 +124,9 @@ export function validateDirectoryTracker(text: string): string[] {
 
   const seenTags = new Set<string>();
   for (const [index, row] of parseTracker(text).entries()) {
-    const label = `row ${index + 2} (${row["Directory"] || "unnamed"})`;
+    const directory =
+      row.Directory === undefined || row.Directory === "" ? "unnamed" : row.Directory;
+    const label = `row ${index + 2} (${directory})`;
     const tag = row["Campaign Tag"] ?? "";
 
     if (!CAMPAIGN_TAG_PATTERN.test(tag)) {
@@ -139,7 +141,7 @@ export function validateDirectoryTracker(text: string): string[] {
       problems.push(`${label}: variant "${variant}" must be one of ${VARIANT_IDS.join(", ")}`);
     }
 
-    const batch = row["Batch"] ?? "";
+    const batch = row.Batch ?? "";
     if (batch === "") {
       if (!isReservedTag(tag)) {
         problems.push(`${label}: Batch may be empty only for reserved tags`);

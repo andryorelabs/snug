@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 const REPO_ROOT = new URL("../", import.meta.url).pathname;
 
 const OWNER_SLUG_SURFACES = ["."];
@@ -38,14 +39,19 @@ describe("owner slug", () => {
   });
 
   test.each(WORKSPACE_PACKAGE_JSONS)("%s carries full owner metadata", (path) => {
-    const manifest = JSON.parse(readFileSync(`${REPO_ROOT}${path}`, "utf8")) as {
-      description?: string;
-      license?: string;
-      author?: string;
-      homepage?: string;
-      repository?: { url?: string };
-      bugs?: { url?: string };
-    };
+    const manifest = parseJsonAs(
+      readFileSync(`${REPO_ROOT}${path}`, "utf8"),
+      (
+        value,
+      ): value is {
+        description?: string;
+        license?: string;
+        author?: string;
+        homepage?: string;
+        repository?: { url?: string };
+        bugs?: { url?: string };
+      } => isRecord(value),
+    );
     expect(manifest.description?.length).toBeGreaterThan(0);
     expect(manifest.license).toBe("MIT");
     expect(manifest.author).toBe("Andry Orellana <hello@andryore.dev>");

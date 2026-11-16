@@ -63,12 +63,12 @@ const PATHS: Record<IconName, ReactNode> = {
   ),
 };
 
-export type IconProps = {
+export interface IconProps {
   name: IconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
-};
+}
 
 /**
  * Stroke icon drawn from the lucide shapes the real app uses.

@@ -70,21 +70,34 @@ export async function resolveLockDirectory(lockName: string): Promise<string> {
   return path.join(gitCommonDirectory, lockName);
 }
 
+function hasErrorCode(error: unknown, code: string): boolean {
+  return error instanceof Error && "code" in error && error.code === code;
+}
+
+function isLockHolder(value: unknown): value is LockHolder {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate: Partial<Record<keyof LockHolder, unknown>> = value;
+  return (
+    typeof candidate.pid === "number" &&
+    typeof candidate.worktree === "string" &&
+    typeof candidate.acquiredAt === "number"
+  );
+}
+
 function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;
   } catch (error) {
-    return (error as NodeJS.ErrnoException).code !== "ESRCH";
+    return !hasErrorCode(error, "ESRCH");
   }
 }
 
-export function readLockHolder<THolder extends LockHolder = LockHolder>(
-  lockDirectory: string,
-): THolder | undefined {
+export function readLockHolder(lockDirectory: string): LockHolder | undefined {
   try {
     const raw = readFileSync(path.join(lockDirectory, "holder.json"), "utf8");
-    return JSON.parse(raw) as THolder;
+    const parsed: unknown = JSON.parse(raw);
+    return isLockHolder(parsed) ? parsed : undefined;
   } catch {
     return undefined;
   }
@@ -135,14 +148,11 @@ export function isLockStale(lockDirectory: string, maxAgeMs: number): boolean {
  * @param holder The holder payload to write into it.
  * @returns Whether this call acquired the lock.
  */
-export function didAcquireLock<THolder extends LockHolder>(
-  lockDirectory: string,
-  holder: THolder,
-): boolean {
+export function didAcquireLock(lockDirectory: string, holder: LockHolder): boolean {
   try {
     mkdirSync(lockDirectory);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "EEXIST") return false;
+    if (hasErrorCode(error, "EEXIST")) return false;
     throw error;
   }
   /**
@@ -195,31 +205,33 @@ export interface AcquireLockOptions {
  * @param options Timeout, poll interval, staleness, and logging config.
  * @returns Resolves once the lock is acquired.
  */
-export async function acquireLock<THolder extends LockHolder>(
+export async function acquireLock(
   lockDirectory: string,
-  buildHolder: () => THolder,
+  buildHolder: () => LockHolder,
   options: AcquireLockOptions,
 ): Promise<void> {
   const { timeoutMs, pollIntervalMs, maxAgeMs, logLabel } = options;
   const deadline = Date.now() + timeoutMs;
-  for (;;) {
+  const attempt = async (): Promise<void> => {
     if (didAcquireLock(lockDirectory, buildHolder())) return;
     if (existsSync(lockDirectory) && isLockStale(lockDirectory, maxAgeMs)) {
       const holder = readLockHolder(lockDirectory);
       console.log(
-        `${logLabel}: reclaiming a stale lock${holder ? ` (pid ${holder.pid} is no longer alive, or the lock is too old)` : " (unreadable holder metadata)"}...`,
+        `${logLabel}: reclaiming a stale lock${holder ? ` (pid ${String(holder.pid)} is no longer alive, or the lock is too old)` : " (unreadable holder metadata)"}...`,
       );
       rmSync(lockDirectory, { recursive: true, force: true });
-      continue;
+      return attempt();
     }
     if (Date.now() >= deadline) {
       const holder = readLockHolder(lockDirectory);
       throw new Error(
-        `${logLabel}: timed out after ${timeoutMs}ms waiting for the lock` +
-          (holder ? ` (held by pid ${holder.pid} in ${holder.worktree})` : "") +
+        `${logLabel}: timed out after ${String(timeoutMs)}ms waiting for the lock` +
+          (holder ? ` (held by pid ${String(holder.pid)} in ${holder.worktree})` : "") +
           " — another process is mid-run. Re-run this command to retry.",
       );
     }
     await Bun.sleep(pollIntervalMs);
-  }
+    return attempt();
+  };
+  return attempt();
 }

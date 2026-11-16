@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { theme } from "../theme";
 import { Icon } from "./Icon";
 
-export type ToastProps = {
+export interface ToastProps {
   /**
    * 0..1 entrance; slides up and fades in. Default 1.
    */
@@ -12,7 +12,7 @@ export type ToastProps = {
    * Content, normally `Toast.Message` and `Toast.Action`.
    */
   children: ReactNode;
-};
+}
 
 const ToastRoot = ({ enter = 1, children }: ToastProps) => (
   <div

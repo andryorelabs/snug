@@ -163,7 +163,7 @@ describe("repository coverage configuration", () => {
 describe("checkCoverageFloors and main", () => {
   test("reports a floor far below the measured value and exits non-zero", () => {
     withMeasuredRoot({ lines: 100, statements: 100, branches: 100, functions: 100 }, (root) => {
-      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const error = vi.spyOn(console, "error").mockImplementation(() => void 0);
       expect(
         checkCoverageFloors(root, null, null).some((line) => line.startsWith("stale: apps/site")),
       ).toBe(true);
@@ -194,7 +194,7 @@ describe("checkCoverageFloors and main", () => {
   test("fails closed when the base branch cannot be read", () => {
     withMeasuredRoot({ ...FLOORS["apps/site"] }, (root) => {
       expect(() => readBaseFloors(root)).toThrow(/cannot read coverage-floors\.json/);
-      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      const error = vi.spyOn(console, "error").mockImplementation(() => void 0);
       expect(main(root)).toBe(1);
       expect(error).toHaveBeenCalledWith(expect.stringContaining("cannot read"));
       error.mockRestore();

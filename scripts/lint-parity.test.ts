@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 import {
   checkExpectedFixtures,
   checkOxlintShards,
@@ -580,9 +581,11 @@ describe("checkOxlintShards", () => {
   });
 
   test("the repo lint:oxlint shards lint every file exactly once", () => {
-    const rootScripts = JSON.parse(
+    const rootScripts = parseJsonAs(
       readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-    ) as { scripts: Record<string, string> };
+      (value): value is { scripts: Record<string, string> } =>
+        isRecord(value) && isRecord(value.scripts),
+    );
     expect(checkOxlintShards(rootScripts.scripts)).toEqual([]);
   });
 });

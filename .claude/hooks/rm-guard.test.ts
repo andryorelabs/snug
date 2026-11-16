@@ -109,11 +109,10 @@ describe("decideRemovalGuard", () => {
   test("emits a deny decision for an unsafe removal", () => {
     const output = decideRemovalGuard(input("rm -rf ."));
     expect(output).not.toBeNull();
-    const parsed = JSON.parse(output ?? "{}") as {
-      hookSpecificOutput: { permissionDecision: string; hookEventName: string };
-    };
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe("deny");
-    expect(parsed.hookSpecificOutput.hookEventName).toBe("PreToolUse");
+    const parsed: unknown = JSON.parse(output ?? "{}");
+    expect(parsed).toMatchObject({
+      hookSpecificOutput: { permissionDecision: "deny", hookEventName: "PreToolUse" },
+    });
   });
 
   test("stays silent for a safe command", () => {

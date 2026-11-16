@@ -138,7 +138,7 @@ describe("CHANGELOG.md shape", () => {
     const sections = releaseSections(changelog);
     expect(sections.length).toBeGreaterThan(0);
     for (const section of sections) {
-      expect(section.version, `heading [${section.version}]`).toMatch(SEMVER);
+      expect(section.version).toMatch(SEMVER);
     }
     expect(sections.at(-1)?.version).toBe("0.1.0");
   });

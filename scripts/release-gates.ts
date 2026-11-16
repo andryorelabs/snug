@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { parseJsonRecord } from "./json-guards";
 import { ChangelogError } from "./release/changelog";
 import { releaseNotes } from "./release/release-notes";
 
@@ -54,9 +55,9 @@ function findTagProblems(input: ReleaseGateInput): string[] {
 }
 
 function findVersionProblems(input: ReleaseGateInput): string[] {
-  const manifest = JSON.parse(
+  const manifest = parseJsonRecord(
     readFileSync(path.join(input.repositoryRoot, MANIFEST_PATH), "utf8"),
-  ) as { version?: unknown };
+  );
   const version = String(manifest.version);
   return input.tag === `v${version}`
     ? []
@@ -141,8 +142,12 @@ export function runReleaseGates(
 if (import.meta.main) {
   process.exitCode = runReleaseGates(process.argv.slice(2), {
     repositoryRoot: path.resolve(import.meta.dirname, ".."),
-    expectedCommit: process.env["GITHUB_SHA"],
-    log: (message) => console.log(message),
-    error: (message) => console.error(message),
+    expectedCommit: process.env.GITHUB_SHA,
+    log: (message) => {
+      console.log(message);
+    },
+    error: (message) => {
+      console.error(message);
+    },
   });
 }
