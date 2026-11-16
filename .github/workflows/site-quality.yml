@@ -186,6 +186,14 @@ jobs:
           SHARD: ${{ matrix.shard }}
         run: bun run test:container --fully-parallel --shard="${SHARD}/2"
 
+      # E20: tests that passed only on a retry are listed in the job summary.
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          bun scripts/flaky-summary.ts "Site container E2E ${SHARD}/2=apps/site/test-results/report.json"
+
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:

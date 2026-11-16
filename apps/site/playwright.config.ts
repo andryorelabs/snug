@@ -8,7 +8,12 @@ export default defineConfig({
   ...(process.env.CI && { workers: "100%" }),
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [["html", { open: "never" }]] : "list",
+  reporter: process.env.CI
+    ? [
+        ["html", { open: "never" }],
+        ["json", { outputFile: "test-results/report.json" }],
+      ]
+    : "list",
   use: { baseURL: "http://localhost:4399" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

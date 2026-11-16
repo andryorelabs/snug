@@ -17,6 +17,7 @@ permissions: {}
 jobs:
   analysis:
     name: Scorecard analysis
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

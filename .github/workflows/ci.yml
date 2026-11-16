@@ -90,6 +90,40 @@ jobs:
           script tests)
         run: bunx turbo run check:root test:root
 
+  # F9: the latest Bun release runs check and test, so a Bun release breaks
+  # this job before it breaks a contributor. It is left out of ci-passed on
+  # purpose: a new Bun never blocks a merge.
+  bun-canary:
+    name: Bun canary (latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+          no-cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check
+        run: bun run check
+
+      - name: Test
+        run: bun run test
+
   build:
     name: Build (extension zip)
     runs-on: ubuntu-latest
@@ -330,6 +364,16 @@ jobs:
           wait "${workspaces_pid}" || status=1
           wait "${site_pid}" || status=1
           exit "${status}"
+
+      # E20: tests that passed only on a retry are listed in the job summary.
+      - name: Summarize flaky tests
+        if: ${{ !cancelled() }}
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          bun scripts/flaky-summary.ts \
+            "Extension E2E ${SHARD}/4=apps/extension/test-results/report.json" \
+            "Site E2E ${SHARD}/4=apps/site/test-results/report.json"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
