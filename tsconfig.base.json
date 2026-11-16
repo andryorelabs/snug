@@ -1,16 +1,25 @@
 {
   "compilerOptions": {
+    "target": "esnext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "noEmit": true,
     "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "jsx": "react-jsx",
     "strict": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
+    "erasableSyntaxOnly": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "verbatimModuleSyntax": true,
-    "erasableSyntaxOnly": true
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
   }
 }
