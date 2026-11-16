@@ -5,7 +5,7 @@ import { fakeBrowser } from "wxt/testing/fake-browser";
 import { getFakeBookmarksRoot, resetFakeBookmarks } from "@/lib/testing/fake-bookmarks";
 import type { ParsedBookmark } from "@/lib/types";
 
-import { importFromJSON, preprocessBookmarks } from "./import-json";
+import { importFromJSON, normalizeJsonRoot, preprocessBookmarks } from "./import-json";
 
 beforeEach(() => {
   fakeBrowser.reset();
@@ -597,5 +597,25 @@ describe("importFromJSON trusted restore with a failing folder create", () => {
     expect(result.skippedInvalidUrl).toBe(2);
     const bar = getFakeBookmarksRoot().children?.find((n) => n.id === "1");
     expect(bar?.children?.map((n) => n.title)).toEqual(["Fine"]);
+  });
+});
+
+describe("normalizeJsonRoot", () => {
+  it("wraps a single object root in an array", () => {
+    const node = { title: "Only", url: "https://only.test" };
+
+    expect(normalizeJsonRoot(node)).toEqual([node]);
+  });
+
+  it("keeps valid nodes and turns non-object entries into empty nodes instead of rejecting the file", () => {
+    const valid = { title: "Fine", url: "https://fine.test" };
+    const placeholder = { title: "", dateAdded: 0 };
+
+    expect(normalizeJsonRoot(["junk", valid, 42, null])).toEqual([
+      placeholder,
+      valid,
+      placeholder,
+      placeholder,
+    ]);
   });
 });

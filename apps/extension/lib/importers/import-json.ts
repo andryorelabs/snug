@@ -97,15 +97,16 @@ function isParsedBookmark(value: unknown): value is ParsedBookmark {
  * Normalizes the parsed root of a JSON export to an array: a file whose root
  * is a single object is treated as a one-element array. The one place this
  * rule lives, shared by the preview and the importer so both agree on count.
+ * An entry that is not an object becomes an empty placeholder node, which the importer
+ * counts as skipped instead of rejecting the whole file.
  * @param raw The value returned by `JSON.parse` for the file content.
  * @returns The root as an array of nodes.
  */
 export function normalizeJsonRoot(raw: unknown): ParsedBookmark[] {
   const nodes: unknown[] = Array.isArray(raw) ? raw : [raw];
-  if (!nodes.every(isParsedBookmark)) {
-    throw new TypeError("Bookmark nodes must be objects");
-  }
-  return nodes;
+  return nodes.map((node): ParsedBookmark =>
+    isParsedBookmark(node) ? node : { title: "", dateAdded: 0 },
+  );
 }
 
 /**
