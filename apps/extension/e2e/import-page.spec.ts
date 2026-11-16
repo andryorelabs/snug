@@ -77,7 +77,7 @@ function jsonBackup(urls: string[]): Buffer {
 }
 
 function urlsFor(prefix: string): string[] {
-  return Array.from({ length: 2500 }, (_, index) => `https://${prefix}.example/${index}`);
+  return Array.from({ length: 2500 }, (_item, index) => `https://${prefix}.example/${index}`);
 }
 
 async function chooseFiles(page: Page, files: UploadedFile[]): Promise<void> {
@@ -224,7 +224,7 @@ test.describe("Import page", () => {
         id: "2",
         title: "Other bookmarks",
         dateAdded: 0,
-        children: Array.from({ length: 4000 }, (_, index) => ({
+        children: Array.from({ length: 4000 }, (_item, index) => ({
           title: `Large ${index}`,
           url: `https://large.example/${index}`,
           dateAdded: 0,
@@ -788,7 +788,7 @@ test.describe("Import page", () => {
     const perFolder = 100;
     const bar = Array.from({ length: folderCount }, (_, folderIndex) => ({
       title: `Folder ${folderIndex}`,
-      children: Array.from({ length: perFolder }, (_, index) => ({
+      children: Array.from({ length: perFolder }, (_item, index) => ({
         title: `Bookmark ${folderIndex}-${index}`,
         url: `https://bulk.example/${folderIndex}/${index}`,
       })),

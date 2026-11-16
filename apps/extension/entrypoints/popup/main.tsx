@@ -12,7 +12,10 @@ import "./style.css";
 applyCachedTheme();
 applyDocumentLanguage();
 
-createRoot(document.querySelector("#root")!).render(
+const rootElement = document.querySelector("#root");
+if (!rootElement) throw new Error("Root element #root not found");
+
+createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider>
       <Toaster>

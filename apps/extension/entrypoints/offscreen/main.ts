@@ -6,6 +6,24 @@ import {
   type RevokeBlobUrlMessage,
 } from "@/lib/offscreen-download";
 
+function isCreateBlobUrlMessage(message: { type: unknown }): message is CreateBlobUrlMessage {
+  return (
+    message.type === CREATE_BLOB_URL_MESSAGE_TYPE &&
+    "content" in message &&
+    typeof message.content === "string" &&
+    "mimeType" in message &&
+    typeof message.mimeType === "string"
+  );
+}
+
+function isRevokeBlobUrlMessage(message: { type: unknown }): message is RevokeBlobUrlMessage {
+  return (
+    message.type === REVOKE_BLOB_URL_MESSAGE_TYPE &&
+    "url" in message &&
+    typeof message.url === "string"
+  );
+}
+
 /**
  * Offscreen document entrypoint. Runs in a real document context (unlike
  * the service worker), so it's the only place `auto-export.ts` can turn
@@ -21,16 +39,16 @@ chrome.runtime.onMessage.addListener((message: unknown, _sender, sendResponse) =
     return false;
   }
 
-  if (message.type === CREATE_BLOB_URL_MESSAGE_TYPE) {
-    const { content, mimeType } = message as CreateBlobUrlMessage;
+  if (isCreateBlobUrlMessage(message)) {
+    const { content, mimeType } = message;
     const blob = new Blob([content], { type: mimeType });
     const response: CreateBlobUrlResponse = { url: URL.createObjectURL(blob) };
     sendResponse(response);
     return true;
   }
 
-  if (message.type === REVOKE_BLOB_URL_MESSAGE_TYPE) {
-    const { url } = message as RevokeBlobUrlMessage;
+  if (isRevokeBlobUrlMessage(message)) {
+    const { url } = message;
     URL.revokeObjectURL(url);
     sendResponse(undefined);
     return true;

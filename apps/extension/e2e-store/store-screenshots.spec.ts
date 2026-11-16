@@ -119,9 +119,25 @@ test.use({
   viewport: APP_CAPTURE,
 });
 
+function isMessageCatalog(value: unknown): value is Record<string, { message: string }> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Object.values(value).every(
+      (entry: unknown) =>
+        typeof entry === "object" &&
+        entry !== null &&
+        "message" in entry &&
+        typeof entry.message === "string",
+    )
+  );
+}
+
 async function readMessages(locale: string): Promise<Record<string, { message: string }>> {
   const raw = await readFile(path.resolve(EXTENSION_ROOT, "locales", `${locale}.json`), "utf8");
-  return JSON.parse(raw) as Record<string, { message: string }>;
+  const messages: unknown = JSON.parse(raw);
+  if (!isMessageCatalog(messages)) throw new TypeError(`Invalid message catalog for ${locale}`);
+  return messages;
 }
 
 test("composes the five store screenshots", async ({
@@ -244,18 +260,22 @@ test("composes the five store screenshots", async ({
       request.onupgradeneeded = () => {
         request.result.createObjectStore("handles");
       };
-      request.onsuccess = () => resolve(request.result);
-      request.addEventListener("error", () =>
-        reject(request.error ?? new Error("IndexedDB request failed")),
-      );
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.addEventListener("error", () => {
+        reject(request.error ?? new Error("IndexedDB request failed"));
+      });
     });
     await new Promise<void>((resolve, reject) => {
       const transaction = database.transaction("handles", "readwrite");
       transaction.objectStore("handles").put(handle, "custom-folder");
-      transaction.oncomplete = () => resolve();
-      transaction.addEventListener("error", () =>
-        reject(transaction.error ?? new Error("IndexedDB transaction failed")),
-      );
+      transaction.oncomplete = () => {
+        resolve();
+      };
+      transaction.addEventListener("error", () => {
+        reject(transaction.error ?? new Error("IndexedDB transaction failed"));
+      });
     });
     database.close();
   });
@@ -345,11 +365,17 @@ test("composes the five store screenshots", async ({
   if (!IS_LANDING) {
     const videoDirectory = path.join(VIDEO_SCREENSHOTS_ROOT, locale);
     await mkdir(videoDirectory, { recursive: true });
-    for (const fileName of VIDEO_SLIDE_FILES)
-      await copyFile(path.join(localeDirectory, fileName), path.join(videoDirectory, fileName));
+    await Promise.all(
+      VIDEO_SLIDE_FILES.map((fileName) =>
+        copyFile(path.join(localeDirectory, fileName), path.join(videoDirectory, fileName)),
+      ),
+    );
   }
   if (!IS_LANDING && locale === DEFAULT_LOCALE) {
-    for (const fileName of SLIDE_FILES)
-      await copyFile(path.join(localeDirectory, fileName), path.join(SCREENSHOTS_ROOT, fileName));
+    await Promise.all(
+      SLIDE_FILES.map((fileName) =>
+        copyFile(path.join(localeDirectory, fileName), path.join(SCREENSHOTS_ROOT, fileName)),
+      ),
+    );
   }
 });

@@ -97,7 +97,9 @@ export function DuplicateGroupCard({
       <CardContent>
         <RadioGroup
           value={keptId}
-          onValueChange={(value) => onKeepChange(group.normalizedUrl, String(value))}
+          onValueChange={(value) => {
+            onKeepChange(group.normalizedUrl, String(value));
+          }}
           aria-label={i18n.t("duplicates_groupLabel", [group.normalizedUrl])}
         >
           {group.copies.map((copy) => (

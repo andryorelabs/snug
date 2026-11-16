@@ -1,5 +1,5 @@
 import en from "../locales/en.json" with { type: "json" };
-import { expect, test } from "./fixtures";
+import { expect, runInOrder, test } from "./fixtures";
 
 test("opens the Welcome route inside the app on install", async ({ context }) => {
   const welcomePage =
@@ -32,11 +32,11 @@ test("Welcome quick-start actions open Export, Auto-export and Import", async ({
     { name: en.welcome_importAction.message, url: /#\/import$/ },
   ];
 
-  for (const action of actions) {
+  await runInOrder(actions, async (action) => {
     await page.getByRole("main").getByRole("link", { name: action.name, exact: true }).click();
     await expect(page).toHaveURL(action.url);
     await page.goBack();
-  }
+  });
 });
 
 test("What's new marks the Current version and links into the app", async ({
@@ -55,11 +55,17 @@ test("What's new marks the Current version and links into the app", async ({
 });
 
 test("toolbar action title is localized", async ({ serviceWorker }) => {
-  const manifest = (await serviceWorker.evaluate(() => chrome.runtime.getManifest())) as {
-    action?: { default_title?: string };
-  };
+  const manifest: unknown = await serviceWorker.evaluate(() => chrome.runtime.getManifest());
+  const action =
+    typeof manifest === "object" && manifest !== null && "action" in manifest
+      ? manifest.action
+      : undefined;
+  const title =
+    typeof action === "object" && action !== null && "default_title" in action
+      ? action.default_title
+      : undefined;
 
-  expect(manifest.action?.default_title).toBe(en.extensionName.message);
+  expect(title).toBe(en.extensionName.message);
 });
 
 test("App and popup pages are titled Snug", async ({ openExtensionPage }) => {
@@ -82,9 +88,9 @@ test("legacy v1 pages redirect to their App routes", async ({ openExtensionPage 
     },
   ];
 
-  for (const legacyPage of legacyPages) {
+  await runInOrder(legacyPages, async (legacyPage) => {
     const page = await openExtensionPage(legacyPage.path);
     await expect(page).toHaveURL(new RegExp(String.raw`/app\.html${legacyPage.hash}$`));
     await page.close();
-  }
+  });
 });

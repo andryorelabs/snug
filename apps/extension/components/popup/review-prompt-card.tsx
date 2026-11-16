@@ -43,7 +43,7 @@ export function ReviewPromptCard() {
     <Item
       variant="muted"
       size="sm"
-      role="region"
+      render={<section />}
       aria-labelledby={titleId}
       data-testid="review-prompt"
     >
@@ -57,7 +57,9 @@ export function ReviewPromptCard() {
           target="_blank"
           rel="noopener noreferrer"
           className={buttonVariants({ size: "sm" })}
-          onClick={openReviewsPage}
+          onClick={(event) => {
+            void openReviewsPage(event);
+          }}
         >
           {i18n.t("reviewPrompt_leaveReview")}
           <ExternalLinkIcon data-icon="inline-end" />

@@ -9,9 +9,9 @@ import { resetFakeI18n } from "@/lib/testing/fake-i18n";
 import en from "../locales/en.json" with { type: "json" };
 import { SafetySnapshotCard } from "./safety-snapshot-card";
 
-const restoreMock = vi.hoisted(() => vi.fn());
-const takeMock = vi.hoisted(() => vi.fn());
-const downloadMock = vi.hoisted(() => vi.fn());
+const restoreMock = vi.hoisted(() => vi.fn<() => Promise<void>>());
+const takeMock = vi.hoisted(() => vi.fn<() => void>());
+const downloadMock = vi.hoisted(() => vi.fn<() => void>());
 
 vi.mock("@/lib/import-lock", () => ({
   withImportLock: (task: () => Promise<unknown>) => task(),
@@ -74,7 +74,7 @@ function rowButton(rowIndex: number, label: string): HTMLButtonElement {
     rowIndex
   ];
   const button = [...(row?.querySelectorAll("button") ?? [])].find(
-    (candidate) => candidate.textContent?.trim() === label,
+    (candidate) => candidate.textContent.trim() === label,
   );
   if (!button) throw new Error(`${label} button missing in row ${rowIndex}`);
   return button;
@@ -88,8 +88,9 @@ async function mountCard(): Promise<void> {
 
 async function openConfirmDialog(rowIndex = 1): Promise<void> {
   await mountCard();
-  await act(async () => {
+  await act(() => {
     rowButton(rowIndex, en.safetySnapshot_restore.message).click();
+    return Promise.resolve();
   });
 }
 
@@ -107,8 +108,9 @@ describe("SafetySnapshotCard", () => {
     restoreMock.mockResolvedValue(undefined);
     await openConfirmDialog(1);
 
-    await act(async () => {
+    await act(() => {
       confirmButton().click();
+      return Promise.resolve();
     });
 
     expect(restoreMock).toHaveBeenCalledExactlyOnceWith(OLDER);
@@ -118,8 +120,9 @@ describe("SafetySnapshotCard", () => {
     downloadMock.mockResolvedValue(undefined);
     await mountCard();
 
-    await act(async () => {
+    await act(() => {
       rowButton(1, en.safetySnapshot_download.message).click();
+      return Promise.resolve();
     });
 
     expect(downloadMock).toHaveBeenCalledExactlyOnceWith(OLDER);
@@ -129,25 +132,32 @@ describe("SafetySnapshotCard", () => {
     takeMock.mockRejectedValue(new Error("blocked"));
     await mountCard();
 
-    await act(async () => {
+    await act(() => {
       for (const button of document.body.querySelectorAll("button")) {
         if (button.textContent === en.safetySnapshot_take.message) {
           button.click();
         }
       }
+      return Promise.resolve();
     });
 
     expect(document.body.textContent).toContain(en.safetySnapshot_takeFailedTitle.message);
   });
 
   it("starts exactly one restore on a fast double click", async () => {
-    restoreMock.mockImplementation(() => new Promise(() => {}));
+    restoreMock.mockImplementation(
+      () =>
+        new Promise<void>(() => {
+          return;
+        }),
+    );
     await openConfirmDialog();
     const confirm = confirmButton();
 
-    await act(async () => {
+    await act(() => {
       confirm.click();
       confirm.click();
+      return Promise.resolve();
     });
 
     expect(restoreMock).toHaveBeenCalledTimes(1);
@@ -158,14 +168,17 @@ describe("SafetySnapshotCard", () => {
     restoreMock.mockResolvedValueOnce(undefined);
     await openConfirmDialog();
 
-    await act(async () => {
+    await act(() => {
       confirmButton().click();
+      return Promise.resolve();
     });
-    await act(async () => {
+    await act(() => {
       rowButton(1, en.safetySnapshot_restore.message).click();
+      return Promise.resolve();
     });
-    await act(async () => {
+    await act(() => {
       confirmButton().click();
+      return Promise.resolve();
     });
 
     expect(restoreMock).toHaveBeenCalledTimes(2);

@@ -37,16 +37,15 @@ import {
   showBookmarkIconStore,
   themeStore,
 } from "@/lib/storage";
-import type { ImportMode } from "@/lib/types";
 import { useStorageItem } from "@/lib/use-storage-item";
 
 type ThemeChoice = "dark" | "light" | "system";
 
-const THEME_OPTIONS: { value: ThemeChoice; label: string }[] = [
+const THEME_OPTIONS = [
   { value: "system", label: "settingsPage_themeSystem" },
   { value: "light", label: "settingsPage_themeLight" },
   { value: "dark", label: "settingsPage_themeDark" },
-];
+] as const satisfies readonly { value: ThemeChoice; label: string }[];
 
 /**
  * The Settings screen: theme, bookmark tree display and the default import
@@ -82,13 +81,13 @@ export function SettingsRoute() {
               aria-label={i18n.t("settingsPage_theme")}
               value={[theme]}
               onValueChange={(value) => {
-                const [next] = value as ThemeChoice[];
+                const next = THEME_OPTIONS.find((option) => option.value === value[0])?.value;
                 if (next) void setTheme(next);
               }}
             >
               {THEME_OPTIONS.map(({ value, label }) => (
                 <ToggleGroupItem key={value} value={value}>
-                  {i18n.t(label as "settingsPage_themeSystem")}
+                  {i18n.t(label)}
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
@@ -139,7 +138,10 @@ export function SettingsRoute() {
             <Select
               items={getImportModeItems()}
               value={mode}
-              onValueChange={(value) => void setMode(value as ImportMode)}
+              onValueChange={(value) => {
+                const next = getImportModeItems().find((item) => item.value === value)?.value;
+                if (next) void setMode(next);
+              }}
             >
               <SelectTrigger id={modeSelectId} className="w-full">
                 <SelectValue />

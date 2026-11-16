@@ -2,7 +2,7 @@
  * The translated copy of one locale's five store slides. `claims` are the four
  * slide-5 rows in the order account, upload, tracking, source.
  */
-export type StoreCaptions = {
+export interface StoreCaptions {
   export: { headline: string; subtitle: string };
   import: { headline: string; subtitle: string };
   autoExport: { headline: string; subtitle: string };
@@ -11,7 +11,7 @@ export type StoreCaptions = {
     headline: string;
     claims: [string, string, string, string];
   };
-};
+}
 
 /**
  * Slide copy per locale folder name (`locales/<code>.json`). Subtitles list

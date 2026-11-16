@@ -29,8 +29,10 @@ afterEach(() => {
 
 describe("didCommitWithAccess", () => {
   it("requests permissions before any await, then commits", async () => {
-    vi.mocked(browser.permissions.request).mockResolvedValue(true as never);
-    const commit = vi.fn(async () => {});
+    Object.assign(browser.permissions, {
+      request: vi.fn<() => Promise<boolean>>(() => Promise.resolve(true)),
+    });
+    const commit = vi.fn<() => Promise<void>>(() => Promise.resolve());
 
     const pending = didCommitWithAccess(["downloads", "notifications"], commit);
     expect(browser.permissions.request).toHaveBeenCalledExactlyOnceWith({
@@ -45,17 +47,21 @@ describe("didCommitWithAccess", () => {
   });
 
   it("commits nothing when access is denied", async () => {
-    vi.mocked(browser.permissions.request).mockResolvedValue(false as never);
-    const commit = vi.fn(async () => {});
+    Object.assign(browser.permissions, {
+      request: vi.fn<() => Promise<boolean>>(() => Promise.resolve(false)),
+    });
+    const commit = vi.fn<() => Promise<void>>(() => Promise.resolve());
 
     expect(await didCommitWithAccess(["notifications"], commit)).toBe(false);
     expect(commit).not.toHaveBeenCalled();
   });
 
   it("treats a rejected request as denied", async () => {
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {
+      return;
+    });
     vi.mocked(browser.permissions.request).mockRejectedValue(new Error("x"));
-    const commit = vi.fn(async () => {});
+    const commit = vi.fn<() => Promise<void>>(() => Promise.resolve());
 
     expect(await didCommitWithAccess(["downloads"], commit)).toBe(false);
     expect(commit).not.toHaveBeenCalled();
@@ -64,7 +70,7 @@ describe("didCommitWithAccess", () => {
 
 describe("AutoExportAccessAlert", () => {
   it("renders the alert and calls onAllow from the button", async () => {
-    const onAllow = vi.fn();
+    const onAllow = vi.fn<() => void>();
     const harness = createDomHarness();
     harnesses.push(harness);
     await harness.render(<AutoExportAccessAlert onAllow={onAllow} />);
@@ -73,8 +79,9 @@ describe("AutoExportAccessAlert", () => {
     expect(document.body.textContent).toContain(
       en.autoExportPage_downloadsAccessDescription.message,
     );
-    await act(async () => {
+    await act(() => {
       document.body.querySelector("button")?.click();
+      return Promise.resolve();
     });
     expect(onAllow).toHaveBeenCalledOnce();
   });
@@ -86,7 +93,7 @@ describe("AccessInlineMessage", () => {
     harnesses.push(harness);
     await harness.render(<AccessInlineMessage>{MESSAGE}</AccessInlineMessage>);
 
-    const status = document.body.querySelector('[role="status"]');
+    const status = document.body.querySelector("output");
     expect(status?.textContent).toBe(MESSAGE);
     expect(document.body.querySelector('[role="alert"]')).toBeNull();
   });

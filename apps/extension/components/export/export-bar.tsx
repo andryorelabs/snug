@@ -57,7 +57,7 @@ export function ExportBar({
         aria-label={i18n.t("exportPage_formatLabel")}
         value={[format]}
         onValueChange={(values) => {
-          const next = values[0] as ExportFormat | undefined;
+          const next = EXPORT_FORMATS.find((candidate) => candidate === values[0]);
           if (next) onFormatChange(next);
         }}
       >

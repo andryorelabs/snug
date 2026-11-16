@@ -10,7 +10,7 @@ import { TimePicker } from "./time-picker";
 const mountedHarnesses: DomHarness[] = [];
 
 async function mountPicker(onChange: (value: string) => void) {
-  Element.prototype.scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = vi.fn<() => void>();
   const harness = createDomHarness();
   mountedHarnesses.push(harness);
   await harness.render(
@@ -26,8 +26,9 @@ async function mountPicker(onChange: (value: string) => void) {
   );
   const trigger = harness.container.querySelector<HTMLElement>("#picker");
   if (!trigger) throw new Error("trigger missing");
-  await act(async () => {
+  await act(() => {
     trigger.click();
+    return Promise.resolve();
   });
   return { trigger };
 }
@@ -41,8 +42,9 @@ function selectedMinute(): HTMLElement {
 }
 
 async function press(element: HTMLElement, key: string) {
-  await act(async () => {
+  await act(() => {
     element.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    return Promise.resolve();
   });
 }
 
@@ -54,7 +56,7 @@ afterEach(() => {
 
 describe("TimePicker", () => {
   it("emits nothing while stepping and one value when committed", async () => {
-    const onChange = vi.fn();
+    const onChange = vi.fn<(value: string) => void>();
     await mountPicker(onChange);
 
     await press(selectedMinute(), "ArrowDown");
@@ -68,7 +70,7 @@ describe("TimePicker", () => {
   });
 
   it("emits nothing when closed without a change", async () => {
-    const onChange = vi.fn();
+    const onChange = vi.fn<(value: string) => void>();
     await mountPicker(onChange);
 
     await press(selectedMinute(), "Escape");
@@ -76,7 +78,7 @@ describe("TimePicker", () => {
   });
 
   it("emits nothing when stepping returns to the original value", async () => {
-    const onChange = vi.fn();
+    const onChange = vi.fn<(value: string) => void>();
     await mountPicker(onChange);
 
     await press(selectedMinute(), "ArrowDown");

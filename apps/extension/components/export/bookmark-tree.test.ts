@@ -11,7 +11,9 @@ import { BookmarkTree } from "./bookmark-tree";
 
 const mountedHarnesses: DomHarness[] = [];
 
-function noop() {}
+function noop() {
+  return;
+}
 
 function seed() {
   const tree = [
@@ -37,12 +39,12 @@ function seed() {
     fakeBrowser.bookmarks.onChanged,
     fakeBrowser.bookmarks.onMoved,
   ]) {
-    event.addListener = vi.fn();
-    event.removeListener = vi.fn();
+    event.addListener = vi.fn<() => void>();
+    event.removeListener = vi.fn<() => void>();
   }
-  fakeBrowser.bookmarks.getTree = vi.fn(async () =>
-    structuredClone(tree),
-  ) as unknown as typeof fakeBrowser.bookmarks.getTree;
+  Object.assign(fakeBrowser.bookmarks, {
+    getTree: vi.fn<() => Promise<typeof tree>>(() => Promise.resolve(structuredClone(tree))),
+  });
 }
 
 async function mountTree(searchTerm: string) {
@@ -80,7 +82,7 @@ function rowTitles(container: HTMLElement) {
 describe("BookmarkTree", () => {
   beforeEach(() => {
     fakeBrowser.reset();
-    fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
+    fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
     seed();
     for (const property of ["offsetHeight", "offsetWidth", "clientHeight", "clientWidth"]) {
       Object.defineProperty(HTMLElement.prototype, property, {
@@ -99,30 +101,51 @@ describe("BookmarkTree", () => {
   it("selects only visible bookmarks when select-all runs during a search", async () => {
     const { reference, getSelectedCount } = await mountTree("recipe");
 
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
 
     expect(getSelectedCount()).toBe(1);
   });
 
   it("keeps selections outside the search when select-all runs during a search", async () => {
     const { reference, rerender, getSelectedCount } = await mountTree("");
-    await act(async () => reference.current?.selectAll());
-    await act(async () => reference.current?.deselectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
+    await act(() => {
+      reference.current?.deselectAll();
+      return Promise.resolve();
+    });
     await rerender("recipe");
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
     await rerender("doc");
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
 
     expect(getSelectedCount()).toBe(2);
   });
 
   it("lets the master toggle clear only the visible bookmarks during a search", async () => {
     const { reference, rerender, getSelectedCount } = await mountTree("");
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
     await rerender("recipe");
 
     expect(reference.current?.areAllVisibleSelected()).toBe(true);
-    await act(async () => reference.current?.deselectAll());
+    await act(() => {
+      reference.current?.deselectAll();
+      return Promise.resolve();
+    });
 
     expect(getSelectedCount()).toBe(2);
     expect(reference.current?.areAllVisibleSelected()).toBe(false);
@@ -133,13 +156,19 @@ describe("BookmarkTree", () => {
 
     expect(rowTitles(harness.container)).toEqual(["Work Folder", "Ticket", "Doc"]);
 
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
     expect(getSelectedCount()).toBe(2);
   });
 
   it("exposes aria-checked on every row and never aria-selected", async () => {
     const { harness, reference } = await mountTree("");
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
 
     const rows = [...harness.container.querySelectorAll('[role="treeitem"]')];
     expect(rows.length).toBeGreaterThan(0);
@@ -152,7 +181,10 @@ describe("BookmarkTree", () => {
   it("moves focus to the new active row when the focused row disappears", async () => {
     const { harness, rerender } = await mountTree("");
     const recipe = harness.container.querySelector<HTMLElement>('[aria-label="Recipe"]');
-    await act(async () => recipe?.focus());
+    await act(() => {
+      recipe?.focus();
+      return Promise.resolve();
+    });
     expect(document.activeElement).toBe(recipe);
 
     await rerender("work folder");

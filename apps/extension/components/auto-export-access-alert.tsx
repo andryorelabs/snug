@@ -60,9 +60,9 @@ export function AutoExportAccessAlert({ onAllow }: AutoExportAccessAlertProperti
  */
 export function AccessInlineMessage({ children }: { children: ReactNode }) {
   return (
-    <p role="status" className="flex items-start gap-1.5 text-xs text-muted-foreground">
+    <output className="flex items-start gap-1.5 text-xs text-muted-foreground">
       <InfoIcon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
       <span>{children}</span>
-    </p>
+    </output>
   );
 }

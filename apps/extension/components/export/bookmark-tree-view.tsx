@@ -156,9 +156,7 @@ export function BookmarkTreeView(properties: BookmarkTreeViewProperties) {
       return;
     }
     setExpandedFolders((current) => {
-      if (preSearchExpandedReference.current === null) {
-        preSearchExpandedReference.current = new Set(current);
-      }
+      preSearchExpandedReference.current ??= new Set(current);
       return new Set(findAncestorsOfMatches(nodes, searchTerm));
     });
   }, [searchTerm, nodes]);
@@ -300,11 +298,7 @@ export function BookmarkTreeView(properties: BookmarkTreeViewProperties) {
     >
       <div
         className="relative h-(--tree-height) w-full"
-        style={
-          {
-            "--tree-height": `${virtualizer.getTotalSize()}px`,
-          } as React.CSSProperties
-        }
+        style={{ "--tree-height": `${virtualizer.getTotalSize()}px` }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const row = rows[virtualRow.index];
@@ -383,12 +377,10 @@ function TreeRow({
         isSelectable || isFolder ? "cursor-pointer" : "cursor-default",
         node.isDisabled && "text-muted-foreground",
       )}
-      style={
-        {
-          "--tree-indent": `${(level - 1) * 16}px`,
-          "--tree-offset": `${offset}px`,
-        } as React.CSSProperties
-      }
+      style={{
+        "--tree-indent": `${(level - 1) * 16}px`,
+        "--tree-offset": `${offset}px`,
+      }}
       onFocus={(event) => {
         if (event.target === event.currentTarget) onFocusRow(node.id);
       }}
@@ -396,9 +388,18 @@ function TreeRow({
         if (isFolder) onToggleExpand(node.id);
         else onToggleSelection(node);
       }}
-      onKeyDown={(event) => onKeyDown(event, row)}
+      onKeyDown={(event) => {
+        onKeyDown(event, row);
+      }}
     >
-      {hasCheckbox && <TreeCheckMark checked={checked} onToggle={() => onToggleSelection(node)} />}
+      {hasCheckbox && (
+        <TreeCheckMark
+          checked={checked}
+          onToggle={() => {
+            onToggleSelection(node);
+          }}
+        />
+      )}
 
       {node.url ? (
         showBookmarkIcon ? (
@@ -408,7 +409,7 @@ function TreeRow({
             className="size-4 shrink-0"
             aria-hidden="true"
             onError={(event) => {
-              (event.target as HTMLImageElement).style.display = "none";
+              event.currentTarget.style.display = "none";
             }}
           />
         ) : (

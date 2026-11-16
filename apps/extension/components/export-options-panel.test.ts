@@ -11,7 +11,9 @@ import { ExportOptionsPanel } from "./export-options-panel";
 
 const mountedHarnesses: DomHarness[] = [];
 
-function noop() {}
+function noop() {
+  return;
+}
 
 async function mountPanel() {
   const harness = createDomHarness();
@@ -23,16 +25,18 @@ async function mountPanel() {
 }
 
 async function typeInto(input: HTMLInputElement, value: string) {
-  await act(async () => {
+  await act(() => {
     const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
     descriptor?.set?.call(input, value);
     input.dispatchEvent(new Event("input", { bubbles: true }));
+    return Promise.resolve();
   });
 }
 
 async function blur(input: HTMLInputElement) {
-  await act(async () => {
+  await act(() => {
     input.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    return Promise.resolve();
   });
 }
 
@@ -45,7 +49,7 @@ async function flushStorage() {
 describe("ExportOptionsPanel filename draft", () => {
   beforeEach(() => {
     fakeBrowser.reset();
-    fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
+    fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
   });
 
   afterEach(() => {
@@ -91,8 +95,9 @@ describe("ExportOptionsPanel filename draft", () => {
     await flushStorage();
 
     await typeInto(input, "Backup %yyyy");
-    await act(async () => {
+    await act(() => {
       globalThis.dispatchEvent(new Event("pagehide"));
+      return Promise.resolve();
     });
     await flushStorage();
 
@@ -105,8 +110,9 @@ describe("ExportOptionsPanel filename draft", () => {
     vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
 
     await typeInto(input, "Backup %yyyy");
-    await act(async () => {
+    await act(() => {
       document.dispatchEvent(new Event("visibilitychange"));
+      return Promise.resolve();
     });
     await flushStorage();
 
@@ -126,9 +132,9 @@ describe("ExportOptionsPanel filename draft", () => {
   });
 
   it("keeps typed characters when a delayed echo of an earlier write arrives", async () => {
-    let deliverEcho: ((value: string | null) => void) | undefined;
+    let deliverEcho: ((newValue: string, oldValue: string) => void) | undefined;
     vi.spyOn(exportFilenameTemplateStore, "watch").mockImplementation((callback) => {
-      deliverEcho = callback as (value: string | null) => void;
+      deliverEcho = callback;
       return noop;
     });
     const { input } = await mountPanel();
@@ -139,8 +145,9 @@ describe("ExportOptionsPanel filename draft", () => {
     await flushStorage();
     await typeInto(input, "ab");
     await typeInto(input, "abd");
-    await act(async () => {
-      deliverEcho?.("a");
+    await act(() => {
+      deliverEcho?.("a", "");
+      return Promise.resolve();
     });
 
     expect(input.value).toBe("abd");

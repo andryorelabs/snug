@@ -17,8 +17,8 @@ function stubSystemColorScheme(isDark: boolean) {
     "matchMedia",
     vi.fn(() => ({
       matches: isDark,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn<() => void>(),
+      removeEventListener: vi.fn<() => void>(),
     })),
   );
 }
