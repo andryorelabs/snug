@@ -4,8 +4,7 @@ import path from "node:path";
 
 const DEFAULT_REPOSITORY = "andryorelabs/snug";
 const DEFAULT_RULESETS_DIRECTORY = path.resolve(import.meta.dirname, "../../.github/rulesets");
-const SETTINGS_TABLE_FILE = "README.md";
-const SETTING_ROW_PATTERN = /^\|\s*`([\w.]+)`\s*\|\s*`([^`]+)`\s*\|/gm;
+const DEFAULT_SETTINGS_FILE = path.resolve(import.meta.dirname, "../../.github/repo-settings.json");
 
 type JsonRecord = Record<string, unknown>;
 
@@ -30,11 +29,13 @@ export interface LiveSettings {
 }
 
 /**
- * The committed state: the settings table keyed by dotted path into the live
- * repository object, and the ruleset files keyed by file name.
+ * The committed state: the settings keyed by dotted path into the live
+ * repository object, the minimum length of each live list keyed the same way,
+ * and the ruleset files keyed by file name.
  */
 export interface ExpectedSettings {
   readonly settings: Readonly<Record<string, unknown>>;
+  readonly minimumCounts?: Readonly<Record<string, number>>;
   readonly rulesets: Readonly<Record<string, unknown>>;
 }
 
@@ -143,14 +144,25 @@ function diffRulesets(
 /**
  * Compares the live repository against the committed settings and rulesets.
  * @param live The settings and rulesets read from the GitHub API.
- * @param expected The settings table and the ruleset files.
+ * @param expected The settings file and the ruleset files.
  * @returns One difference per value that is not as committed, settings first.
  */
 export function diffSettings(live: LiveSettings, expected: ExpectedSettings): Difference[] {
   const settings = Object.entries(expected.settings).flatMap(([key, value]) =>
     compareValues(`settings ${key}`, value, readPath(live.repository, key)),
   );
-  return [...settings, ...diffRulesets(live.rulesets, expected.rulesets)];
+  const counts = Object.entries(expected.minimumCounts ?? {})
+    .map(([key, minimum]) => {
+      const actual = readPath(live.repository, key);
+      return { key, minimum, length: Array.isArray(actual) ? actual.length : 0 };
+    })
+    .filter(({ minimum, length }) => length < minimum)
+    .map(({ key, minimum, length }) => ({
+      path: `settings ${key} (count)`,
+      expected: `at least ${String(minimum)}`,
+      actual: length,
+    }));
+  return [...settings, ...counts, ...diffRulesets(live.rulesets, expected.rulesets)];
 }
 
 function describeValue(value: unknown): string {
@@ -167,33 +179,47 @@ export function formatDifference(difference: Difference): string {
 }
 
 /**
- * Reads the expected-settings table: each row whose first cell is a backticked
- * dotted path and whose second cell is a backticked JSON value.
- * @param markdown The content of `.github/rulesets/README.md`.
- * @returns The expected value of each setting, keyed by its dotted path.
+ * Parses the settings file: `settings` maps a dotted path into the live
+ * repository object to its expected JSON value, and `minimumCounts` maps the
+ * path of a live list to its minimum length.
+ * @param text The content of `.github/repo-settings.json`.
+ * @returns The expected settings and minimum list lengths.
  */
-export function parseSettingsTable(markdown: string): Record<string, unknown> {
-  const rows = markdown.matchAll(SETTING_ROW_PATTERN).toArray();
-  if (rows.length === 0) throw new Error("no expected settings found");
-  return Object.fromEntries(
-    rows.map((row): [string, unknown] => [row[1] ?? "", JSON.parse(row[2] ?? "null")]),
-  );
+export function parseSettings(text: string): Pick<ExpectedSettings, "settings" | "minimumCounts"> {
+  const parsed: unknown = JSON.parse(text);
+  const settings = isRecord(parsed) ? parsed["settings"] : undefined;
+  if (!isRecord(settings) || Object.keys(settings).length === 0) {
+    throw new Error("no expected settings found");
+  }
+  const counts = isRecord(parsed) ? parsed["minimumCounts"] : undefined;
+  return {
+    settings,
+    minimumCounts: isRecord(counts)
+      ? Object.fromEntries(
+          Object.entries(counts).filter(
+            (entry): entry is [string, number] => typeof entry[1] === "number",
+          ),
+        )
+      : {},
+  };
 }
 
 /**
- * Reads the committed expectation: the settings table and every ruleset file.
+ * Reads the committed expectation: the settings file and every ruleset file.
  * @param directory The rulesets directory, defaulting to `.github/rulesets`.
+ * @param settingsFile The settings file, defaulting to `.github/repo-settings.json`.
  * @returns The expected settings and rulesets.
  */
 export function readExpectedSettings(
   directory: string = DEFAULT_RULESETS_DIRECTORY,
+  settingsFile: string = DEFAULT_SETTINGS_FILE,
 ): ExpectedSettings {
   const readText = (file: string) => readFileSync(path.join(directory, file), "utf8");
   const rulesetFiles = readdirSync(directory)
     .filter((file) => file.endsWith(".json"))
     .toSorted((first, second) => first.localeCompare(second));
   return {
-    settings: parseSettingsTable(readText(SETTINGS_TABLE_FILE)),
+    ...parseSettings(readFileSync(settingsFile, "utf8")),
     rulesets: Object.fromEntries(
       rulesetFiles.map((file): [string, unknown] => [file, JSON.parse(readText(file))]),
     ),
@@ -209,7 +235,10 @@ function requireBody(request: ApiRequest, endpoint: string): unknown {
 /**
  * Reads the live settings and rulesets of a repository. Dependabot alerts have
  * no field on the repository object: their endpoint answers 204 when on and 404
- * when off, recorded here as `vulnerability_alerts.enabled`.
+ * when off, recorded here as `vulnerability_alerts.enabled`. The Actions token
+ * default, the fork-PR approval policy and the CodeQL default setup are read
+ * from their own endpoints and recorded as `workflow_permissions`,
+ * `fork_pr_contributor_approval` and `code_scanning_default_setup`.
  * @param repository The repository as `<owner>/<repo>`.
  * @param request Performs one read-only API request.
  * @returns The live settings and rulesets.
@@ -218,6 +247,9 @@ export function collectLiveSettings(repository: string, request: ApiRequest): Li
   const base = `repos/${repository}`;
   const repositoryBody = requireBody(request, base);
   const reporting = request(`${base}/private-vulnerability-reporting`);
+  const workflowPermissions = request(`${base}/actions/permissions/workflow`);
+  const forkApproval = request(`${base}/actions/permissions/fork-pr-contributor-approval`);
+  const defaultSetup = request(`${base}/code-scanning/default-setup`);
   const summaries = requireBody(request, `${base}/rulesets`);
   const rulesetIds = (Array.isArray(summaries) ? summaries : []).map((summary: unknown) =>
     isRecord(summary) ? summary["id"] : undefined,
@@ -229,6 +261,9 @@ export function collectLiveSettings(repository: string, request: ApiRequest): Li
         enabled: request(`${base}/vulnerability-alerts`).found,
       },
       private_vulnerability_reporting: reporting.found ? reporting.body : {},
+      workflow_permissions: workflowPermissions.found ? workflowPermissions.body : {},
+      fork_pr_contributor_approval: forkApproval.found ? forkApproval.body : {},
+      code_scanning_default_setup: defaultSetup.found ? defaultSetup.body : {},
     },
     rulesets: rulesetIds.map((id) => requireBody(request, `${base}/rulesets/${String(id)}`)),
   };
@@ -278,7 +313,9 @@ export function runCheck(options: CheckOptions): number {
   const live = collectLiveSettings(options.repository, options.request);
   const differences = diffSettings(live, options.expected ?? readExpectedSettings());
   if (differences.length === 0) {
-    options.report(`${options.repository} matches .github/rulesets and the settings table.`);
+    options.report(
+      `${options.repository} matches .github/repo-settings.json and .github/rulesets.`,
+    );
     return 0;
   }
   for (const difference of differences) {

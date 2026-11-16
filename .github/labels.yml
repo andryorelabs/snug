@@ -33,6 +33,10 @@
   color: "fbca04"
   description: Actively being worked on
 
+- name: "Status: Needs Decision"
+  color: "5319e7"
+  description: Waiting for a maintainer decision
+
 - name: "Status: Blocked"
   color: "e11d48"
   description: Blocked by another issue or external dependency
@@ -65,6 +69,10 @@
   color: "cfd3d7"
   description: This will not be worked on
 
+- name: "Resolution: Invalid"
+  color: "cfd3d7"
+  description: This is not a valid issue or PR
+
 # ── Area ──────────────────────────────────────────────────────────────────────
 
 - name: "Area: ui"
@@ -88,6 +96,10 @@
 - name: "dependencies"
   color: "0366d6"
   description: Dependency updates (used by Renovate)
+
+- name: "security"
+  color: "b60205"
+  description: Security-related change or report
 
 - name: "github-actions"
   color: "2088ff"
