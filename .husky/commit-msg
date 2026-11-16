@@ -1,1 +1,1 @@
-bunx commitlint --edit $1
+exec bun scripts/commit-msg.ts "$1"

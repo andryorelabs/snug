@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Exportez, importez et sauvegardez vos favoris dans des formats courants, depuis Chrome ou Safari. Tout en local.",
+    "message": "Exportez, importez et sauvegardez vos favoris — entièrement sur votre appareil.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Exportez, importez et sauvegardez vos favoris dans des formats courants, de façon planifiée. Tout reste en local.",
+    "message": "Exportez, importez et sauvegardez vos favoris — entièrement sur votre appareil.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

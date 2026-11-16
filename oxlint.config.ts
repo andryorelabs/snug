@@ -309,7 +309,10 @@ const unicornOriginalRules: DummyRuleMap = {
   "unicorn-js/expiring-todo-comments": "error",
   "unicorn-js/isolated-functions": "error",
   "unicorn-js/logical-assignment-operators": "error",
-  "unicorn-js/name-replacements": ["error", { allowList: { utils: true, docs: true, doc: true } }],
+  "unicorn-js/name-replacements": [
+    "error",
+    { allowList: { utils: true, docs: true, doc: true, env: true, msg: true } },
+  ],
   "unicorn-js/no-array-concat-in-loop": "error",
   "unicorn-js/no-array-from-fill": "error",
   "unicorn-js/no-array-sort-for-min-max": "error",

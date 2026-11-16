@@ -1,6 +1,8 @@
 import { configDefaults, defineConfig } from "vitest/config";
 import { WxtVitest } from "wxt/testing/vitest-plugin";
 
+import { coverageThresholds } from "../../scripts/coverage-floors.ts";
+
 /**
  * Keeps `isolate: true`: with `isolate: false` the suite ran slower (about 24 s
  * against 14-18 s) and `run-import` and `auto-export-folder` failed
@@ -16,9 +18,10 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "e2e/**", "e2e-store/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "lcov"],
+      reporter: ["text", "lcov", "json-summary"],
       include: ["lib/**"],
-      thresholds: { lines: 96, statements: 96, branches: 89, functions: 98 },
+      exclude: ["lib/__snapshots__/**"],
+      thresholds: coverageThresholds("apps/extension"),
     },
   },
 });

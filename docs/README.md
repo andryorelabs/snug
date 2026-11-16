@@ -1,6 +1,6 @@
 # Documentation index
 
-An index of every document in this repository. `scripts/docs-index.test.ts`
+An index of every document in this repository. `scripts/standard-invariants.test.ts`
 fails when a document under `docs/` is missing here. Terms follow
 [`GLOSSARY.md`](../GLOSSARY.md).
 

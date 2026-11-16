@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Export, import and back up your bookmarks in common formats, from Chrome or Safari, on a schedule. Everything stays local.",
+    "message": "Export, import, and back up your bookmarks — entirely on your device.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Export, import and back up your bookmarks in common formats, on a schedule. Everything stays local.",
+    "message": "Export, import, and back up your bookmarks — entirely on your device.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

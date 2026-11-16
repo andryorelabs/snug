@@ -1,0 +1,31 @@
+{
+  "settings": {
+    "description": "Export, import, and schedule automatic exports of your bookmarks — six formats, duplicate cleanup, and undo, all on your device, no account, no cloud.",
+    "homepage": "https://snug.andryore.dev/",
+    "default_branch": "main",
+    "allow_squash_merge": true,
+    "allow_merge_commit": true,
+    "allow_rebase_merge": false,
+    "squash_merge_commit_title": "PR_TITLE",
+    "squash_merge_commit_message": "PR_BODY",
+    "merge_commit_title": "PR_TITLE",
+    "merge_commit_message": "PR_BODY",
+    "delete_branch_on_merge": true,
+    "allow_auto_merge": true,
+    "allow_update_branch": true,
+    "has_wiki": false,
+    "has_projects": false,
+    "has_discussions": false,
+    "security_and_analysis.secret_scanning.status": "enabled",
+    "security_and_analysis.secret_scanning_push_protection.status": "enabled",
+    "security_and_analysis.dependabot_security_updates.status": "enabled",
+    "vulnerability_alerts.enabled": true,
+    "private_vulnerability_reporting.enabled": true,
+    "workflow_permissions.default_workflow_permissions": "read",
+    "fork_pr_contributor_approval.approval_policy": "all_external_contributors",
+    "code_scanning_default_setup.state": "not-configured"
+  },
+  "minimumCounts": {
+    "topics": 5
+  }
+}

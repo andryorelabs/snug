@@ -121,9 +121,9 @@ file-wide or project-wide:
   [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - `bun run lint:docs` runs lychee (downloaded on first use); broken links and
   anchors fail it: [`docs/troubleshooting.md`](docs/troubleshooting.md).
-- `scripts/docs-index.test.ts` fails when a document under `docs/` is not linked
-  from [`docs/README.md`](docs/README.md), and `scripts/stale-names.test.ts`
-  fails when a retired project name appears outside ADRs and the changelog.
+- `scripts/standard-invariants.test.ts` fails when a document under `docs/` is
+  not linked from [`docs/README.md`](docs/README.md) or when a retired project
+  name appears outside ADRs and the changelog.
 - Actions are SHA-pinned and workflows are linted; edit them with care:
   [`docs/development.md#ci`](docs/development.md#ci).
 - Repository settings are code: the rulesets live in `.github/rulesets`, are

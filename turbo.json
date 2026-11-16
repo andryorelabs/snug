@@ -40,6 +40,9 @@
       "dependsOn": ["transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/coverage-floors.json",
+        "$TURBO_ROOT$/scripts/coverage-exceptions.ts",
+        "$TURBO_ROOT$/scripts/coverage-floors.ts",
         "!.output/**",
         "!.wxt/**",
         "!dist/**",
