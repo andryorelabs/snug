@@ -246,7 +246,7 @@ describe("bumpVersion on a fixture copy", () => {
   });
 
   it("keeps a single entry on one line in the in-app changelog", () => {
-    writeFixture("\n- Only one.\n");
+    writeFixture("\n### Changed\n\n- Only one.\n");
 
     bumpVersion(workspace.root, "2.4.0");
 
@@ -299,7 +299,7 @@ describe("bumpVersion on a fixture copy", () => {
       changelogPath,
       readFileSync(changelogPath, "utf8").replace(
         "## [Unreleased]\n",
-        "## [Unreleased]\n\n- Stabilized.\n",
+        "## [Unreleased]\n\n### Fixed\n\n- Stabilized.\n",
       ),
     );
 
@@ -371,7 +371,7 @@ describe("bumpVersion on a copy of this repository", () => {
       changelogPath,
       readFileSync(changelogPath, "utf8").replace(
         /^## \[Unreleased\]\n/m,
-        "## [Unreleased]\n\n- A release script fixture entry.\n",
+        "## [Unreleased]\n\n### Added\n\n- A release script fixture entry.\n",
       ),
     );
     const before = readTree(workspace.root);
@@ -394,7 +394,7 @@ describe("bumpVersion on a copy of this repository", () => {
       );
     }
     expect(after["CHANGELOG.md"]).toMatch(
-      /## \[Unreleased\]\n\n## \[999\.0\.0\] - \d{4}-\d{2}-\d{2}\n\n- A release script fixture entry\.\n\n## \[/,
+      /## \[Unreleased\]\n\n## \[999\.0\.0\] - \d{4}-\d{2}-\d{2}\n\n### Added\n\n- A release script fixture entry\.\n\n## \[/,
     );
     expect(after["CHANGELOG.md"]).toMatch(
       /\n\[Unreleased\]: (\S+)\/compare\/v999\.0\.0\.\.\.HEAD\n\[999\.0\.0\]: \1\/compare\/v\d\S*\.\.\.v999\.0\.0\n/,

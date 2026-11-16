@@ -1,6 +1,6 @@
 ---
 title: Neuigkeiten
-sourceHash: 1d5179f4a7f68463
+sourceHash: 29b86f4d2465d65b
 description: "Versionshinweise zur Snug-Erweiterung für Chrome: was sich in jeder Version
   geändert hat, von neuen Auto-Export-Optionen bis zu Korrekturen."
 seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
@@ -9,6 +9,8 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 ## 2.3.1
 
 2026-11-03
+
+### Behoben
 
 - Wenn Snug Zugriff auf Downloads braucht, erscheinen jetzt verständlichere
   Meldungen statt eines rohen Fehlercodes.
@@ -21,30 +23,42 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2026-11-03
 
-- Der Zugriff auf Downloads und Benachrichtigungen ist jetzt optional, daher
-  zeigen Updates keine neuen Berechtigungswarnungen mehr. Snug fragt nur, wenn
-  du den automatischen Export in Downloads oder Fehlerbenachrichtigungen
-  aktivierst.
+### Hinzugefügt
+
 - Neue Abschiedsseite, die sich beim Entfernen von Snug öffnet: Sie fragt mit
   einem Klick nach dem Grund und hilft passend zu deiner Antwort.
 - Die Seite „Neuigkeiten“ beginnt jetzt mit einer Zeile, die erklärt, was Snug
   ist.
 
+### Geändert
+
+- Der Zugriff auf Downloads und Benachrichtigungen ist jetzt optional, daher
+  zeigen Updates keine neuen Berechtigungswarnungen mehr. Snug fragt nur, wenn
+  du den automatischen Export in Downloads oder Fehlerbenachrichtigungen
+  aktivierst.
+
 ## 2.2.0
 
 2026-10-10
+
+### Hinzugefügt
 
 - Auto-Export kann jetzt in einen Eigenen Ordner speichern, den du frei auf
   deinem Computer auswählst.
 - Snug warnt dich jetzt frühzeitig, wenn Ordnerzugriff erforderlich ist, und die
   Auto-Export-Seite hat eine Schaltfläche „Zugriff erlauben“, um ihn erneut zu
   gewähren.
+
+### Geändert
+
 - Aufbewahrung behält nur die neuesten Durchläufe, gezählt über Downloads und
   den Eigenen Ordner hinweg.
 
 ## 2.1.0
 
 2026-10-08
+
+### Geändert
 
 - Der Import wurde deutlich verbessert: Wähle mehrere Dateien gleichzeitig aus
   oder ziehe sie hinein, sieh dir eine Vorschau als Baum an und entscheide
@@ -55,10 +69,15 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2026-10-06
 
+### Hinzugefügt
+
 - Das Popup zeigt nach deinem ersten erfolgreichen Export jetzt einmalig eine
   Bewertungsaufforderung, die sich schließen lässt.
 - Die Datenschutzerklärung beschreibt jetzt den rein lokalen Zustand der
   Aufforderung.
+
+### Geändert
+
 - Das Aussehen des Popups wurde verfeinert: klarere Kartenränder, ein besser
   sichtbarer Tastaturfokus im hellen Design und flüssigere Übergänge bei
   Schaltflächen und Menüs.
@@ -67,14 +86,21 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2026-10-06
 
+### Hinzugefügt
+
 - Die App-Seitenleiste verlinkt jetzt auf die Snug-Website und die
   Datenschutzerklärung.
-- Die Startseite der Erweiterung im Manifest verweist jetzt auf die Website.
 - Einen Eintrag in den Neuigkeiten hinzugefügt, der die Website ankündigt.
+
+### Geändert
+
+- Die Startseite der Erweiterung im Manifest verweist jetzt auf die Website.
 
 ## 2.0.1
 
 2026-10-04
+
+### Geändert
 
 - Die Store-Beschreibungen in allen 10 Sprachen wurden so umgeschrieben, dass
   sie sich wie einfache Sätze lesen. Keine funktionalen Änderungen seit 2.0.0,
@@ -84,19 +110,10 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2026-10-02
 
-- Die Erweiterung heißt jetzt **Snug**, mit neuem Namen und neuem Symbol. Das
-  Versprechen bleibt dasselbe, alles lokal zu halten: An deinen Daten und
-  Einstellungen ändert sich nichts.
+### Hinzugefügt
+
 - Eine neue App mit Seitenleiste für Export, Import, Auto-Export, Einstellungen
   und Neuigkeiten hinzugefügt.
-- Das Popup kompakter gestaltet.
-- Die neue Snug-Farbpalette in der gesamten Erweiterung angewendet.
-- 8 neue Sprachen hinzugefügt, insgesamt 10 Sprachversionen: Englisch, Spanisch,
-  Deutsch, Französisch, Italienisch, brasilianisches Portugiesisch, Russisch,
-  Japanisch, Koreanisch und vereinfachtes Chinesisch.
-- Beim Wiederherstellen wird jetzt zuerst ein Sicherheits-Snapshot deiner
-  Lesezeichen gespeichert, und ein Ersetzen kannst du auf der Importseite
-  rückgängig machen.
 - Eine Seite Duplikate hinzugefügt, um doppelte Lesezeichen zu finden und nur
   die gewählten zu löschen, dazu die Option Duplikate überspringen beim Import.
 - Auto-Export erhält stündliche und wöchentliche Zeitpläne, eine Aufbewahrung,
@@ -108,19 +125,40 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 - Den Lesezeichenbaum auch bei riesigen Sammlungen schnell gemacht und
   vollständig per Tastatur und Screenreader bedienbar.
 
+### Geändert
+
+- Die Erweiterung heißt jetzt **Snug**, mit neuem Namen und neuem Symbol. Das
+  Versprechen bleibt dasselbe, alles lokal zu halten: An deinen Daten und
+  Einstellungen ändert sich nichts.
+- Das Popup kompakter gestaltet.
+- Die neue Snug-Farbpalette in der gesamten Erweiterung angewendet.
+- 8 neue Sprachen hinzugefügt, insgesamt 10 Sprachversionen: Englisch, Spanisch,
+  Deutsch, Französisch, Italienisch, brasilianisches Portugiesisch, Russisch,
+  Japanisch, Koreanisch und vereinfachtes Chinesisch.
+- Beim Wiederherstellen wird jetzt zuerst ein Sicherheits-Snapshot deiner
+  Lesezeichen gespeichert, und ein Ersetzen kannst du auf der Importseite
+  rückgängig machen.
+
 ## 1.7.0
 
 2026-10-01
 
+### Hinzugefügt
+
 - Eine Statuskarte und eine Schaltfläche Jetzt exportieren in den
   Auto-Export-Einstellungen hinzugefügt, dazu eine Statuszeile im Popup, die
   zeigt, ob der Auto-Export an, aus oder fehlgeschlagen ist.
+
+### Behoben
+
 - Lesezeichen-Importe gehärtet: Nicht zulässige URL-Schemata (z. B.
   `javascript:`) in CSV-, HTML- und JSON-Dateien werden jetzt abgelehnt.
 
 ## 1.6.0
 
 2026-04-29
+
+### Hinzugefügt
 
 - Auto-Export hinzugefügt – speichere deine Lesezeichen automatisch in
   individuellen Intervallen (alle 12 Stunden, täglich, alle 3 oder 7 Tage) in
@@ -130,6 +168,8 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2025-04-29
 
+### Hinzugefügt
+
 - Erweiterten Import hinzugefügt – stelle Lesezeichen an ihren ursprünglichen
   Orten (Lesezeichenleiste und Weitere Lesezeichen) wieder her, wahlweise
   zusammenführend oder ersetzend.
@@ -137,6 +177,8 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 ## 1.4.0
 
 2025-04-29
+
+### Hinzugefügt
 
 - Anpassbare Dateinamenvorlagen für Exporte hinzugefügt – mit Datums- und
   Uhrzeit-Platzhaltern wie %yyyy, %mm, %dd entstehen automatisch eindeutige
@@ -146,6 +188,8 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2025-02-16
 
+### Hinzugefügt
+
 - Dunkelmodus hinzugefügt, der sich automatisch an das Design deines Systems
   anpasst.
 
@@ -153,12 +197,16 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2025-02-14
 
+### Geändert
+
 - Passt sich jetzt automatisch der Sprache deines Browsers an! Verfügbar auf
   Englisch und Spanisch.
 
 ## 1.1.0
 
 2025-02-13
+
+### Geändert
 
 - Importierte Lesezeichen landen jetzt in einem eigenen Ordner und vermischen
   sich nicht mit deinen vorhandenen Lesezeichen.
@@ -169,15 +217,22 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 2024-08-05
 
+### Hinzugefügt
+
 - Neue Funktion „Erweiterter Export“ für mehr Kontrolle über deine Lesezeichen
   hinzugefügt.
 - Willkommens- und Update-Seiten eingeführt, damit du über neue Funktionen auf
   dem Laufenden bleibst.
+
+### Geändert
+
 - Gesamtleistung für ein flüssigeres Erlebnis verbessert.
 
 ## 0.1.1
 
 2024-08-04
+
+### Behoben
 
 - Einen kritischen Fehler behoben, der Nutzer mit nicht englischen
   Browsersprachen betraf.
@@ -190,6 +245,8 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 ## 0.1.0
 
 2024-08-03
+
+### Hinzugefügt
 
 - Erstveröffentlichung der Erweiterung zum Importieren und Exportieren von
   Lesezeichen.

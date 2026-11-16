@@ -111,6 +111,18 @@ describe("cutRelease", () => {
     );
   });
 
+  it("rejects entries that sit outside a group heading", () => {
+    expect(() => cutRelease(changelog("\n- Flat entry.\n\n"), "2.4.0", "2026-11-11")).toThrow(
+      /must sit under a "### Added"/,
+    );
+  });
+
+  it("rejects a group heading that is not Added, Changed or Fixed", () => {
+    expect(() =>
+      cutRelease(changelog("\n### Added\n\n- A.\n\n### Misc\n\n- B.\n"), "2.4.0", "2026-11-11"),
+    ).toThrow(/"### Misc" is not a changelog group/);
+  });
+
   it("rejects a version that already has a section", () => {
     expect(() => cutRelease(changelog(UNRELEASED), "2.3.1", "2026-11-11")).toThrow(
       /already has a section for 2\.3\.1/,
