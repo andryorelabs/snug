@@ -186,13 +186,15 @@ test("how it works arrows only animate opacity under no-preference", async ({ pa
         arrow
           .getAnimations()
           .flatMap((animation) =>
-            (animation.effect as KeyframeEffect)
-              .getKeyframes()
-              .flatMap((keyframe) =>
-                Object.keys(keyframe).filter(
-                  (key) => !["offset", "easing", "composite", "computedOffset"].includes(key),
-                ),
-              ),
+            animation.effect instanceof KeyframeEffect
+              ? animation.effect
+                  .getKeyframes()
+                  .flatMap((keyframe) =>
+                    Object.keys(keyframe).filter(
+                      (key) => !["offset", "easing", "composite", "computedOffset"].includes(key),
+                    ),
+                  )
+              : [],
           ),
       ),
     );

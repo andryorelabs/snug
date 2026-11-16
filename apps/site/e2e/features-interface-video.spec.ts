@@ -219,9 +219,9 @@ for (const colorScheme of SCHEMES) {
       ).toBe("");
     });
 
-    const hiddenUrls = await hidden.evaluateAll((elements) =>
+    const hiddenUrls = await hidden.evaluateAll((elements: HTMLImageElement[]) =>
       elements.flatMap((element) =>
-        (element as HTMLImageElement).srcset
+        element.srcset
           .split(",")
           .map(
             (candidate) => new URL(candidate.trim().split(" ", 1)[0] ?? "", document.baseURI).href,
@@ -311,7 +311,7 @@ test("showcase pins its panel and switches one screenshot per step on scroll", a
           const style = getComputedStyle(shot);
           return style.visibility === "visible" && style.opacity !== "0";
         })
-        .map((shot) => (shot as HTMLElement).dataset.shot),
+        .map((shot) => (shot instanceof HTMLElement ? shot.dataset.shot : undefined)),
     );
   await forEachSequentially(SHOWCASE_STEPS.entries(), async ([index, step]) => {
     const pinTop = await scrollToShowcaseStep(page, index);
@@ -345,7 +345,7 @@ test("showcase on mobile pins the stage and shows only the active step", async (
           const style = getComputedStyle(item);
           return style.visibility === "visible" && style.opacity !== "0";
         })
-        .map((item) => (item as HTMLElement).dataset.step),
+        .map((item) => (item instanceof HTMLElement ? item.dataset.step : undefined)),
     );
   await forEachSequentially(SHOWCASE_STEPS.entries(), async ([index, step]) => {
     await scrollToShowcaseStep(page, index);

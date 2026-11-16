@@ -50,9 +50,9 @@ test("language popover has no transform animation under reduced motion", async (
     element
       .getAnimations()
       .flatMap((animation) =>
-        (animation.effect as KeyframeEffect)
-          .getKeyframes()
-          .map((keyframe) => String(keyframe.transform ?? "none")),
+        animation.effect instanceof KeyframeEffect
+          ? animation.effect.getKeyframes().map((keyframe) => String(keyframe.transform ?? "none"))
+          : [],
       ),
   );
   const identityTransform =
@@ -119,12 +119,10 @@ test("cross-document view transitions are not active", async ({ page }) => {
       for (const rule of list) {
         if (rule.constructor.name === "CSSViewTransitionRule") {
           found.push(rule.cssText);
-        } else if ("conditionText" in rule && "cssRules" in rule) {
-          if (globalThis.matchMedia(String(rule.conditionText)).matches) {
-            visit(rule.cssRules as CSSRuleList);
-          }
-        } else if ("cssRules" in rule) {
-          visit((rule as CSSGroupingRule).cssRules);
+        } else if (rule instanceof globalThis.CSSConditionRule) {
+          if (globalThis.matchMedia(rule.conditionText).matches) visit(rule.cssRules);
+        } else if (rule instanceof globalThis.CSSGroupingRule) {
+          visit(rule.cssRules);
         }
       }
     };
@@ -148,9 +146,12 @@ test("a theme switch starts no view transition", async ({ page }) => {
   await page.locator("[data-theme-menu]").getByRole("button").click();
   await page.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  const started = await page.evaluate(
-    () => (globalThis as unknown as { startedTransitions: string[] }).startedTransitions,
-  );
+  const started = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "startedTransitions");
+    return Array.isArray(recorded)
+      ? recorded.filter((item): item is string => typeof item === "string")
+      : [];
+  });
   expect(started).toEqual([]);
 });
 

@@ -179,9 +179,12 @@ test("a theme switch runs no colour transition on the frame it flips", async ({ 
   await openMenu(page);
   await page.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  const samples = await page.evaluate(
-    () => (globalThis as unknown as { transitionSamples: string[] }).transitionSamples,
-  );
+  const samples = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "transitionSamples");
+    return Array.isArray(recorded)
+      ? recorded.filter((item): item is string => typeof item === "string")
+      : [];
+  });
   expect(samples.length).toBeGreaterThan(1);
   for (const sample of samples) expect(sample).toBe("none");
   await expect(page.locator("html")).not.toHaveClass(/theme-switching/);

@@ -8,10 +8,12 @@ import { COMPARISON_PATHS } from "../e2e/comparison-paths";
 import { hydratedFaq } from "../e2e/faq-helpers";
 import { HOW_TO_INDEX_PATHS, HOW_TO_PATHS } from "../e2e/how-to-paths";
 import { requireValue } from "../e2e/require";
+import { parseJson } from "../e2e/require";
 import { forEachSequentially } from "../e2e/sequential";
 import { blockUmami, UMAMI_ORIGINS } from "../e2e/umami-helpers";
 import { languageTag, localePath, LOCALES } from "../src/i18n/locales";
 import { UMAMI_COLLECT_ORIGIN, UMAMI_SCRIPT_ORIGIN } from "../src/seo/umami";
+import { isRecord } from "../src/testing/guards";
 
 const LOCALE_PATHS = LOCALES.map((locale) => localePath(locale));
 
@@ -89,9 +91,11 @@ for (const { alias, canonical } of ALIASES) {
 for (const locale of LOCALES) {
   const prefix = localePath(locale);
   const contentFile = fileURLToPath(new URL(`../src/content/${locale}.json`, import.meta.url));
-  const { notFound } = JSON.parse(readFileSync(contentFile, "utf8")) as {
-    notFound: { title: string };
-  };
+  const { notFound } = parseJson(
+    readFileSync(contentFile, "utf8"),
+    (value): value is { notFound: { title: string } } =>
+      isRecord(value) && isRecord(value.notFound),
+  );
 
   test(`an unknown path under ${prefix} gets the ${locale} 404`, async ({ page }) => {
     const missing = `${prefix}no-such-page/`;
@@ -282,9 +286,11 @@ test("the speculation rules resolve with the right MIME type", async ({ request 
   const rules = await request.get("/speculation-rules.json");
   expect(rules.status()).toBe(200);
   expect(rules.headers()["content-type"]).toContain("application/speculationrules+json");
-  const parsed = (await rules.json()) as {
-    prefetch: { eagerness: string; where: unknown }[];
-  };
+  const parsed = parseJson(
+    JSON.stringify(await rules.json()),
+    (value): value is { prefetch: { eagerness: string; where: unknown }[] } =>
+      isRecord(value) && Array.isArray(value.prefetch),
+  );
   expect(parsed).not.toHaveProperty("prerender");
   expect(parsed.prefetch[0]?.eagerness).toBe("moderate");
   const serialized = JSON.stringify(parsed.prefetch[0]?.where);

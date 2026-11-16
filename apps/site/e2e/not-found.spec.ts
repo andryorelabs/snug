@@ -5,8 +5,10 @@ import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { DEFAULT_LOCALE, languageTag, localePath, LOCALES } from "../src/i18n/locales";
+import { isRecord } from "../src/testing/guards";
 import { howToIndexPath } from "./how-to-paths";
 import { expectNoHorizontalOverflow } from "./layout-helpers";
+import { parseJson } from "./require";
 import { forEachSequentially } from "./sequential";
 
 const siteRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -19,9 +21,11 @@ function getNotFoundCopy(locale: Locale): {
   body: string;
   backLink: string;
 } {
-  const content = JSON.parse(
+  const content = parseJson(
     readFileSync(path.join(siteRoot, "src/content", `${locale}.json`), "utf8"),
-  ) as { notFound: { title: string; body: string; backLink: string } };
+    (value): value is { notFound: { title: string; body: string; backLink: string } } =>
+      isRecord(value) && isRecord(value.notFound),
+  );
   return content.notFound;
 }
 

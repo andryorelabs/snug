@@ -70,56 +70,37 @@ function flagCell(value: true | "none" | "not-listed"): FactCell {
  * @returns The cell to render; text is not translated, copy labels are.
  */
 export function factCell(key: CriterionKey, facts: TableFacts, locale: Locale): FactCell {
+  if (key === "exportFormats") return listCell(facts.exportFormats, false);
+  if (key === "import") return listCell(facts.import, false);
+  if (key === "chooseFolders") return flagCell(facts.chooseFolders);
+  if (key === "schedule") return flagCell(facts.schedule);
+  if (key === "cloudCopies") return flagCell(facts.cloudCopies);
+  if (key === "browsers") return listCell(facts.browsers, false);
   const tag = languageTag(locale);
-  switch (key) {
-    case "exportFormats": {
-      return listCell(facts.exportFormats, false);
-    }
-    case "import": {
-      return listCell(facts.import, false);
-    }
-    case "chooseFolders": {
-      return flagCell(facts.chooseFolders);
-    }
-    case "schedule": {
-      return flagCell(facts.schedule);
-    }
-    case "cloudCopies": {
-      return flagCell(facts.cloudCopies);
-    }
-    case "browsers": {
-      return listCell(facts.browsers, false);
-    }
-    case "languages": {
-      return facts.languageCount === "not-listed"
-        ? { kind: "not-listed" }
-        : {
-            kind: "text",
-            text: new Intl.NumberFormat(tag).format(facts.languageCount),
-            isEnglish: false,
-          };
-    }
-    case "usersRating": {
-      const numbers = new Intl.NumberFormat(tag);
-      const rating = new Intl.NumberFormat(tag, {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      });
-      return {
-        kind: "text",
-        text: `${numbers.format(facts.userCount)} / ${rating.format(facts.ratingValue)} (${numbers.format(facts.ratingCount)})`,
-        isEnglish: false,
-      };
-    }
-    case "dataDisclosure": {
-      return facts.dataDisclosure === "none-declared"
-        ? { kind: "none-declared" }
-        : listCell(facts.dataDisclosure, true);
-    }
-    default: {
-      throw new Error(`Unknown comparison criterion "${String(key)}"`);
-    }
+  if (key === "languages") {
+    return facts.languageCount === "not-listed"
+      ? { kind: "not-listed" }
+      : {
+          kind: "text",
+          text: new Intl.NumberFormat(tag).format(facts.languageCount),
+          isEnglish: false,
+        };
   }
+  if (key === "usersRating") {
+    const numbers = new Intl.NumberFormat(tag);
+    const rating = new Intl.NumberFormat(tag, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+    return {
+      kind: "text",
+      text: `${numbers.format(facts.userCount)} / ${rating.format(facts.ratingValue)} (${numbers.format(facts.ratingCount)})`,
+      isEnglish: false,
+    };
+  }
+  return facts.dataDisclosure === "none-declared"
+    ? { kind: "none-declared" }
+    : listCell(facts.dataDisclosure, true);
 }
 
 /**

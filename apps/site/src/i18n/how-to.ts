@@ -409,12 +409,10 @@ export function howToPlaceholderValues(locale: Locale, slug: string): Record<str
  */
 function howToVerifiedOn(slug: string): string {
   const { from, to } = getHowToPage(slug);
-  const latest = [BROWSER_FACTS[from], BROWSER_FACTS[to]]
-    .map((facts: BrowserFacts) => facts.verifiedOn)
-    .toSorted((a, b) => a.localeCompare(b))
-    .at(-1);
-  if (latest === undefined) throw new Error(`How-to page "${slug}" has no browser facts`);
-  return latest;
+  const times = [BROWSER_FACTS[from], BROWSER_FACTS[to]].map((facts: BrowserFacts) =>
+    Date.parse(facts.verifiedOn),
+  );
+  return new Date(Math.max(...times)).toISOString().slice(0, 10);
 }
 
 /**

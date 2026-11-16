@@ -52,9 +52,10 @@ test("the theme class is set before first paint", async ({ page }) => {
     });
   });
   await page.goto("/");
-  const darkAtDomContentLoaded = await page.evaluate(
-    () => (globalThis as { darkAtDomContentLoaded?: boolean }).darkAtDomContentLoaded,
-  );
+  const darkAtDomContentLoaded = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "darkAtDomContentLoaded");
+    return typeof recorded === "boolean" ? recorded : undefined;
+  });
   expect(darkAtDomContentLoaded).toBe(true);
 });
 

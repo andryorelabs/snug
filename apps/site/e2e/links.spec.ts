@@ -17,7 +17,7 @@ for (const path of PATHS) {
     const origin = new URL(baseURL ?? "").origin;
     const hrefs = await page
       .locator("a[href]")
-      .evaluateAll((anchors) => anchors.map((anchor) => (anchor as HTMLAnchorElement).href));
+      .evaluateAll((anchors: HTMLAnchorElement[]) => anchors.map((anchor) => anchor.href));
 
     const targets = new Set<string>();
     for (const href of hrefs) {

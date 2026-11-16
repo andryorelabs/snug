@@ -1,9 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-interface ViolationWindow {
-  cspViolations: string[];
-}
-
 test("the promo video iframe loads under the production CSP", async ({ page }) => {
   await page.route("https://www.youtube-nocookie.com/**", (route) =>
     route.fulfill({
@@ -12,10 +8,10 @@ test("the promo video iframe loads under the production CSP", async ({ page }) =
     }),
   );
   await page.addInitScript(() => {
-    const target = globalThis as unknown as ViolationWindow;
-    target.cspViolations = [];
+    const recorded: string[] = [];
+    Object.assign(globalThis, { cspViolations: recorded });
     document.addEventListener("securitypolicyviolation", (event) => {
-      target.cspViolations.push(`${event.violatedDirective} ${event.blockedURI}`);
+      recorded.push(`${event.violatedDirective} ${event.blockedURI}`);
     });
   });
 
@@ -48,9 +44,12 @@ test("the promo video iframe loads under the production CSP", async ({ page }) =
 
   expect(youtubeRequests.length).toBeGreaterThan(0);
 
-  const violations = await page.evaluate(
-    () => (globalThis as unknown as ViolationWindow).cspViolations,
-  );
+  const violations = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "cspViolations");
+    return Array.isArray(recorded)
+      ? recorded.filter((item): item is string => typeof item === "string")
+      : [];
+  });
   expect(violations).toEqual([]);
 });
 

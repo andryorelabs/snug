@@ -43,6 +43,18 @@ function hasSidebarLabels(value: unknown): value is { docs: SidebarLabels } {
 }
 
 /**
+ * Picks the sidebar labels out of one locale's parsed content file.
+ * @param content - The parsed `src/content/<locale>.json`.
+ * @param locale - The locale the file belongs to, for the error message.
+ * @returns The `docs` labels of that locale.
+ */
+export function sidebarLabelsOf(content: unknown, locale: Locale): SidebarLabels {
+  if (!hasSidebarLabels(content))
+    throw new Error(`Content file for "${locale}" has no docs labels`);
+  return content.docs;
+}
+
+/**
  * Reads the sidebar labels of every locale from `src/content/<locale>.json`.
  * @returns The labels keyed by locale.
  */
@@ -50,9 +62,7 @@ export function readSidebarLabels(): Record<Locale, SidebarLabels> {
   return buildLocaleRecord((locale) => {
     const file = new URL(`../content/${locale}.json`, import.meta.url);
     const content: unknown = JSON.parse(readFileSync(file, "utf8"));
-    if (!hasSidebarLabels(content))
-      throw new Error(`Content file for "${locale}" has no docs labels`);
-    return content.docs;
+    return sidebarLabelsOf(content, locale);
   });
 }
 

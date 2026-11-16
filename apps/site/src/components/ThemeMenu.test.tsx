@@ -155,6 +155,22 @@ describe("ThemeMenu", () => {
     expect(environment.mediaListeners).toHaveLength(0);
   });
 
+  it("unmounts cleanly while on a fixed choice", () => {
+    choose("Light");
+    act(() => environment.root?.unmount());
+    expect(environment.mediaListeners).toHaveLength(0);
+    mount();
+  });
+
+  it("clears the switching class once two frames have passed", () => {
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    });
+    choose("Dark");
+    expect(document.documentElement.classList.contains("theme-switching")).toBe(false);
+  });
+
   it("uses a view transition when available and motion is allowed", () => {
     const startViewTransition = vi.fn((update: () => void) => {
       update();

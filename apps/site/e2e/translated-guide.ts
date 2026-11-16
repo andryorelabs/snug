@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { DEFAULT_LOCALE, type Locale, LOCALES } from "../src/i18n/locales";
+import { isRecord } from "../src/testing/guards";
+import { parseJson } from "./require";
 
 const CONTENT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/content");
 
@@ -44,9 +46,10 @@ export const TRANSLATED_LOCALES = NON_DEFAULT_LOCALES.filter(
  * @returns The translated string.
  */
 export function docsString(locale: Locale, key: string): string {
-  const content = JSON.parse(readFileSync(path.join(CONTENT_DIR, `${locale}.json`), "utf8")) as {
-    docs: Record<string, string>;
-  };
+  const content = parseJson(
+    readFileSync(path.join(CONTENT_DIR, `${locale}.json`), "utf8"),
+    (value): value is { docs: Record<string, string> } => isRecord(value) && isRecord(value.docs),
+  );
   const value = content.docs[key];
   if (value === undefined) {
     throw new Error(`Missing docs string "${key}" for locale ${locale}`);
