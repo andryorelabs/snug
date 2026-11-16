@@ -1,7 +1,7 @@
 {
   ".": { "lines": 91, "statements": 91, "branches": 83, "functions": 90 },
   "apps/extension": {
-    "lines": 96,
+    "lines": 98,
     "statements": 96,
     "branches": 89,
     "functions": 98
