@@ -43,19 +43,88 @@ interface ShardedJob {
 const ROUTED_RUNS_ON =
   "${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || vars.BLACKSMITH_RUNNER || 'ubuntu-latest' }}";
 
+const LIGHT_JOB_REASON =
+  "light job (ADR 0031): a faster runner shortens every pull request, and fork pull requests fall back to ubuntu-latest";
+
 /**
- * The only jobs, as `<file>:<job>`, allowed to use {@link ROUTED_RUNS_ON}.
+ * The only jobs, as `<file>:<job>`, allowed to use {@link ROUTED_RUNS_ON},
+ * each with the reason it is routed (rule F10).
  */
-const ROUTED_JOBS: readonly string[] = [
-  "ci.yml:quality",
-  "ci.yml:changes",
-  "ci.yml:commitlint",
-  "ci.yml:ci-passed",
-  "lint-pr.yml:validate-title",
-  "lint-docs.yml:check-links",
-  "lint-workflows.yml:lint",
-  "labels.yml:sync",
-];
+const ROUTED_JOB_REASONS: Readonly<Record<string, string>> = {
+  "ci.yml:quality": `${LIGHT_JOB_REASON}; format, lint, typecheck and unit tests only`,
+  "ci.yml:changes": `${LIGHT_JOB_REASON}; a path diff of the pull request`,
+  "ci.yml:commitlint": `${LIGHT_JOB_REASON}; lints commit messages`,
+  "ci.yml:ci-passed": `${LIGHT_JOB_REASON}; the aggregate required check`,
+  "lint-pr.yml:validate-title": `${LIGHT_JOB_REASON}; the required title check`,
+  "lint-docs.yml:check-links": `${LIGHT_JOB_REASON}; the required link check`,
+  "lint-workflows.yml:lint": `${LIGHT_JOB_REASON}; actionlint and zizmor`,
+  "labels.yml:sync": `${LIGHT_JOB_REASON}; a label sync`,
+};
+
+const ROUTED_JOBS: readonly string[] = Object.keys(ROUTED_JOB_REASONS);
+
+const HEAVY_JOB_REASON =
+  "heavy job (ADR 0031): a GitHub-hosted runner is free with 4 vCPU on a public repository, and Blacksmith minutes are not";
+const TRUSTED_JOB_REASON =
+  "release, deploy, scheduled and code scanning jobs keep a literal ubuntu-latest (ADR 0031), so a repository variable never moves them";
+
+/**
+ * Every job, as `<file>:<job>`, that runs on a literal `ubuntu-latest`, each
+ * with the reason it is not routed (rule F10, ADR 0031).
+ */
+const LITERAL_RUNNER_JOB_REASONS: Readonly<Record<string, string>> = {
+  "browserstack.yml:plan": `${HEAVY_JOB_REASON}; it plans the BrowserStack matrix beside the heavy jobs`,
+  "browserstack.yml:layout": `${HEAVY_JOB_REASON}; real-device layout runs`,
+  "browserstack.yml:report-failure": `${TRUSTED_JOB_REASON}; it writes issues for nightly runs`,
+  "browserstack.yml:resolve-failure": `${TRUSTED_JOB_REASON}; it closes issues for nightly runs`,
+  "browserstack.yml:percy": `${HEAVY_JOB_REASON}; Percy cross-browser snapshots`,
+  "ci.yml:bun-canary": `${HEAVY_JOB_REASON}; a full check and test on the latest Bun`,
+  "ci.yml:build": `${HEAVY_JOB_REASON}; builds the extension zip`,
+  "ci.yml:build-site": `${HEAVY_JOB_REASON}; builds the site once for every E2E shard`,
+  "ci.yml:e2e": `${HEAVY_JOB_REASON}; the sharded Playwright suites`,
+  "codeql.yml:analyze": `${TRUSTED_JOB_REASON}; CodeQL`,
+  "deploy-site.yml:deploy": `${TRUSTED_JOB_REASON}; the site deploy`,
+  "release.yml:verify": `${TRUSTED_JOB_REASON}; the release gates, check, test and build`,
+  "release.yml:release": `${TRUSTED_JOB_REASON}; builds, attests and publishes the release`,
+  "release.yml:publish-chrome-web-store": `${TRUSTED_JOB_REASON}; store publishing`,
+  "release.yml:publish-edge-add-ons": `${TRUSTED_JOB_REASON}; store publishing`,
+  "scorecard.yml:analysis": `${TRUSTED_JOB_REASON}; Scorecard`,
+  "site-quality.yml:build": `${HEAVY_JOB_REASON}; builds the site image`,
+  "site-quality.yml:smoke": `${HEAVY_JOB_REASON}; runs the site container`,
+  "site-quality.yml:e2e": `${HEAVY_JOB_REASON}; the container Playwright shards`,
+  "site-quality.yml:visual": `${HEAVY_JOB_REASON}; visual regression`,
+  "site-quality.yml:lighthouse": `${TRUSTED_JOB_REASON}; the Lighthouse budget`,
+  "site-quality.yml:site-quality-passed": `${HEAVY_JOB_REASON}; the aggregate of the heavy site-quality jobs, kept beside them`,
+};
+
+/**
+ * Checks that every job's runner choice carries a recorded reason (rule F10):
+ * each runnable job is listed once, in the routed or the literal-runner table,
+ * with a non-empty reason, and every listed job exists.
+ * @param jobKeys Every `<file>:<job>` key except reusable workflow calls,
+ * which have no runner of their own.
+ * @param routed The routed jobs and their reasons.
+ * @param literal The literal-runner jobs and their reasons.
+ * @returns One message per problem; empty when every runner has a reason.
+ */
+function findRunnerReasonProblems(
+  jobKeys: readonly string[],
+  routed: Readonly<Record<string, string>>,
+  literal: Readonly<Record<string, string>>,
+): string[] {
+  const problems: string[] = [];
+  for (const key of jobKeys) {
+    const isRouted = Object.hasOwn(routed, key);
+    const isLiteral = Object.hasOwn(literal, key);
+    if (!isRouted && !isLiteral) problems.push(`${key} has no recorded runner reason`);
+    if (isRouted && isLiteral) problems.push(`${key} is listed as both routed and literal`);
+  }
+  for (const [key, reason] of [...Object.entries(routed), ...Object.entries(literal)]) {
+    if (reason.trim() === "") problems.push(`${key} has an empty runner reason`);
+    if (!jobKeys.includes(key)) problems.push(`${key} is listed but no such job exists`);
+  }
+  return problems;
+}
 
 const FORBIDDEN_RUNNER_LABEL_PATTERN = /^vps-|^self-hosted$/;
 
@@ -201,6 +270,25 @@ function isGuardedToMain(condition: string | undefined): boolean {
       .split("&&")
       .map((term) => term.trim())
       .includes(MAIN_REF_GUARD)
+  );
+}
+
+const PUBLIC_REPOSITORY_GUARD = "!github.event.repository.private";
+
+/**
+ * Checks that a job's `if` requires a public repository: code scanning and
+ * Scorecard need GitHub Advanced Security, which a private repository lacks.
+ * @param condition The job's `if` expression.
+ * @returns Whether every run of the job requires a public repository.
+ */
+function isSkippedOnPrivateRepositories(condition: string | undefined): boolean {
+  const expression = unwrapExpression(condition ?? "");
+  return (
+    !expression.includes("||") &&
+    expression
+      .split("&&")
+      .map((term) => term.trim())
+      .includes(PUBLIC_REPOSITORY_GUARD)
   );
 }
 
@@ -358,8 +446,8 @@ function findViolations(workflow: Workflow, source: string): string[] {
     violations.push("uses the pull_request_target trigger");
   }
 
-  if (triggerNames(workflow).includes("pull_request") && !hasConcurrencyGroup(workflow)) {
-    violations.push("pull_request workflow has no concurrency group");
+  if (!hasConcurrencyGroup(workflow)) {
+    violations.push("workflow has no concurrency group");
   }
 
   const topLevel = JSON.stringify(workflow.permissions);
@@ -419,7 +507,434 @@ function findViolations(workflow: Workflow, source: string): string[] {
   return violations;
 }
 
+/**
+ * A command a CI step may run although it is not a script call, with the
+ * reason it may (rule F10, `steps-call-scripts`). The pattern matches the
+ * whole command text, from its first word after any `VAR=value` prefix.
+ */
+interface ScriptExemption {
+  readonly command: RegExp;
+  readonly reason: string;
+}
+
+/**
+ * The commands `steps-call-scripts` admits besides a script call. Each entry
+ * is as narrow as the workflows allow and carries its own reason; an entry no
+ * step uses fails the suite.
+ */
+const STEPS_CALL_SCRIPTS_EXEMPTIONS: readonly ScriptExemption[] = [
+  {
+    command: /^(?:echo|printf|exit|cd|read|export|wait|true|test|\[\[x\]\])(?:\s|$)/,
+    reason: "shell builtins: output, tests and control flow inside a step, not a tool",
+  },
+  {
+    command: /^(?:sleep|seq|ls|grep -q \.$|sed 's\/\^\/\* \/')(?:\s|$)/,
+    reason:
+      "coreutils on every runner image: waits, loops, zip lookups and the allowed signers format",
+  },
+  {
+    command: /^bun install --frozen-lockfile(?: --ignore-scripts)?$/,
+    reason: "installs the dependencies every script needs, so no script can run before it",
+  },
+  {
+    command: /^bunx turbo run /,
+    reason:
+      "turbo is the task runner behind bun run check, test and zip; CI calls it directly to pass --affected and --shard, which the package.json scripts do not forward",
+  },
+  {
+    command:
+      /^bunx playwright(?:@1\.63\.0)? (?:--version|install --with-deps chromium|install-deps chromium)$/,
+    reason:
+      "installs or names the Playwright browser of the runner, which no workspace script does; the 1.63 pin is the Chromium Lighthouse needs",
+  },
+  {
+    command: /^bunx commitlint --from "\$\{BASE_SHA\}" --to "\$\{HEAD_SHA\}" --verbose$/,
+    reason:
+      "lints the exact commit range of the pull request event, which lint:commits does not take",
+  },
+  {
+    command: /^bunx wxt submit --(?:chrome|edge)-zip "\$\{zip_path\}"$/,
+    reason: "submits the attested release zip to a store, which only the release workflow may do",
+  },
+  {
+    command: /^docker (?:build|save|load|run|logs|create|cp|rm) /,
+    reason: "builds, moves and runs the site container image that site-quality and deploy test",
+  },
+  {
+    command:
+      /^bash (?:apps\/site\/docker\/(?:last-modified|smoke)\.sh|\.github\/scripts\/deploy-coolify\.sh)$/,
+    reason: "repo shell scripts: the site image's dates, the nginx smoke test and the deploy hook",
+  },
+  {
+    command: /^curl -fs -o \/dev\/null http:\/\/127\.0\.0\.1:8080\/$/,
+    reason: "the readiness probe of the site container started in the step",
+  },
+  {
+    command:
+      /^curl -sSLO "https:\/\/github\.com\/rhysd\/actionlint\/releases\/download\/|^tar xzf "actionlint_|^sha256sum -c -$|^actionlint -color$/,
+    reason:
+      "installs the checksum-verified actionlint release and runs it; actionlint is a Go binary no package script reaches",
+  },
+  {
+    command:
+      /^git (?:fetch --no-tags (?:--force )?origin |merge-base --is-ancestor |diff --name-only |cat-file -e )/,
+    reason:
+      "release ancestry, the release tag fetch and the site change detection read the checkout's history in place",
+  },
+  {
+    command: /^gh (?:api |release (?:view|create) |issue (?:list|create|comment|close) )/,
+    reason:
+      "reads the tagger's keys and the CI result, publishes the GitHub Release and reports nightly failures with the job token",
+  },
+  {
+    command: /^gpg --batch --quiet --import$/,
+    reason: "imports the tagger's GPG keys so git tag -v can check the release tag",
+  },
+  {
+    command: /^(?:jq -r|jq -nc|yq) /,
+    reason:
+      "reads a field of a JSON or YAML document, or builds the BrowserStack matrix JSON, inside a step",
+  },
+];
+
+const SCRIPT_CALL_PATTERN =
+  /^bun (?:run (?:--cwd \S+ )?(?:--[\w-]+ )*[\w:-]+|scripts\/[\w./-]+\.ts)(?:\s|$)/;
+const BUN_RUN_SCRIPT_PATTERN = /^bun run (?:--cwd (\S+) )?(?:--[\w-]+ )*([\w:-]+)(?:\s|$)/;
+const COMMAND_SEPARATOR_PATTERN = /[|;&()\n]/;
+const RESERVED_WORDS: ReadonlySet<string> = new Set([
+  "if",
+  "then",
+  "else",
+  "elif",
+  "fi",
+  "do",
+  "done",
+  "while",
+  "until",
+  "esac",
+  "{",
+  "}",
+  "!",
+  "time",
+]);
+const CLAUSE_WORDS: ReadonlySet<string> = new Set(["for", "case", "select"]);
+const ASSIGNMENT_WORD_PATTERN = /^[A-Za-z_]\w*(?:\[[^\]]*\])?\+?=/;
+const REDIRECTION_OPERATOR_PATTERN = /^\d*(?:<<<|<<-?|>>|<>|>&|<&|>\||<|>)$/;
+const ATTACHED_REDIRECTION_PATTERN = /^\d*(?:<<<|<<-?|>>|<>|>&|<&|>\||<|>)\S/;
+const HEREDOC_START_PATTERN = /(?<!<)<<-?\s*(['"]?)([A-Za-z_]\w*)\1/;
+const CASE_PATTERNS_PATTERN = /(\bin\b|;;)(\s*)([^;()\n]*\))/g;
+const ARRAY_ASSIGNMENT_START_PATTERN = /[A-Za-z_]\w*\+?=\(/g;
+const FUNCTION_DEFINITION_PATTERN = /(?:^|[\n;&|{}])\s*([A-Za-z_][\w-]*)\s*\(\s*\)/g;
+
+interface MaskedScript {
+  readonly masked: string;
+  readonly substitutions: readonly string[];
+  readonly end: number;
+}
+
+function removeHeredocBodies(script: string): string {
+  const kept: string[] = [];
+  let terminator: string | undefined;
+  for (const line of script.split("\n")) {
+    if (terminator !== undefined) {
+      if (line.trim() === terminator) terminator = undefined;
+      continue;
+    }
+    kept.push(line);
+    terminator = HEREDOC_START_PATTERN.exec(line)?.[2];
+  }
+  return kept.join("\n");
+}
+
+/**
+ * Scans `text` from `start`, masking quoted text, `${ }` expansions, comments
+ * and `$( )` substitutions so separators inside them do not split commands.
+ * With `isInsideSubstitution`, the scan stops at the `)` closing the substitution.
+ * @param text The shell script.
+ * @param start The index to scan from.
+ * @param isInsideSubstitution Whether the scan starts inside a `$( )`.
+ * @returns The masked text, the substitutions found and where the scan stopped.
+ */
+function maskShell(text: string, start: number, isInsideSubstitution: boolean): MaskedScript {
+  let masked = "";
+  const substitutions: string[] = [];
+  let quote: "'" | '"' | undefined;
+  let depth = 0;
+  let index = start;
+  while (index < text.length) {
+    const character = text[index] ?? "";
+    const next = text[index + 1] ?? "";
+    let width = 1;
+    let replacement: string | undefined = "x";
+    if (quote === "'") {
+      if (character === "'") quote = undefined;
+    } else if (character === "\\") {
+      width = Math.min(2, text.length - index);
+    } else if (character === "$" && next === "(") {
+      const inner = maskShell(text, index + 2, true);
+      substitutions.push(text.slice(index + 2, inner.end));
+      width = Math.min(inner.end + 1, text.length) - index;
+    } else if (character === "$" && next === "{") {
+      const close = text.indexOf("}", index);
+      width = (close === -1 ? text.length : close + 1) - index;
+    } else if (quote === '"') {
+      if (character === '"') quote = undefined;
+    } else if (character === "'" || character === '"') {
+      quote = character;
+    } else if (character === "#" && (index === start || /\s/.test(text[index - 1] ?? ""))) {
+      const newline = text.indexOf("\n", index);
+      width = (newline === -1 ? text.length : newline) - index;
+      replacement = " ";
+    } else if (character === ")" && isInsideSubstitution && depth === 0) {
+      return { masked, substitutions, end: index };
+    } else {
+      if (character === "(") depth += 1;
+      else if (character === ")") depth -= 1;
+      replacement = undefined;
+    }
+    masked += replacement === undefined ? character : replacement.repeat(width);
+    index += width;
+  }
+  return { masked, substitutions, end: index };
+}
+
+function maskCasePatterns(masked: string): string {
+  return masked.replaceAll(
+    CASE_PATTERNS_PATTERN,
+    (_match, keyword: string, space: string, patterns: string) =>
+      `${keyword}${space}${" ".repeat(patterns.length)}`,
+  );
+}
+
+function maskArrayAssignments(masked: string): string {
+  let result = masked;
+  for (const match of masked.matchAll(ARRAY_ASSIGNMENT_START_PATTERN)) {
+    const open = match.index + match[0].length - 1;
+    const close = result.indexOf(")", open);
+    const stop = close === -1 ? result.length : close + 1;
+    result = `${result.slice(0, open)}${"x".repeat(stop - open)}${result.slice(stop)}`;
+  }
+  return result;
+}
+
+function commandIn(
+  script: string,
+  masked: string,
+  span: { start: number; end: number },
+  functions: ReadonlySet<string>,
+): string | undefined {
+  const segment = masked.slice(span.start, span.end);
+  const words = segment.matchAll(/\S+/g).toArray();
+  let position = 0;
+  while (position < words.length) {
+    const word = words[position]?.[0] ?? "";
+    if (CLAUSE_WORDS.has(word)) return undefined;
+    if (REDIRECTION_OPERATOR_PATTERN.test(word)) {
+      position += 2;
+    } else if (
+      RESERVED_WORDS.has(word) ||
+      ASSIGNMENT_WORD_PATTERN.test(word) ||
+      ATTACHED_REDIRECTION_PATTERN.test(word)
+    ) {
+      position += 1;
+    } else {
+      break;
+    }
+  }
+  const head = words[position];
+  if (head === undefined) return undefined;
+  const headStart = span.start + head.index;
+  if (functions.has(script.slice(headStart, headStart + head[0].length))) return undefined;
+  const length = masked.slice(headStart, span.end).trimEnd().length;
+  return script.slice(headStart, headStart + length);
+}
+
+function listScriptCommands(script: string): string[] {
+  const { masked: quoted, substitutions } = maskShell(script, 0, false);
+  const masked = maskArrayAssignments(maskCasePatterns(quoted));
+  const functions = new Set(
+    masked.matchAll(FUNCTION_DEFINITION_PATTERN).map((match) => match[1] ?? ""),
+  );
+  const commands: string[] = [];
+  let start = 0;
+  for (let index = 0; index <= masked.length; index += 1) {
+    if (index < masked.length && !COMMAND_SEPARATOR_PATTERN.test(masked[index] ?? "")) continue;
+    const command = commandIn(script, masked, { start, end: index }, functions);
+    if (command !== undefined) commands.push(command);
+    start = index + 1;
+  }
+  return [
+    ...commands,
+    ...substitutions.flatMap((substitution) => listScriptCommands(substitution)),
+  ];
+}
+
+/**
+ * Lists every command a `run:` script executes, each from its first word:
+ * commands joined by `&&`, `||`, `|` and `;`, inside `if`, loops and groups,
+ * and inside `$( )` substitutions. Heredoc bodies, `case` patterns, array
+ * lists and calls to functions the script defines are not commands; each
+ * `[[ ]]` or `(( ))` test is one `[[x]]` command, since the `||` and `&&`
+ * inside a test do not split commands. Ported
+ * from aokit's workflow rules library: a shell parser in miniature.
+ * @param run The step's `run` script.
+ * @returns The commands, in order, then those inside substitutions.
+ */
+function listStepCommands(run: string): string[] {
+  const script = removeHeredocBodies(run.replaceAll("\r\n", "\n"))
+    .replaceAll("\\\n", "  ")
+    .replaceAll(/\d*>&\d+/g, "")
+    .replaceAll(/\$\(\([^\n]*?\)\)/g, "0")
+    .replaceAll(/\(\([^\n]*?\)\)/g, "[[x]]")
+    .replaceAll(/\[\[[^\n]*?\]\]/g, "[[x]]");
+  return listScriptCommands(script);
+}
+
+const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+/**
+ * Reads the `scripts` keys of a workspace's `package.json`.
+ * @param directory The workspace directory, relative to the repository root.
+ * @returns The script names; empty when the manifest has none.
+ */
+function readPackageScripts(directory: string): ReadonlySet<string> {
+  const manifest = JSON.parse(
+    readFileSync(path.join(REPOSITORY_ROOT, directory, "package.json"), "utf8"),
+  ) as { scripts?: Record<string, unknown> };
+  return new Set(Object.keys(manifest.scripts ?? {}));
+}
+
+/**
+ * Tells whether a command calls a script: a repo script under `scripts/`, or
+ * `bun run <name>` where `<name>` is a script of the root `package.json` (or
+ * of the `--cwd` workspace). `bun run` also executes `node_modules/.bin`
+ * binaries, which is a raw tool call.
+ * @param command One command from {@link listStepCommands}.
+ * @param directory The directory the command runs in, relative to the root.
+ * @returns Whether the command is a script call.
+ */
+function isScriptCall(command: string, directory = "."): boolean {
+  if (!SCRIPT_CALL_PATTERN.test(command)) return false;
+  const match = BUN_RUN_SCRIPT_PATTERN.exec(command);
+  return (
+    match === null || readPackageScripts(path.join(directory, match[1] ?? ".")).has(match[2] ?? "")
+  );
+}
+
+/**
+ * The `steps-call-scripts` rule (F10): a step calls `bun run <script>` or a
+ * repo script under `scripts/`, never a raw tool such as `bunx commitlint`,
+ * unless an exemption admits the command with a reason.
+ * @param workflow The parsed workflow document.
+ * @param exemptions The admitted commands and their reasons.
+ * @returns One message per command that is neither a script call nor exempt.
+ */
+function findStepScriptProblems(
+  workflow: Workflow,
+  exemptions: readonly ScriptExemption[] = STEPS_CALL_SCRIPTS_EXEMPTIONS,
+): string[] {
+  return listRunCommands(workflow)
+    .filter(
+      ({ command, directory }) =>
+        !isScriptCall(command, directory) &&
+        exemptions.every((exemption) => !exemption.command.test(command)),
+    )
+    .map(({ step, command }) => `step "${step}" runs \`${command}\` directly`);
+}
+
+interface RunCommand {
+  readonly step: string;
+  readonly command: string;
+  readonly directory: string;
+}
+
+/**
+ * Lists every command of every `run:` step with the directory it runs in: the
+ * step's `working-directory`, then any `cd` earlier in the same script.
+ * @param workflow The parsed workflow document.
+ * @returns One entry per command, in step order.
+ */
+function listRunCommands(workflow: Workflow): RunCommand[] {
+  return collectSteps(workflow).flatMap((step) => {
+    const stepName = step.name ?? step.uses ?? "run";
+    const workingDirectory = (step as { "working-directory"?: unknown })["working-directory"];
+    let directory = typeof workingDirectory === "string" ? workingDirectory : ".";
+    return listStepCommands(step.run ?? "").map((command) => {
+      const entry = { step: stepName, command, directory };
+      const change = /^cd (\S+)$/.exec(command);
+      if (change) directory = path.join(directory, change[1] ?? ".");
+      return entry;
+    });
+  });
+}
+
 const allFiles = listWorkflowFiles();
+
+describe("steps call scripts (F10)", () => {
+  test.each(allFiles)("every %s step calls a script or an exempted command", (fileName) => {
+    expect(findStepScriptProblems(readWorkflow(fileName))).toEqual([]);
+  });
+
+  test("every exemption admits a command some step runs, and has a reason", () => {
+    const commands = allFiles.flatMap((fileName) =>
+      listRunCommands(readWorkflow(fileName)).map(({ command }) => command),
+    );
+    for (const exemption of STEPS_CALL_SCRIPTS_EXEMPTIONS) {
+      expect(exemption.reason.trim()).not.toBe("");
+      expect(commands.some((command) => exemption.command.test(command))).toBe(true);
+    }
+  });
+
+  test("lists the commands of a script, joined, nested and substituted", () => {
+    expect(
+      listStepCommands(
+        [
+          'if [[ -z "${A}" || -n "${B}" ]]; then',
+          '  value="$(bunx tsc --noEmit)" && bun run check',
+          "fi",
+          "while (( SECONDS < 10 )); do sleep 1; done",
+          "gh release view v1 > /dev/null 2>&1 | grep -q .",
+          "cat <<EOF",
+          "bunx hidden",
+          "EOF",
+        ].join("\n"),
+      ),
+    ).toEqual([
+      "[[x]]",
+      "bun run check",
+      "[[x]]",
+      "sleep 1",
+      "gh release view v1 > /dev/null",
+      "grep -q .",
+      "cat <<EOF",
+      "bunx tsc --noEmit",
+    ]);
+  });
+
+  test("the rule rejects a raw tool, an unknown script and a script outside its workspace", () => {
+    const broken = parse(`
+jobs:
+  lint:
+    steps:
+      - name: Lint
+        run: |
+          bunx oxlint .
+          bun run not-a-script
+          bun run check
+      - name: Site
+        working-directory: apps/site
+        run: |
+          bun run test:visual
+          bun run release
+`) as Workflow;
+
+    expect(findStepScriptProblems(broken, [])).toEqual([
+      'step "Lint" runs `bunx oxlint .` directly',
+      'step "Lint" runs `bun run not-a-script` directly',
+      'step "Site" runs `bun run release` directly',
+    ]);
+  });
+});
 
 test("there is at least one workflow to check", () => {
   expect(allFiles.length).toBeGreaterThan(0);
@@ -460,7 +975,7 @@ jobs:
 
   test.each([
     "uses the pull_request_target trigger",
-    "pull_request workflow has no concurrency group",
+    "workflow has no concurrency group",
     "top-level permissions are not contents: read or empty",
     'job "build" has no timeout-minutes',
     'job "build" does not declare permissions',
@@ -491,6 +1006,33 @@ describe("runner routing (ADR 0031)", () => {
     for (const key of ROUTED_JOBS) {
       expect(existing).toContain(key);
     }
+  });
+
+  test("every job's runner carries a recorded reason (F10)", () => {
+    const runnableJobKeys = allFiles.flatMap((fileName) =>
+      Object.entries(readWorkflow(fileName).jobs ?? {})
+        .filter(([, job]) => job.uses === undefined)
+        .map(([jobName]) => `${fileName}:${jobName}`),
+    );
+
+    expect(
+      findRunnerReasonProblems(runnableJobKeys, ROUTED_JOB_REASONS, LITERAL_RUNNER_JOB_REASONS),
+    ).toEqual([]);
+  });
+
+  test("the reason rule rejects an unlisted, doubly listed, unreasoned or stale job", () => {
+    expect(
+      findRunnerReasonProblems(
+        ["a.yml:new", "a.yml:both", "a.yml:blank"],
+        { "a.yml:both": "light", "a.yml:blank": " " },
+        { "a.yml:both": "heavy", "a.yml:gone": "heavy" },
+      ),
+    ).toEqual([
+      "a.yml:new has no recorded runner reason",
+      "a.yml:both is listed as both routed and literal",
+      "a.yml:blank has an empty runner reason",
+      "a.yml:gone is listed but no such job exists",
+    ]);
   });
 
   describe("the rules reject a broken workflow", () => {
@@ -538,6 +1080,28 @@ describe("ci.yml", () => {
       expect.arrayContaining(["quality", "build", "build-site", "e2e", "commitlint"]),
     );
     expect(needs).not.toContain("browserstack");
+  });
+
+  describe("latest-Bun canary (F9)", () => {
+    const canary = workflow.jobs?.["bun-canary"];
+    const setupBun = (canary?.steps ?? []).find((step) =>
+      step.uses?.startsWith("oven-sh/setup-bun@"),
+    );
+
+    test("installs the latest Bun, not the pinned one", () => {
+      expect(setupBun?.with?.["bun-version"]).toBe("latest");
+      expect(setupBun?.with?.["bun-version-file"]).toBeUndefined();
+    });
+
+    test("runs check and test on it", () => {
+      const runs = (canary?.steps ?? []).map((step) => step.run ?? "").join("\n");
+      expect(runs).toContain("bun run check");
+      expect(runs).toContain("bun run test");
+    });
+
+    test("never blocks CI passed: a Bun release breaks the canary, not merges", () => {
+      expect(needsList(workflow.jobs?.["ci-passed"]?.needs)).not.toContain("bun-canary");
+    });
   });
 
   describe("develop branch (ADR 0040)", () => {
@@ -1178,6 +1742,50 @@ jobs:
     expect(doesCancelInProgress(workflow, "refs/heads/develop")).toBe(false);
     expect(doesCancelInProgress(workflow, "refs/pull/1/merge")).toBe(true);
   });
+
+  test("analyzes without a build (F7)", () => {
+    const init = collectSteps(readWorkflow("codeql.yml")).find((step) =>
+      step.uses?.startsWith(CODEQL_INIT),
+    );
+    expect(init?.with?.["build-mode"]).toBe("none");
+  });
+});
+
+describe("manual dispatch (F6)", () => {
+  test.each(["ci.yml", "codeql.yml", "lint-docs.yml"])(
+    "%s accepts workflow_dispatch",
+    (fileName) => {
+      expect(missingTriggers(readWorkflow(fileName), ["workflow_dispatch"])).toEqual([]);
+    },
+  );
+});
+
+describe("code scanning skips private repositories (F7)", () => {
+  test.each(["codeql.yml", "scorecard.yml"])(
+    "every %s job skips a private repository",
+    (fileName) => {
+      const jobs = Object.values(readWorkflow(fileName).jobs ?? {});
+      expect(jobs.length).toBeGreaterThan(0);
+      for (const job of jobs) {
+        expect(isSkippedOnPrivateRepositories(job.if)).toBe(true);
+      }
+    },
+  );
+
+  test("the rule rejects a condition that can still run on a private repository", () => {
+    expect(isSkippedOnPrivateRepositories(undefined)).toBe(false);
+    expect(isSkippedOnPrivateRepositories("github.ref == 'refs/heads/main'")).toBe(false);
+    expect(isSkippedOnPrivateRepositories(`${PUBLIC_REPOSITORY_GUARD} || always()`)).toBe(false);
+    expect(isSkippedOnPrivateRepositories(`\${{ ${PUBLIC_REPOSITORY_GUARD} }}`)).toBe(true);
+  });
+});
+
+describe("lint-workflows.yml (F10)", () => {
+  test("runs on pushes to main and develop, not only on pull requests", () => {
+    const workflow = readWorkflow("lint-workflows.yml");
+    expect(pushBranches(workflow)).toEqual(["main", "develop"]);
+    expect(missingTriggers(workflow, ["pull_request"])).toEqual([]);
+  });
 });
 
 describe("main-only workflows never trigger or run on develop (ADR 0040)", () => {
@@ -1289,6 +1897,38 @@ describe("release.yml (ADR 0026)", () => {
     }
   });
 
+  test("runs the release gates before any install, check, test or build (F4, F13)", () => {
+    const verifySteps = workflow.jobs?.verify?.steps ?? [];
+    const gateIndex = verifySteps.findIndex((step) =>
+      (step.run ?? "").includes(
+        'bun scripts/release-gates.ts "${GITHUB_REF_NAME}" --allowed-signers',
+      ),
+    );
+    const firstBuildIndex = verifySteps.findIndex((step) =>
+      /bun install|bun run|turbo/.test(step.run ?? ""),
+    );
+
+    expect(gateIndex).toBeGreaterThanOrEqual(0);
+    expect(firstBuildIndex).toBeGreaterThan(gateIndex);
+    expect(verifySteps[gateIndex]?.if).toBeUndefined();
+    expect(verifySteps[gateIndex]?.["continue-on-error"]).toBeUndefined();
+  });
+
+  test("fetches the tag object itself before the gates read it", () => {
+    expect(verifyRuns).toContain(
+      'git fetch --no-tags --force origin "+refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"',
+    );
+  });
+
+  test("never cancels a release in progress (F6)", () => {
+    expect(hasConcurrencyGroup(workflow)).toBe(true);
+    expect(doesCancelInProgress(workflow, "refs/tags/v1.0.0")).toBe(false);
+  });
+
+  test("the CI wait survives a failed check-runs call (F6)", () => {
+    expect(verifyRuns).toMatch(/gh api [^\n]*check-runs[\s\S]*?\) \|\| run_json=''/);
+  });
+
   test("publish jobs skip a version already released", () => {
     const publishJobs = jobs.filter(([name]) => name.startsWith("publish-"));
     expect(publishJobs.length).toBeGreaterThan(0);
@@ -1329,6 +1969,43 @@ describe("browserstack.yml nightly failure reporting", () => {
 
   test("the failure report opts out of the implicit success() gate", () => {
     expect(String(report?.if)).toMatch(/\b(always|failure)\(\)/);
+  });
+});
+
+describe("flaky test summary (E20)", () => {
+  test.each([
+    ["ci.yml", "e2e", "Run E2E tests", "apps/extension/test-results/report.json"],
+    ["ci.yml", "e2e", "Run E2E tests", "apps/site/test-results/report.json"],
+    [
+      "site-quality.yml",
+      "e2e",
+      "Run the smoke and accessibility spec",
+      "apps/site/test-results/report.json",
+    ],
+  ])(
+    "%s:%s summarizes %s's retried tests from %s",
+    (fileName, jobName, testStepName, reportPath) => {
+      const steps = readWorkflow(fileName).jobs?.[jobName]?.steps ?? [];
+      const testIndex = steps.findIndex((step) => step.name === testStepName);
+      const summaryIndex = steps.findIndex(
+        (step) =>
+          (step.run ?? "").includes("bun scripts/flaky-summary.ts") &&
+          (step.run ?? "").includes(`=${reportPath}`),
+      );
+
+      expect(testIndex).toBeGreaterThanOrEqual(0);
+      expect(summaryIndex).toBeGreaterThan(testIndex);
+      expect(steps[summaryIndex]?.if).toBe("${{ !cancelled() }}");
+    },
+  );
+
+  test.each([
+    "apps/extension/playwright.config.ts",
+    "apps/site/playwright.config.ts",
+    "apps/site/playwright.container.config.ts",
+  ])("%s writes the JSON report the summary reads in CI", (configPath) => {
+    const source = readFileSync(path.join(REPOSITORY_ROOT, configPath), "utf8");
+    expect(source).toContain('["json", { outputFile: "test-results/report.json" }]');
   });
 });
 

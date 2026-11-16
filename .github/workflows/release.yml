@@ -4,6 +4,10 @@ on:
   push:
     tags: ["v*"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -22,6 +26,36 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+          no-cache: true
+
+      # actions/checkout can leave a tag push's ref as a lightweight copy, so
+      # the annotated tag object is fetched again before the gates read it.
+      - name: Fetch the release tag object
+        run: |
+          git fetch --no-tags --force origin "+refs/tags/${GITHUB_REF_NAME}:refs/tags/${GITHUB_REF_NAME}"
+
+      - name: Load the tagger's signing keys
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          allowed_signers="${RUNNER_TEMP}/allowed_signers"
+          gh api "users/${ACTOR}/ssh_signing_keys" --jq '.[].key' | sed 's/^/* /' > "${allowed_signers}"
+          gpg_keys=$(gh api "users/${ACTOR}/gpg_keys" --jq '.[].raw_key')
+          if [[ -n "${gpg_keys}" ]]; then
+            printf '%s\n' "${gpg_keys}" | gpg --batch --quiet --import
+          fi
+
+      # F4/F13: a lightweight or unsigned tag, a tag that differs from the
+      # manifest version, or a tag without a CHANGELOG section fails here,
+      # before anything is installed or built.
+      - name: Release gates (signed annotated tag, version, CHANGELOG)
+        run: |
+          bun scripts/release-gates.ts "${GITHUB_REF_NAME}" --allowed-signers "${RUNNER_TEMP}/allowed_signers"
+
       - name: Check the tagged commit is on main
         run: |
           git fetch --no-tags origin main
@@ -37,7 +71,7 @@ jobs:
           deadline=$((SECONDS + 4200))
           while true; do
             run_json=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/check-runs?per_page=100" \
-              --jq '[.check_runs[] | select(.name == "CI passed")] | sort_by(.id) | last // empty')
+              --jq '[.check_runs[] | select(.name == "CI passed")] | sort_by(.id) | last // empty') || run_json=''
             status=$(jq -r '.status // empty' <<< "${run_json}")
             conclusion=$(jq -r '.conclusion // empty' <<< "${run_json}")
             if [[ "${status}" == "completed" ]]; then
@@ -59,11 +93,6 @@ jobs:
             echo "CI passed is ${status:-missing}, checking again in 30s"
             sleep 30
           done
-
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: package.json
-          no-cache: true
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -101,16 +130,7 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Check tag matches extension package.json version
-        run: |
-          tag_version="${GITHUB_REF_NAME#v}"
-          pkg_version=$(node -p "require('./apps/extension/package.json').version")
-          if [[ "${tag_version}" != "${pkg_version}" ]]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match apps/extension/package.json version ${pkg_version}"
-            exit 1
-          fi
-
-      - name: Require a CHANGELOG section for the tag
+      - name: Write the release notes from the CHANGELOG section
         run: |
           bun scripts/release/release-notes.ts "${GITHUB_REF_NAME}" > release-notes.md
 

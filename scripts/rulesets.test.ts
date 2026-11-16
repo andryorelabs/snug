@@ -7,7 +7,13 @@ import { listWorkflowFiles, readWorkflow } from "./workflow-files";
 
 const RULESETS_DIRECTORY = path.resolve(import.meta.dirname, "../.github/rulesets");
 const GITHUB_ACTIONS_INTEGRATION_ID = 15_368;
-const REQUIRED_CHECKS = ["CI passed", "Validate PR title", "Check markdown links"];
+const REQUIRED_CHECKS = [
+  "CI passed",
+  "Validate PR title",
+  "Check markdown links",
+  "Analyze (javascript-typescript)",
+  "Analyze (actions)",
+];
 const MATRIX_EXPRESSION_PATTERN = /\$\{\{\s*matrix\.([\w-]+)\s*\}\}/g;
 
 type JsonRecord = Record<string, unknown>;
@@ -164,6 +170,11 @@ describe("workflow check names", () => {
   test("the real workflows report the sharded E2E checks", () => {
     expect(checkNames).toContain("E2E (Playwright 4/4)");
   });
+
+  test("the real workflows report one CodeQL check per language (F7)", () => {
+    expect(checkNames).toContain("Analyze (javascript-typescript)");
+    expect(checkNames).toContain("Analyze (actions)");
+  });
 });
 
 describe(".github/rulesets", () => {
@@ -229,7 +240,7 @@ describe("develop ruleset", () => {
     expect(parameters["required_review_thread_resolution"]).toBe(true);
   });
 
-  test("requires the three checks, strictly, from GitHub Actions", () => {
+  test("requires the five checks, strictly, from GitHub Actions", () => {
     const parameters = ruleParameters(developRuleset, "required_status_checks");
 
     expect(parameters["strict_required_status_checks_policy"]).toBe(true);
@@ -267,7 +278,7 @@ describe("main ruleset", () => {
     expect(parameters["required_review_thread_resolution"]).toBe(true);
   });
 
-  test("requires the three checks, not strictly, from GitHub Actions", () => {
+  test("requires the five checks, not strictly, from GitHub Actions", () => {
     const parameters = ruleParameters(mainRuleset, "required_status_checks");
 
     expect(parameters["strict_required_status_checks_policy"]).toBe(false);
