@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "북마크를 일반적인 형식으로 내보내고 Chrome·Safari에서 가져오며 자동 백업까지. 모든 작업은 기기 안에서.",
+    "message": "북마크를 내보내고, 가져오고, 백업하세요 — 모든 작업은 기기 안에서.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "북마크를 일반적인 형식으로 내보내고 가져오며, 일정에 따라 백업하세요. 모든 데이터는 로컬에 남습니다.",
+    "message": "북마크를 내보내고, 가져오고, 백업하세요 — 모든 작업은 기기 안에서.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

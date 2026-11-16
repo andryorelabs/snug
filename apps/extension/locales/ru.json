@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Экспорт, импорт и резервные копии закладок в распространённых форматах, из Chrome и Safari. Всё локально.",
+    "message": "Экспорт, импорт и резервные копии закладок — полностью на вашем устройстве.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Экспортируйте, импортируйте и резервируйте закладки в популярных форматах по расписанию. Всё остаётся локально.",
+    "message": "Экспорт, импорт и резервные копии закладок — полностью на вашем устройстве.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "Lesezeichen in gängigen Formaten exportieren, aus Chrome oder Safari importieren und automatisch sichern. Alles lokal.",
+    "message": "Lesezeichen exportieren, importieren und sichern — komplett auf deinem Gerät.",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "Exportiere, importiere und sichere deine Lesezeichen in gängigen Formaten, nach Zeitplan. Alles bleibt lokal.",
+    "message": "Lesezeichen exportieren, importieren und sichern — komplett auf deinem Gerät.",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {
