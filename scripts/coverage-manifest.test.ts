@@ -209,8 +209,6 @@ const EXEMPTIONS: Readonly<Record<string, string>> = {
     "Data-only list of per-file coverage exceptions read by the Vitest configs; its shape and reasons are validated by coverage-floors.test.ts.",
   "scripts/lint-parity-run.ts":
     "CLI runner of the lint parity gate: it only orchestrates external processes (baseline ESLint install, Oxlint, git clones, corpus installs) and is exercised end to end by `bun run lint:parity`; its decision logic lives in the tested scripts/lint-parity.ts.",
-  "scripts/oxlint-baseline-plugin.ts":
-    "Vendored copy of the shared Oxlint baseline plugin from aokit, loaded only by oxlint.baseline.config.ts and verified by running `bun run lint:baseline`.",
   "scripts/workflow-files.ts":
     "Workflow loader used by workflows-invariants.test.ts, which exercises it against the real workflows.",
 };

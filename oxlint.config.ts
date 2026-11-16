@@ -1136,7 +1136,6 @@ export default defineConfig({
     ".claude/worktrees/**",
     "**/node_modules/**",
     "dist/**",
-    "scripts/oxlint-baseline-plugin.ts",
   ],
   rules: {
     ...baselineRules,

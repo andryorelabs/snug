@@ -26,7 +26,6 @@ export default defineConfig({
         "eslint-rules/**/*.test.ts",
         "oxlint-plugins/**/*.test.ts",
         "scripts/lint-parity-run.ts",
-        "scripts/oxlint-baseline-plugin.ts",
         "scripts/**/*.d.ts",
       ],
       reporter: ["text", "lcov", "json-summary"],
