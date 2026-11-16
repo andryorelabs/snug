@@ -33,7 +33,7 @@
     "@snug/extension": "workspace:*",
     "@types/bun": "catalog:",
     "@types/react": "catalog:",
-    "@types/web": "0.0.359",
+    "@types/web": "0.0.361",
     "typescript": "catalog:",
     "@vitest/coverage-v8": "^5.0.4",
     "vitest": "catalog:"
