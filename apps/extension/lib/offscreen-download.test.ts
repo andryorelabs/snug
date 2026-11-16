@@ -348,12 +348,8 @@ describe("downloadViaOffscreenDocument", () => {
       throw new Error("download failed");
     });
     browser.downloads.download = download;
-    browser.downloads.onChanged.addListener = vi.fn<
-      (...arguments_: unknown[]) => void
-    >();
-    browser.downloads.onChanged.removeListener = vi.fn<
-      (...arguments_: unknown[]) => void
-    >();
+    browser.downloads.onChanged.addListener = vi.fn<(...arguments_: unknown[]) => void>();
+    browser.downloads.onChanged.removeListener = vi.fn<(...arguments_: unknown[]) => void>();
 
     await expect(downloadViaOffscreenDocument("content", "text/plain", "file.txt")).rejects.toThrow(
       "download failed",
