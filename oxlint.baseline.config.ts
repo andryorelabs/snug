@@ -9,6 +9,7 @@ import baseConfig from "./oxlint.config.ts";
  */
 interface OxlintBaseline {
   plugins: NonNullable<OxlintConfig["plugins"]>;
+  categories: NonNullable<OxlintConfig["categories"]>;
   rules: DummyRuleMap;
   overrides: {
     files: string[];
@@ -59,7 +60,7 @@ function adaptRules(rules: DummyRuleMap): DummyRuleMap {
 export default defineConfig({
   ...baseConfig,
   plugins: [...new Set([...(baseConfig.plugins ?? []), ...baseline.plugins])],
-  categories: { ...baseConfig.categories, correctness: "error" },
+  categories: { ...baseConfig.categories, ...baseline.categories },
   options: {
     ...baseConfig.options,
     typeAware: true,
@@ -75,6 +76,7 @@ export default defineConfig({
   rules: { ...baseConfig.rules, ...adaptRules(baseline.rules) },
   overrides: [
     ...(baseConfig.overrides ?? []),
+    { files: ["**/*"], rules: adaptRules(baseline.rules) },
     ...baseline.overrides.map((override) => ({
       ...override,
       rules: adaptRules(override.rules),
