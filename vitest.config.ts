@@ -1,5 +1,7 @@
 import { defineConfig } from "vitest/config";
 
+import { coverageThresholds } from "./scripts/coverage-floors.ts";
+
 /**
  * Keeps `isolate: true`: `isolate: false` gave no consistent speed-up on the
  * tooling suites (import-bound, 22 files), so the safer default stays.
@@ -24,9 +26,11 @@ export default defineConfig({
         "eslint-rules/**/*.test.ts",
         "oxlint-plugins/**/*.test.ts",
         "scripts/lint-parity-run.ts",
+        "scripts/oxlint-baseline-plugin.ts",
+        "scripts/**/*.d.ts",
       ],
-      reporter: ["text", "lcov"],
-      thresholds: { lines: 91, statements: 91, branches: 83, functions: 90 },
+      reporter: ["text", "lcov", "json-summary"],
+      thresholds: coverageThresholds("."),
     },
   },
 });

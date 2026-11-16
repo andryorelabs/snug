@@ -87,8 +87,11 @@ jobs:
           bunx turbo run check test:coverage "${affected_flags[@]}"
 
       - name: Check and test repo-wide (format, oxlint + eslint on .astro, knip,
-          script tests)
-        run: bunx turbo run check:root test:root
+          script tests with coverage)
+        run: |
+          bun run check:root
+          bun run test:coverage:root
+          bun run coverage:floors
 
   # F9: the latest Bun release runs check and test, so a Bun release breaks
   # this job before it breaks a contributor. It is left out of ci-passed on
