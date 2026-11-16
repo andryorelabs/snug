@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-
 import { describe, expect, test, vi } from "vitest";
 
 import {

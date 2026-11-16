@@ -2,7 +2,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 /// <reference types="chrome" />
 import { test as base, chromium } from "@playwright/test";
 import type { BrowserContext, Page, Worker } from "@playwright/test";

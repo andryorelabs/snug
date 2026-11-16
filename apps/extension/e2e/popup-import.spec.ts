@@ -1,6 +1,5 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";

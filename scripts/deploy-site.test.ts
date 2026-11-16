@@ -3,7 +3,6 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const DEPLOY_SCRIPT = path.join(

@@ -1,7 +1,6 @@
 import { stat } from "node:fs/promises";
 import type { Server } from "node:http";
 import { createServer } from "node:http";
-
 /// <reference types="chrome" />
 import type { Page, Worker } from "@playwright/test";
 

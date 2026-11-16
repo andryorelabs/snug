@@ -1,7 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..");

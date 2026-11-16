@@ -1,4 +1,4 @@
-import type { RuleTester } from 'oxlint/plugins-dev'
+import type { RuleTester } from "oxlint/plugins-dev";
 
 /**
  * Type declaration for `./typed-unicorn.mjs`, needed because this module is
@@ -6,7 +6,7 @@ import type { RuleTester } from 'oxlint/plugins-dev'
  * across a `.ts` -> `.mjs` import without one.
  */
 declare const typedUnicornPlugin: {
-  rules: Record<string, Parameters<RuleTester['run']>[1]>
-}
+  rules: Record<string, Parameters<RuleTester["run"]>[1]>;
+};
 
-export default typedUnicornPlugin
+export default typedUnicornPlugin;

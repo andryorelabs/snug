@@ -1,5 +1,4 @@
 import path from "node:path";
-
 import type { Loader, LoaderContext } from "astro/loaders";
 
 import { loadLocalizedCatalog } from "./catalog";
