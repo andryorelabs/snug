@@ -20,7 +20,7 @@ Stack rules live next to the code they govern, and apply on top of this file:
   (`@snug/site`), reusing `@workspace/ui`.
 - [`apps/video/AGENTS.md`](apps/video/AGENTS.md) — the Remotion promo video.
 
-The code map is [`docs/architecture.md`](docs/architecture.md). Skills stay in
+The code map is [`docs/architecture.md`](docs/architecture.md), with a short agent map in [`docs/agents/codebase.md`](docs/agents/codebase.md). Skills stay in
 the root `.claude/skills`.
 
 ## Running scripts
@@ -70,7 +70,7 @@ Each rule is a recorded decision; read its ADR before changing it.
 - AI crawlers follow the robots policy
   ([ADR 0038](docs/adr/0038-ai-crawler-robots-policy.md)).
 
-## Architecture decision records
+## ADRs
 
 A new ADR must add its row to [`docs/adr/README.md`](docs/adr/README.md);
 `docs/adr/adr-invariants.test.ts` fails when an ADR is missing from the index.
@@ -109,7 +109,7 @@ file-wide or project-wide:
    (`eslint-disable-next-line` in `.astro`) on the exact offending line. Never a
    file-level or project-level disable.
 
-## Quirks and gotchas
+## Quirks
 
 - Extension rules (WXT, MV3, `fakeBrowser`, i18n key parity across locales) live
   in [`apps/extension/AGENTS.md`](apps/extension/AGENTS.md).
