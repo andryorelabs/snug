@@ -16,8 +16,8 @@ function fakeChild(event: string, payload: unknown): object {
 }
 
 const childProcess = vi.hoisted(() => ({
-  spawn: vi.fn(),
-  spawnSync: vi.fn(),
+  spawn: vi.fn<(command: string, arguments_: readonly string[], options: object) => object>(),
+  spawnSync: vi.fn<(command: string, arguments_: string[]) => object>(),
 }));
 
 vi.mock("node:child_process", () => childProcess);

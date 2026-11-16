@@ -1,3 +1,5 @@
+import { isDirectoryHandle } from "@/lib/is-directory-handle";
+
 /**
  * Folder access as the Custom folder's handle reports it, or `missing` when
  * no handle is stored. Anything other than `granted` means a run cannot write
@@ -13,6 +15,21 @@ interface PermissionAwareDirectoryHandle extends FileSystemDirectoryHandle {
   requestPermission(descriptor: { mode: "readwrite" }): Promise<PermissionState>;
 }
 
+type QueryableDirectoryHandle = FileSystemDirectoryHandle &
+  Pick<PermissionAwareDirectoryHandle, "queryPermission">;
+type RequestableDirectoryHandle = FileSystemDirectoryHandle &
+  Pick<PermissionAwareDirectoryHandle, "requestPermission">;
+
+function canQueryPermission(handle: FileSystemDirectoryHandle): handle is QueryableDirectoryHandle {
+  return "queryPermission" in handle;
+}
+
+function canRequestPermission(
+  handle: FileSystemDirectoryHandle,
+): handle is RequestableDirectoryHandle {
+  return "requestPermission" in handle;
+}
+
 const DATABASE_NAME = "snug-custom-folder";
 const STORE_NAME = "handles";
 const HANDLE_KEY = "custom-folder";
@@ -23,10 +40,12 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE_NAME);
     };
-    request.onsuccess = () => resolve(request.result);
-    request.addEventListener("error", () =>
-      reject(request.error ?? new Error("IndexedDB request failed")),
-    );
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.addEventListener("error", () => {
+      reject(request.error ?? new Error("IndexedDB request failed"));
+    });
   });
 }
 
@@ -38,10 +57,12 @@ async function runRequest<T>(
   try {
     return await new Promise<T>((resolve, reject) => {
       const request = operation(database.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
-      request.onsuccess = () => resolve(request.result);
-      request.addEventListener("error", () =>
-        reject(request.error ?? new Error("IndexedDB request failed")),
-      );
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.addEventListener("error", () => {
+        reject(request.error ?? new Error("IndexedDB request failed"));
+      });
     });
   } finally {
     database.close();
@@ -62,11 +83,8 @@ export async function saveFolderHandle(handle: FileSystemDirectoryHandle): Promi
  * @returns The stored Custom folder handle, or `null` when none was saved.
  */
 export async function loadFolderHandle(): Promise<FileSystemDirectoryHandle | null> {
-  const handle = await runRequest<FileSystemDirectoryHandle | undefined>(
-    "readonly",
-    (store) => store.get(HANDLE_KEY) as IDBRequest<FileSystemDirectoryHandle | undefined>,
-  );
-  return handle ?? null;
+  const stored = await runRequest<unknown>("readonly", (store) => store.get(HANDLE_KEY));
+  return isDirectoryHandle(stored) ? stored : null;
 }
 
 /**
@@ -86,7 +104,10 @@ export async function clearFolderHandle(): Promise<void> {
 export async function queryFolderAccess(
   handle: FileSystemDirectoryHandle,
 ): Promise<PermissionState> {
-  return (handle as PermissionAwareDirectoryHandle).queryPermission({
+  if (!canQueryPermission(handle)) {
+    throw new TypeError("This directory handle does not expose queryPermission");
+  }
+  return handle.queryPermission({
     mode: "readwrite",
   });
 }
@@ -100,7 +121,10 @@ export async function queryFolderAccess(
 export async function requestFolderAccess(
   handle: FileSystemDirectoryHandle,
 ): Promise<PermissionState> {
-  return (handle as PermissionAwareDirectoryHandle).requestPermission({
+  if (!canRequestPermission(handle)) {
+    throw new TypeError("This directory handle does not expose requestPermission");
+  }
+  return handle.requestPermission({
     mode: "readwrite",
   });
 }
@@ -117,8 +141,15 @@ export async function queryStoredFolderAccess(): Promise<FolderAccess> {
 /**
  * `showDirectoryPicker` is not part of the DOM typings yet.
  */
-interface DirectoryPickerWindow {
-  showDirectoryPicker?: (options: { mode: "readwrite" }) => Promise<FileSystemDirectoryHandle>;
+type DirectoryPicker = (options: { mode: "readwrite" }) => Promise<FileSystemDirectoryHandle>;
+
+function getDirectoryPicker(): DirectoryPicker | undefined {
+  const candidate: unknown = Reflect.get(globalThis, "showDirectoryPicker");
+  return isDirectoryPicker(candidate) ? candidate : undefined;
+}
+
+function isDirectoryPicker(value: unknown): value is DirectoryPicker {
+  return typeof value === "function";
 }
 
 /**
@@ -126,7 +157,7 @@ interface DirectoryPickerWindow {
  *   folder can be chosen at all.
  */
 export function canPickFolder(): boolean {
-  return typeof (globalThis as DirectoryPickerWindow).showDirectoryPicker === "function";
+  return getDirectoryPicker() !== undefined;
 }
 
 /**
@@ -136,7 +167,7 @@ export function canPickFolder(): boolean {
  * @throws {DOMException} `AbortError` when the user dismisses the picker.
  */
 export async function pickFolder(): Promise<FileSystemDirectoryHandle> {
-  const picker = (globalThis as DirectoryPickerWindow).showDirectoryPicker;
+  const picker = getDirectoryPicker();
   if (!picker) throw new Error("showDirectoryPicker is not available");
   return picker.call(globalThis, { mode: "readwrite" });
 }

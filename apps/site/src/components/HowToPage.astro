@@ -33,10 +33,9 @@ const definition = getHowToPage(slug);
 const page = howToPageDescriptor(locale, slug);
 const values = howToValues(locale, slug) as unknown as Record<string, string>;
 const fill = (template: string) => interpolateHowTo(template, locale, values);
-const crumbs = howToCrumbs(locale, slug).map((crumb, index, all) => ({
-  name: crumb.name,
-  ...(index < all.length - 1 && { href: crumb.path }),
-}));
+const crumbs = howToCrumbs(locale, slug).map((crumb, index, all) =>
+  index < all.length - 1 ? { name: crumb.name, href: crumb.path } : { name: crumb.name },
+);
 const guideTitles = new Map(
   loadLocalizedCatalog()
     .filter((entry) => entry.locale === locale)

@@ -26,7 +26,7 @@ export function collectStarlightInlineScriptHashes(): `sha256-${string}`[] {
       .map(
         ({ groups }) =>
           `sha256-${createHash("sha256")
-            .update(groups?.["body"] ?? "")
+            .update(groups?.body ?? "")
             .digest("base64")}` as const,
       )
       .toArray();

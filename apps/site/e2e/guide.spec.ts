@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { HOW_TO_PAGES } from "../src/content/how-to-pages";
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { howToLocales } from "./how-to-paths";
+import { forEachSequentially } from "./sequential";
 import { translatedTitle } from "./translated-guide";
 
 for (const locale of LOCALES) {
@@ -36,7 +37,9 @@ test("the Guide keeps its own language in the header switcher", async ({ page })
 
 test("the Guide follows the stored theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/guide/");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
   await expect(page.locator("html")).toHaveCSS("color-scheme", "dark");
@@ -135,7 +138,9 @@ test("the Guide heading order starts at the page title", async ({ page }) => {
 
 test("the Guide keeps data-theme in step with the stored theme", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
-  await page.addInitScript(() => localStorage.setItem("snug:theme", "dark"));
+  await page.addInitScript(() => {
+    localStorage.setItem("snug:theme", "dark");
+  });
   await page.goto("/guide/");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 });
@@ -179,7 +184,7 @@ for (const locale of LOCALES) {
       }
       const links = block.locator("a");
       await expect(links).toHaveCount(slugs.length);
-      for (const [index, slug] of slugs.entries()) {
+      await forEachSequentially(slugs.entries(), async ([index, slug]) => {
         const target = howToLocales(slug).includes(locale)
           ? localePath(locale, `/how-to/${slug}/`)
           : `/how-to/${slug}/`;
@@ -188,7 +193,7 @@ for (const locale of LOCALES) {
         expect(box?.height).toBeGreaterThanOrEqual(44);
         const response = await request.get(target);
         expect(response.status()).toBe(200);
-      }
+      });
     });
   }
 }

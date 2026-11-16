@@ -54,7 +54,7 @@ function isRecord(value: unknown): value is JsonRecord {
 
 function identifyListEntry(entry: unknown, index: number): string {
   if (!isRecord(entry)) return String(entry);
-  const name = entry["type"] ?? entry["context"];
+  const name = entry.type ?? entry.context;
   return typeof name === "string" ? name : String(index);
 }
 
@@ -113,7 +113,7 @@ function readPath(value: unknown, dottedPath: string): unknown {
 }
 
 function rulesetName(ruleset: unknown): string | undefined {
-  const name = isRecord(ruleset) ? ruleset["name"] : undefined;
+  const name = isRecord(ruleset) ? ruleset.name : undefined;
   return typeof name === "string" ? name : undefined;
 }
 
@@ -187,11 +187,11 @@ export function formatDifference(difference: Difference): string {
  */
 export function parseSettings(text: string): Pick<ExpectedSettings, "settings" | "minimumCounts"> {
   const parsed: unknown = JSON.parse(text);
-  const settings = isRecord(parsed) ? parsed["settings"] : undefined;
+  const settings = isRecord(parsed) ? parsed.settings : undefined;
   if (!isRecord(settings) || Object.keys(settings).length === 0) {
     throw new Error("no expected settings found");
   }
-  const counts = isRecord(parsed) ? parsed["minimumCounts"] : undefined;
+  const counts = isRecord(parsed) ? parsed.minimumCounts : undefined;
   return {
     settings,
     minimumCounts: isRecord(counts)
@@ -252,7 +252,7 @@ export function collectLiveSettings(repository: string, request: ApiRequest): Li
   const defaultSetup = request(`${base}/code-scanning/default-setup`);
   const summaries = requireBody(request, `${base}/rulesets`);
   const rulesetIds = (Array.isArray(summaries) ? summaries : []).map((summary: unknown) =>
-    isRecord(summary) ? summary["id"] : undefined,
+    isRecord(summary) ? summary.id : undefined,
   );
   return {
     repository: {
@@ -270,7 +270,7 @@ export function collectLiveSettings(repository: string, request: ApiRequest): Li
 }
 
 function isNotFoundError(error: unknown): boolean {
-  const stderr = isRecord(error) ? error["stderr"] : undefined;
+  const stderr = isRecord(error) ? error.stderr : undefined;
   return typeof stderr === "string" && stderr.includes("HTTP 404");
 }
 
@@ -328,6 +328,8 @@ if (import.meta.main) {
   process.exitCode = runCheck({
     repository: process.argv[2] ?? DEFAULT_REPOSITORY,
     request: requestWithGitHubCli,
-    report: (line) => console.log(line),
+    report: (line) => {
+      console.log(line);
+    },
   });
 }

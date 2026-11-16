@@ -108,14 +108,15 @@ export async function captureSafetySnapshot(): Promise<SafetySnapshot> {
       takenAt,
       roots: rootChildren
         .filter((node) => ROOT_FOLDER_TYPES.includes(node.folderType ?? ""))
-        .map((node) => ({
-          ...toParsedBookmark(node),
-          id: node.id,
-          ...(node.folderType !== undefined && {
-            folderType: node.folderType,
+        .map((node) =>
+          Object.assign(toParsedBookmark(node), {
+            id: node.id,
+            ...(node.folderType !== undefined && {
+              folderType: node.folderType,
+            }),
+            syncing: node.syncing,
           }),
-          syncing: node.syncing,
-        })),
+        ),
     };
   }
 
@@ -201,7 +202,10 @@ export async function takeSafetySnapshot(): Promise<SafetySnapshot> {
     await saveSnapshotFileBestEffort(snapshot);
     return snapshot;
   } catch (error) {
-    throw new Error(i18n.t("safetySnapshotFailed", [(error as Error).message]), { cause: error });
+    throw new Error(
+      i18n.t("safetySnapshotFailed", [error instanceof Error ? error.message : String(error)]),
+      { cause: error },
+    );
   }
 }
 
@@ -259,14 +263,14 @@ export function restoreSafetySnapshot(snapshot: SafetySnapshot): Promise<void> {
 
 async function restoreSafetySnapshotUnlocked(snapshot: SafetySnapshot): Promise<void> {
   const taken = await takeSafetySnapshot();
-  let hasClearedExisting = false;
+  const progress = { hasClearedExisting: false };
   try {
     const isComplete = await hasRewrittenRootsFully(snapshot.roots, () => {
-      hasClearedExisting = true;
+      progress.hasClearedExisting = true;
     });
     if (!isComplete) throw new Error(i18n.t("safetySnapshotIncomplete"));
   } catch (error) {
-    if (hasClearedExisting) await recoverFromSnapshot(taken, error);
+    if (progress.hasClearedExisting) await recoverFromSnapshot(taken, error);
     throw error;
   }
 }

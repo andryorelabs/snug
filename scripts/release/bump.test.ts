@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { isRecord, parseJsonRecord } from "../json-guards";
 import { bumpVersion, runRelease } from "./bump";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "../..");
@@ -116,8 +117,8 @@ function changedPaths(before: Record<string, string>, after: Record<string, stri
 }
 
 function messageOf(localeText: string, key: string): unknown {
-  const locale = JSON.parse(localeText) as Record<string, { message?: unknown } | undefined>;
-  return locale[key]?.message;
+  const entry = parseJsonRecord(localeText)[key];
+  return isRecord(entry) ? entry.message : undefined;
 }
 
 const workspace = { root: "" };

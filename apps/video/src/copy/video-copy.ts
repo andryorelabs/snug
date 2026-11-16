@@ -1,9 +1,9 @@
 import type { Locale } from "./locales";
 
-export type VideoCopy = {
+export interface VideoCopy {
   hook: string;
   cta: string;
-};
+}
 
 /**
  * Strings that exist only in the promo video. Everything else is read from

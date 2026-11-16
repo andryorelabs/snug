@@ -114,7 +114,12 @@ async function analyzeFile(
     const parsed = parseImportFile(text, file.type, file.name, liveRootTitles);
     return { kind: "valid", id, file, text, preview, parsed };
   } catch (error) {
-    return { kind: "invalid", id, file, message: (error as Error).message };
+    return {
+      kind: "invalid",
+      id,
+      file,
+      message: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -205,10 +210,9 @@ export function ImportRoute() {
     ids: ReadonlySet<string>;
   } | null>(null);
   const selectedCount = selection?.count ?? null;
-  const handleSelectionChange = useCallback(
-    (count: number, ids: string[]) => setSelection({ count, ids: new Set(ids) }),
-    [],
-  );
+  const handleSelectionChange = useCallback((count: number, ids: string[]) => {
+    setSelection({ count, ids: new Set(ids) });
+  }, []);
   const selectionReference = useRef<ImportPreviewTreeHandle>(null);
   const progress = useOperationProgress();
 
@@ -271,21 +275,22 @@ export function ImportRoute() {
   const isSelectionEmpty = !isReplace && !isEmpty && !isAllDuplicates && importCount === 0;
 
   const importStartedReference = useRef(false);
+  const hasImportStarted = () => importStartedReference.current;
 
   const handleFiles = async (files: File[]) => {
-    if (importStartedReference.current) return;
+    if (hasImportStarted()) return;
     setAnalyzingCount((count) => count + 1);
     try {
       const freshTree = await browser.bookmarks.getTree();
       const analyzed = await Promise.all(files.map((file) => analyzeFile(file, freshTree)));
-      if (importStartedReference.current) return;
+      if (hasImportStarted()) return;
       setLiveTree(freshTree);
       setEntries((current) => [...current, ...analyzed]);
       setStatus("idle");
       setErrorMessage("");
     } catch (error) {
       setStatus("error");
-      setErrorMessage((error as Error).message);
+      setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
       setAnalyzingCount((count) => count - 1);
     }
@@ -354,7 +359,7 @@ export function ImportRoute() {
         setStatus("canceled");
       } else {
         setStatus("error");
-        setErrorMessage((error as Error).message);
+        setErrorMessage(error instanceof Error ? error.message : String(error));
         setWasRestored(wasImportRestored(error));
       }
     } finally {
@@ -390,7 +395,7 @@ export function ImportRoute() {
       setStatus("undone");
     } catch (error) {
       setStatus("success");
-      setErrorMessage((error as Error).message);
+      setErrorMessage(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -499,7 +504,7 @@ export function ImportRoute() {
         </>
       )}
 
-      {!isAnalyzing && isSupported && preview && plan && (
+      {!isAnalyzing && isSupported && plan && (
         <>
           <ImportStep number={2} title={i18n.t("importPreview")} isComplete>
             <div className="flex flex-col gap-3">

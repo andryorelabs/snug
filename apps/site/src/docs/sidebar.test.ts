@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "../i18n/locales";
-import { buildSidebar, readSidebarLabels } from "./sidebar";
+import { buildSidebar, readSidebarLabels, sidebarLabelsOf } from "./sidebar";
 
 describe("readSidebarLabels", () => {
   it("reads a complete label set for every locale", () => {
@@ -61,5 +61,17 @@ describe("buildSidebar", () => {
     };
 
     expect(buildSidebar(custom)[0]?.label).toBe("Custom guide");
+  });
+});
+
+describe("sidebarLabelsOf", () => {
+  it("returns the docs labels of a content file", () => {
+    const labels = readSidebarLabels();
+
+    expect(sidebarLabelsOf({ docs: labels.en }, "en")).toBe(labels.en);
+  });
+
+  it("rejects a content file without docs labels", () => {
+    expect(() => sidebarLabelsOf({}, "de")).toThrow('Content file for "de" has no docs labels');
   });
 });

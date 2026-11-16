@@ -33,8 +33,6 @@ const ENTRYPOINT_REASON =
 
 const EXEMPTIONS: Readonly<Record<string, string>> = {
   "apps/extension/lib/testing/dom-harness.ts": TEST_SUPPORT_REASON,
-  "apps/extension/lib/testing/fake-bookmarks.ts": TEST_SUPPORT_REASON,
-  "apps/extension/lib/testing/fake-directory-handle.ts": TEST_SUPPORT_REASON,
   "apps/extension/lib/testing/fake-folder-run-identity.ts": TEST_SUPPORT_REASON,
   "apps/extension/lib/testing/fake-i18n.ts": TEST_SUPPORT_REASON,
   "apps/extension/lib/testing/fake-locks.ts": TEST_SUPPORT_REASON,

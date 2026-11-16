@@ -195,7 +195,7 @@ function findUnreadableReason(
     );
     return countBookmarks(tree) > 0 ? null : i18n.t("import_noBookmarks");
   } catch (error) {
-    return (error as Error).message;
+    return error instanceof Error ? error.message : String(error);
   }
 }
 

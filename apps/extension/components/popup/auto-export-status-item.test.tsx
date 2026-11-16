@@ -21,7 +21,7 @@ async function mountItem(config: { enabled: boolean; destination: "downloads" | 
   const harness = createDomHarness();
   harnesses.push(harness);
   await harness.render(<AutoExportStatusItem />);
-  await act(async () => {});
+  await act(() => Promise.resolve());
 }
 
 beforeEach(() => {
@@ -38,7 +38,9 @@ afterEach(() => {
 
 describe("AutoExportStatusItem Downloads access row", () => {
   it("shows the row when enabled on Downloads without access, then clears it once access is added", async () => {
-    vi.mocked(browser.permissions.contains).mockResolvedValue(false as never);
+    Object.assign(browser.permissions, {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(false)),
+    });
     type AddedListener = Parameters<typeof browser.permissions.onAdded.addListener>[0];
     const addListener = vi.fn<(listener: AddedListener) => void>();
     browser.permissions.onAdded.addListener = addListener;
@@ -49,10 +51,11 @@ describe("AutoExportStatusItem Downloads access row", () => {
 
     const onAdded = addListener.mock.calls[0]?.[0];
     if (!onAdded) throw new Error("listener missing");
-    await act(async () => {
+    await act(() => {
       onAdded({
         permissions: ["downloads"],
       });
+      return Promise.resolve();
     });
 
     expect(document.body.textContent).not.toContain(en.popup_statusDownloadsAccessTitle.message);
@@ -60,14 +63,18 @@ describe("AutoExportStatusItem Downloads access row", () => {
   });
 
   it("does not show the row when Downloads access is held", async () => {
-    vi.mocked(browser.permissions.contains).mockResolvedValue(true as never);
+    Object.assign(browser.permissions, {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(true)),
+    });
     await mountItem({ enabled: true, destination: "downloads" });
 
     expect(document.body.textContent).not.toContain(en.popup_statusDownloadsAccessTitle.message);
   });
 
   it("does not show the row while Auto-export is off", async () => {
-    vi.mocked(browser.permissions.contains).mockResolvedValue(false as never);
+    Object.assign(browser.permissions, {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(false)),
+    });
     await mountItem({ enabled: false, destination: "downloads" });
 
     expect(document.body.textContent).not.toContain(en.popup_statusDownloadsAccessTitle.message);
@@ -78,7 +85,9 @@ describe("AutoExportStatusItem Downloads access row", () => {
 describe("AutoExportStatusItem effective destination", () => {
   it("judges Downloads access when a stored Custom folder is unavailable", async () => {
     vi.stubGlobal("showDirectoryPicker", undefined);
-    vi.mocked(browser.permissions.contains).mockResolvedValue(false as never);
+    Object.assign(browser.permissions, {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(false)),
+    });
     await mountItem({ enabled: true, destination: "folder" });
 
     expect(document.body.textContent).toContain(en.popup_statusDownloadsAccessTitle.message);
@@ -87,7 +96,9 @@ describe("AutoExportStatusItem effective destination", () => {
 
 describe("AutoExportStatusItem failed run", () => {
   it("shows the localized sentence, never the raw code", async () => {
-    vi.mocked(browser.permissions.contains).mockResolvedValue(true as never);
+    Object.assign(browser.permissions, {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(true)),
+    });
     await autoExportLastRunStore.setValue({
       ok: false,
       at: 1,

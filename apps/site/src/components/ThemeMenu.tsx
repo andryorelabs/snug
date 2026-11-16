@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
-import { useEffect, useSyncExternalStore } from "react";
+import React, { useEffect, useSyncExternalStore } from "react";
 
 import { themeColor } from "../scripts/theme-color";
 
@@ -36,7 +36,7 @@ export interface ThemeMenuCopy {
 }
 
 function isThemeChoice(value: unknown): value is ThemeChoice {
-  return CHOICES.includes(value as ThemeChoice);
+  return CHOICES.some((choice) => choice === value);
 }
 
 function readStoredChoice(): ThemeChoice {
@@ -85,13 +85,31 @@ function applyChoice(choice: ThemeChoice) {
     root.classList.toggle("dark", isDark);
     root.dataset.theme = isDark ? "dark" : "light";
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => root.classList.remove("theme-switching"));
+      requestAnimationFrame(() => {
+        root.classList.remove("theme-switching");
+      });
     });
   };
   const shouldAnimate =
     typeof document.startViewTransition === "function" && !matchMedia(REDUCED_MOTION_QUERY).matches;
   if (shouldAnimate) document.startViewTransition(flip);
   else flip();
+}
+
+function stopFollowing(): void {
+  return;
+}
+
+function applySystemChoice(): void {
+  applyChoice("system");
+}
+
+function followSystemTheme(): () => void {
+  const query = matchMedia(DARK_QUERY);
+  query.addEventListener("change", applySystemChoice);
+  return () => {
+    query.removeEventListener("change", applySystemChoice);
+  };
 }
 
 function selectChoice(value: string) {
@@ -109,16 +127,10 @@ function selectChoice(value: string) {
  * @param properties.copy - Menu label and the System, Light and Dark names.
  * @returns The icon trigger and the menu with the three choices.
  */
-export default function ThemeMenu({ copy }: { copy: ThemeMenuCopy }) {
+export default function ThemeMenu({ copy }: { copy: ThemeMenuCopy }): React.JSX.Element {
   const choice = useSyncExternalStore(subscribeToChoice, readChoice, (): ThemeChoice => "system");
 
-  useEffect(() => {
-    if (choice !== "system") return;
-    const query = matchMedia(DARK_QUERY);
-    const follow = () => applyChoice("system");
-    query.addEventListener("change", follow);
-    return () => query.removeEventListener("change", follow);
-  }, [choice]);
+  useEffect(() => (choice === "system" ? followSystemTheme() : stopFollowing), [choice]);
 
   return (
     <div className="hidden shrink-0 js:block" data-theme-menu>

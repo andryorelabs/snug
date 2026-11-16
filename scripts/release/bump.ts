@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { parseJsonRecord } from "../json-guards";
 import { cutRelease } from "./changelog";
 import { compareVersions, parseVersion } from "./version";
 
@@ -48,7 +49,7 @@ function messageKeys(version: string, count: number): string[] {
 }
 
 function readCurrentVersion(packageText: string): string {
-  const { version } = JSON.parse(packageText) as { version?: unknown };
+  const { version } = parseJsonRecord(packageText);
   if (typeof version !== "string") {
     throw new ReleaseError(`${PACKAGE_PATH} has no "version" field`);
   }
@@ -126,7 +127,7 @@ function addLocaleMessages(
   localePath: string,
   messages: ReadonlyMap<string, string>,
 ): string {
-  const existingKeys = new Set(Object.keys(JSON.parse(localeText) as Record<string, unknown>));
+  const existingKeys = new Set(Object.keys(parseJsonRecord(localeText)));
   for (const key of messages.keys()) {
     if (existingKeys.has(key)) {
       throw new ReleaseError(`${localePath} already has the key "${key}"`);
@@ -260,6 +261,8 @@ if (import.meta.main) {
   process.exitCode = runRelease(
     process.argv.slice(2),
     path.resolve(import.meta.dirname, "../.."),
-    (message) => console.error(message),
+    (message) => {
+      console.error(message);
+    },
   );
 }

@@ -1,3 +1,5 @@
+import React from "react";
+
 import LanguageSwitcher, { type LanguageSwitcherProperties } from "./LanguageSwitcher";
 import ThemeMenu, { type ThemeMenuCopy } from "./ThemeMenu";
 
@@ -14,7 +16,7 @@ interface HeaderMenusProperties {
  * @param props.language - Props for the language menu.
  * @returns Both menus in one row.
  */
-export default function HeaderMenus({ theme, language }: HeaderMenusProperties) {
+export default function HeaderMenus({ theme, language }: HeaderMenusProperties): React.JSX.Element {
   return (
     <div className="flex min-w-0 items-center gap-1">
       <ThemeMenu copy={theme} />

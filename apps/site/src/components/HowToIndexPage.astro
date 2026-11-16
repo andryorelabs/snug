@@ -19,10 +19,9 @@ const { locale } = Astro.props;
 const shared = getHowToSharedContent(locale);
 const page = howToIndexDescriptor(locale);
 const groups = howToIndexGroups(locale);
-const crumbs = howToIndexCrumbs(locale).map((crumb, index, all) => ({
-  name: crumb.name,
-  ...(index < all.length - 1 && { href: crumb.path }),
-}));
+const crumbs = howToIndexCrumbs(locale).map((crumb, index, all) =>
+  index < all.length - 1 ? { name: crumb.name, href: crumb.path } : { name: crumb.name },
+);
 ---
 
 <Layout locale={locale} page={page}>

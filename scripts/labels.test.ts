@@ -65,7 +65,7 @@ function findMissingLabels(
 const declaredLabels = asArray(parse(readRepositoryFile(".github/labels.yml")));
 const declaredNames = new Set(
   declaredLabels
-    .map((label) => (isRecord(label) ? label["name"] : undefined))
+    .map((label) => (isRecord(label) ? label.name : undefined))
     .filter((name) => typeof name === "string"),
 );
 
@@ -84,13 +84,13 @@ describe(".github/labels.yml", () => {
     const problems = declaredLabels.flatMap((label, index) => {
       if (!isRecord(label)) return `entry ${index + 1} is not a mapping`;
       const entryProblems: string[] = [];
-      if (typeof label["name"] !== "string" || label["name"] === "") {
+      if (typeof label.name !== "string" || label.name === "") {
         entryProblems.push(`entry ${index + 1} has no name`);
       }
-      if (typeof label["color"] !== "string" || !HEX_COLOR_PATTERN.test(label["color"])) {
+      if (typeof label.color !== "string" || !HEX_COLOR_PATTERN.test(label.color)) {
         entryProblems.push(`entry ${index + 1} has no six-digit hex color`);
       }
-      if (typeof label["description"] !== "string" || label["description"] === "") {
+      if (typeof label.description !== "string" || label.description === "") {
         entryProblems.push(`entry ${index + 1} has no description`);
       }
       return entryProblems;

@@ -118,9 +118,9 @@ export function findSplitRootTypes(parsed: ParsedBookmark[]): RootFolderType[] {
  * @param rootChildren `browser.bookmarks.getTree()`'s root node's `children`.
  * @returns The live root id for each split parsed root.
  */
-export function resolveSplitRootTargets<T extends RootChildNode>(
+export function resolveSplitRootTargets(
   parsed: ParsedBookmark[],
-  rootChildren: T[],
+  rootChildren: RootChildNode[],
 ): Map<ParsedBookmark, string> {
   const targets = new Map<ParsedBookmark, string>();
   const splitTypes = new Set<RootFolderType>(findSplitRootTypes(parsed));
@@ -146,9 +146,7 @@ export function resolveSplitRootTargets<T extends RootChildNode>(
  * @param rootChildren `browser.bookmarks.getTree()`'s root node's `children`.
  * @returns The resolved bar/Other/Mobile root ids.
  */
-export function resolveImportRoots<T extends RootChildNode>(
-  rootChildren: T[],
-): ResolvedImportRoots {
+export function resolveImportRoots(rootChildren: RootChildNode[]): ResolvedImportRoots {
   const bookmarksBarNode = resolveRoot(
     rootChildren,
     "bookmarks-bar",
@@ -176,9 +174,7 @@ export function resolveImportRoots<T extends RootChildNode>(
  * @param rootChildren `browser.bookmarks.getTree()`'s root node's `children`.
  * @returns The resolved bar/Other/Mobile root titles.
  */
-export function resolveImportRootTitles<T extends RootTitleNode>(
-  rootChildren: T[],
-): ResolvedImportRootTitles {
+export function resolveImportRootTitles(rootChildren: RootTitleNode[]): ResolvedImportRootTitles {
   const bookmarksBarNode = resolveRoot(
     rootChildren,
     "bookmarks-bar",

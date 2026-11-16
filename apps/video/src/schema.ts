@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { type Locale, LOCALES } from "./copy";
+import { LOCALES } from "./copy";
 
 export const DEFAULT_MUSIC = "music/track.wav";
 
@@ -16,4 +16,4 @@ export const promoSchema = z.object({
 
 export type PromoProps = z.infer<typeof promoSchema>;
 
-export type SceneProps = { locale: Locale };
+export type SceneProps = Pick<PromoProps, "locale">;

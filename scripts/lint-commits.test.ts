@@ -81,7 +81,9 @@ describe("runLintCommits", () => {
       "merge-base origin/main HEAD": { ok: true, output: "base" },
       "rev-parse HEAD": { ok: true, output: "head" },
     });
-    const spawnCommand = vi.fn().mockResolvedValue(3);
+    const spawnCommand = vi
+      .fn<(command: string, commandArguments: string[]) => Promise<number>>()
+      .mockResolvedValue(3);
     await expect(runLintCommits({ git, spawnCommand })).resolves.toBe(3);
     expect(spawnCommand).toHaveBeenCalledWith("bunx", [
       "commitlint",
@@ -98,8 +100,8 @@ describe("runLintCommits", () => {
       "merge-base origin/main HEAD": { ok: true, output: "same" },
       "rev-parse HEAD": { ok: true, output: "same" },
     });
-    const spawnCommand = vi.fn();
-    const log = vi.spyOn(console, "log").mockImplementation(vi.fn());
+    const spawnCommand = vi.fn<(command: string, commandArguments: string[]) => Promise<number>>();
+    const log = vi.spyOn(console, "log").mockImplementation(vi.fn<() => void>());
     await expect(runLintCommits({ git, spawnCommand })).resolves.toBe(0);
     expect(spawnCommand).not.toHaveBeenCalled();
     expect(log).toHaveBeenCalledWith(expect.stringContaining("nothing to lint"));
@@ -110,8 +112,11 @@ describe("runLintCommits", () => {
     const { git } = createGitRunner({
       "merge-base origin/main HEAD": { ok: true, output: "base" },
     });
-    await expect(runLintCommits({ git, spawnCommand: vi.fn() })).rejects.toThrow(
-      /could not resolve HEAD/,
-    );
+    await expect(
+      runLintCommits({
+        git,
+        spawnCommand: vi.fn<(command: string, commandArguments: string[]) => Promise<number>>(),
+      }),
+    ).rejects.toThrow(/could not resolve HEAD/);
   });
 });

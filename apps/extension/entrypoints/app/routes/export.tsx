@@ -29,6 +29,10 @@ function getMasterState(selected: number, total: number): CheckedState {
   return selected !== 0 && total !== 0 && (selected === total || "indeterminate");
 }
 
+function renderTreeError(retry: () => void) {
+  return <ExportTreeError onRetry={retry} />;
+}
+
 /**
  * The Export screen: a searchable, selectable bookmark tree with a sticky
  * export bar, next to the Export options panel (stacked below it under `lg`).
@@ -102,7 +106,7 @@ export function ExportRoute() {
           : {
               type: "error",
               title: i18n.t("exportPage_failedTitle"),
-              description: (error as Error).message,
+              description: error instanceof Error ? error.message : String(error),
             },
       );
     } finally {
@@ -137,9 +141,14 @@ export function ExportRoute() {
               onTotalChange={setTotalCount}
               loadingState={<ExportTreeSkeleton />}
               noBookmarksState={<ExportTreeNoBookmarks />}
-              errorState={(retry) => <ExportTreeError onRetry={retry} />}
+              errorState={renderTreeError}
               emptyState={
-                <ExportTreeEmpty searchTerm={searchTerm} onClearSearch={() => setSearchTerm("")} />
+                <ExportTreeEmpty
+                  searchTerm={searchTerm}
+                  onClearSearch={() => {
+                    setSearchTerm("");
+                  }}
+                />
               }
             />
           </div>

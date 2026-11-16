@@ -51,7 +51,7 @@ describe("registerUninstallUrl", () => {
     vi.spyOn(fakeBrowser.runtime, "getManifest").mockReturnValue({
       version: "2.2.0",
     } as ReturnType<typeof fakeBrowser.runtime.getManifest>);
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockReturnValue(undefined);
   });
 
   afterEach(() => {

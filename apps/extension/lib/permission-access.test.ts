@@ -19,7 +19,7 @@ function mockPermissionsApi(options: { isGranted?: boolean; approve?: boolean })
     void query;
     return options.approve ?? false;
   });
-  browser.permissions = {
+  Reflect.set(browser, "permissions", {
     contains: isGrantedLookup,
     request: isRequestApproved,
     onAdded: {
@@ -35,7 +35,7 @@ function mockPermissionsApi(options: { isGranted?: boolean; approve?: boolean })
       removeListener: (listener: PermissionsListener) =>
         removed.splice(removed.indexOf(listener), 1),
     },
-  } as unknown as typeof browser.permissions;
+  });
   return {
     isGrantedLookup,
     isRequestApproved,
@@ -70,15 +70,15 @@ describe("hasDownloadsAccess / hasNotificationAccess", () => {
   it("treats a rejected lookup as missing and logs it", async () => {
     const { isGrantedLookup } = mockPermissionsApi({});
     isGrantedLookup.mockRejectedValueOnce(new Error("boom"));
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
 
     expect(await hasDownloadsAccess()).toBe(false);
     expect(consoleError).toHaveBeenCalled();
   });
 
   it("treats an undefined permissions API as missing", async () => {
-    browser.permissions = undefined as unknown as typeof browser.permissions;
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    Reflect.set(browser, "permissions", undefined);
+    vi.spyOn(console, "error").mockReturnValue(undefined);
 
     expect(await hasNotificationAccess()).toBe(false);
   });
@@ -103,7 +103,7 @@ describe("didUserGrantAccess", () => {
   it("resolves false and logs when the request rejects", async () => {
     const { isRequestApproved } = mockPermissionsApi({});
     isRequestApproved.mockRejectedValueOnce(new Error("no gesture"));
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
 
     expect(await didUserGrantAccess("notifications")).toBe(false);
     expect(consoleError).toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe("didUserGrantAccess", () => {
 describe("watchAccessChanges", () => {
   it("reports a grant from onAdded", () => {
     const { added } = mockPermissionsApi({});
-    const listener = vi.fn();
+    const listener = vi.fn<(...arguments_: unknown[]) => void>();
     watchAccessChanges(listener);
 
     added[0]?.({ permissions: ["notifications"] });
@@ -134,7 +134,7 @@ describe("watchAccessChanges", () => {
 
   it("reports a revocation from onRemoved", () => {
     const { removed } = mockPermissionsApi({});
-    const listener = vi.fn();
+    const listener = vi.fn<(...arguments_: unknown[]) => void>();
     watchAccessChanges(listener);
 
     removed[0]?.({ permissions: ["downloads", "bookmarks"] });
@@ -148,7 +148,7 @@ describe("watchAccessChanges", () => {
 
   it("ignores unrelated permissions", () => {
     const { added } = mockPermissionsApi({});
-    const listener = vi.fn();
+    const listener = vi.fn<(...arguments_: unknown[]) => void>();
     watchAccessChanges(listener);
 
     added[0]?.({ permissions: ["bookmarks"] });
@@ -159,7 +159,7 @@ describe("watchAccessChanges", () => {
 
   it("stops reporting after unsubscribe", () => {
     const { added, removed } = mockPermissionsApi({});
-    const stop = watchAccessChanges(vi.fn());
+    const stop = watchAccessChanges(vi.fn<(...arguments_: unknown[]) => void>());
 
     stop();
 

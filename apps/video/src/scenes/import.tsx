@@ -49,6 +49,8 @@ export const IMPORT_FILE_START = {
   format: "json",
 } as const;
 
+const LABEL_SEPARATOR = "\u0000";
+
 const PLURAL_CATALOGS: Record<Locale, Record<string, unknown>> = {
   en,
   es,
@@ -62,13 +64,19 @@ const PLURAL_CATALOGS: Record<Locale, Record<string, unknown>> = {
   zh_CN,
 };
 
+const pluralForm = (entry: unknown, form: string): string | undefined => {
+  if (typeof entry !== "object" || entry === null) return undefined;
+  const value: unknown = Reflect.get(entry, form);
+  return typeof value === "string" ? value : undefined;
+};
+
 /**
  * Resolves a plural entry (`1` / `n` forms with `$1`, `$2` placeholders) from
  * the shipped locale catalog; `message` only addresses plain strings.
  */
 const plural = (locale: Locale, key: string, count: number, values: readonly string[]): string => {
-  const entry = PLURAL_CATALOGS[locale][key] as Record<string, string>;
-  const template = (count === 1 ? entry["1"] : undefined) ?? entry["n"];
+  const entry = PLURAL_CATALOGS[locale][key];
+  const template = (count === 1 ? pluralForm(entry, "1") : undefined) ?? pluralForm(entry, "n");
   if (template === undefined) throw new Error(`No plural "${key}" for ${locale}`);
   let text = template;
   for (const [index, value] of values.entries()) {
@@ -353,9 +361,9 @@ export const ImportScene = ({ locale }: SceneProps) => {
     message(locale, "importModeRestoreReplace"),
     message(locale, "importModeFolder"),
   ];
-  const modeLabelsKey = JSON.stringify(modeLabels);
+  const modeLabelsKey = modeLabels.join(LABEL_SEPARATOR);
   const segments = useMemo(
-    () => segmentWidthFor(JSON.parse(modeLabelsKey) as string[], family),
+    () => segmentWidthFor(modeLabelsKey.split(LABEL_SEPARATOR), family),
     [modeLabelsKey, family],
   );
 

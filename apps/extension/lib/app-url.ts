@@ -31,7 +31,7 @@ export const SAFETY_SNAPSHOT_SETTINGS_ROUTE = `${APP_ROUTES.settings}?section=sa
  * @param route The in-app route path, with or without a leading slash.
  * @returns The extension-internal URL to open in a tab.
  */
-export function getAppUrl(route: string = "/"): string {
+export function getAppUrl(route = "/"): string {
   const normalizedRoute = route.startsWith("/") ? route : `/${route}`;
   return `${browser.runtime.getURL("/app.html")}#${normalizedRoute}`;
 }

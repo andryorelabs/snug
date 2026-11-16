@@ -1,12 +1,15 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 import { DEFAULT_LOCALE, languageTag, localePath, LOCALES } from "../src/i18n/locales";
+import { isRecord } from "../src/testing/guards";
 import { howToIndexPath } from "./how-to-paths";
 import { expectNoHorizontalOverflow } from "./layout-helpers";
+import { parseJson } from "./require";
+import { forEachSequentially } from "./sequential";
 
 const siteRoot = fileURLToPath(new URL("..", import.meta.url));
 const builtSite = path.join(siteRoot, "dist");
@@ -18,9 +21,11 @@ function getNotFoundCopy(locale: Locale): {
   body: string;
   backLink: string;
 } {
-  const content = JSON.parse(
+  const content = parseJson(
     readFileSync(path.join(siteRoot, "src/content", `${locale}.json`), "utf8"),
-  ) as { notFound: { title: string; body: string; backLink: string } };
+    (value): value is { notFound: { title: string; body: string; backLink: string } } =>
+      isRecord(value) && isRecord(value.notFound),
+  );
   return content.notFound;
 }
 
@@ -77,26 +82,29 @@ test.describe("rendered 404 pages", () => {
   for (const locale of LOCALES) {
     test(`${locale} 404 fits the width, shows the footer and passes axe`, async ({ page }) => {
       const notFound = getNotFoundCopy(locale);
-      for (const viewport of [
-        { width: 320, height: 568 },
-        { width: 1280, height: 720 },
-      ]) {
-        await page.setViewportSize(viewport);
-        await page.goto(notFoundUrl(locale));
+      await forEachSequentially(
+        [
+          { width: 320, height: 568 },
+          { width: 1280, height: 720 },
+        ],
+        async (viewport) => {
+          await page.setViewportSize(viewport);
+          await page.goto(notFoundUrl(locale));
 
-        await expect(page.getByRole("heading", { level: 1 })).toHaveText(notFound.title);
-        await expect(page.getByRole("link", { name: notFound.backLink })).toHaveAttribute(
-          "href",
-          localePath(locale),
-        );
-        if (viewport.width >= 1280) {
-          const scrollHeight = await page.evaluate(
-            () => globalThis.document.documentElement.scrollHeight,
+          await expect(page.getByRole("heading", { level: 1 })).toHaveText(notFound.title);
+          await expect(page.getByRole("link", { name: notFound.backLink })).toHaveAttribute(
+            "href",
+            localePath(locale),
           );
-          expect(scrollHeight).toBeLessThanOrEqual(viewport.height);
-        }
-        await expectNoHorizontalOverflow(page);
-      }
+          if (viewport.width >= 1280) {
+            const scrollHeight = await page.evaluate(
+              () => globalThis.document.documentElement.scrollHeight,
+            );
+            expect(scrollHeight).toBeLessThanOrEqual(viewport.height);
+          }
+          await expectNoHorizontalOverflow(page);
+        },
+      );
 
       await page.setViewportSize({ width: 320, height: 568 });
       await page.goto(notFoundUrl(locale));

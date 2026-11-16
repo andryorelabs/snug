@@ -111,6 +111,26 @@ export function ogImagePath(locale: Locale): string {
 }
 
 /**
+ * Builds one value per locale, in `LOCALES` order.
+ * @param build - Produces the value for one locale.
+ * @returns A record with every locale as a key.
+ */
+export function buildLocaleRecord<T>(build: (locale: Locale) => T): Record<Locale, T> {
+  return {
+    en: build("en"),
+    es: build("es"),
+    de: build("de"),
+    fr: build("fr"),
+    it: build("it"),
+    ja: build("ja"),
+    ko: build("ko"),
+    pt_BR: build("pt_BR"),
+    ru: build("ru"),
+    zh_CN: build("zh_CN"),
+  };
+}
+
+/**
  * Each locale's name in its own language, shown by the language switcher.
  * Never translated, so a visitor can find their language from any page.
  */

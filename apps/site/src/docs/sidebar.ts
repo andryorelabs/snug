@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-import { languageTag, type Locale, LOCALES } from "../i18n/locales";
+import { buildLocaleRecord, languageTag, type Locale, LOCALES } from "../i18n/locales";
 
 /**
  * Sidebar labels of the Guide, one per page plus the group and What's new.
@@ -38,20 +38,32 @@ const SIDEBAR_PAGES = [
   ["faq", "guide/faq"],
 ] as const satisfies readonly (readonly [keyof SidebarLabels, string])[];
 
+function hasSidebarLabels(value: unknown): value is { docs: SidebarLabels } {
+  return typeof value === "object" && value !== null && "docs" in value;
+}
+
+/**
+ * Picks the sidebar labels out of one locale's parsed content file.
+ * @param content - The parsed `src/content/<locale>.json`.
+ * @param locale - The locale the file belongs to, for the error message.
+ * @returns The `docs` labels of that locale.
+ */
+export function sidebarLabelsOf(content: unknown, locale: Locale): SidebarLabels {
+  if (!hasSidebarLabels(content))
+    throw new Error(`Content file for "${locale}" has no docs labels`);
+  return content.docs;
+}
+
 /**
  * Reads the sidebar labels of every locale from `src/content/<locale>.json`.
  * @returns The labels keyed by locale.
  */
 export function readSidebarLabels(): Record<Locale, SidebarLabels> {
-  return Object.fromEntries(
-    LOCALES.map((locale) => {
-      const file = new URL(`../content/${locale}.json`, import.meta.url);
-      const content = JSON.parse(readFileSync(file, "utf8")) as {
-        docs: SidebarLabels;
-      };
-      return [locale, content.docs];
-    }),
-  ) as Record<Locale, SidebarLabels>;
+  return buildLocaleRecord((locale) => {
+    const file = new URL(`../content/${locale}.json`, import.meta.url);
+    const content: unknown = JSON.parse(readFileSync(file, "utf8"));
+    return sidebarLabelsOf(content, locale);
+  });
 }
 
 function translationsOf(

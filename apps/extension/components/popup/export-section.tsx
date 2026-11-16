@@ -19,7 +19,6 @@ import { ExportCanceledError } from "@/lib/export-control";
 import {
   EXPORT_FORMAT_INFO,
   EXPORT_FORMATS,
-  type ExportFormat,
   POPUP_TOGGLE_FORMAT_LIMIT,
 } from "@/lib/export-formats";
 import { formatCount } from "@/lib/format-count";
@@ -68,7 +67,7 @@ export function ExportSection() {
           : {
               type: "error",
               title: i18n.t("popup_exportFailedTitle"),
-              description: (error as Error).message,
+              description: error instanceof Error ? error.message : String(error),
             },
       );
     } finally {
@@ -77,13 +76,18 @@ export function ExportSection() {
     }
   };
 
+  const availableFormatCount: number = EXPORT_FORMATS.length;
+
   return (
     <section className="flex flex-col gap-2">
-      {EXPORT_FORMATS.length > POPUP_TOGGLE_FORMAT_LIMIT ? (
+      {availableFormatCount > POPUP_TOGGLE_FORMAT_LIMIT ? (
         <Select
           items={formatItems}
           value={format}
-          onValueChange={(value) => void setFormat(value as ExportFormat)}
+          onValueChange={(value) => {
+            const next = EXPORT_FORMATS.find((candidate) => candidate === value);
+            if (next) void setFormat(next);
+          }}
         >
           <SelectTrigger className="w-full" aria-label={i18n.t("popup_exportFormatLabel")}>
             <SelectValue />
@@ -105,7 +109,7 @@ export function ExportSection() {
           aria-label={i18n.t("popup_exportFormatLabel")}
           value={[format]}
           onValueChange={(values) => {
-            const next = values[0] as ExportFormat | undefined;
+            const next = EXPORT_FORMATS.find((candidate) => candidate === values[0]);
             if (next) void setFormat(next);
           }}
         >

@@ -1,10 +1,12 @@
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { type Page } from "@playwright/test";
 
 import { firstFaqTrigger } from "./faq-helpers";
 import { expect, test } from "./fixtures";
 import { expectNoHorizontalOverflow, openLanguageMenu, setViewportOrSkip } from "./layout-helpers";
+import { requireValue } from "./require";
 import { CONTENT_PATHS, SCANNED_PATHS, WIDTH_CHECK_PATHS } from "./routes";
+import { forEachSequentially } from "./sequential";
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
@@ -51,11 +53,11 @@ for (const path of WIDTH_CHECK_PATHS) {
 }
 
 test("/guide/ has no accessibility violations at 320px and 768px", async ({ page }) => {
-  for (const width of [320, 768]) {
+  await forEachSequentially([320, 768], async (width) => {
     await setViewportOrSkip(page, { width, height: 800 });
     await page.goto("/guide/");
     await expectNoViolations(page);
-  }
+  });
 });
 
 test("/privacy/ inline links are underlined with visible contrast", async ({ page }) => {
@@ -93,7 +95,7 @@ for (const path of CONTENT_PATHS) {
     expect(levels.filter((level) => level === 1)).toHaveLength(1);
     expect(levels[0]).toBe(1);
     for (const [index, level] of levels.entries()) {
-      if (index > 0) expect(level - levels[index - 1]!).toBeLessThanOrEqual(1);
+      if (index > 0) expect(level - requireValue(levels[index - 1])).toBeLessThanOrEqual(1);
     }
   });
 }

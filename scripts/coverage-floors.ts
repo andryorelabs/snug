@@ -4,6 +4,7 @@ import path from "node:path";
 
 import floorsFile from "../coverage-floors.json" with { type: "json" };
 import { COVERAGE_EXCEPTIONS, type CoverageException } from "./coverage-exceptions.ts";
+import { isRecord, parseJsonAs } from "./json-guards.ts";
 
 export const METRICS = ["lines", "statements", "branches", "functions"] as const;
 export type Metric = (typeof METRICS)[number];
@@ -146,6 +147,22 @@ export function readBaseFile(repositoryRoot: string, relativePath: string): stri
   );
 }
 
+function isFloorsByWorkspace(value: unknown): value is FloorsByWorkspace {
+  return isRecord(value);
+}
+
+function hasMetricTotals(value: unknown): value is { total: Record<Metric, { pct: number }> } {
+  if (!isRecord(value)) return false;
+  const { total } = value;
+  return (
+    isRecord(total) &&
+    METRICS.every((metric) => {
+      const entry = total[metric];
+      return isRecord(entry) && typeof entry.pct === "number";
+    })
+  );
+}
+
 /**
  * Reads `coverage-floors.json` from `develop`.
  * @param repositoryRoot - Repository checkout to read from.
@@ -154,7 +171,7 @@ export function readBaseFile(repositoryRoot: string, relativePath: string): stri
  */
 export function readBaseFloors(repositoryRoot: string): FloorsByWorkspace | null {
   const raw = readBaseFile(repositoryRoot, "coverage-floors.json");
-  return raw === null ? null : (JSON.parse(raw) as FloorsByWorkspace);
+  return raw === null ? null : parseJsonAs(raw, isFloorsByWorkspace);
 }
 
 /**
@@ -203,9 +220,7 @@ function readMeasured(repositoryRoot: string): Measured {
     if (!existsSync(summaryPath)) {
       continue;
     }
-    const { total } = JSON.parse(readFileSync(summaryPath, "utf8")) as {
-      total: Record<Metric, { pct: number }>;
-    };
+    const { total } = parseJsonAs(readFileSync(summaryPath, "utf8"), hasMetricTotals);
     measured[workspace] = Object.fromEntries(METRICS.map((metric) => [metric, total[metric].pct]));
   }
   return measured;

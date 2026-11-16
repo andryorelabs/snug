@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { requestWithGitHubCli } from "./check";
 
-vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
+vi.mock("node:child_process", () => ({ execFileSync: vi.fn<typeof execFileSync>() }));
 
 const execFileSyncMock = vi.mocked(execFileSync);
 

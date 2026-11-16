@@ -408,7 +408,7 @@ test("a drop while an import is running is ignored", async ({
         }),
       );
     };
-    const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+    const { promise: gate, resolve: release } = Promise.withResolvers<undefined>();
     const slow = new File(["title,url\nSlow,https://slow.example/page"], "slow.csv", {
       type: "text/csv",
     });
@@ -432,7 +432,8 @@ test("a drop while an import is running is ignored", async ({
   await expect(popup.getByText("Import in progress. Dropped files are ignored.")).toBeVisible();
 
   await popup.evaluate(() => {
-    (globalThis as unknown as { releaseSlowDrop: () => void }).releaseSlowDrop();
+    const release: unknown = Reflect.get(globalThis, "releaseSlowDrop");
+    if (typeof release === "function") Reflect.apply(release, undefined, []);
   });
 
   await expectImportToast(popup);

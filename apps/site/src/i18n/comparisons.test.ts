@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { COMPETITORS } from "../content/competitors";
+import { isRecord } from "../testing/guards";
 import {
   ALTERNATIVES_PATH,
   alternativesPath,
@@ -16,13 +17,21 @@ import { LOCALES } from "./locales";
 
 const english = getComparisonContent("en");
 
+type ComparisonFiles = Parameters<typeof loadComparisonContent>[0];
+
+function isComparisonFiles(value: unknown): value is ComparisonFiles {
+  return isRecord(value);
+}
+
 function filesFor(entries: Record<string, unknown>) {
-  return Object.fromEntries(
+  const files: unknown = Object.fromEntries(
     Object.entries(entries).map(([locale, content]) => [
       `../content/comparisons/${locale}.json`,
       { default: content },
     ]),
-  ) as Parameters<typeof loadComparisonContent>[0];
+  );
+  if (!isComparisonFiles(files)) throw new Error("The fake comparison files are invalid");
+  return files;
 }
 
 describe("loadComparisonContent", () => {

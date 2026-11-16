@@ -56,6 +56,15 @@ function isScheduleRelevantChange(previous: AutoExportConfig, next: AutoExportCo
   );
 }
 
+function isRunManualExportMessage(message: unknown): message is RunManualExportMessage {
+  return (
+    typeof message === "object" &&
+    message !== null &&
+    "type" in message &&
+    message.type === RUN_MANUAL_EXPORT_MESSAGE_TYPE
+  );
+}
+
 /**
  * Runs a `manual`-triggered {@link runAutoExport} using `message`'s
  * on-screen `formats`/`path`, for the Auto-export page's "Export now" button.
@@ -99,6 +108,10 @@ async function restoreMissingAlarm(): Promise<void> {
   }
 }
 
+function getBrowserNamespaces(): { notifications: typeof browser.notifications | undefined } {
+  return { notifications: browser.notifications };
+}
+
 /**
  * Registers the Failure notification click handler once Notification access
  * exists: synchronously at worker start when the `notifications` namespace is
@@ -111,9 +124,10 @@ async function restoreMissingAlarm(): Promise<void> {
 function attachNotificationClickListenerWhenGranted(): void {
   let isAttached = false;
   const attach = () => {
-    if (isAttached || !browser.notifications) return;
+    const { notifications } = getBrowserNamespaces();
+    if (isAttached || !notifications) return;
     isAttached = true;
-    browser.notifications.onClicked.addListener((notificationId) => {
+    notifications.onClicked.addListener((notificationId) => {
       void handleNotificationClick(notificationId).catch(console.error);
     });
   };
@@ -201,15 +215,11 @@ export default defineBackground(() => {
   attachNotificationClickListenerWhenGranted();
 
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (
-      typeof message !== "object" ||
-      message === null ||
-      (message as { type?: unknown }).type !== RUN_MANUAL_EXPORT_MESSAGE_TYPE
-    ) {
-      return;
+    if (!isRunManualExportMessage(message)) {
+      return false;
     }
 
-    void runManualExport(message as RunManualExportMessage).then(sendResponse);
+    void runManualExport(message).then(sendResponse);
     return true;
   });
 });

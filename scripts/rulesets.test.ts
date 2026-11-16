@@ -36,7 +36,7 @@ function asRecord(value: unknown): JsonRecord {
  * @returns One record per combination, or a single empty one without a matrix.
  */
 function listMatrixCombinations(job: JsonRecord): JsonRecord[] {
-  const matrix = asRecord(job["strategy"])["matrix"];
+  const matrix = asRecord(job.strategy).matrix;
   if (!isRecord(matrix)) return [{}];
   const listedKeys = Object.entries(matrix).filter(
     ([key]) => key !== "include" && key !== "exclude",
@@ -44,10 +44,10 @@ function listMatrixCombinations(job: JsonRecord): JsonRecord[] {
   let product: JsonRecord[] = listedKeys.length === 0 ? [] : [{}];
   for (const [key, values] of listedKeys) {
     product = product.flatMap((combination) =>
-      asArray(values).map((value) => ({ ...combination, [key]: value })),
+      asArray(values).map((value) => Object.assign({}, combination, { [key]: value })),
     );
   }
-  return [...product, ...asArray(matrix["include"]).filter((entry) => isRecord(entry))];
+  return [...product, ...asArray(matrix.include).filter((entry) => isRecord(entry))];
 }
 
 /**
@@ -59,9 +59,9 @@ function listMatrixCombinations(job: JsonRecord): JsonRecord[] {
  * @returns The check names, in job order.
  */
 function listCheckNames(workflow: unknown): string[] {
-  return Object.entries(asRecord(asRecord(workflow)["jobs"])).flatMap(([id, job]) => {
+  return Object.entries(asRecord(asRecord(workflow).jobs)).flatMap(([id, job]) => {
     if (!isRecord(job)) return [];
-    const name = job["name"];
+    const name = job.name;
     if (name === undefined) return id;
     if (typeof name !== "string") return [];
     const expanded = listMatrixCombinations(job).map((combination) =>
@@ -75,26 +75,26 @@ function listCheckNames(workflow: unknown): string[] {
 }
 
 function listRules(ruleset: unknown): JsonRecord[] {
-  return asArray(asRecord(ruleset)["rules"]).filter((rule) => isRecord(rule));
+  return asArray(asRecord(ruleset).rules).filter((rule) => isRecord(rule));
 }
 
 function findRule(ruleset: unknown, type: string): JsonRecord | undefined {
-  return listRules(ruleset).find((rule) => rule["type"] === type);
+  return listRules(ruleset).find((rule) => rule.type === type);
 }
 
 function ruleParameters(ruleset: unknown, type: string): JsonRecord {
-  return asRecord(findRule(ruleset, type)?.["parameters"]);
+  return asRecord(findRule(ruleset, type)?.parameters);
 }
 
 function listRequiredStatusChecks(ruleset: unknown): JsonRecord[] {
-  return asArray(
-    ruleParameters(ruleset, "required_status_checks")["required_status_checks"],
-  ).filter((check) => isRecord(check));
+  return asArray(ruleParameters(ruleset, "required_status_checks").required_status_checks).filter(
+    (check) => isRecord(check),
+  );
 }
 
 function listRequiredCheckNames(ruleset: unknown): string[] {
   return listRequiredStatusChecks(ruleset)
-    .map((check) => check["context"])
+    .map((check) => check.context)
     .filter((context) => typeof context === "string");
 }
 
@@ -120,7 +120,7 @@ function readRuleset(file: string): unknown {
 }
 
 function includedReferences(ruleset: unknown): unknown {
-  return asRecord(asRecord(asRecord(ruleset)["conditions"])["ref_name"])["include"];
+  return asRecord(asRecord(asRecord(ruleset).conditions).ref_name).include;
 }
 
 const checkNames = new Set(
@@ -209,15 +209,15 @@ describe(".github/rulesets", () => {
   test.each(rulesetFiles)("%s is active with no bypass actors", (file) => {
     const ruleset = asRecord(readRuleset(file));
 
-    expect(ruleset["enforcement"]).toBe("active");
-    expect(ruleset["bypass_actors"]).toEqual([]);
+    expect(ruleset.enforcement).toBe("active");
+    expect(ruleset.bypass_actors).toEqual([]);
   });
 });
 
 describe("develop ruleset", () => {
   test("is named develop and targets refs/heads/develop", () => {
-    expect(asRecord(developRuleset)["name"]).toBe("develop");
-    expect(asRecord(developRuleset)["target"]).toBe("branch");
+    expect(asRecord(developRuleset).name).toBe("develop");
+    expect(asRecord(developRuleset).target).toBe("branch");
     expect(includedReferences(developRuleset)).toEqual(["refs/heads/develop"]);
   });
 
@@ -235,24 +235,24 @@ describe("develop ruleset", () => {
   test("requires a squash-merged pull request with resolved threads", () => {
     const parameters = ruleParameters(developRuleset, "pull_request");
 
-    expect(parameters["allowed_merge_methods"]).toEqual(["squash"]);
-    expect(parameters["required_review_thread_resolution"]).toBe(true);
+    expect(parameters.allowed_merge_methods).toEqual(["squash"]);
+    expect(parameters.required_review_thread_resolution).toBe(true);
   });
 
   test("requires the five checks, strictly, from GitHub Actions", () => {
     const parameters = ruleParameters(developRuleset, "required_status_checks");
 
-    expect(parameters["strict_required_status_checks_policy"]).toBe(true);
+    expect(parameters.strict_required_status_checks_policy).toBe(true);
     expect(listRequiredCheckNames(developRuleset)).toEqual(REQUIRED_CHECKS);
-    expect(
-      listRequiredStatusChecks(developRuleset).map((check) => check["integration_id"]),
-    ).toEqual(REQUIRED_CHECKS.map(() => GITHUB_ACTIONS_INTEGRATION_ID));
+    expect(listRequiredStatusChecks(developRuleset).map((check) => check.integration_id)).toEqual(
+      REQUIRED_CHECKS.map(() => GITHUB_ACTIONS_INTEGRATION_ID),
+    );
   });
 });
 
 describe("main ruleset", () => {
   test("targets the default branch", () => {
-    expect(asRecord(mainRuleset)["target"]).toBe("branch");
+    expect(asRecord(mainRuleset).target).toBe("branch");
     expect(includedReferences(mainRuleset)).toEqual(["~DEFAULT_BRANCH"]);
   });
 
@@ -273,16 +273,16 @@ describe("main ruleset", () => {
   test("allows merge commits only, with resolved threads", () => {
     const parameters = ruleParameters(mainRuleset, "pull_request");
 
-    expect(parameters["allowed_merge_methods"]).toEqual(["merge"]);
-    expect(parameters["required_review_thread_resolution"]).toBe(true);
+    expect(parameters.allowed_merge_methods).toEqual(["merge"]);
+    expect(parameters.required_review_thread_resolution).toBe(true);
   });
 
   test("requires the five checks, not strictly, from GitHub Actions", () => {
     const parameters = ruleParameters(mainRuleset, "required_status_checks");
 
-    expect(parameters["strict_required_status_checks_policy"]).toBe(false);
+    expect(parameters.strict_required_status_checks_policy).toBe(false);
     expect(listRequiredCheckNames(mainRuleset)).toEqual(REQUIRED_CHECKS);
-    expect(listRequiredStatusChecks(mainRuleset).map((check) => check["integration_id"])).toEqual(
+    expect(listRequiredStatusChecks(mainRuleset).map((check) => check.integration_id)).toEqual(
       REQUIRED_CHECKS.map(() => GITHUB_ACTIONS_INTEGRATION_ID),
     );
   });
@@ -290,7 +290,7 @@ describe("main ruleset", () => {
 
 describe("tags ruleset", () => {
   test("targets version tags", () => {
-    expect(asRecord(tagsRuleset)["target"]).toBe("tag");
+    expect(asRecord(tagsRuleset).target).toBe("tag");
     expect(includedReferences(tagsRuleset)).toEqual(["refs/tags/v*"]);
   });
 

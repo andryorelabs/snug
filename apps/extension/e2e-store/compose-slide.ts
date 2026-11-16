@@ -43,26 +43,29 @@ const FONT_FILES = [
 /**
  * The copy shown above the UI on every slide.
  */
-export type SlideCaption = { headline: string; subtitle?: string };
+export interface SlideCaption {
+  headline: string;
+  subtitle?: string;
+}
 
 /**
  * A UI slide: a raw 2x capture displayed as a card under the caption.
  */
-export type UiSlide = SlideCaption & {
+export interface UiSlide extends SlideCaption {
   screenshot: Buffer;
   cardWidth: number;
   cardTop: number;
   cardHeight?: number;
   theme?: SlideTheme;
-};
+}
 
 /**
  * A claim row on the local-only slide: a lucide icon and one line of text.
  */
-export type LocalClaim = {
+export interface LocalClaim {
   icon: "account" | "upload" | "tracking" | "source";
   text: string;
-};
+}
 
 const CLAIM_ICONS = {
   account: UserX,

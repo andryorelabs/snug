@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FakeDirectoryHandle } from "@/lib/testing/fake-directory-handle";
 
@@ -19,7 +19,7 @@ function installFakeIndexedDatabase(): void {
   const databases = new Map<string, Map<string, unknown>>();
 
   function request<T>(compute: () => T): IDBRequest<T> {
-    const fake = { addEventListener: () => {} } as unknown as IDBRequest<T>;
+    const fake = { addEventListener: vi.fn<() => void>() } as unknown as IDBRequest<T>;
     queueMicrotask(() => {
       Object.assign(fake, { result: compute() });
       fake.onsuccess?.(new Event("success"));
@@ -30,15 +30,15 @@ function installFakeIndexedDatabase(): void {
   const indexedDatabaseFake = {
     open(name: string) {
       const fake = {
-        addEventListener: () => {},
+        addEventListener: vi.fn<() => void>(),
       } as unknown as IDBOpenDBRequest;
       queueMicrotask(() => {
         const isNew = !databases.has(name);
         const store = databases.get(name) ?? new Map<string, unknown>();
         databases.set(name, store);
         const database = {
-          createObjectStore: () => {},
-          close: () => {},
+          createObjectStore: vi.fn<() => void>(),
+          close: vi.fn<() => void>(),
           transaction: () => ({
             objectStore: () => ({
               put: (value: unknown, key: string) => request(() => store.set(key, value) && key),

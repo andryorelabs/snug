@@ -56,7 +56,7 @@ describe("writeToCustomFolder", () => {
           write: async () => {
             throw new Error("disk full");
           },
-          close: async () => {},
+          close: () => Promise.resolve(),
           abort: async () => {
             didAbort = true;
           },

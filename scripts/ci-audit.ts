@@ -1,45 +1,47 @@
 import { execFileSync } from "node:child_process";
 
-export type AuditStep = {
+import { isRecord, parseJsonAs } from "./json-guards.ts";
+
+export interface AuditStep {
   name: string;
   startedAt: string;
   completedAt: string;
-};
+}
 
-export type AuditJob = {
+export interface AuditJob {
   name: string;
   conclusion?: string;
   createdAt?: string;
   startedAt: string;
   completedAt: string;
   steps?: AuditStep[];
-};
+}
 
-export type JobSummary = {
+export interface JobSummary {
   waitSeconds: number;
   setupSeconds: number;
   runSeconds: number;
-};
+}
 
 export type JobRow = JobSummary & { name: string; samples: number };
 
 const SETUP_STEP_PATTERN =
   /^(Set up job|Run [^\s]+@[^\s]+|Install |Setup |Set up |Restore |Cache |Download |Prepare |Read the )/i;
 
-export type ApiJobStep = {
+export interface ApiJobStep {
   name: string;
   started_at: string | null;
   completed_at: string | null;
-};
+}
 
-export type ApiJob = {
+export interface ApiJob {
   name: string;
   conclusion: string | null;
   created_at: string;
   started_at: string | null;
   completed_at: string | null;
   steps?: ApiJobStep[];
-};
+}
 
 /**
  * Maps a job from the REST `actions/runs/<id>/jobs` payload, which carries the
@@ -163,7 +165,10 @@ export function formatTable(rows: JobRow[]): string {
   return [render(header), ...body.map((cells) => render(cells))].join("\n");
 }
 
-export type AuditOptions = { runs: number; workflow: string };
+export interface AuditOptions {
+  runs: number;
+  workflow: string;
+}
 
 /**
  * Parses `--runs N` and `--workflow file` from argv.
@@ -200,12 +205,43 @@ function runGh(ghArguments: string[]): string {
   });
 }
 
+function isRunList(value: unknown): value is { databaseId: number }[] {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => isRecord(entry) && typeof entry.databaseId === "number")
+  );
+}
+
+function isApiJob(value: unknown): value is ApiJob {
+  return isRecord(value) && typeof value.name === "string";
+}
+
+/**
+ * Reads the `gh run list --json databaseId` output.
+ * @param text - The raw JSON array.
+ * @returns The run ids, in listing order.
+ * @throws {TypeError} When the text is not an array of runs with numeric ids.
+ */
+export function parseRunIds(text: string): number[] {
+  return parseJsonAs(text, isRunList).map(({ databaseId }) => databaseId);
+}
+
+/**
+ * Reads one job line printed by `gh api ... --jq .jobs[]`.
+ * @param line - One JSON object.
+ * @returns The job as the REST API returned it.
+ * @throws {TypeError} When the line is not a job object.
+ */
+export function parseApiJobLine(line: string): ApiJob {
+  return parseJsonAs(line, isApiJob);
+}
+
 function main(): void {
   const { runs, workflow } = parseArguments(process.argv.slice(2));
-  const listed = JSON.parse(
+  const listed = parseRunIds(
     runGh(["run", "list", "--workflow", workflow, "--limit", String(runs), "--json", "databaseId"]),
-  ) as { databaseId: number }[];
-  const jobs = listed.flatMap(({ databaseId }) =>
+  );
+  const jobs = listed.flatMap((databaseId) =>
     runGh([
       "api",
       ["repos", "{owner}", "{repo}", "actions", "runs", databaseId, "jobs"].join("/"),
@@ -215,7 +251,7 @@ function main(): void {
     ])
       .split("\n")
       .filter((line) => line.trim() !== "")
-      .map((line) => fromApiJob(JSON.parse(line) as ApiJob)),
+      .map((line) => fromApiJob(parseApiJobLine(line))),
   );
   console.log(`${workflow}: ${listed.length} runs`);
   console.log(formatTable(aggregateJobs(jobs)));

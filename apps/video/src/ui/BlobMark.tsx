@@ -2,13 +2,13 @@ import { interpolate, useCurrentFrame } from "remotion";
 
 import { theme } from "../theme";
 
-export type BlobMarkProps = {
+export interface BlobMarkProps {
   size?: number;
   /**
    * Frames for one full morph cycle. Default 90.
    */
   period?: number;
-};
+}
 
 const parseRadii = (value: string): number[] => value.match(/\d+/g)?.map(Number) ?? [];
 

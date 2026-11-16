@@ -20,10 +20,10 @@ vi.mock("@/lib/run-import", async (importOriginal) => {
   type RunImportModule = typeof RunImportNamespace;
 
   const original = await importOriginal<RunImportModule>();
-  return { ...original, runImport: vi.fn(original.runImport) };
+  return { ...original, runImport: vi.fn<RunImportModule["runImport"]>(original.runImport) };
 });
 
-vi.mock("@workspace/ui/components/toast", () => ({ toast: { add: vi.fn() } }));
+vi.mock("@workspace/ui/components/toast", () => ({ toast: { add: vi.fn<() => void>() } }));
 
 const runImportMock = vi.mocked(runImport);
 const toastAddMock = vi.mocked(toast.add);
@@ -44,14 +44,19 @@ function deferredTextFile(file: File): {
   release: () => void;
 } {
   const original = file.text.bind(file);
-  const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+  const { promise: gate, resolve: release } = Promise.withResolvers<null>();
   Object.defineProperty(file, "text", {
     value: async () => {
       await gate;
       return original();
     },
   });
-  return { file, release };
+  return {
+    file,
+    release: () => {
+      release(null);
+    },
+  };
 }
 
 async function mountSection() {
@@ -65,7 +70,7 @@ async function mountSection() {
 
 function chooseFileButton(harness: DomHarness): HTMLButtonElement {
   const button = [...harness.container.querySelectorAll("button")].find((candidate) =>
-    /popup_chooseFile|popup_importing/.test(candidate.textContent ?? ""),
+    /popup_chooseFile|popup_importing/.test(candidate.textContent),
   );
   if (!button) throw new Error("choose file button missing");
   return button;
@@ -76,8 +81,9 @@ async function pick(input: HTMLInputElement, files: File | File[]) {
     value: Array.isArray(files) ? files : [files],
     configurable: true,
   });
-  await act(async () => {
+  await act(() => {
     input.dispatchEvent(new Event("change", { bubbles: true }));
+    return Promise.resolve();
   });
 }
 
@@ -89,8 +95,9 @@ async function dispatchDrag(
 ) {
   const event = new Event(type, { bubbles: true, cancelable: true });
   Object.defineProperty(event, "dataTransfer", { value: { files, types } });
-  await act(async () => {
+  await act(() => {
     target.dispatchEvent(event);
+    return Promise.resolve();
   });
   return event;
 }
@@ -130,7 +137,7 @@ beforeEach(async () => {
       syncing: false,
     },
   ]);
-  fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
+  fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
   vi.spyOn(fakeBrowser.tabs, "create").mockResolvedValue(undefined);
   runImportMock.mockClear();
   toastAddMock.mockClear();
@@ -235,13 +242,13 @@ describe("popup ImportSection", () => {
 
   it("shows the lock error when another import holds the shared lock", async () => {
     const { input } = await mountSection();
-    const { promise: lockHeld, resolve: releaseLock } = Promise.withResolvers<void>();
+    const { promise: lockHeld, resolve: releaseLock } = Promise.withResolvers<null>();
     const holder = navigator.locks.request(IMPORT_LOCK_NAME, () => lockHeld);
     await Promise.resolve();
 
     await pick(input, csvFile(2));
     await settle();
-    releaseLock();
+    releaseLock(null);
     await holder;
 
     expect(toastAddMock).toHaveBeenCalledWith(

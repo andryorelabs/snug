@@ -2,7 +2,10 @@
  * A locale the store screenshots are generated for: the `locales/<code>.json`
  * folder name and the BCP 47 tag Chromium is launched with.
  */
-export type StoreLocale = { code: string; browserLocale: string };
+export interface StoreLocale {
+  code: string;
+  browserLocale: string;
+}
 
 /**
  * The ten locales Snug ships, in the order the Playwright projects run.

@@ -22,6 +22,15 @@ export interface RenderExportOptions extends ExportControl {
   hideParentFolder: boolean;
 }
 
+const EXPORT_RENDERERS: Record<ExportFormat, (options: RenderExportOptions) => Promise<string>> = {
+  html: (options) => exportToHTML(options),
+  json: async (options) => JSON.stringify(await exportToJSON(options), null, 2),
+  csv: (options) => exportToCSV(options),
+  markdown: (options) => exportToMarkdown(options),
+  opml: (options) => exportToOPML(options),
+  xbel: (options) => exportToXBEL(options),
+};
+
 /**
  * Renders the bookmarks as file text in the given format. Each exporter takes
  * only the options that make sense for it (CSV ignores the folder-hiding and
@@ -31,28 +40,6 @@ export interface RenderExportOptions extends ExportControl {
  * @returns The file text.
  * @throws {ExportCanceledError} When `options.signal` aborts.
  */
-export async function renderExport(
-  format: ExportFormat,
-  options: RenderExportOptions,
-): Promise<string> {
-  switch (format) {
-    case "html": {
-      return exportToHTML(options);
-    }
-    case "json": {
-      return JSON.stringify(await exportToJSON(options), null, 2);
-    }
-    case "csv": {
-      return exportToCSV(options);
-    }
-    case "markdown": {
-      return exportToMarkdown(options);
-    }
-    case "opml": {
-      return exportToOPML(options);
-    }
-    case "xbel": {
-      return exportToXBEL(options);
-    }
-  }
+export function renderExport(format: ExportFormat, options: RenderExportOptions): Promise<string> {
+  return EXPORT_RENDERERS[format](options);
 }

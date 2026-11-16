@@ -1,8 +1,10 @@
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 import { type Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
 import { hydrateHeaderIsland, MIN_TOUCH_TARGET, setViewportOrSkip } from "./layout-helpers";
+import { requireValue } from "./require";
+import { forEachSequentially, indexRange } from "./sequential";
 
 const WIDTHS = [320, 375, 768, 1280];
 
@@ -85,24 +87,24 @@ for (const width of WIDTHS) {
     await openMenu(page);
     const items = page.getByRole("menuitemradio");
     await expect(items).toHaveCount(3);
-    for (let index = 0; index < 3; index++) {
+    await forEachSequentially(indexRange(3), async (index) => {
       await expect
-        .poll(async () => (await items.nth(index).boundingBox())!.height)
+        .poll(async () => requireValue(await items.nth(index).boundingBox()).height)
         .toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-    }
+    });
     const panel = await page.getByRole("menu").boundingBox();
-    expect(panel!.x).toBeGreaterThanOrEqual(0);
-    expect(panel!.x + panel!.width).toBeLessThanOrEqual(width);
-    expect(panel!.width).toBeGreaterThanOrEqual(176);
-    expect(panel!.width).toBeLessThanOrEqual(200);
+    expect(requireValue(panel).x).toBeGreaterThanOrEqual(0);
+    expect(requireValue(panel).x + requireValue(panel).width).toBeLessThanOrEqual(width);
+    expect(requireValue(panel).width).toBeGreaterThanOrEqual(176);
+    expect(requireValue(panel).width).toBeLessThanOrEqual(200);
   });
 }
 
 test("the trigger is a 44px square", async ({ page }) => {
   await visit(page);
   const box = await page.getByRole("button", { name: "Theme" }).boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-  expect(box!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+  expect(requireValue(box).width).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+  expect(requireValue(box).height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
 });
 
 for (const path of ["/de/", "/ru/"]) {
@@ -114,14 +116,18 @@ for (const path of ["/de/", "/ru/"]) {
     const brand = await header.locator("a[aria-label]").boundingBox();
     const theme = await header.locator("[data-theme-menu]").boundingBox();
     const language = await header.locator("[data-language-switcher]").boundingBox();
-    for (const box of [theme!, language!]) {
-      expect(box.y).toBeLessThan(brand!.y + brand!.height);
-      expect(brand!.y).toBeLessThan(box.y + box.height);
+    for (const box of [requireValue(theme), requireValue(language)]) {
+      expect(box.y).toBeLessThan(requireValue(brand).y + requireValue(brand).height);
+      expect(requireValue(brand).y).toBeLessThan(box.y + box.height);
       expect(box.x + box.width).toBeLessThanOrEqual(320);
     }
-    expect(brand!.x + brand!.width).toBeLessThanOrEqual(theme!.x);
-    expect(theme!.x + theme!.width).toBeLessThanOrEqual(language!.x + 1);
-    expect((await header.boundingBox())!.height).toBeLessThanOrEqual(64);
+    expect(requireValue(brand).x + requireValue(brand).width).toBeLessThanOrEqual(
+      requireValue(theme).x,
+    );
+    expect(requireValue(theme).x + requireValue(theme).width).toBeLessThanOrEqual(
+      requireValue(language).x + 1,
+    );
+    expect(requireValue(await header.boundingBox()).height).toBeLessThanOrEqual(64);
   });
 }
 
@@ -173,9 +179,12 @@ test("a theme switch runs no colour transition on the frame it flips", async ({ 
   await openMenu(page);
   await page.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  const samples = await page.evaluate(
-    () => (globalThis as unknown as { transitionSamples: string[] }).transitionSamples,
-  );
+  const samples = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "transitionSamples");
+    return Array.isArray(recorded)
+      ? recorded.filter((item): item is string => typeof item === "string")
+      : [];
+  });
   expect(samples.length).toBeGreaterThan(1);
   for (const sample of samples) expect(sample).toBe("none");
   await expect(page.locator("html")).not.toHaveClass(/theme-switching/);

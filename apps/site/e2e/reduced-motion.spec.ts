@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { hydratedFaq } from "./faq-helpers";
+import { forEachSequentially } from "./sequential";
 import { blockUmami } from "./umami-helpers";
 
 test.use({ reducedMotion: "reduce" });
@@ -31,7 +32,9 @@ for (const path of PATHS) {
     expect(
       await page.evaluate(() => globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches),
     ).toBe(true);
-    await page.evaluate(() => globalThis.scrollTo(0, globalThis.document.body.scrollHeight));
+    await page.evaluate(() => {
+      globalThis.scrollTo(0, globalThis.document.body.scrollHeight);
+    });
     await page.waitForLoadState("networkidle");
 
     expect(problems).toEqual([]);
@@ -47,9 +50,9 @@ test("language popover has no transform animation under reduced motion", async (
     element
       .getAnimations()
       .flatMap((animation) =>
-        (animation.effect as KeyframeEffect)
-          .getKeyframes()
-          .map((keyframe) => String(keyframe.transform ?? "none")),
+        animation.effect instanceof KeyframeEffect
+          ? animation.effect.getKeyframes().map((keyframe) => String(keyframe.transform ?? "none"))
+          : [],
       ),
   );
   const identityTransform =
@@ -96,11 +99,14 @@ test("stats show their final numbers as plain text", async ({ page }) => {
 
 test("how it works journey is static and fully visible", async ({ page }) => {
   await page.goto("/");
-  for (const selector of [".hero-arrow-in", ".hero-arrow-out", ".hero-file"]) {
-    const target = page.locator(`[data-section="how"] ${selector}`);
-    await expect(target).toHaveCSS("animation-name", "none");
-    await expect(target).toHaveCSS("opacity", "1");
-  }
+  await forEachSequentially(
+    [".hero-arrow-in", ".hero-arrow-out", ".hero-file"],
+    async (selector) => {
+      const target = page.locator(`[data-section="how"] ${selector}`);
+      await expect(target).toHaveCSS("animation-name", "none");
+      await expect(target).toHaveCSS("opacity", "1");
+    },
+  );
   const logos = page.locator('[data-section="how"] .hero-logos > *');
   await expect(logos.first()).toHaveCSS("opacity", "1");
 });
@@ -113,12 +119,10 @@ test("cross-document view transitions are not active", async ({ page }) => {
       for (const rule of list) {
         if (rule.constructor.name === "CSSViewTransitionRule") {
           found.push(rule.cssText);
-        } else if ("conditionText" in rule && "cssRules" in rule) {
-          if (globalThis.matchMedia(String(rule.conditionText)).matches) {
-            visit(rule.cssRules as CSSRuleList);
-          }
-        } else if ("cssRules" in rule) {
-          visit((rule as CSSGroupingRule).cssRules);
+        } else if (rule instanceof globalThis.CSSConditionRule) {
+          if (globalThis.matchMedia(rule.conditionText).matches) visit(rule.cssRules);
+        } else if (rule instanceof globalThis.CSSGroupingRule) {
+          visit(rule.cssRules);
         }
       }
     };
@@ -142,9 +146,12 @@ test("a theme switch starts no view transition", async ({ page }) => {
   await page.locator("[data-theme-menu]").getByRole("button").click();
   await page.getByRole("menuitemradio", { name: "Dark" }).click();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
-  const started = await page.evaluate(
-    () => (globalThis as unknown as { startedTransitions: string[] }).startedTransitions,
-  );
+  const started = await page.evaluate(() => {
+    const recorded: unknown = Reflect.get(globalThis, "startedTransitions");
+    return Array.isArray(recorded)
+      ? recorded.filter((item): item is string => typeof item === "string")
+      : [];
+  });
   expect(started).toEqual([]);
 });
 

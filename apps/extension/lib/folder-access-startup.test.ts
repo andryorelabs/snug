@@ -38,13 +38,13 @@ function mockBrowserApis() {
     void rest;
     return id;
   });
-  browser.notifications = {
+  Reflect.set(browser, "notifications", {
     create,
-    clear: vi.fn(),
-  } as unknown as typeof browser.notifications;
-  const setBadgeText = vi.fn(async () => {});
+    clear: vi.fn<(...arguments_: unknown[]) => void>(),
+  });
+  const setBadgeText = vi.fn<() => Promise<void>>(() => Promise.resolve());
   browser.action.setBadgeText = setBadgeText;
-  browser.action.setBadgeBackgroundColor = vi.fn(async () => {});
+  browser.action.setBadgeBackgroundColor = vi.fn<() => Promise<void>>(() => Promise.resolve());
   return { create, setBadgeText };
 }
 

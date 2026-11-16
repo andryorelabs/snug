@@ -2,13 +2,13 @@ import { interpolate } from "remotion";
 
 import { theme } from "../theme";
 
-export type CheckboxProps = {
+export interface CheckboxProps {
   /**
    * 0 is unchecked, 1 is checked; animate it with `progressBetween`.
    */
   progress?: number;
   size?: number;
-};
+}
 
 const CHECK_PATH_LENGTH = 22;
 

@@ -96,18 +96,24 @@ async function waitForFaviconCached(
       () =>
         page.evaluate(
           /* eslint-disable unicorn-js/isolated-functions -- this callback runs in the page's own browser context, where URL/fetch/FileReader are real globals, not the Node/ES-only set this rule checks against */
-          async ({ extensionId, pageUrl }) => {
-            const faviconUrl = new URL(`chrome-extension://${extensionId}/_favicon/?`);
-            faviconUrl.searchParams.set("pageUrl", pageUrl);
+          async ({ extensionId: id, pageUrl: address }) => {
+            const faviconUrl = new URL(`chrome-extension://${id}/_favicon/?`);
+            faviconUrl.searchParams.set("pageUrl", address);
             faviconUrl.searchParams.set("size", "16");
             const response = await fetch(faviconUrl.href);
             const blob = await response.blob();
             return new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
-              reader.addEventListener("loadend", () => resolve(reader.result as string));
-              reader.addEventListener("error", () =>
-                reject(reader.error ?? new Error("FileReader failed")),
-              );
+              reader.addEventListener("loadend", () => {
+                if (typeof reader.result === "string") {
+                  resolve(reader.result);
+                } else {
+                  reject(new Error("FileReader did not return a string"));
+                }
+              });
+              reader.addEventListener("error", () => {
+                reject(reader.error ?? new Error("FileReader failed"));
+              });
               reader.readAsDataURL(blob);
             });
           },

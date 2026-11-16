@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@workspace/ui/components/accordion";
+import React from "react";
 
 interface FaqEntry {
   id: string;
@@ -15,7 +16,7 @@ interface FaqAccordionProperties {
   entries: FaqEntry[];
 }
 
-export default function FaqAccordion({ entries }: FaqAccordionProperties) {
+export default function FaqAccordion({ entries }: FaqAccordionProperties): React.JSX.Element {
   return (
     <Accordion variant="faq" hiddenUntilFound keepMounted className="max-w-208">
       {entries.map((entry, index) => (

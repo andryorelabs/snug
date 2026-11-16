@@ -21,6 +21,8 @@ const ROW_HEIGHT = 84;
 const VISIBLE_BACKUPS = 3;
 const SWEEP_FROM = 38;
 const SWEEP_TO = 104;
+const LABEL_SEPARATOR = "\u0000";
+
 const ARRIVALS = [58, 82, 106, 130] as const;
 const REMOVAL_FROM = 130;
 const REMOVAL_TO = 152;
@@ -168,9 +170,9 @@ const ScheduleColumn = ({ locale }: { locale: Locale }) => {
     message(locale, "autoExportPage_interval1d"),
     message(locale, "autoExportPage_interval7d"),
   ];
-  const scheduleLabelsKey = JSON.stringify(scheduleLabels);
+  const scheduleLabelsKey = scheduleLabels.join(LABEL_SEPARATOR);
   const scheduleSize = useMemo(
-    () => scheduleFontSize(JSON.parse(scheduleLabelsKey) as string[], fonts.body),
+    () => scheduleFontSize(scheduleLabelsKey.split(LABEL_SEPARATOR), fonts.body),
     [scheduleLabelsKey, fonts.body],
   );
   const sweep = progressBetween(frame, SWEEP_FROM, SWEEP_TO, EASE.standard);
@@ -211,11 +213,11 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
     message(locale, "autoExportPage_destinationDownloads"),
     message(locale, "autoExportPage_destinationFolder"),
   ];
-  const destinationLabelsKey = JSON.stringify(destinationLabels);
+  const destinationLabelsKey = destinationLabels.join(LABEL_SEPARATOR);
   const destinationSize = useMemo(
     () =>
       scheduleFontSize(
-        JSON.parse(destinationLabelsKey) as string[],
+        destinationLabelsKey.split(LABEL_SEPARATOR),
         fonts.body,
         DESTINATION_SEGMENT_WIDTH,
       ),
@@ -316,8 +318,8 @@ const DestinationCard = ({ locale }: { locale: Locale }) => {
         </div>
       </div>
       <div style={{ position: "relative", height: ROW_HEIGHT * VISIBLE_BACKUPS }}>
-        {ARRIVALS.map((_, index) => (
-          <BackupRow key={index} index={index} shift={removal} locale={locale} />
+        {ARRIVALS.map((arrival, index) => (
+          <BackupRow key={arrival} index={index} shift={removal} locale={locale} />
         ))}
       </div>
     </div>

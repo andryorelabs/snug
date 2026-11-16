@@ -58,6 +58,10 @@ export function useAutoExportLastRun(): AutoExportLastRun | null {
   return lastRun;
 }
 
+function noop() {
+  return;
+}
+
 /**
  * Reads the Custom folder's Folder access once, only when the destination is a
  * Custom folder.
@@ -68,7 +72,7 @@ function useFolderAccess(isFolderDestination: boolean): FolderAccess | null {
   const [folderAccess, setFolderAccess] = useState<FolderAccess | null>(null);
 
   useEffect(() => {
-    if (!isFolderDestination) return;
+    if (!isFolderDestination) return noop;
     let isMounted = true;
     const load = async () => {
       try {
@@ -97,7 +101,7 @@ function useHasDownloadsAccess(isDownloadsDestination: boolean): boolean {
   const [hasAccess, setHasAccess] = useState(true);
 
   useEffect(() => {
-    if (!isDownloadsDestination) return;
+    if (!isDownloadsDestination) return noop;
     let isMounted = true;
     const load = async () => {
       const isHeld = await hasDownloadsAccess();
@@ -158,12 +162,11 @@ export function AutoExportStatusItem() {
             size="sm"
             className="mt-1 self-start"
             render={
-              // eslint-disable-next-line jsx-a11y-js/anchor-has-content -- Button's render prop injects the children into this anchor
-              <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer" />
+              <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer">
+                {i18n.t("popup_statusDownloadsAccessAction")}
+              </a>
             }
-          >
-            {i18n.t("popup_statusDownloadsAccessAction")}
-          </Button>
+          />
         </ItemContent>
       </Item>
     );
@@ -186,12 +189,11 @@ export function AutoExportStatusItem() {
             variant="outline"
             size="sm"
             render={
-              // eslint-disable-next-line jsx-a11y-js/anchor-has-content -- Button's render prop injects the children into this anchor
-              <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer" />
+              <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer">
+                {i18n.t("popup_statusFolderAccessAction")}
+              </a>
             }
-          >
-            {i18n.t("popup_statusFolderAccessAction")}
-          </Button>
+          />
         </ItemActions>
       </Item>
     );
@@ -225,24 +227,23 @@ export function AutoExportStatusItem() {
       variant="muted"
       size="sm"
       render={
-        // eslint-disable-next-line jsx-a11y-js/anchor-has-content -- Item's render prop injects the children into this anchor
-        <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer" />
+        <a href={getAppUrl(APP_ROUTES.autoExport)} target="_blank" rel="noreferrer">
+          <ItemMedia variant="icon">
+            {status.kind === "failed" ? (
+              <CircleAlertIcon className="text-destructive" />
+            ) : (
+              <CalendarClockIcon />
+            )}
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>{title}</ItemTitle>
+            <ItemDescription>{description}</ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <ChevronRightIcon />
+          </ItemActions>
+        </a>
       }
-    >
-      <ItemMedia variant="icon">
-        {status.kind === "failed" ? (
-          <CircleAlertIcon className="text-destructive" />
-        ) : (
-          <CalendarClockIcon />
-        )}
-      </ItemMedia>
-      <ItemContent>
-        <ItemTitle>{title}</ItemTitle>
-        <ItemDescription>{description}</ItemDescription>
-      </ItemContent>
-      <ItemActions>
-        <ChevronRightIcon />
-      </ItemActions>
-    </Item>
+    />
   );
 }

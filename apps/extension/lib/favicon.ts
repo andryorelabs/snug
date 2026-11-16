@@ -18,7 +18,7 @@ const placeholderBySize = new Map<number, Promise<string>>();
  * @param size The requested favicon size, in pixels.
  * @returns The `_favicon` API URL for that page and size.
  */
-export function getFaviconUrl(url: string, size: number = 16): string {
+export function getFaviconUrl(url: string, size = 16): string {
   const faviconUrl = new URL(browser.runtime.getURL("/_favicon/?"));
   faviconUrl.searchParams.set("pageUrl", url);
   faviconUrl.searchParams.set("size", size.toString());
@@ -28,8 +28,13 @@ export function getFaviconUrl(url: string, size: number = 16): string {
 function readBlobAsDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener("loadend", () => resolve(reader.result as string));
-    reader.addEventListener("error", () => reject(reader.error ?? new Error("FileReader failed")));
+    reader.addEventListener("loadend", () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("FileReader did not produce a data URL"));
+    });
+    reader.addEventListener("error", () => {
+      reject(reader.error ?? new Error("FileReader failed"));
+    });
     reader.readAsDataURL(blob);
   });
 }
@@ -71,7 +76,7 @@ function getPlaceholderDataUrl(size: number): Promise<string> {
  * @param size The requested favicon size, in pixels.
  * @returns The favicon as a base64 data URL, or `''` if none is available.
  */
-export async function getFaviconBase64(url: string, size: number = 16): Promise<string> {
+export async function getFaviconBase64(url: string, size = 16): Promise<string> {
   try {
     const [dataUrl, placeholder] = await Promise.all([
       fetchFaviconDataUrl(url, size),

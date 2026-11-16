@@ -26,7 +26,7 @@ import {
 import type { ExtendedBookmarkTreeNode } from "./types";
 
 vi.mock("./export-all-bookmarks", () => ({
-  triggerDownload: vi.fn(),
+  triggerDownload: vi.fn<(...arguments_: unknown[]) => void>(),
 }));
 
 const downloadMock = vi.mocked(triggerDownload);
@@ -91,7 +91,7 @@ describe("takeSafetySnapshot", () => {
   });
 
   it("never touches browser.downloads, so it needs no Downloads access", async () => {
-    const download = vi.fn();
+    const download = vi.fn<(...arguments_: unknown[]) => void>();
     Object.assign(browser, { downloads: { download } });
     seedSample();
 
@@ -122,7 +122,7 @@ describe("takeSafetySnapshot", () => {
 
   it("still stores the snapshot and resolves when the file save fails", async () => {
     seedSample();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
     downloadMock.mockImplementationOnce(() => {
       throw new Error("disk full");
     });
@@ -246,7 +246,7 @@ describe("restoreSafetySnapshot", () => {
     downloadMock.mockImplementationOnce(() => {
       throw new Error("blocked");
     });
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockReturnValue(undefined);
 
     await restoreSafetySnapshot(snapshot);
 
@@ -298,7 +298,7 @@ describe("Mobile root and non-web URLs", () => {
   it("calls onClearingExisting before the existing content is deleted", async () => {
     seedSample();
     const { roots } = await captureSafetySnapshot();
-    const onClearingExisting = vi.fn();
+    const onClearingExisting = vi.fn<(...arguments_: unknown[]) => void>();
 
     await hasRewrittenRootsFully(roots, onClearingExisting);
 

@@ -3,6 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "yaml";
 
+import { isRecord } from "./json-guards";
+
 const DEFAULT_WORKFLOWS_DIRECTORY = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   "../.github/workflows",
@@ -61,6 +63,24 @@ export function readWorkflowText(
   return readFileSync(path.join(directory, fileName), "utf8");
 }
 
+function isWorkflow(value: unknown): value is Workflow {
+  return isRecord(value);
+}
+
+/**
+ * Parses workflow YAML text.
+ * @param text The workflow YAML source.
+ * @returns The workflow document as a plain object.
+ * @throws {TypeError} When the document is not a YAML mapping.
+ */
+export function parseWorkflow(text: string): Workflow {
+  const document: unknown = parse(text);
+  if (!isWorkflow(document)) {
+    throw new TypeError("workflow document must be a YAML mapping");
+  }
+  return document;
+}
+
 /**
  * Reads and parses a workflow file.
  * @param fileName The file name inside the workflows directory.
@@ -71,5 +91,5 @@ export function readWorkflow(
   fileName: string,
   directory: string = DEFAULT_WORKFLOWS_DIRECTORY,
 ): Workflow {
-  return parse(readWorkflowText(fileName, directory)) as Workflow;
+  return parseWorkflow(readWorkflowText(fileName, directory));
 }

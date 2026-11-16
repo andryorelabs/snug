@@ -3,7 +3,7 @@ import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 
 import { SPRING } from "./easing";
 
-export type CameraKeyframe = {
+export interface CameraKeyframe {
   /**
    * Frame at which the move to this keyframe starts.
    */
@@ -14,9 +14,13 @@ export type CameraKeyframe = {
   x: number;
   y: number;
   zoom: number;
-};
+}
 
-export type CameraState = { x: number; y: number; zoom: number };
+export interface CameraState {
+  x: number;
+  y: number;
+  zoom: number;
+}
 
 const mix = (from: number, to: number, amount: number): number => from + (to - from) * amount;
 
@@ -53,7 +57,7 @@ export const cameraStateAt = (
   };
 };
 
-export type CameraProps = {
+export interface CameraProps {
   keyframes: readonly CameraKeyframe[];
   /**
    * Frames a move takes. Default 24.
@@ -73,7 +77,7 @@ export type CameraProps = {
    */
   layer?: { width: number; height: number };
   children: ReactNode;
-};
+}
 
 /**
  * Virtual camera: clips to its viewport and transforms a layer so the

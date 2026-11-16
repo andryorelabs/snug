@@ -97,9 +97,9 @@ export function findAncestorsOfMatches(nodes: BookmarkNode[], term: string): str
   const lower = term.toLowerCase();
   const ancestors: string[] = [];
 
-  function hasMatchingDescendant(nodes: BookmarkNode[]): boolean {
+  function hasMatchingDescendant(siblings: BookmarkNode[]): boolean {
     let didMatch = false;
-    for (const node of nodes) {
+    for (const node of siblings) {
       if (node.url) {
         if (isSearchMatch(node, lower)) didMatch = true;
       } else {

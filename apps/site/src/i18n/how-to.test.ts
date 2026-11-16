@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import { HOW_TO_PAGES, type HowToPageDefinition } from "../content/how-to-pages";
 import { PUBLISHED_SOURCES } from "../docs/published";
+import { isRecord } from "../testing/guards";
 import { flattenKeys } from "./content";
 import {
   getHowToContent,
@@ -50,7 +52,7 @@ function files(entries: Record<string, Record<string, unknown>>): HowToFiles {
   );
 }
 
-const firstPageOnly = { [SLUG]: HOW_TO_PAGES[SLUG] as HowToPageDefinition };
+const firstPageOnly = { [SLUG]: requireValue(HOW_TO_PAGES[SLUG]) };
 
 function load(
   entries: Record<string, Record<string, unknown>>,
@@ -71,7 +73,7 @@ function withoutKey(tree: Record<string, unknown>, key: string) {
 }
 
 function placeholdersIn(node: unknown): string[] {
-  const children = typeof node === "string" ? [] : Object.values(node as Record<string, unknown>);
+  const children = isRecord(node) ? Object.values(node) : [];
   const own =
     typeof node === "string"
       ? node
@@ -80,6 +82,10 @@ function placeholdersIn(node: unknown): string[] {
           .toArray()
       : [];
   return [...own, ...children.flatMap((child) => placeholdersIn(child))];
+}
+
+function codePointLength(text: string): number {
+  return text.match(/./gsu)?.length ?? 0;
 }
 
 describe("loadHowToContent", () => {
@@ -147,12 +153,8 @@ describe("bundled copy", () => {
   it("has the Firefox to Chrome page in every locale with key parity", () => {
     expect(howToPageLocales(SLUG)).toEqual([...LOCALES]);
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, SLUG) as never)).toEqual(
-        flattenKeys(english as never),
-      );
-      expect(flattenKeys(getHowToSharedContent(locale) as never)).toEqual(
-        flattenKeys(sharedEnglish as never),
-      );
+      expect(flattenKeys(getHowToContent(locale, SLUG))).toEqual(flattenKeys(english));
+      expect(flattenKeys(getHowToSharedContent(locale))).toEqual(flattenKeys(sharedEnglish));
     }
   });
 
@@ -164,8 +166,8 @@ describe("bundled copy", () => {
   ])("has %s in every locale with key parity", (slug) => {
     expect(howToPageLocales(slug)).toEqual([...LOCALES]);
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, slug) as never)).toEqual(
-        flattenKeys(getHowToContent("en", slug) as never),
+      expect(flattenKeys(getHowToContent(locale, slug))).toEqual(
+        flattenKeys(getHowToContent("en", slug)),
       );
     }
   });
@@ -184,7 +186,7 @@ describe("bundled copy", () => {
           ...placeholdersIn(getHowToSharedContent(locale)),
         ];
         for (const key of keys) {
-          expect(known, `${locale}/${slug} {${key}}`).toContain(key);
+          expect(known).toContain(key);
         }
       }
     }
@@ -196,9 +198,9 @@ describe("bundled copy", () => {
       for (const locale of LOCALES) {
         const { title, description } = getHowToMeta(locale, slug);
         const label = `${locale}/${slug}`;
-        const length = [...description].length;
+        const length = codePointLength(description);
         const checks: [string, boolean][] = [
-          ["title suffix", / \| Snug$/u.test(title)],
+          ["title suffix", title.endsWith(" | Snug")],
           ["title starts with Snug", !title.startsWith("Snug")],
           ["title width", visualWidth(title) <= 60],
           [
@@ -331,8 +333,8 @@ describe("export pages", () => {
     expect(howToPageLocales(slug)).toEqual([...LOCALES]);
     expect(getHowToPage(slug).sample).toBe(slug.endsWith("csv") ? "csv" : "json");
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, slug) as never)).toEqual(
-        flattenKeys(getHowToContent("en", slug) as never),
+      expect(flattenKeys(getHowToContent(locale, slug))).toEqual(
+        flattenKeys(getHowToContent("en", slug)),
       );
     }
   });
@@ -370,12 +372,12 @@ describe("remove-duplicate-bookmarks-in-chrome", () => {
 
 describe("howToSlugsForGuideEntry", () => {
   const pages: Record<string, HowToPageDefinition> = {
-    a: { ...HOW_TO_PAGES[SLUG]!, relatedGuide: ["guide/importing"] },
+    a: { ...requireValue(HOW_TO_PAGES[SLUG]), relatedGuide: ["guide/importing"] },
     b: {
-      ...HOW_TO_PAGES[SLUG]!,
+      ...requireValue(HOW_TO_PAGES[SLUG]),
       relatedGuide: ["guide/importing", "guide/duplicates"],
     },
-    c: { ...HOW_TO_PAGES[SLUG]!, relatedGuide: ["guide"] },
+    c: { ...requireValue(HOW_TO_PAGES[SLUG]), relatedGuide: ["guide"] },
   };
 
   it("inverts the related Guide pages in registry order", () => {

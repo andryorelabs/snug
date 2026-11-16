@@ -48,6 +48,12 @@ function isForwardPhrase(phrase: string): phrase is ForwardPhrase {
   return Object.hasOwn(RELATION_KINDS, phrase);
 }
 
+function isRelationPhrase(phrase: string): phrase is RelationPhrase {
+  return (
+    isForwardPhrase(phrase) || Object.values(RELATION_KINDS).some((kind) => kind.inverse === phrase)
+  );
+}
+
 function readStatusSection(content: string): string {
   return /(?:^|\n)## Status\n\n([\s\S]*?)(?=\n## |$)/.exec(content)?.[1] ?? "";
 }
@@ -65,13 +71,15 @@ function readTitle(content: string, number: string): string | undefined {
 function parseRelations(statusSection: string): Relation[] {
   return statusSection
     .matchAll(RELATION_LIST_PATTERN)
-    .flatMap((listMatch) =>
-      (listMatch[2] ?? "").matchAll(RELATION_LINK_PATTERN).map((link): Relation => ({
-        phrase: (listMatch[1] ?? "").replaceAll(/\s+/g, " ") as RelationPhrase,
+    .flatMap((listMatch) => {
+      const phrase = (listMatch[1] ?? "").replaceAll(/\s+/g, " ");
+      if (!isRelationPhrase(phrase)) return [];
+      return (listMatch[2] ?? "").matchAll(RELATION_LINK_PATTERN).map((link): Relation => ({
+        phrase,
         targetNumber: link[1] ?? "",
         targetFile: link[2] ?? "",
-      })),
-    )
+      }));
+    })
     .toArray();
 }
 

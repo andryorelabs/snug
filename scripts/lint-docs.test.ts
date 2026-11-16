@@ -162,7 +162,9 @@ function installBunShim(): void {
       });
       return {
         exited: new Promise<number>((resolve) => {
-          child.on("close", (code) => resolve(code ?? 1));
+          child.on("close", (code) => {
+            resolve(code ?? 1);
+          });
         }),
         stderr: Readable.toWeb(child.stderr),
       };
@@ -195,16 +197,16 @@ const lockPath = () => path.join(cacheRoot.directory, buildLycheeLockRelativePat
 
 describe("ensureLycheeBinary", () => {
   let scratch: string;
-  let fetchMock: ReturnType<typeof vi.fn>;
+  let fetchMock: ReturnType<typeof vi.fn<typeof fetch>>;
 
   beforeEach(() => {
     scratch = mkdtempSync(path.join(tmpdir(), "lint-docs-ensure-"));
     cacheRoot.directory = path.join(scratch, "git");
     mkdirSync(cacheRoot.directory);
     installBunShim();
-    fetchMock = vi.fn();
+    fetchMock = vi.fn<typeof fetch>();
     vi.stubGlobal("fetch", fetchMock);
-    vi.spyOn(console, "log").mockImplementation(vi.fn());
+    vi.spyOn(console, "log").mockImplementation(vi.fn<() => void>());
   });
   afterEach(() => {
     vi.unstubAllGlobals();

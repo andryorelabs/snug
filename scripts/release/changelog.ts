@@ -1,5 +1,3 @@
-const SECTION_HEADING = /^## \[/;
-const SUBSECTION_HEADING = /^### /;
 const GROUP_HEADING = /^### (?:Added|Changed|Fixed)\s*$/;
 const LINK_DEFINITION = /^\[[^\]]+\]:\s/;
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i;
@@ -45,7 +43,7 @@ function findSectionBody(
     return undefined;
   }
   const rest = lines.slice(headingIndex + 1);
-  const length = rest.findIndex((line) => SECTION_HEADING.test(line) || LINK_DEFINITION.test(line));
+  const length = rest.findIndex((line) => line.startsWith("## [") || LINK_DEFINITION.test(line));
   return {
     headingIndex,
     body: length === -1 ? rest : rest.slice(0, length),
@@ -57,13 +55,13 @@ function dropEmptySubsections(body: readonly string[]): string[] {
   let subsection: string[] = [];
   const flush = () => {
     const [first = "", ...rest] = subsection;
-    if (!SUBSECTION_HEADING.test(first) || rest.some((line) => hasContent(line))) {
+    if (!first.startsWith("### ") || rest.some((line) => hasContent(line))) {
       kept.push(...subsection);
     }
     subsection = [];
   };
   for (const line of body) {
-    if (SUBSECTION_HEADING.test(line)) {
+    if (line.startsWith("### ")) {
       flush();
     }
     subsection.push(line);
@@ -124,14 +122,12 @@ export function cutRelease(changelog: string, version: string, isoDate: string):
     );
   }
   const firstLine = body.find((line) => hasContent(line)) ?? "";
-  if (!SUBSECTION_HEADING.test(firstLine)) {
+  if (!firstLine.startsWith("### ")) {
     throw new ChangelogError(
       'Entries under "## [Unreleased]" must sit under a "### Added", "### Changed" or "### Fixed" heading',
     );
   }
-  const unknownGroup = body.find(
-    (line) => SUBSECTION_HEADING.test(line) && !GROUP_HEADING.test(line),
-  );
+  const unknownGroup = body.find((line) => line.startsWith("### ") && !GROUP_HEADING.test(line));
   if (unknownGroup !== undefined) {
     throw new ChangelogError(
       `"${unknownGroup.trim()}" is not a changelog group; use "### Added", "### Changed" or "### Fixed"`,

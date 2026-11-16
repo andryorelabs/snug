@@ -22,7 +22,7 @@ import { Skeleton } from "@workspace/ui/components/skeleton";
 import { Spinner } from "@workspace/ui/components/spinner";
 import { toast } from "@workspace/ui/components/toast";
 import { CopyCheckIcon, TriangleAlertIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { DuplicateGroupCard } from "@/components/duplicates/duplicate-group-card";
 import {
@@ -37,15 +37,14 @@ import { formatCount } from "@/lib/format-count";
 
 function DuplicatesSkeleton() {
   return (
-    <div
-      role="status"
+    <output
       aria-label={i18n.t("duplicates_scanning")}
       className="mx-auto flex w-full max-w-2xl flex-col gap-4"
     >
       <Skeleton className="h-16 w-full" />
       <Skeleton className="h-40 w-full" />
       <Skeleton className="h-40 w-full" />
-    </div>
+    </output>
   );
 }
 
@@ -104,14 +103,17 @@ export function DuplicatesRoute() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [hasScanFailed, setHasScanFailed] = useState(false);
 
-  const [scanCount, setScanCount] = useState(0);
-  const headingFocusPending = useRef(false);
+  const [scanRequest, setScanRequest] = useState({ shouldFocusHeading: false });
 
-  const scan = () => {
+  const startScan = (shouldFocusHeading: boolean) => {
     setGroups(null);
     setHasScanFailed(false);
     setKeptCopyIds({});
-    setScanCount((previous) => previous + 1);
+    setScanRequest({ shouldFocusHeading });
+  };
+
+  const scan = () => {
+    startScan(false);
   };
 
   useEffect(() => {
@@ -123,15 +125,14 @@ export function DuplicatesRoute() {
       } catch {
         if (isCurrent) setHasScanFailed(true);
       }
-      if (!isCurrent || !headingFocusPending.current) return;
-      headingFocusPending.current = false;
+      if (!isCurrent || !scanRequest.shouldFocusHeading) return;
       document.querySelector("h1")?.focus();
     };
     void runScan();
     return () => {
       isCurrent = false;
     };
-  }, [scanCount]);
+  }, [scanRequest]);
 
   if (hasScanFailed) {
     return (
@@ -178,13 +179,12 @@ export function DuplicatesRoute() {
       toast.add({
         type: "error",
         title: i18n.t("duplicates_deleteFailed"),
-        description: (error as Error).message,
+        description: error instanceof Error ? error.message : String(error),
       });
     } finally {
       setIsDeleting(false);
       setIsConfirmOpen(false);
-      headingFocusPending.current = true;
-      scan();
+      startScan(true);
     }
   };
 
@@ -202,7 +202,12 @@ export function DuplicatesRoute() {
           </ItemTitle>
         </ItemContent>
         <ItemActions>
-          <Button variant="destructive" onClick={() => setIsConfirmOpen(true)}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setIsConfirmOpen(true);
+            }}
+          >
             {i18n.t("duplicates_deleteButton", copyCount, [copyCountText])}
           </Button>
         </ItemActions>
@@ -213,12 +218,12 @@ export function DuplicatesRoute() {
           key={group.normalizedUrl}
           group={group}
           keptCopyIds={keptCopyIds}
-          onKeepChange={(normalizedUrl, copyId) =>
+          onKeepChange={(normalizedUrl, copyId) => {
             setKeptCopyIds((previous) => ({
               ...previous,
               [normalizedUrl]: copyId,
-            }))
-          }
+            }));
+          }}
         />
       ))}
 

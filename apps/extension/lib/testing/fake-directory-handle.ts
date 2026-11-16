@@ -1,3 +1,5 @@
+import { isDirectoryHandle } from "@/lib/is-directory-handle";
+
 /**
  * In-memory stand-in for the slice of `FileSystemDirectoryHandle` the Custom
  * folder writer uses, so unit tests run without a real file system. Files are
@@ -15,60 +17,60 @@ export class FakeDirectoryHandle {
     this.permission = permission;
   }
 
-  async queryPermission(): Promise<PermissionState> {
-    return this.permission;
+  queryPermission(): Promise<PermissionState> {
+    return Promise.resolve(this.permission);
   }
 
-  async getDirectoryHandle(
-    name: string,
-    options?: { create?: boolean },
-  ): Promise<FakeDirectoryHandle> {
+  getDirectoryHandle(name: string, options?: { create?: boolean }): Promise<FakeDirectoryHandle> {
     const existing = this.directories.get(name);
-    if (existing) return existing;
+    if (existing) return Promise.resolve(existing);
     if (!options?.create) {
-      throw new DOMException("not found", "NotFoundError");
+      return Promise.reject(new DOMException("not found", "NotFoundError"));
     }
     const created = new FakeDirectoryHandle(name);
     this.directories.set(name, created);
-    return created;
+    return Promise.resolve(created);
   }
 
-  async isSameEntry(other: unknown): Promise<boolean> {
-    return other === this;
+  isSameEntry(other: unknown): Promise<boolean> {
+    return Promise.resolve(other === this);
   }
 
-  async removeEntry(name: string): Promise<void> {
-    if (!this.files.delete(name)) {
-      throw new DOMException("not found", "NotFoundError");
-    }
+  removeEntry(name: string): Promise<void> {
+    return this.files.delete(name)
+      ? Promise.resolve()
+      : Promise.reject(new DOMException("not found", "NotFoundError"));
   }
 
-  async getFileHandle(name: string, options?: { create?: boolean }) {
+  getFileHandle(name: string, options?: { create?: boolean }) {
     if (!this.files.has(name)) {
       if (!options?.create) {
-        throw new DOMException("not found", "NotFoundError");
+        return Promise.reject(new DOMException("not found", "NotFoundError"));
       }
       this.files.set(name, "");
     }
-    return {
+    return Promise.resolve({
       kind: "file",
       name,
-      createWritable: async () => {
+      createWritable: () => {
         let pending = "";
-        return {
-          write: async (chunk: string) => {
+        return Promise.resolve({
+          write: (chunk: string) => {
             pending += chunk;
+            return Promise.resolve();
           },
-          close: async () => {
+          close: () => {
             this.files.set(name, pending);
+            return Promise.resolve();
           },
-          abort: async () => {},
-        };
+          abort: () => Promise.resolve(),
+        });
       },
-    };
+    });
   }
 
   asHandle(): FileSystemDirectoryHandle {
-    return this as unknown as FileSystemDirectoryHandle;
+    if (!isDirectoryHandle(this)) throw new TypeError("The fake is not a directory handle");
+    return this;
   }
 }

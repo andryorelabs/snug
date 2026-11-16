@@ -62,8 +62,8 @@ function installFakeIndexedDatabase(options: { failOpen?: boolean } = {}) {
 
   const database = {
     transaction: () => ({ objectStore: () => store }),
-    createObjectStore: vi.fn(),
-    close: vi.fn(),
+    createObjectStore: vi.fn<(...arguments_: unknown[]) => void>(),
+    close: vi.fn<(...arguments_: unknown[]) => void>(),
   };
 
   vi.stubGlobal("indexedDB", {

@@ -37,20 +37,20 @@ beforeEach(() => {
       const anchor: FakeAnchor = {
         href: "",
         download: "",
-        click: () => {},
-        remove: () => {},
+        click: vi.fn<() => void>(),
+        remove: vi.fn<() => void>(),
       };
       anchors.push(anchor);
       return anchor;
     },
-    body: { append: () => {} },
+    body: { append: vi.fn<() => void>() },
   });
   vi.stubGlobal("URL", {
     createObjectURL: (blob: Blob) => {
       blobs.push(blob);
       return "blob:fake";
     },
-    revokeObjectURL: () => {},
+    revokeObjectURL: vi.fn<() => void>(),
   });
 });
 

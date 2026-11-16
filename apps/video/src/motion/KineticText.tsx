@@ -8,7 +8,7 @@ import { theme } from "../theme";
 import { SPRING } from "./easing";
 import { splitWords } from "./split-words";
 
-export type KineticTextProps = {
+export interface KineticTextProps {
   text: string;
   locale: Locale;
   /**
@@ -35,7 +35,7 @@ export type KineticTextProps = {
   weight?: number;
   color?: string;
   family?: "display" | "body";
-};
+}
 
 const WRAP_THRESHOLD = 0.62;
 const WRAP_WIDTH_FACTOR = 1.7;
@@ -69,6 +69,9 @@ const fitFontSize = (
   );
 };
 
+const splitCharacters = (text: string): string[] =>
+  Array.from(text.matchAll(/./gsu), ([character]) => character);
+
 /**
  * Word- or character-staggered entrance (settle spring, rise and fade).
  */
@@ -93,9 +96,17 @@ export const KineticText = ({
     [text, fontFamily, weight, maxWidth, fontSize],
   );
   const units = useMemo(
-    () => (unit === "char" ? [...text] : splitWords(text, locale)),
+    () => (unit === "char" ? splitCharacters(text) : splitWords(text, locale)),
     [text, unit, locale],
   );
+  const keyedUnits = useMemo(() => {
+    const occurrences = new Map<string, number>();
+    return units.map((part) => {
+      const occurrence = occurrences.get(part) ?? 0;
+      occurrences.set(part, occurrence + 1);
+      return { part, key: `${part}-${String(occurrence)}` };
+    });
+  }, [units]);
   const gap = unit === "word" && !isCjk(locale) ? "0.28em" : 0;
   return (
     <div
@@ -113,7 +124,7 @@ export const KineticText = ({
         textAlign: align,
       }}
     >
-      {units.map((part, index) => {
+      {keyedUnits.map(({ part, key }, index) => {
         const progress = spring({
           frame: frame - delay - index * stagger,
           fps,
@@ -121,7 +132,7 @@ export const KineticText = ({
         });
         return (
           <span
-            key={`${index}-${part}`}
+            key={key}
             style={{
               display: "inline-block",
               whiteSpace: "pre",

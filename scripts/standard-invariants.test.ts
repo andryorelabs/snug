@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { isRecord, parseJsonAs, parseJsonRecord } from "./json-guards";
 const REPO_ROOT = path.resolve(import.meta.dirname, "..");
 
 const readRepositoryFile = (relativePath: string): string =>
@@ -100,10 +101,9 @@ const readReadmeSlogan = (readme: string): string | undefined =>
   /^\*\*(.+)\*\*$/m.exec(readme)?.[1];
 
 const readExtensionDescription = (): string | undefined =>
-  (
-    JSON.parse(readRepositoryFile("apps/extension/locales/en.json")) as {
-      extensionDescription?: { message?: string };
-    }
+  parseJsonAs(
+    readRepositoryFile("apps/extension/locales/en.json"),
+    (value): value is { extensionDescription?: { message?: string } } => isRecord(value),
   ).extensionDescription?.message;
 
 describe("copy drift", () => {
@@ -127,9 +127,10 @@ describe("copy drift", () => {
   it.each(PRODUCT_PACKAGES)(
     "%s description equals the one-line description in copy.md",
     (packagePath) => {
-      const manifest = JSON.parse(readRepositoryFile(packagePath)) as {
-        description?: string;
-      };
+      const manifest = parseJsonAs(
+        readRepositoryFile(packagePath),
+        (value): value is { description?: string } => isRecord(value),
+      );
       expect(manifest.description).toBe(approvedDescription);
     },
   );
@@ -307,9 +308,8 @@ const compareSkills = (
 });
 
 const readLockedSkills = (): string[] => {
-  const lock: unknown = JSON.parse(readRepositoryFile("skills-lock.json"));
-  const skills = (lock as { skills?: Record<string, unknown> }).skills;
-  if (typeof skills !== "object" || skills === null) {
+  const { skills } = parseJsonRecord(readRepositoryFile("skills-lock.json"));
+  if (!isRecord(skills)) {
     throw new Error('skills-lock.json has no "skills" object');
   }
   return Object.keys(skills);

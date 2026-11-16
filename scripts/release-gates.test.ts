@@ -106,7 +106,7 @@ function runCli(commandArguments: readonly string[]): { code: number; errors: st
   const code = runReleaseGates(commandArguments, {
     repositoryRoot: fixture.repository,
     environment: GIT_IDENTITY,
-    log: () => {},
+    log: () => void 0,
     error: (message) => {
       errors.push(message);
     },
