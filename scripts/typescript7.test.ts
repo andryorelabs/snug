@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const typescript7Bin = path.join(repositoryRoot, "node_modules/typescript7/bin/tsc");
-const typescript6Bin = path.join(repositoryRoot, "node_modules/typescript/bin/tsc");
+const typescript6Bin = path.join(repositoryRoot, "node_modules/typescript/bin/tsc6");
 
 const typecheckScripts = [
   ["package.json", "check:root"],

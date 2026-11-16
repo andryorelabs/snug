@@ -115,7 +115,7 @@
     {
       groupName: "workspace catalog",
       matchFileNames: ["package.json"],
-      matchDepNames: ["cn", "@types/bun"],
+      matchDepNames: ["cn"],
     },
     {
       groupName: "tailwindcss",
@@ -135,13 +135,6 @@
       matchManagers: ["github-actions"],
     },
 
-    // Bun runtime is not managed via package.json engines — bump manually
-    {
-      matchPackageNames: ["bun"],
-      matchManagers: ["npm"],
-      enabled: false,
-    },
-
     // OPT-IN AUTOMERGE — active: branch protection + required "CI passed" status check
     // are now enforced on develop (AO-827, docs/adr/0001-public-repo-security-posture.md)
     // Uses 7-day release age (stricter than global 3-day) as extra supply-chain buffer
@@ -159,12 +152,26 @@
       automergeType: "pr",
       minimumReleaseAge: "7 days",
     },
-    // The Oxc toolchain moves in lockstep and is exact-pinned: lint, format and
-    // typecheck results change between releases, so every bump is a reviewed PR.
-    // Declared after the devDependencies automerge rule so it wins
+    // Toolchain pin groups (standard rule F5, table in scripts/toolchain-table.md):
+    // each moves in its own reviewed PR and never automerges, because lint,
+    // format, typecheck or runtime results change between releases. Declared
+    // after every automerge rule so they win
     {
       groupName: "oxc",
-      matchDepNames: ["oxlint", "oxlint-tsgolint", "oxfmt", "typescript7"],
+      matchDepNames: ["oxlint", "oxlint-tsgolint", "oxfmt"],
+      rangeStrategy: "pin",
+      automerge: false,
+    },
+    {
+      groupName: "typescript7",
+      matchDepNames: ["typescript7"],
+      rangeStrategy: "pin",
+      automerge: false,
+    },
+    // packageManager, engines.bun and @types/bun share one version
+    {
+      groupName: "bun",
+      matchDepNames: ["bun", "@types/bun"],
       rangeStrategy: "pin",
       automerge: false,
     },
