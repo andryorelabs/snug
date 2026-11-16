@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isRecord } from "../testing/guards";
 import { onRequest } from "./route-middleware";
 
 interface FakeEntry {
@@ -24,11 +25,16 @@ interface FakeRoute {
   pagination: { prev?: { href: string }; next?: { href: string } };
 }
 
+type MiddlewareContext = Parameters<typeof onRequest>[0];
+
+function isMiddlewareContext(value: unknown): value is MiddlewareContext {
+  return isRecord(value) && isRecord(value.locals);
+}
+
 const runMiddleware = async (route: FakeRoute) => {
-  await onRequest(
-    { locals: { starlightRoute: route } } as never,
-    (() => Promise.resolve(new Response())) as never,
-  );
+  const context: unknown = { locals: { starlightRoute: route } };
+  if (!isMiddlewareContext(context)) throw new Error("The fake middleware context is invalid");
+  await onRequest(context, () => Promise.resolve());
   return route;
 };
 

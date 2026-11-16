@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { requireValue } from "../../e2e/require";
+import { isRecord } from "../testing/guards";
 import { catalogLoader } from "./loader";
 import { REPOSITORY_ROOT, TRANSLATIONS_DIRECTORY } from "./paths";
 
@@ -77,8 +78,16 @@ const createContext = (hasWatcher = false) => {
   };
 };
 
-const load = (context: unknown) =>
-  catalogLoader().load(context as Parameters<ReturnType<typeof catalogLoader>["load"]>[0]);
+type LoaderLoadContext = Parameters<ReturnType<typeof catalogLoader>["load"]>[0];
+
+function isLoaderLoadContext(value: unknown): value is LoaderLoadContext {
+  return isRecord(value) && isRecord(value.store);
+}
+
+const load = (context: unknown) => {
+  if (!isLoaderLoadContext(context)) throw new Error("The fake loader context is invalid");
+  return catalogLoader().load(context);
+};
 
 describe("catalogLoader", () => {
   it("is the catalog loader", () => {

@@ -8,9 +8,19 @@ import {
   howToPath,
 } from "../i18n/how-to";
 import { SITE_ORIGIN } from "../i18n/locales";
+import { isRecord } from "../testing/guards";
 import { howToCrumbs, howToIndexDescriptor, howToPageDescriptor } from "./how-to-descriptor";
 
 const SLUG = HOW_TO_SLUGS[0] ?? "";
+
+interface GraphNode {
+  "@type": string;
+  itemListElement?: { position: number; url?: string; item?: string }[];
+}
+
+function hasGraph(value: object | undefined): value is { "@graph": GraphNode[] } {
+  return isRecord(value) && Array.isArray(value["@graph"]);
+}
 
 describe("howToPageDescriptor", () => {
   it("uses the page path and only the locales that carry the page", () => {
@@ -21,14 +31,8 @@ describe("howToPageDescriptor", () => {
 
   it("serializes a WebPage and a BreadcrumbList with the page last", () => {
     const page = howToPageDescriptor("en", SLUG);
-    const graph = (
-      page.jsonLd as {
-        "@graph": {
-          "@type": string;
-          itemListElement?: { position: number; item: string }[];
-        }[];
-      }
-    )["@graph"];
+    if (!hasGraph(page.jsonLd)) throw new Error("Missing JSON-LD graph");
+    const graph = page.jsonLd["@graph"];
     expect(graph.map((node) => node["@type"])).toEqual(["WebPage", "BreadcrumbList"]);
     const items = graph[1]?.itemListElement ?? [];
     expect(items.map((item) => item.position)).toEqual([1, 2, 3]);
@@ -47,14 +51,8 @@ describe("howToIndexDescriptor", () => {
 
   it("serializes CollectionPage, ItemList and BreadcrumbList with every page once", () => {
     const page = howToIndexDescriptor("en");
-    const graph = (
-      page.jsonLd as {
-        "@graph": {
-          "@type": string;
-          itemListElement?: { position: number; url?: string; item?: string }[];
-        }[];
-      }
-    )["@graph"];
+    if (!hasGraph(page.jsonLd)) throw new Error("Missing JSON-LD graph");
+    const graph = page.jsonLd["@graph"];
     expect(graph.map((node) => node["@type"])).toEqual([
       "CollectionPage",
       "ItemList",

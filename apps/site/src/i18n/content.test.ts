@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isRecord } from "../testing/guards";
 import { assertSameKeys, flattenKeys, getContent, loadAllContent } from "./content";
 import { LOCALES } from "./locales";
 
@@ -16,7 +17,8 @@ function visualWidth(text: string): number {
 function flattenValues(node: unknown, prefix = ""): [string, string][] {
   if (typeof node === "string") return [[prefix, node]];
   const entries: [string, string][] = [];
-  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+  const nodeEntries = Object.entries(isRecord(node) ? node : {});
+  for (const [key, value] of nodeEntries) {
     entries.push(...flattenValues(value, prefix ? `${prefix}.${key}` : key));
   }
   return entries;

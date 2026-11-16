@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { requireValue } from "../../e2e/require";
 import { HOW_TO_PAGES, type HowToPageDefinition } from "../content/how-to-pages";
 import { PUBLISHED_SOURCES } from "../docs/published";
+import { isRecord } from "../testing/guards";
 import { flattenKeys } from "./content";
 import {
   getHowToContent,
@@ -72,7 +73,7 @@ function withoutKey(tree: Record<string, unknown>, key: string) {
 }
 
 function placeholdersIn(node: unknown): string[] {
-  const children = typeof node === "string" ? [] : Object.values(node as Record<string, unknown>);
+  const children = isRecord(node) ? Object.values(node) : [];
   const own =
     typeof node === "string"
       ? node
@@ -152,12 +153,8 @@ describe("bundled copy", () => {
   it("has the Firefox to Chrome page in every locale with key parity", () => {
     expect(howToPageLocales(SLUG)).toEqual([...LOCALES]);
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, SLUG) as never)).toEqual(
-        flattenKeys(english as never),
-      );
-      expect(flattenKeys(getHowToSharedContent(locale) as never)).toEqual(
-        flattenKeys(sharedEnglish as never),
-      );
+      expect(flattenKeys(getHowToContent(locale, SLUG))).toEqual(flattenKeys(english));
+      expect(flattenKeys(getHowToSharedContent(locale))).toEqual(flattenKeys(sharedEnglish));
     }
   });
 
@@ -169,8 +166,8 @@ describe("bundled copy", () => {
   ])("has %s in every locale with key parity", (slug) => {
     expect(howToPageLocales(slug)).toEqual([...LOCALES]);
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, slug) as never)).toEqual(
-        flattenKeys(getHowToContent("en", slug) as never),
+      expect(flattenKeys(getHowToContent(locale, slug))).toEqual(
+        flattenKeys(getHowToContent("en", slug)),
       );
     }
   });
@@ -336,8 +333,8 @@ describe("export pages", () => {
     expect(howToPageLocales(slug)).toEqual([...LOCALES]);
     expect(getHowToPage(slug).sample).toBe(slug.endsWith("csv") ? "csv" : "json");
     for (const locale of LOCALES) {
-      expect(flattenKeys(getHowToContent(locale, slug) as never)).toEqual(
-        flattenKeys(getHowToContent("en", slug) as never),
+      expect(flattenKeys(getHowToContent(locale, slug))).toEqual(
+        flattenKeys(getHowToContent("en", slug)),
       );
     }
   });

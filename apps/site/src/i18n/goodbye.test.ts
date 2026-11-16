@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isRecord } from "../testing/guards";
 import {
   GOODBYE_COPY_EN,
   GOODBYE_REASON_IDS,
@@ -106,15 +107,12 @@ describe("goodbye copy", () => {
       typeof value === "string"
         ? "string"
         : Object.fromEntries(
-            Object.entries(value as Record<string, unknown>).map(([key, child]) => [
-              key,
-              shape(child),
-            ]),
+            Object.entries(isRecord(value) ? value : {}).map(([key, child]) => [key, shape(child)]),
           );
     const strings = (value: unknown): string[] =>
       typeof value === "string"
         ? [value]
-        : Object.values(value as Record<string, unknown>).flatMap((child) => strings(child));
+        : Object.values(isRecord(value) ? value : {}).flatMap((child) => strings(child));
     for (const locale of LOCALES) {
       const copy = getGoodbyeCopy(locale);
       expect(shape(copy)).toEqual(shape(GOODBYE_COPY_EN));
