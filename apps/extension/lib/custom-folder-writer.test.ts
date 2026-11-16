@@ -35,9 +35,7 @@ describe("writeToCustomFolder", () => {
 
   it("propagates unexpected lookup errors", async () => {
     const root = new FakeDirectoryHandle("root");
-    root.getFileHandle = async () => {
-      throw new DOMException("denied", "NotAllowedError");
-    };
+    root.getFileHandle = () => Promise.reject(new DOMException("denied", "NotAllowedError"));
 
     await expect(
       writeToCustomFolder(root.asHandle(), "", "x", "csv", "data"),
@@ -52,15 +50,15 @@ describe("writeToCustomFolder", () => {
       const handle = await realGetFileHandle(name, options);
       return {
         ...handle,
-        createWritable: async () => ({
-          write: async () => {
-            throw new Error("disk full");
-          },
-          close: () => Promise.resolve(),
-          abort: async () => {
-            didAbort = true;
-          },
-        }),
+        createWritable: () =>
+          Promise.resolve({
+            write: () => Promise.reject(new Error("disk full")),
+            close: () => Promise.resolve(),
+            abort: () => {
+              didAbort = true;
+              return Promise.resolve();
+            },
+          }),
       };
     };
 

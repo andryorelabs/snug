@@ -69,7 +69,9 @@ describe("useOperationProgress", () => {
     act(() => {
       controlsNow().begin();
     });
-    act(() => controlsNow().end());
+    act(() => {
+      controlsNow().end();
+    });
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1000);
@@ -84,14 +86,18 @@ describe("useOperationProgress", () => {
       controlsNow().begin();
     });
 
-    act(() => controlsNow().report({ done: 3, total: 10 }));
+    act(() => {
+      controlsNow().report({ done: 3, total: 10 });
+    });
     expect(controlsNow().state).toMatchObject({
       done: 3,
       total: 10,
       skippedDuplicates: 0,
     });
 
-    act(() => controlsNow().report({ done: 4, total: 10, skippedDuplicates: 2 }));
+    act(() => {
+      controlsNow().report({ done: 4, total: 10, skippedDuplicates: 2 });
+    });
     expect(controlsNow().state.skippedDuplicates).toBe(2);
   });
 
@@ -101,7 +107,9 @@ describe("useOperationProgress", () => {
       signal = controlsNow().begin();
     });
 
-    act(() => controlsNow().requestCancel());
+    act(() => {
+      controlsNow().requestCancel();
+    });
 
     expect(signal?.aborted).toBe(true);
     expect(controlsNow().state.phase).toBe("canceling");
@@ -112,8 +120,12 @@ describe("useOperationProgress", () => {
     act(() => {
       controlsNow().begin();
     });
-    act(() => controlsNow().report({ done: 5, total: 5, skippedDuplicates: 1 }));
-    act(() => controlsNow().end());
+    act(() => {
+      controlsNow().report({ done: 5, total: 5, skippedDuplicates: 1 });
+    });
+    act(() => {
+      controlsNow().end();
+    });
     expect(controlsNow().state.phase).toBe("idle");
 
     act(() => {
@@ -128,6 +140,10 @@ describe("useOperationProgress", () => {
   });
 
   it("tolerates canceling when no operation began", () => {
-    expect(() => act(() => controlsNow().requestCancel())).not.toThrow();
+    expect(() => {
+      act(() => {
+        controlsNow().requestCancel();
+      });
+    }).not.toThrow();
   });
 });

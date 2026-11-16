@@ -9,6 +9,7 @@ import {
   wasImportRestored,
   withImportRollback,
 } from "./import-control";
+import { forEachSequentially } from "./sequential";
 import { resetFakeBookmarks } from "./testing/fake-bookmarks";
 
 beforeEach(() => {
@@ -58,13 +59,16 @@ describe("ImportWriter", () => {
     const writer = new ImportWriter({ onProgress }, total, 4);
     const folder = await writer.create({ parentId: "1", title: "Folder" });
 
-    for (let index = 0; index < IMPORT_PROGRESS_BATCH_SIZE; index++) {
-      await writer.create({
-        parentId: folder.id,
-        title: `B${index}`,
-        url: `https://example.com/${index}`,
-      });
-    }
+    await forEachSequentially(
+      Array.from({ length: IMPORT_PROGRESS_BATCH_SIZE }, (_, index) => index),
+      async (index) => {
+        await writer.create({
+          parentId: folder.id,
+          title: `B${index}`,
+          url: `https://example.com/${index}`,
+        });
+      },
+    );
     expect(onProgress).toHaveBeenCalledTimes(1);
     expect(onProgress).toHaveBeenCalledWith({
       done: IMPORT_PROGRESS_BATCH_SIZE,
@@ -96,9 +100,9 @@ describe("ImportWriter", () => {
     expect(onClearingExisting).toHaveBeenCalledOnce();
 
     controller.abort();
-    expect(() => writer.throwIfAborted()).toThrow(
-      expect.objectContaining({ hasClearedExisting: true }),
-    );
+    expect(() => {
+      writer.throwIfAborted();
+    }).toThrow(expect.objectContaining({ hasClearedExisting: true }));
   });
 
   it("rolls back only the top-level nodes it created, removing their subtrees", async () => {
@@ -145,7 +149,7 @@ describe("withImportRollback", () => {
   it("returns the step result without rolling back", async () => {
     const writer = new ImportWriter({}, 1, 0);
 
-    await expect(withImportRollback(writer, async () => 7)).resolves.toBe(7);
+    await expect(withImportRollback(writer, () => Promise.resolve(7))).resolves.toBe(7);
   });
 
   it("rolls back and rethrows the original error", async () => {
@@ -173,11 +177,7 @@ describe("withImportRollback", () => {
       .mockImplementation(vi.fn<(...arguments_: unknown[]) => void>());
     vi.spyOn(writer, "rollback").mockRejectedValue(new Error("rollback failed"));
 
-    await expect(
-      withImportRollback(writer, async () => {
-        throw failure;
-      }),
-    ).rejects.toBe(failure);
+    await expect(withImportRollback(writer, () => Promise.reject(failure))).rejects.toBe(failure);
     expect(log).toHaveBeenCalledWith("Import rollback failed", expect.any(Error));
   });
 });

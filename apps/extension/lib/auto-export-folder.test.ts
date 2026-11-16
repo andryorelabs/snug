@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
+import { forEachSequentially } from "@/lib/sequential";
 import {
   autoExportConfigStore,
   autoExportLastRunStore,
@@ -21,8 +22,8 @@ const folderHandleMock = vi.hoisted((): { handle: unknown } => ({
   handle: null,
 }));
 
-vi.mock("@/lib/folder-handle", async () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+vi.mock("@/lib/folder-handle", () => ({
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
 }));
@@ -171,10 +172,10 @@ describe("runAutoExport retention with the Custom folder destination", () => {
 
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
-      for (let run = 0; run < 3; run++) {
+      await forEachSequentially([0, 1, 2], async (run) => {
         vi.setSystemTime(1000 + run);
         await runAutoExport("manual");
-      }
+      });
     } finally {
       vi.useRealTimers();
     }

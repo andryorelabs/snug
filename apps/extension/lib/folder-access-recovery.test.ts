@@ -16,7 +16,7 @@ const folderHandleMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/folder-handle", () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
   requestFolderAccess: async (handle: { request(): Promise<string> }) => handle.request(),
@@ -24,8 +24,8 @@ vi.mock("@/lib/folder-handle", () => ({
 
 function makeHandle(result: string) {
   return {
-    request: async () => result,
-    queryPermission: async () => "prompt",
+    request: () => Promise.resolve(result),
+    queryPermission: () => Promise.resolve("prompt"),
   };
 }
 

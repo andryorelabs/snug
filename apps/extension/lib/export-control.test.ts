@@ -34,7 +34,9 @@ describe("createExportTicker", () => {
 
     controller.abort();
 
-    expect(() => ticker.tick()).toThrow(ExportCanceledError);
+    expect(() => {
+      ticker.tick();
+    }).toThrow(ExportCanceledError);
   });
 
   it("throws ExportCanceledError from finish when aborted and reports nothing", () => {
@@ -43,7 +45,9 @@ describe("createExportTicker", () => {
     const ticker = createExportTicker({ signal: controller.signal, onProgress }, 0);
     controller.abort();
 
-    expect(() => ticker.finish()).toThrow("Export canceled");
+    expect(() => {
+      ticker.finish();
+    }).toThrow("Export canceled");
     expect(onProgress).not.toHaveBeenCalled();
   });
 });

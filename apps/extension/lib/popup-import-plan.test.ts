@@ -262,6 +262,8 @@ describe("planPopupFileBatch", () => {
   });
 
   it("throws when no file is readable", async () => {
-    await expect(planPopupFileBatch([BROKEN_JSON_REQUEST, BROKEN_JSON_REQUEST])).rejects.toThrow();
+    await expect(planPopupFileBatch([BROKEN_JSON_REQUEST, BROKEN_JSON_REQUEST])).rejects.toThrow(
+      Error,
+    );
   });
 });

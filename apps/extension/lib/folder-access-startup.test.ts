@@ -12,8 +12,8 @@ const folderHandleMock = vi.hoisted((): { handle: unknown } => ({
   handle: null,
 }));
 
-vi.mock("@/lib/folder-handle", async () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+vi.mock("@/lib/folder-handle", () => ({
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
 }));
@@ -34,10 +34,9 @@ function config(overrides: Partial<AutoExportConfig> = {}): AutoExportConfig {
 }
 
 function mockBrowserApis() {
-  const create = vi.fn(async (id: string, ...rest: unknown[]) => {
-    void rest;
-    return id;
-  });
+  const create = vi.fn<(id: string, ...rest: unknown[]) => Promise<string>>((id) =>
+    Promise.resolve(id),
+  );
   Reflect.set(browser, "notifications", {
     create,
     clear: vi.fn<(...arguments_: unknown[]) => void>(),

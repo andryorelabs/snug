@@ -18,6 +18,7 @@ vi.mock("./offscreen-download", () => ({
 }));
 
 const downloadMock = vi.mocked(downloadViaOffscreenDocument);
+const createRejected: unknown = expect.stringContaining("create rejected");
 
 function existing(): ExtendedBookmarkTreeNode[] {
   return [
@@ -114,7 +115,7 @@ describe("runImport error rollback", () => {
     restoreCreate();
 
     expect(failure).toBeInstanceOf(Error);
-    expect((failure as Error).message).toContain("create rejected");
+    expect(failure).toMatchObject({ message: createRejected });
     expect(wasImportRestored(failure)).toBe(true);
     expect(shapeOf(getFakeBookmarksRoot())).toEqual(before);
   });
@@ -127,7 +128,7 @@ describe("runImport error rollback", () => {
     const failure = await failureOf(runImport(jsonFile(20), "application/json", "folder"));
     restoreCreate();
 
-    expect((failure as Error).message).toContain("create rejected");
+    expect(failure).toMatchObject({ message: createRejected });
     expect(wasImportRestored(failure)).toBe(false);
     expect(getFakeBookmarksRoot()).toEqual(before);
   });
@@ -140,7 +141,7 @@ describe("runImport error rollback", () => {
     const failure = await failureOf(runImport(jsonFile(20), "application/json", "restore-merge"));
     restoreCreate();
 
-    expect((failure as Error).message).toContain("create rejected");
+    expect(failure).toMatchObject({ message: createRejected });
     expect(getFakeBookmarksRoot()).toEqual(before);
   });
 });

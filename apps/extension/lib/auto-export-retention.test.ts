@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
+import { forEachSequentially } from "@/lib/sequential";
 import { autoExportRunsStore } from "@/lib/storage";
 import { FakeDirectoryHandle } from "@/lib/testing/fake-directory-handle";
 import {
@@ -19,7 +20,7 @@ const folderHandleMock = vi.hoisted((): { handle: unknown } => ({
 }));
 
 vi.mock("@/lib/folder-handle", () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
 }));
@@ -38,10 +39,10 @@ async function recordFolderRun(
   names: string[],
 ): Promise<void> {
   const folderId = await registerFolderIdentity(folder.asHandle());
-  for (const name of names) {
+  await forEachSequentially(names, async (name) => {
     folder.files.set(name, "data");
     await recordSavedFolderFile(folderId, name, runAt);
-  }
+  });
 }
 
 /**
@@ -56,16 +57,21 @@ async function recordFolderRun(
  * @returns The installed mocks.
  */
 function mockDownloadsCleanup(missingFileIds: number[] = [], foreignIds: number[] = []) {
-  const removeFile = vi.fn(async (id: number) => {
-    if (missingFileIds.includes(id)) throw new Error("Download file missing.");
-  });
-  const erase = vi.fn<(query: { id: number }) => Promise<number[]>>(async () => []);
-  const search = vi.fn(async ({ id }: { id: number }) => [
-    {
-      id,
-      byExtensionId: foreignIds.includes(id) ? "some-other-extension" : browser.runtime.id,
-    },
-  ]);
+  const removeFile = vi.fn<(id: number) => Promise<void>>((id) =>
+    missingFileIds.includes(id)
+      ? Promise.reject(new Error("Download file missing."))
+      : Promise.resolve(),
+  );
+  const erase = vi.fn<(query: { id: number }) => Promise<number[]>>(() => Promise.resolve([]));
+  const search = vi.fn<(query: { id: number }) => Promise<{ id: number; byExtensionId: string }[]>>(
+    ({ id }) =>
+      Promise.resolve([
+        {
+          id,
+          byExtensionId: foreignIds.includes(id) ? "some-other-extension" : browser.runtime.id,
+        },
+      ]),
+  );
   Reflect.set(browser.downloads, "search", search);
   browser.downloads.removeFile = removeFile;
   Reflect.set(browser.downloads, "erase", erase);
@@ -78,7 +84,7 @@ function mockDownloadsCleanup(missingFileIds: number[] = [], foreignIds: number[
  * @param ids The run's download ids, oldest first.
  */
 async function recordRun(runAt: number, ids: number[]): Promise<void> {
-  for (const id of ids) await recordSavedDownload(id, runAt);
+  await forEachSequentially(ids, (id) => recordSavedDownload(id, runAt));
 }
 
 function runsOf(...idGroups: number[][]) {

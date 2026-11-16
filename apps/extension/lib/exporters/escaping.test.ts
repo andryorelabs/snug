@@ -60,9 +60,9 @@ describe("OPML attribute whitespace", () => {
     ]);
 
     const xml = await exportToOPML({ selectedBookmarks: null, ...flags });
-    const document_ = new DOMParser().parseFromString(xml, "application/xml");
+    const xmlDocument = new DOMParser().parseFromString(xml, "application/xml");
 
-    const link = document_.querySelector('outline[type="link"]');
+    const link = xmlDocument.querySelector('outline[type="link"]');
     expect(link?.getAttribute("text")).toBe("a\nb\tc");
     expect(link?.getAttribute("title")).toBe("a\nb\tc");
   });

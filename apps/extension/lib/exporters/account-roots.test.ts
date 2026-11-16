@@ -66,7 +66,7 @@ function seedAccountRoots(): void {
       },
     ],
   };
-  fakeBrowser.bookmarks.getTree = async () => [structuredClone(root)];
+  fakeBrowser.bookmarks.getTree = () => Promise.resolve([structuredClone(root)]);
 }
 
 beforeEach(() => {

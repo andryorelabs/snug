@@ -31,7 +31,10 @@ export async function forEachSequentially<T>(
   items: Iterable<T>,
   step: (item: T) => Promise<void>,
 ): Promise<void> {
-  await reduceSequentially<T, void>(items, undefined, (_previous, item) => step(item));
+  await reduceSequentially<T, null>(items, null, async (_previous, item) => {
+    await step(item);
+    return null;
+  });
 }
 
 /**

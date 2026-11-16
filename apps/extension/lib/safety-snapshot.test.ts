@@ -18,6 +18,7 @@ import {
   takeSafetySnapshot,
 } from "./safety-snapshot";
 import type { SafetySnapshot } from "./safety-snapshot";
+import { forEachSequentially } from "./sequential";
 import {
   getFakeBookmarksRoot,
   resetFakeBookmarks,
@@ -69,7 +70,7 @@ function seedSample(): void {
   );
 }
 
-beforeEach(async () => {
+beforeEach(() => {
   fakeBrowser.reset();
   resetFakeBookmarks();
   downloadMock.mockClear();
@@ -320,9 +321,9 @@ describe("Mobile root and non-web URLs", () => {
     const snapshot = await captureSafetySnapshot();
     const mobileNode = (getFakeBookmarksRoot().children ?? []).find((node) => node.id === "3");
     const mobileChildren = mobileNode?.children ?? [];
-    for (const child of mobileChildren) {
+    await forEachSequentially(mobileChildren, async (child) => {
       await browser.bookmarks.removeTree(child.id);
-    }
+    });
     await browser.bookmarks.create({
       parentId: "3",
       title: "Later",
@@ -375,7 +376,7 @@ describe("Mobile root and non-web URLs", () => {
       return realCreate(details);
     };
 
-    await expect(restoreSafetySnapshot(snapshot)).rejects.toThrow();
+    await expect(restoreSafetySnapshot(snapshot)).rejects.toThrow(Error);
 
     expect(rootOutline("1")).toEqual([{ title: "Good", url: "https://good.example/" }]);
   });
@@ -446,6 +447,6 @@ describe("restoreSafetySnapshot rollback and lock", () => {
 
     await restoreSafetySnapshot(snapshot);
 
-    await expect(withImportLock(async () => "free")).resolves.toBe("free");
+    await expect(withImportLock(() => Promise.resolve("free"))).resolves.toBe("free");
   });
 });
