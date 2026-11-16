@@ -116,25 +116,84 @@ export function findStaleFloors(
   );
 }
 
+const BASE_REFERENCES = ["origin/develop", "develop"] as const;
+
 /**
- * Reads `coverage-floors.json` from `develop`.
+ * Reads one tracked file from the base branch, failing closed.
  * @param repositoryRoot - Repository checkout to read from.
- * @returns The floors on the base branch, or `null` when no base has them yet.
+ * @param relativePath - Repo-relative path of the file.
+ * @returns The file text, or `null` when the base branch exists but does not have the file yet.
+ * @throws {Error} When no base branch can be resolved or git cannot read it.
  */
-export function readBaseFloors(repositoryRoot: string): FloorsByWorkspace | null {
-  for (const reference of ["origin/develop", "develop"]) {
+export function readBaseFile(repositoryRoot: string, relativePath: string): string | null {
+  const git = (gitArguments: string[]) =>
+    execFileSync("git", gitArguments, {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  for (const reference of BASE_REFERENCES) {
     try {
-      const raw = execFileSync("git", ["show", `${reference}:coverage-floors.json`], {
-        cwd: repositoryRoot,
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      });
-      return JSON.parse(raw) as FloorsByWorkspace;
+      git(["rev-parse", "--verify", "--quiet", reference + "^{commit}"]);
     } catch {
       continue;
     }
+    const isTracked = git(["ls-tree", "--name-only", reference, "--", relativePath]).trim() !== "";
+    return isTracked ? git(["show", `${reference}:${relativePath}`]) : null;
   }
-  return null;
+  throw new Error(
+    `cannot read ${relativePath} from ${BASE_REFERENCES.join(" or ")}: fetch develop before running the raise-only check`,
+  );
+}
+
+/**
+ * Reads `coverage-floors.json` from `develop`.
+ * @param repositoryRoot - Repository checkout to read from.
+ * @returns The floors on the base branch, or `null` when the base has none yet.
+ * @throws {Error} When the base branch cannot be read.
+ */
+export function readBaseFloors(repositoryRoot: string): FloorsByWorkspace | null {
+  const raw = readBaseFile(repositoryRoot, "coverage-floors.json");
+  return raw === null ? null : (JSON.parse(raw) as FloorsByWorkspace);
+}
+
+/**
+ * Extracts the own floors of every excepted file from the text of
+ * `scripts/coverage-exceptions.ts`.
+ * @param source - Source text of the exception list.
+ * @returns Exception floors keyed by workspace and file.
+ */
+export function parseExceptionFloors(source: string): ExceptionsByWorkspace {
+  const result: Record<string, Record<string, { lines: number; functions: number }>> = {};
+  let files: Record<string, { lines: number; functions: number }> | undefined;
+  let entry: { lines: number; functions: number } | undefined;
+  for (const line of source.split("\n")) {
+    const workspaceMatch = /^ {2}"([^"]+)": \{$/.exec(line);
+    const fileMatch = /^ {4}"([^"]+)": \{$/.exec(line);
+    const metricMatch = /^ {6}(lines|functions): (\d+),$/.exec(line);
+    if (workspaceMatch?.[1] !== undefined) {
+      files = {};
+      result[workspaceMatch[1]] = files;
+      entry = undefined;
+    } else if (files !== undefined && fileMatch?.[1] !== undefined) {
+      entry = { lines: NaN, functions: NaN };
+      files[fileMatch[1]] = entry;
+    } else if (metricMatch !== null && entry !== undefined) {
+      entry[metricMatch[1] === "lines" ? "lines" : "functions"] = Number(metricMatch[2]);
+    }
+  }
+  return result;
+}
+
+/**
+ * Reads the exception floors from `develop`.
+ * @param repositoryRoot - Repository checkout to read from.
+ * @returns The exception floors on the base branch, or `null` when the base has none yet.
+ * @throws {Error} When the base branch cannot be read.
+ */
+export function readBaseExceptions(repositoryRoot: string): ExceptionsByWorkspace | null {
+  const raw = readBaseFile(repositoryRoot, "scripts/coverage-exceptions.ts");
+  return raw === null ? null : parseExceptionFloors(raw);
 }
 
 function readMeasured(repositoryRoot: string): Measured {
@@ -156,29 +215,49 @@ function readMeasured(repositoryRoot: string): Measured {
  * Runs the raise-only and floors-track-measured checks.
  * @param repositoryRoot - Repository checkout holding the coverage summaries.
  * @param base - Floors on the base branch, read from `develop` by default.
+ * @param baseExceptions - Exception floors on the base branch, read from `develop` by default.
  * @returns One line per problem found.
  */
 export function checkCoverageFloors(
   repositoryRoot: string,
   base: FloorsByWorkspace | null = readBaseFloors(repositoryRoot),
+  baseExceptions: ExceptionsByWorkspace | null = readBaseExceptions(repositoryRoot),
 ): string[] {
   const lowered = base === null ? [] : findLoweredFloors(base, FLOORS);
+  const loweredExceptions =
+    baseExceptions === null ? [] : findLoweredExceptionFloors(baseExceptions, COVERAGE_EXCEPTIONS);
   const stale = findStaleFloors(FLOORS, readMeasured(repositoryRoot));
-  return [...lowered.map((line) => `lowered: ${line}`), ...stale.map((line) => `stale: ${line}`)];
+  return [
+    ...lowered.map((line) => `lowered: ${line}`),
+    ...loweredExceptions.map((line) => `lowered exception: ${line}`),
+    ...stale.map((line) => `stale: ${line}`),
+  ];
 }
 
 /**
- * Prints the problems found.
+ * Prints the problems found. A base branch that cannot be read is a problem,
+ * never a pass.
  * @param repositoryRoot - Repository checkout to check.
+ * @param base - Floors on the base branch, read from `develop` by default.
+ * @param baseExceptions - Exception floors on the base branch, read from `develop` by default.
  * @returns The process exit code.
  */
-export function main(repositoryRoot: string): number {
-  const problems = checkCoverageFloors(repositoryRoot);
-  if (problems.length > 0) {
-    console.error(problems.join("\n"));
+export function main(
+  repositoryRoot: string,
+  base?: FloorsByWorkspace | null,
+  baseExceptions?: ExceptionsByWorkspace | null,
+): number {
+  try {
+    const problems = checkCoverageFloors(repositoryRoot, base, baseExceptions);
+    if (problems.length > 0) {
+      console.error(problems.join("\n"));
+      return 1;
+    }
+    return 0;
+  } catch (error) {
+    console.error(String(error));
     return 1;
   }
-  return 0;
 }
 
 if (import.meta.main) {

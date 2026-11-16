@@ -33,6 +33,23 @@ const findEnvironmentReads = (source: string): string[] => {
 const findDocumentedNames = (markdown: string): Set<string> =>
   new Set(markdown.matchAll(DOCUMENTED_NAME_PATTERN).map((match) => match[1] ?? ""));
 
+/**
+ * Lists every environment variable read that the configuration document does
+ * not name.
+ * @param files - Source files to scan, with their repo-relative path and text.
+ * @param documented - The documented names.
+ * @returns One `path: NAME` line per undocumented read.
+ */
+const findUndocumentedReads = (
+  files: readonly { readonly file: string; readonly source: string }[],
+  documented: ReadonlySet<string>,
+): string[] =>
+  files.flatMap(({ file, source }) =>
+    findEnvironmentReads(source)
+      .filter((name) => !documented.has(name))
+      .map((name) => `${file}: ${name}`),
+  );
+
 const listTrackedCodeFiles = (): string[] =>
   execFileSync("git", ["ls-files", "-z"], {
     cwd: REPO_ROOT,
@@ -53,14 +70,10 @@ describe("environment variables are documented", () => {
   );
 
   it("documents every variable the code reads in docs/configuration.md", () => {
-    const undocumented = listTrackedCodeFiles()
+    const files = listTrackedCodeFiles()
       .filter((file) => file !== "scripts/env-docs.test.ts")
-      .flatMap((file) =>
-        findEnvironmentReads(readFileSync(path.join(REPO_ROOT, file), "utf8"))
-          .filter((name) => !documented.has(name))
-          .map((name) => `${file}: ${name}`),
-      );
-    expect(undocumented).toEqual([]);
+      .map((file) => ({ file, source: readFileSync(path.join(REPO_ROOT, file), "utf8") }));
+    expect(findUndocumentedReads(files, documented)).toEqual([]);
   });
 });
 
@@ -75,5 +88,21 @@ describe("findEnvironmentReads", () => {
 
   it("ignores spreads and unrelated text", () => {
     expect(findEnvironmentReads("{ ...process.env }; const env = 1; envelope.X")).toEqual([]);
+  });
+});
+
+describe("findUndocumentedReads", () => {
+  it("reports a read that the configuration document does not name", () => {
+    const documented = findDocumentedNames("Set `KNOWN_VAR` to enable it.");
+
+    expect(
+      findUndocumentedReads(
+        [
+          { file: "lib/a.ts", source: "process.env.NEW_VAR; process.env.KNOWN_VAR" },
+          { file: "lib/b.ts", source: "const unrelated = 1;" },
+        ],
+        documented,
+      ),
+    ).toEqual(["lib/a.ts: NEW_VAR"]);
   });
 });

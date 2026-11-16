@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { findKeyFiles, type PreCommitDependencies, runPreCommit } from "./pre-commit";
+import {
+  findKeyFiles,
+  parseStagedPaths,
+  type PreCommitDependencies,
+  runPreCommit,
+} from "./pre-commit";
 
 function dependencies(
   stagedPaths: string[],
@@ -45,5 +50,18 @@ describe("runPreCommit", () => {
 
   it("allows an empty index", () => {
     expect(runPreCommit(dependencies([]))).toBe(0);
+  });
+});
+
+describe("parseStagedPaths", () => {
+  it("splits on NUL so a non-ASCII key file path stays matchable", () => {
+    const paths = parseStagedPaths("README.md\0dé/.env.keys\0");
+
+    expect(paths).toEqual(["README.md", "dé/.env.keys"]);
+    expect(findKeyFiles(paths)).toEqual(["dé/.env.keys"]);
+  });
+
+  it("returns no paths for an empty index", () => {
+    expect(parseStagedPaths("")).toEqual([]);
   });
 });

@@ -34,18 +34,25 @@ export function runPreCommit(dependencies: PreCommitDependencies): number {
   return 0;
 }
 
+/**
+ * Splits the NUL-separated output of `git diff --cached --name-only -z`, which
+ * keeps non-ASCII and special-character paths unquoted.
+ * @param output - The text git printed, NUL between paths.
+ * @returns Each staged path, in order.
+ */
+export function parseStagedPaths(output: string): string[] {
+  return output.split("\0").filter((entry) => entry !== "");
+}
+
 function readStagedPaths(): string[] {
-  const result = Bun.spawnSync(["git", "diff", "--cached", "--name-only"], {
+  const result = Bun.spawnSync(["git", "diff", "--cached", "--name-only", "-z"], {
     stdout: "pipe",
     stderr: "inherit",
   });
   if (result.exitCode !== 0) {
     throw new Error("git diff --cached failed");
   }
-  return result.stdout
-    .toString()
-    .split("\n")
-    .filter((line) => line !== "");
+  return parseStagedPaths(result.stdout.toString());
 }
 
 if (import.meta.main) {
