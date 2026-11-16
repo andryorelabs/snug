@@ -19,6 +19,7 @@ export interface ReleaseGateInput {
   readonly repositoryRoot: string;
   readonly allowedSignersFile?: string | undefined;
   readonly environment?: Readonly<Record<string, string>> | undefined;
+  readonly expectedCommit?: string | undefined;
 }
 
 function git(input: ReleaseGateInput, commandArguments: readonly string[]) {
@@ -43,7 +44,13 @@ function findTagProblems(input: ReleaseGateInput): string[] {
   if (git(input, ["tag", "-v", tag]).status !== 0) {
     return [`tag ${tag} has no valid signature (git tag -v failed)`];
   }
-  return [];
+  if (input.expectedCommit === undefined) return [];
+  const taggedCommit = git(input, ["rev-list", "-n", "1", `refs/tags/${tag}`]).stdout.trim();
+  return taggedCommit === input.expectedCommit
+    ? []
+    : [
+        `tag ${tag} points at ${taggedCommit}, not at the commit being released ${input.expectedCommit}`,
+      ];
 }
 
 function findVersionProblems(input: ReleaseGateInput): string[] {
@@ -89,6 +96,7 @@ export function findReleaseGateProblems(input: ReleaseGateInput): string[] {
 export interface ReleaseGateRunContext {
   readonly repositoryRoot: string;
   readonly environment?: Readonly<Record<string, string>> | undefined;
+  readonly expectedCommit?: string | undefined;
   readonly log: (message: string) => void;
   readonly error: (message: string) => void;
 }
@@ -122,6 +130,7 @@ export function runReleaseGates(
     ...parsed,
     repositoryRoot: context.repositoryRoot,
     environment: context.environment,
+    expectedCommit: context.expectedCommit,
   });
   for (const problem of problems) context.error(`release-gates: ${problem}`);
   if (problems.length > 0) return 1;
@@ -132,6 +141,7 @@ export function runReleaseGates(
 if (import.meta.main) {
   process.exitCode = runReleaseGates(process.argv.slice(2), {
     repositoryRoot: path.resolve(import.meta.dirname, ".."),
+    expectedCommit: process.env["GITHUB_SHA"],
     log: (message) => console.log(message),
     error: (message) => console.error(message),
   });

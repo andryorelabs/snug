@@ -63,7 +63,7 @@ Each rule is a recorded decision; read its ADR before changing it.
 - CI runs on GitHub-hosted runners, with an optional routed runner for light
   jobs
   ([ADR 0031](docs/adr/0031-github-hosted-ci-with-sharded-e2e-and-optional-blacksmith-runner.md)).
-- The repository conforms to the andryorelabs standard v1, with its N-A list
+- The repository conforms to the andryorelabs standard v2, with its N-A list
   recorded in [ADR 0035](docs/adr/0035-adopt-andryorelabs-standard-v1.md).
 - Snug keeps its own palette, type and voice; only the maker credit is shared
   ([ADR 0036](docs/adr/0036-brand-kit-and-maker-credit.md)).

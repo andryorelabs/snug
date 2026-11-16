@@ -108,6 +108,11 @@ seoTitle: "Novidades do Snug: notas de versão e mudanças"
 
 - Foi adicionado um novo app com uma barra lateral para exportar, importar,
   exportação automática, configurações e novidades.
+- Foram adicionados 8 novos idiomas, somando 10: inglês, espanhol, alemão,
+  francês, italiano, português do Brasil, russo, japonês, coreano e chinês
+  simplificado.
+- Restaurar agora salva primeiro um instantâneo de segurança dos seus favoritos,
+  e você pode Desfazer uma substituição na página Importar.
 - Foi adicionada uma página Duplicados para encontrar favoritos repetidos e
   excluir só os que você escolher, além de uma opção Ignorar duplicados na
   importação.
@@ -126,11 +131,6 @@ seoTitle: "Novidades do Snug: notas de versão e mudanças"
   configurações.
 - Redesenhamos o popup para ficar mais compacto.
 - Aplicamos a nova paleta de cores do Snug em toda a extensão.
-- Foram adicionados 8 novos idiomas, somando 10: inglês, espanhol, alemão,
-  francês, italiano, português do Brasil, russo, japonês, coreano e chinês
-  simplificado.
-- Restaurar agora salva primeiro um instantâneo de segurança dos seus favoritos,
-  e você pode Desfazer uma substituição na página Importar.
 
 ## 1.7.0
 

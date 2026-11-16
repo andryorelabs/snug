@@ -110,6 +110,11 @@ seoTitle: "Novità di Snug: note di rilascio e modifiche"
 
 - Aggiunta una nuova App con una barra laterale per esportazione, importazione,
   esportazione automatica, impostazioni e novità.
+- Aggiunte 8 nuove lingue, per un totale di 10 impostazioni locali: inglese,
+  spagnolo, tedesco, francese, italiano, portoghese brasiliano, russo,
+  giapponese, coreano e cinese semplificato.
+- Il ripristino ora salva prima un'istantanea di sicurezza dei tuoi segnalibri,
+  e puoi annullare una sostituzione dalla pagina Importa.
 - Aggiunta una pagina Duplicati per trovare i segnalibri ripetuti ed eliminare
   solo quelli che scegli, più un'opzione Salta i duplicati all'importazione.
 - L'esportazione automatica aggiunge pianificazioni orarie e settimanali, la
@@ -128,11 +133,6 @@ seoTitle: "Novità di Snug: note di rilascio e modifiche"
   tue impostazioni.
 - Ridisegnato il popup per renderlo più compatto.
 - Applicata la nuova palette di colori di Snug a tutta l'estensione.
-- Aggiunte 8 nuove lingue, per un totale di 10 impostazioni locali: inglese,
-  spagnolo, tedesco, francese, italiano, portoghese brasiliano, russo,
-  giapponese, coreano e cinese semplificato.
-- Il ripristino ora salva prima un'istantanea di sicurezza dei tuoi segnalibri,
-  e puoi annullare una sostituzione dalla pagina Importa.
 
 ## 1.7.0
 

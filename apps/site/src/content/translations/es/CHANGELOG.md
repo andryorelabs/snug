@@ -112,6 +112,11 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 - Se añadió una App nueva con una barra lateral para exportar, importar,
   auto-export, ajustes y novedades.
+- Se añadieron 8 idiomas nuevos, hasta sumar 10: inglés, español, alemán,
+  francés, italiano, portugués de Brasil, ruso, japonés, coreano y chino
+  simplificado.
+- Restaurar ahora guarda primero una instantánea de seguridad de tus marcadores,
+  y puedes Deshacer un reemplazo desde la página Importar.
 - Se añadió una página Duplicados para encontrar marcadores repetidos y eliminar
   solo los que elijas, además de una opción Omitir duplicados al importar.
 - Auto-export suma horarios por hora y por semana, Retención para conservar solo
@@ -129,11 +134,6 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
   ajustes.
 - Rediseñamos el popup para que sea más compacto.
 - Aplicamos la nueva paleta de colores de Snug en toda la extensión.
-- Se añadieron 8 idiomas nuevos, hasta sumar 10: inglés, español, alemán,
-  francés, italiano, portugués de Brasil, ruso, japonés, coreano y chino
-  simplificado.
-- Restaurar ahora guarda primero una instantánea de seguridad de tus marcadores,
-  y puedes Deshacer un reemplazo desde la página Importar.
 
 ## 1.7.0
 

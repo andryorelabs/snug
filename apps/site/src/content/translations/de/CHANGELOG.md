@@ -114,6 +114,12 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
 
 - Eine neue App mit Seitenleiste für Export, Import, Auto-Export, Einstellungen
   und Neuigkeiten hinzugefügt.
+- 8 neue Sprachen hinzugefügt, insgesamt 10 Sprachversionen: Englisch, Spanisch,
+  Deutsch, Französisch, Italienisch, brasilianisches Portugiesisch, Russisch,
+  Japanisch, Koreanisch und vereinfachtes Chinesisch.
+- Beim Wiederherstellen wird jetzt zuerst ein Sicherheits-Snapshot deiner
+  Lesezeichen gespeichert, und ein Ersetzen kannst du auf der Importseite
+  rückgängig machen.
 - Eine Seite Duplikate hinzugefügt, um doppelte Lesezeichen zu finden und nur
   die gewählten zu löschen, dazu die Option Duplikate überspringen beim Import.
 - Auto-Export erhält stündliche und wöchentliche Zeitpläne, eine Aufbewahrung,
@@ -132,12 +138,6 @@ seoTitle: "Neuigkeiten in Snug: Versionshinweise und Änderungen"
   Einstellungen ändert sich nichts.
 - Das Popup kompakter gestaltet.
 - Die neue Snug-Farbpalette in der gesamten Erweiterung angewendet.
-- 8 neue Sprachen hinzugefügt, insgesamt 10 Sprachversionen: Englisch, Spanisch,
-  Deutsch, Französisch, Italienisch, brasilianisches Portugiesisch, Russisch,
-  Japanisch, Koreanisch und vereinfachtes Chinesisch.
-- Beim Wiederherstellen wird jetzt zuerst ein Sicherheits-Snapshot deiner
-  Lesezeichen gespeichert, und ein Ersetzen kannst du auf der Importseite
-  rückgängig machen.
 
 ## 1.7.0
 

@@ -115,6 +115,11 @@ seoTitle: "Nouveautés de Snug : notes de version et changements"
 
 - Ajout d'une nouvelle application avec une barre latérale pour l'exportation,
   l'importation, l'exportation automatique, les paramètres et les nouveautés.
+- Ajout de 8 nouvelles langues, pour 10 langues au total : anglais, espagnol,
+  allemand, français, italien, portugais brésilien, russe, japonais, coréen et
+  chinois simplifié.
+- Restaurer enregistre désormais d'abord un instantané de sécurité de vos
+  favoris, et vous pouvez annuler un remplacement depuis la page Importer.
 - Ajout d'une page Doublons pour trouver les favoris répétés et ne supprimer que
   ceux que vous choisissez, ainsi qu'une option Ignorer les doublons à
   l'importation.
@@ -135,11 +140,6 @@ seoTitle: "Nouveautés de Snug : notes de version et changements"
   paramètres.
 - Refonte de la fenêtre contextuelle, plus compacte.
 - Application de la nouvelle palette de couleurs Snug dans toute l'extension.
-- Ajout de 8 nouvelles langues, pour 10 langues au total : anglais, espagnol,
-  allemand, français, italien, portugais brésilien, russe, japonais, coréen et
-  chinois simplifié.
-- Restaurer enregistre désormais d'abord un instantané de sécurité de vos
-  favoris, et vous pouvez annuler un remplacement depuis la page Importer.
 
 ## 1.7.0
 

@@ -124,6 +124,30 @@ describe("findReleaseGateProblems", () => {
     expect(check("v2.4.0")).toEqual([]);
   });
 
+  test("rejects a tag that points at a different commit than the one being released", () => {
+    const tagged = run("git", ["rev-list", "-n", "1", "v2.4.0"], fixture.repository).trim();
+    expect(
+      findReleaseGateProblems({
+        tag: "v2.4.0",
+        repositoryRoot: fixture.repository,
+        allowedSignersFile: fixture.allowedSigners,
+        environment: GIT_IDENTITY,
+        expectedCommit: tagged,
+      }),
+    ).toEqual([]);
+    expect(
+      findReleaseGateProblems({
+        tag: "v2.4.0",
+        repositoryRoot: fixture.repository,
+        allowedSignersFile: fixture.allowedSigners,
+        environment: GIT_IDENTITY,
+        expectedCommit: "0".repeat(40),
+      }),
+    ).toEqual([
+      `tag v2.4.0 points at ${tagged}, not at the commit being released ${"0".repeat(40)}`,
+    ]);
+  });
+
   test("rejects a lightweight tag", () => {
     expect(check("v2.4.0-lightweight")).toContain(
       "tag v2.4.0-lightweight is a lightweight tag; a release tag is annotated and signed (git tag -s)",
