@@ -27,7 +27,8 @@ export async function importFromHTML(
   try {
     parsed = parseHTML(html, await loadLiveRootTitles());
   } catch (error) {
-    throw new Error(i18n.t("importFromHTMLLoadError", [(error as Error).message]));
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(i18n.t("importFromHTMLLoadError", [message]), { cause: error });
   }
   return importParsedTree(parsed, mode, options);
 }
@@ -96,9 +97,9 @@ export function parseHTMLWithLocation(
     if (!firstChild) continue;
 
     if (firstChild.tagName === "A") {
-      otherBookmarks.push(parseBookmarkElement(firstChild as HTMLAnchorElement));
+      otherBookmarks.push(parseBookmarkElement(firstChild));
     } else if (firstChild.tagName === "H3") {
-      const h3 = firstChild as HTMLElement;
+      const h3 = firstChild;
       const isBookmarksBar =
         h3.hasAttribute("personal_toolbar_folder") &&
         h3.getAttribute("personal_toolbar_folder") === "true";
@@ -231,14 +232,14 @@ function buildKnownTitleSet(...candidates: (string | undefined)[]): Set<string> 
  * @param a The anchor element to parse.
  * @returns The parsed bookmark.
  */
-function parseBookmarkElement(a: HTMLAnchorElement): ParsedBookmark {
+function parseBookmarkElement(a: Element): ParsedBookmark {
   const dateAddedAttribute = a.getAttribute("add_date");
   const href = a.getAttribute("href") ?? undefined;
 
   const url = isAllowedBookmarkUrl(href) ? href : undefined;
 
   return {
-    title: a.textContent?.trim() ?? "",
+    title: a.textContent.trim(),
     ...(url !== undefined && { url }),
     dateAdded: dateAddedAttribute
       ? secondsToMilliseconds(parseInt(dateAddedAttribute))
@@ -279,22 +280,23 @@ function findChildDl(dt: Element): Element | null {
  * @returns The parsed folder node.
  */
 function parseFolderElement(
-  h3: HTMLElement,
+  h3: Element,
   dt: Element,
   hoistedToolbarFolders?: ParsedBookmark[],
 ): ParsedBookmark {
   const dateAddedAttribute = h3.getAttribute("add_date");
   const lastModifiedAttribute = h3.getAttribute("last_modified");
 
+  const children: ParsedBookmark[] = [];
   const folder: ParsedBookmark = {
-    title: h3.textContent?.trim() ?? "",
+    title: h3.textContent.trim(),
     dateAdded: dateAddedAttribute
       ? secondsToMilliseconds(parseInt(dateAddedAttribute))
       : Date.now(),
     dateGroupModified: lastModifiedAttribute
       ? secondsToMilliseconds(parseInt(lastModifiedAttribute))
       : Date.now(),
-    children: [],
+    children,
   };
 
   const childDl = findChildDl(dt);
@@ -306,14 +308,14 @@ function parseFolderElement(
       if (!firstChild) continue;
 
       if (firstChild.tagName === "A") {
-        folder.children!.push(parseBookmarkElement(firstChild as HTMLAnchorElement));
+        children.push(parseBookmarkElement(firstChild));
       } else if (firstChild.tagName === "H3") {
-        const childH3 = firstChild as HTMLElement;
+        const childH3 = firstChild;
         const childFolder = parseFolderElement(childH3, childDt, hoistedToolbarFolders);
         if (hoistedToolbarFolders && childH3.getAttribute("personal_toolbar_folder") === "true") {
           hoistedToolbarFolders.push(childFolder);
         } else {
-          folder.children!.push(childFolder);
+          children.push(childFolder);
         }
       }
     }

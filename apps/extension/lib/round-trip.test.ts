@@ -77,7 +77,7 @@ function collectUrls(node: ExtendedBookmarkTreeNode | undefined): string[] {
   const visit = (n: ExtendedBookmarkTreeNode) => {
     if (n.url) urls.push(n.url);
     const children = n.children ?? [];
-    for (const child of children) visit(child as ExtendedBookmarkTreeNode);
+    for (const child of children) visit(child);
   };
   visit(node);
   return urls.toSorted((a, b) => a.localeCompare(b));
@@ -144,9 +144,7 @@ describe("round trip: JSON", () => {
 
     expect(collectUrls(getFakeBookmarksRoot())).toEqual(originalUrls);
     const mobile = getFakeBookmarksRoot().children?.find((n) => n.id === "3");
-    expect(collectUrls(mobile as ExtendedBookmarkTreeNode | undefined)).toEqual([
-      "https://mobile.example",
-    ]);
+    expect(collectUrls(mobile)).toEqual(["https://mobile.example"]);
   });
 
   it("export (hideOtherBookmarks) -> import (restore-merge) restores each bookmark under its original root", async () => {
@@ -197,8 +195,8 @@ describe("round trip: JSON", () => {
     await importFromJSON(reparsed[0]?.children ?? [], "restore-merge");
 
     const root = getFakeBookmarksRoot();
-    const bar = root.children?.find((n) => n.id === "1") as ExtendedBookmarkTreeNode | undefined;
-    const other = root.children?.find((n) => n.id === "2") as ExtendedBookmarkTreeNode | undefined;
+    const bar = root.children?.find((n) => n.id === "1");
+    const other = root.children?.find((n) => n.id === "2");
 
     expect(collectUrls(bar)).toEqual(["https://github.example/repo"]);
     expect(collectUrls(other)).toEqual(["https://reading.example/article"]);
@@ -461,8 +459,6 @@ describe("round trip: XBEL", () => {
     expect(development?.children?.[1]?.children?.map((n) => n.url)).toEqual([
       "https://leaf.example",
     ]);
-    expect(collectUrls(other as ExtendedBookmarkTreeNode | undefined)).toEqual([
-      "https://reading.example",
-    ]);
+    expect(collectUrls(other)).toEqual(["https://reading.example"]);
   });
 });

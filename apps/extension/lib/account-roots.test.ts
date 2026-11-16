@@ -9,7 +9,7 @@ import { getFakeBookmarksRoot, resetFakeBookmarks } from "./testing/fake-bookmar
 import type { ParsedBookmark } from "./types";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 function link(title: string): ParsedBookmark {

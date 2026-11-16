@@ -13,7 +13,7 @@ interface Download {
 
 const downloads: Download[] = [];
 const blobs: Blob[] = [];
-const revokeObjectUrl = vi.fn();
+const revokeObjectUrl = vi.fn<(...arguments_: unknown[]) => void>();
 
 beforeEach(async () => {
   resetFakeBookmarks();

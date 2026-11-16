@@ -218,14 +218,15 @@ export function computeNextRunAfterDue(
   const stepDays = interval === "7d" ? 1 : DAY_INTERVALS[interval];
   const next = new Date(dueTime);
 
+  const isRejectedStep = (): boolean =>
+    next.getTime() <= now ||
+    next.getTime() <= dueTime ||
+    (interval === "7d" && next.getDay() !== dayOfWeek);
+
   do {
     next.setDate(next.getDate() + stepDays);
     next.setHours(hours, minutes, 0, 0);
-  } while (
-    next.getTime() <= now ||
-    next.getTime() <= dueTime ||
-    (interval === "7d" && next.getDay() !== dayOfWeek)
-  );
+  } while (isRejectedStep());
   return next.getTime();
 }
 
@@ -313,6 +314,20 @@ export async function syncAlarm(trigger: SyncAlarmTrigger): Promise<void> {
   await armAlarm(nextRun);
 }
 
+const RESERVED_PATH_CHARACTERS = new Set(["<", ">", ":", '"', "|", "?", "*"]);
+
+function isPrintable(character: string): boolean {
+  return (character.codePointAt(0) ?? 0) > 0x1f;
+}
+
+function stripReservedPathCharacters(segment: string): string {
+  let kept = "";
+  for (const character of segment) {
+    if (!RESERVED_PATH_CHARACTERS.has(character) && isPrintable(character)) kept += character;
+  }
+  return kept;
+}
+
 /**
  * Sanitises the user-configured auto-export output path before it's used as
  * a `browser.downloads.download` filename prefix. The path is relative to the
@@ -326,7 +341,7 @@ export async function syncAlarm(trigger: SyncAlarmTrigger): Promise<void> {
 function sanitizePath(path: string): string {
   return path
     .split(/[/\\]/)
-    .map((segment) => sanitizePathSegment(segment.replaceAll(/[<>:"|?*\u{0}-\u{1F}]/gu, "")))
+    .map((segment) => sanitizePathSegment(stripReservedPathCharacters(segment)))
     .filter(Boolean)
     .join("/");
 }
@@ -377,11 +392,6 @@ export class DownloadsAccessNeededError extends Error {
     this.name = "DownloadsAccessNeededError";
   }
 }
-
-/**
- * Retention default used when a stored config predates `keepLast`.
- */
-const DEFAULT_KEEP_LAST = 10;
 
 /**
  * Downloads one export file via {@link downloadViaOffscreenDocument} and
@@ -571,7 +581,7 @@ export async function runAutoExport(
     });
     await markReviewPromptEligible(Date.now());
     await clearFailureBadge();
-    await applyRetention(config.keepLast ?? DEFAULT_KEEP_LAST);
+    await applyRetention(config.keepLast);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     await autoExportLastRunStore.setValue({

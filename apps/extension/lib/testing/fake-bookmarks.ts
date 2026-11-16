@@ -40,11 +40,11 @@ function makeDefaultRoot(
 }
 
 function makeAccountRoots(shouldIncludeMobileRoot: boolean): ExtendedBookmarkTreeNode[] {
-  const roots: [string, string, string][] = [
+  const roots: [string, string, "bookmarks-bar" | "other" | "mobile"][] = [
     ["acct-1", "Bookmarks bar", "bookmarks-bar"],
     ["acct-2", "Other bookmarks", "other"],
     ...(shouldIncludeMobileRoot
-      ? ([["acct-3", "Mobile bookmarks", "mobile"]] as [string, string, string][])
+      ? [["acct-3", "Mobile bookmarks", "mobile"] satisfies [string, string, "mobile"]]
       : []),
   ];
   return roots.map(([id, title, folderType], offset) => ({
@@ -52,7 +52,7 @@ function makeAccountRoots(shouldIncludeMobileRoot: boolean): ExtendedBookmarkTre
     parentId: "0",
     index: 3 + offset,
     title,
-    folderType: folderType as "bookmarks-bar",
+    folderType,
     syncing: true,
     dateAdded: Date.now(),
     children: [],
@@ -115,7 +115,7 @@ function findNode(
   if (node.id === id) return node;
   const children = node.children ?? [];
   for (const child of children) {
-    const found = findNode(id, child as ExtendedBookmarkTreeNode);
+    const found = findNode(id, child);
     if (found) return found;
   }
   return undefined;
@@ -129,7 +129,7 @@ function didDeleteNode(id: string, node: ExtendedBookmarkTreeNode = store.root):
     return true;
   }
   for (const child of node.children) {
-    if (didDeleteNode(id, child as ExtendedBookmarkTreeNode)) return true;
+    if (didDeleteNode(id, child)) return true;
   }
   return false;
 }
@@ -168,12 +168,14 @@ export function resetFakeBookmarks(options: ResetFakeBookmarksOptions = {}): voi
   store.nextId = options.withMobileRoot ? 4 : 3;
   store.root = makeDefaultRoot(options.withMobileRoot ?? false, options.withAccountRoots ?? false);
 
-  fakeBrowser.bookmarks.getTree = async () => [clone(store.root)];
+  fakeBrowser.bookmarks.getTree = () => Promise.resolve([clone(store.root)]);
 
-  fakeBrowser.bookmarks.create = async (details: Browser.bookmarks.CreateDetails) => {
+  fakeBrowser.bookmarks.create = (details: Browser.bookmarks.CreateDetails) => {
     const parentId = details.parentId ?? "2";
     const parent = findNode(parentId);
-    if (!parent) throw new Error(`Parent bookmark folder not found: ${parentId}`);
+    if (!parent) {
+      return Promise.reject(new Error(`Parent bookmark folder not found: ${parentId}`));
+    }
     parent.children ??= [];
 
     const node: ExtendedBookmarkTreeNode = {
@@ -191,12 +193,11 @@ export function resetFakeBookmarks(options: ResetFakeBookmarksOptions = {}): voi
     }
 
     parent.children.push(node);
-    return clone(node);
+    return Promise.resolve(clone(node));
   };
 
-  fakeBrowser.bookmarks.search = async (query: string | Browser.bookmarks.SearchQuery) => {
-    const title =
-      typeof query === "object" && query !== null && "title" in query ? query.title : undefined;
+  fakeBrowser.bookmarks.search = (query: string | Browser.bookmarks.SearchQuery) => {
+    const title = typeof query === "object" && "title" in query ? query.title : undefined;
 
     const results: ExtendedBookmarkTreeNode[] = [];
     const visit = (node: ExtendedBookmarkTreeNode) => {
@@ -205,15 +206,16 @@ export function resetFakeBookmarks(options: ResetFakeBookmarksOptions = {}): voi
       }
       const children = node.children ?? [];
       for (const child of children) {
-        visit(child as ExtendedBookmarkTreeNode);
+        visit(child);
       }
     };
     visit(store.root);
-    return results;
+    return Promise.resolve(results);
   };
 
-  fakeBrowser.bookmarks.removeTree = async (id: string) => {
+  fakeBrowser.bookmarks.removeTree = (id: string) => {
     didDeleteNode(id);
+    return Promise.resolve();
   };
 }
 

@@ -53,7 +53,7 @@ describe("ImportCanceledError", () => {
 
 describe("ImportWriter", () => {
   it("creates nodes and counts only bookmarks toward progress batches", async () => {
-    const onProgress = vi.fn();
+    const onProgress = vi.fn<(...arguments_: unknown[]) => void>();
     const total = IMPORT_PROGRESS_BATCH_SIZE + 1;
     const writer = new ImportWriter({ onProgress }, total, 4);
     const folder = await writer.create({ parentId: "1", title: "Folder" });
@@ -89,7 +89,7 @@ describe("ImportWriter", () => {
 
   it("tells a cancel that existing bookmarks were cleared", () => {
     const controller = new AbortController();
-    const onClearingExisting = vi.fn();
+    const onClearingExisting = vi.fn<(...arguments_: unknown[]) => void>();
     const writer = new ImportWriter({ signal: controller.signal, onClearingExisting }, 0, 0);
 
     writer.markClearingExisting();
@@ -168,7 +168,9 @@ describe("withImportRollback", () => {
   it("logs a failing rollback without replacing the original error", async () => {
     const writer = new ImportWriter({}, 1, 0);
     const failure = new Error("step failed");
-    const log = vi.spyOn(console, "error").mockImplementation(vi.fn());
+    const log = vi
+      .spyOn(console, "error")
+      .mockImplementation(vi.fn<(...arguments_: unknown[]) => void>());
     vi.spyOn(writer, "rollback").mockRejectedValue(new Error("rollback failed"));
 
     await expect(

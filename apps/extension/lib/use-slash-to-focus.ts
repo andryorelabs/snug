@@ -23,6 +23,8 @@ export function useSlashToFocus(inputReference: RefObject<HTMLElement | null>) {
       inputReference.current?.focus();
     };
     globalThis.addEventListener("keydown", handleKeyDown);
-    return () => globalThis.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      globalThis.removeEventListener("keydown", handleKeyDown);
+    };
   }, [inputReference]);
 }

@@ -6,10 +6,10 @@ import { beforeEach, vi } from "vitest";
  * Tests that need a missing or denied permission overwrite it themselves.
  */
 beforeEach(() => {
-  browser.permissions = {
-    contains: vi.fn(async () => true),
-    request: vi.fn(async () => true),
+  Reflect.set(browser, "permissions", {
+    contains: vi.fn(() => Promise.resolve(true)),
+    request: vi.fn(() => Promise.resolve(true)),
     onAdded: { addListener: vi.fn(), removeListener: vi.fn() },
     onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
-  } as unknown as typeof browser.permissions;
+  });
 });

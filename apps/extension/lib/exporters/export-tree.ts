@@ -48,9 +48,7 @@ export type ExportNode =
  */
 export async function buildExportTree(options: TreeExportOptions): Promise<ExportNode[]> {
   const rootNodes = await browser.bookmarks.getTree();
-  const nodes = (options.selectedBookmarks ??
-    rootNodes[0]?.children ??
-    []) as ExtendedBookmarkTreeNode[];
+  const nodes = options.selectedBookmarks ?? rootNodes[0]?.children ?? [];
   const ticker = createExportTicker(options, countBookmarks(nodes));
 
   const convert = (list: ExtendedBookmarkTreeNode[]): ExportNode[] => {
@@ -67,7 +65,7 @@ export async function buildExportTree(options: TreeExportOptions): Promise<Expor
             node.dateLastUsed && { dateLastUsed: node.dateLastUsed }),
         });
       } else if (node.children) {
-        const children = convert(node.children as ExtendedBookmarkTreeNode[]);
+        const children = convert(node.children);
         const isHidden =
           (isOtherBookmarks(node) && options.hideOtherBookmarks) ||
           (options.hideParentFolder &&
@@ -98,6 +96,26 @@ export async function buildExportTree(options: TreeExportOptions): Promise<Expor
   return tree;
 }
 
+function stripXmlForbiddenCharacters(text: string): string {
+  let kept = "";
+  for (const character of text) {
+    if (!isXmlForbiddenCodePoint(character.codePointAt(0))) kept += character;
+  }
+  return kept;
+}
+
+function isXmlForbiddenCodePoint(codePoint: number | undefined): boolean {
+  return (
+    codePoint !== undefined &&
+    (codePoint <= 0x8 ||
+      codePoint === 0xb ||
+      codePoint === 0xc ||
+      (codePoint >= 0xe && codePoint <= 0x1f) ||
+      codePoint === 0xff_fe ||
+      codePoint === 0xff_ff)
+  );
+}
+
 /**
  * Escapes text for XML element content or a double-quoted attribute, and
  * drops characters XML 1.0 cannot carry (most control characters).
@@ -105,9 +123,7 @@ export async function buildExportTree(options: TreeExportOptions): Promise<Expor
  * @returns Text safe to embed in an XML document.
  */
 export function escapeXml(text: string): string {
-  return text
-
-    .replaceAll(/[\u{0}-\u{8}\u{B}\u{C}\u{E}-\u{1F}\u{FFFE}\u{FFFF}]/gu, "")
+  return stripXmlForbiddenCharacters(text)
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")

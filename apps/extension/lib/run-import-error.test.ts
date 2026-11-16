@@ -14,7 +14,7 @@ import {
 import type { ExtendedBookmarkTreeNode } from "./types";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 const downloadMock = vi.mocked(downloadViaOffscreenDocument);

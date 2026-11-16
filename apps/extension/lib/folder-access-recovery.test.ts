@@ -69,7 +69,7 @@ describe("resolveFolderAccessAlert", () => {
 describe("allowFolderAccess", () => {
   beforeEach(() => {
     fakeBrowser.reset();
-    browser.action.setBadgeText = vi.fn(async () => {});
+    browser.action.setBadgeText = vi.fn<() => Promise<void>>(() => Promise.resolve());
     folderHandleMock.handle = null;
   });
 

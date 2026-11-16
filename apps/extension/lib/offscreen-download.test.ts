@@ -13,6 +13,8 @@ import {
   REVOKE_BLOB_URL_MESSAGE_TYPE,
 } from "./offscreen-download";
 
+const offscreenUrl: unknown = expect.stringContaining(OFFSCREEN_DOCUMENT_PATH);
+
 /**
  * Replaces `chrome.offscreen` (unimplemented in `fakeBrowser`) with `vi.fn`
  * stubs for `createDocument`/`closeDocument`, and `chrome.runtime.getContexts`.
@@ -28,11 +30,11 @@ function mockOffscreenApi(existingContexts: unknown[] = []) {
     isOpen = false;
   });
   const getContexts = vi.fn(async () => (isOpen ? [{ contextType: "OFFSCREEN_DOCUMENT" }] : []));
-  chrome.offscreen = {
+  Reflect.set(chrome, "offscreen", {
     createDocument,
     closeDocument,
-  } as unknown as typeof chrome.offscreen;
-  chrome.runtime.getContexts = getContexts as unknown as typeof chrome.runtime.getContexts;
+  });
+  Reflect.set(chrome.runtime, "getContexts", getContexts);
   function closeFromAnotherContext(): void {
     isOpen = false;
   }
@@ -54,7 +56,7 @@ function mockRuntimeSendMessage() {
     }
     return;
   });
-  browser.runtime.sendMessage = mock as unknown as typeof browser.runtime.sendMessage;
+  Reflect.set(browser.runtime, "sendMessage", mock);
   return mock;
 }
 
@@ -156,7 +158,7 @@ describe("downloadViaOffscreenDocument", () => {
     mockOffscreenApi();
     mockRuntimeSendMessage();
     const downloads = mockDownloadsApi();
-    const onDownloadStarted = vi.fn();
+    const onDownloadStarted = vi.fn<(...arguments_: unknown[]) => void>();
 
     const runPromise = downloadViaOffscreenDocument("c", "text/plain", "f.txt", onDownloadStarted);
     await flushMicrotasks();
@@ -172,7 +174,7 @@ describe("downloadViaOffscreenDocument", () => {
       const offscreen = mockOffscreenApi();
       const sendMessage = mockRuntimeSendMessage();
       const downloads = mockDownloadsApi();
-      const onDownloadStarted = vi.fn();
+      const onDownloadStarted = vi.fn<(...arguments_: unknown[]) => void>();
 
       const settled = Promise.allSettled([
         downloadViaOffscreenDocument("c", "text/plain", "f.txt", onDownloadStarted),
@@ -235,7 +237,7 @@ describe("downloadViaOffscreenDocument", () => {
     expect(offscreen.createDocument).toHaveBeenCalledTimes(1);
     expect(offscreen.createDocument).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: expect.stringContaining(OFFSCREEN_DOCUMENT_PATH) as string,
+        url: offscreenUrl,
         reasons: ["BLOBS"],
       }),
     );
@@ -321,12 +323,14 @@ describe("downloadViaOffscreenDocument", () => {
     const createDocument = vi.fn(async () => {
       throw new Error("offscreen creation failed");
     });
-    const closeDocument = vi.fn(async () => {});
-    chrome.offscreen = {
+    const closeDocument = vi.fn<() => Promise<void>>(() => Promise.resolve());
+    Reflect.set(chrome, "offscreen", {
       createDocument,
       closeDocument,
-    } as unknown as typeof chrome.offscreen;
-    chrome.runtime.getContexts = vi.fn(async () => []);
+    });
+    chrome.runtime.getContexts = vi.fn<() => Promise<chrome.runtime.ExtensionContext[]>>(() =>
+      Promise.resolve([]),
+    );
     mockRuntimeSendMessage();
     mockDownloadsApi();
 
@@ -344,10 +348,8 @@ describe("downloadViaOffscreenDocument", () => {
       throw new Error("download failed");
     });
     browser.downloads.download = download;
-    browser.downloads.onChanged.addListener =
-      vi.fn() as typeof browser.downloads.onChanged.addListener;
-    browser.downloads.onChanged.removeListener =
-      vi.fn() as typeof browser.downloads.onChanged.removeListener;
+    browser.downloads.onChanged.addListener = vi.fn<(...arguments_: unknown[]) => void>();
+    browser.downloads.onChanged.removeListener = vi.fn<(...arguments_: unknown[]) => void>();
 
     await expect(downloadViaOffscreenDocument("content", "text/plain", "file.txt")).rejects.toThrow(
       "download failed",
@@ -374,7 +376,7 @@ describe("downloadViaOffscreenDocument", () => {
       }
       return { url: "blob:mock-a" };
     });
-    browser.runtime.sendMessage = sendMessage as unknown as typeof browser.runtime.sendMessage;
+    Reflect.set(browser.runtime, "sendMessage", sendMessage);
 
     const a = downloadViaOffscreenDocument("a", "text/plain", "a.txt");
     const b = downloadViaOffscreenDocument("b", "text/plain", "b.txt");
@@ -396,14 +398,14 @@ describe("downloadViaOffscreenDocument", () => {
 
   it("still resolves with the download id when revoking the object URL fails", async () => {
     mockOffscreenApi();
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockReturnValue(undefined);
     const sendMessage = vi.fn(async (message: { type: string }) => {
       if (message.type === CREATE_BLOB_URL_MESSAGE_TYPE) {
         return { url: "blob:mock-1" };
       }
       throw new Error("Could not establish connection");
     });
-    browser.runtime.sendMessage = sendMessage as unknown as typeof browser.runtime.sendMessage;
+    Reflect.set(browser.runtime, "sendMessage", sendMessage);
     const downloads = mockDownloadsApi();
 
     const runPromise = downloadViaOffscreenDocument("c", "text/plain", "f.txt");
@@ -449,7 +451,7 @@ describe("downloadViaOffscreenDocument", () => {
   it("does not fail a successful download when closing the document fails", async () => {
     const offscreen = mockOffscreenApi();
     offscreen.closeDocument.mockRejectedValueOnce(new Error("No document"));
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockReturnValue(undefined);
     mockRuntimeSendMessage();
     const downloads = mockDownloadsApi();
 
