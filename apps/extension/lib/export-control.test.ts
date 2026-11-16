@@ -5,7 +5,7 @@ import { IMPORT_PROGRESS_BATCH_SIZE } from "./import-control";
 
 describe("createExportTicker", () => {
   it("reports progress after every batch and once more on finish", () => {
-    const onProgress = vi.fn();
+    const onProgress = vi.fn<(...arguments_: unknown[]) => void>();
     const total = IMPORT_PROGRESS_BATCH_SIZE * 2 + 3;
     const ticker = createExportTicker({ onProgress }, total);
 
@@ -34,16 +34,20 @@ describe("createExportTicker", () => {
 
     controller.abort();
 
-    expect(() => ticker.tick()).toThrow(ExportCanceledError);
+    expect(() => {
+      ticker.tick();
+    }).toThrow(ExportCanceledError);
   });
 
   it("throws ExportCanceledError from finish when aborted and reports nothing", () => {
     const controller = new AbortController();
-    const onProgress = vi.fn();
+    const onProgress = vi.fn<(...arguments_: unknown[]) => void>();
     const ticker = createExportTicker({ signal: controller.signal, onProgress }, 0);
     controller.abort();
 
-    expect(() => ticker.finish()).toThrow("Export canceled");
+    expect(() => {
+      ticker.finish();
+    }).toThrow("Export canceled");
     expect(onProgress).not.toHaveBeenCalled();
   });
 });

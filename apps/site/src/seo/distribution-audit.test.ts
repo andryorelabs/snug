@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { findInlineScriptHashes } from "../scripts/security-headers";
@@ -129,15 +128,12 @@ describe("auditDistribution", () => {
   });
 });
 
-describe.runIf(existsSync(builtSite) || process.env["REQUIRE_DIST"] === "1")(
-  "the built site",
-  () => {
-    it("has a build output folder", () => {
-      expect(existsSync(builtSite)).toBe(true);
-    });
+describe.runIf(existsSync(builtSite) || process.env.REQUIRE_DIST === "1")("the built site", () => {
+  it("has a build output folder", () => {
+    expect(existsSync(builtSite)).toBe(true);
+  });
 
-    it("requests nothing outside the allowlist and hashes every inline script", () => {
-      expect(auditDistribution(builtSite)).toEqual([]);
-    });
-  },
-);
+  it("requests nothing outside the allowlist and hashes every inline script", () => {
+    expect(auditDistribution(builtSite)).toEqual([]);
+  });
+});

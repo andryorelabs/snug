@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
 import safariHtml from "../e2e/fixtures/bookmarks-safari.html?raw";
@@ -33,7 +33,7 @@ import {
 import type { ParsedBookmark } from "./types";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 const FIXTURES: [string, string, string, string][] = [
@@ -240,7 +240,7 @@ describe("buildImportPlan", () => {
     const folders = Array.from({ length: 100 }, (_, folder) => ({
       title: `Folder ${folder}`,
       dateAdded: 1,
-      children: Array.from({ length: 100 }, (_, item) =>
+      children: Array.from({ length: 100 }, (_value, item) =>
         mark(`B${folder}-${item}`, `https://site${folder}.example/page/${item}`),
       ),
     }));
@@ -296,7 +296,8 @@ describe("pruneFilesToChecked", () => {
     );
     const snapshot = structuredClone(file);
     const [pruned] = pruneFilesToChecked([file], new Set(["f0/0/2"]));
-    expect(pruned?.tree[0]?.children?.map((node) => node.title)).toEqual(["B"]);
+    assert(pruned);
+    expect(pruned.tree[0]?.children.map((node) => node.title)).toEqual(["B"]);
     expect(file).toEqual(snapshot);
   });
 });

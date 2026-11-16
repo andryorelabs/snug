@@ -9,7 +9,7 @@ import { readLatestSafetySnapshot } from "./safety-snapshot";
 import { resetFakeBookmarks } from "./testing/fake-bookmarks";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn().mockResolvedValue(1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>().mockResolvedValue(1),
 }));
 
 function htmlFile(urls: string[]): string {

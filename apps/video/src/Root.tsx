@@ -16,14 +16,15 @@ import { DEFAULT_MUSIC, promoSchema, type SceneProps } from "./schema";
 import { LandingPoster, Thumbnail, THUMBNAIL_SIZE } from "./thumbnail/Thumbnail";
 import { FPS, HEIGHT, type SceneId, sceneLength, TOTAL_FRAMES, WIDTH } from "./timing";
 
-const gated = (Scene: ComponentType<SceneProps>): ComponentType<SceneProps> => {
-  const GatedScene = ({ locale }: SceneProps) => (
-    <FontGate locale={locale}>
-      <Scene locale={locale} />
-    </FontGate>
-  );
-  return GatedScene;
-};
+const GatedScene = ({ Scene, locale }: SceneProps & { Scene: ComponentType<SceneProps> }) => (
+  <FontGate locale={locale}>
+    <Scene locale={locale} />
+  </FontGate>
+);
+
+const gated =
+  (Scene: ComponentType<SceneProps>): ComponentType<SceneProps> =>
+  ({ locale }) => <GatedScene Scene={Scene} locale={locale} />;
 
 const SCENES: {
   id: SceneId;

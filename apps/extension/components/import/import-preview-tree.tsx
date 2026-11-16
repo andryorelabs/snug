@@ -15,7 +15,9 @@ import { useSlashToFocus } from "@/lib/use-slash-to-focus";
 
 const EXPAND_ALL_ON_MOUNT_TOKEN = 1;
 
-function ignoreCount() {}
+function ignoreCount() {
+  return;
+}
 
 function renderDuplicateBadge(node: BookmarkNode) {
   return node.isDisabled ? (
@@ -89,7 +91,9 @@ export function ImportPreviewTree({
             ref={searchInputReference}
             type="search"
             value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
+            onChange={(event) => {
+              setSearchTerm(event.target.value);
+            }}
             placeholder={i18n.t("searchBookmarks")}
             aria-label={i18n.t("searchBookmarks")}
             aria-keyshortcuts="/"
@@ -133,7 +137,12 @@ export function ImportPreviewTree({
           onTotalChange={ignoreCount}
           className="max-h-105"
           emptyState={
-            <ExportTreeEmpty searchTerm={searchTerm} onClearSearch={() => setSearchTerm("")} />
+            <ExportTreeEmpty
+              searchTerm={searchTerm}
+              onClearSearch={() => {
+                setSearchTerm("");
+              }}
+            />
           }
         />
       </div>

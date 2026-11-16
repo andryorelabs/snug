@@ -43,15 +43,17 @@ describe("buildUninstallUrl", () => {
 describe("registerUninstallUrl", () => {
   let uninstallUrlSpy: MockInstance<typeof fakeBrowser.runtime.setUninstallURL>;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     fakeBrowser.reset();
     vi.stubEnv("DEV", false);
     vi.spyOn(fakeBrowser.i18n, "getUILanguage").mockReturnValue("pt-BR");
     uninstallUrlSpy = vi.spyOn(fakeBrowser.runtime, "setUninstallURL").mockResolvedValue(undefined);
     vi.spyOn(fakeBrowser.runtime, "getManifest").mockReturnValue({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.2.0",
-    } as ReturnType<typeof fakeBrowser.runtime.getManifest>);
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    });
+    vi.spyOn(console, "error").mockReturnValue(undefined);
   });
 
   afterEach(() => {
@@ -82,8 +84,10 @@ describe("registerUninstallUrl", () => {
 
   it("falls back to the bare URL when the built URL is at or over the length limit", async () => {
     vi.spyOn(fakeBrowser.runtime, "getManifest").mockReturnValue({
+      manifest_version: 3,
+      name: "Snug",
       version: "1".repeat(1100),
-    } as ReturnType<typeof fakeBrowser.runtime.getManifest>);
+    });
     await registerUninstallUrl();
     expect(uninstallUrlSpy).toHaveBeenCalledTimes(1);
     expect(uninstallUrlSpy).toHaveBeenCalledWith(BARE_URL);

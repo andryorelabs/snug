@@ -22,7 +22,7 @@ function stubFaviconResponses(responseByPageUrl: (pageUrl: string) => Blob | Err
   vi.stubGlobal(
     "fetch",
     vi.fn((input: string) => {
-      const pageUrl = new URL(input).searchParams.get("pageUrl") as string;
+      const pageUrl = new URL(input).searchParams.get("pageUrl") ?? "";
       const outcome = responseByPageUrl(pageUrl);
       return outcome instanceof Error
         ? Promise.reject(outcome)
@@ -116,7 +116,7 @@ describe("getFaviconBase64", () => {
 
   it("resolves to an empty string and logs when fetching fails", async () => {
     const { getFaviconBase64 } = await loadFavicon();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
     const error = new Error("network error");
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(error));
 
@@ -128,7 +128,7 @@ describe("getFaviconBase64", () => {
 
   it("resolves to an empty string and logs when the FileReader errors", async () => {
     const { getFaviconBase64 } = await loadFavicon();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
     const readError = new Error("read failed");
     vi.stubGlobal(
       "FileReader",

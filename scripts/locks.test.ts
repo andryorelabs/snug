@@ -2,9 +2,9 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 import { acquireLock, didAcquireLock, type LockHolder, releaseLock } from "./locks";
 
 /**
@@ -14,7 +14,7 @@ import { acquireLock, didAcquireLock, type LockHolder, releaseLock } from "./loc
  */
 function deadPid(): number {
   const child = spawnSync(process.execPath, ["-e", "0"]);
-  if (child.pid === undefined) {
+  if (child.error !== undefined) {
     throw new Error("locks.test: failed to spawn a child process to obtain a dead pid");
   }
   return child.pid;
@@ -53,9 +53,10 @@ describe("acquireLock / releaseLock", () => {
     });
 
     expect(existsSync(lockDirectory)).toBe(true);
-    const written = JSON.parse(
+    const written = parseJsonAs(
       readFileSync(path.join(lockDirectory, "holder.json"), "utf8"),
-    ) as LockHolder;
+      (value): value is LockHolder => isRecord(value),
+    );
     expect(written).toEqual(holder);
   });
 
@@ -105,9 +106,10 @@ describe("acquireLock / releaseLock", () => {
       logLabel: "test",
     });
 
-    const written = JSON.parse(
+    const written = parseJsonAs(
       readFileSync(path.join(lockDirectory, "holder.json"), "utf8"),
-    ) as LockHolder;
+      (value): value is LockHolder => isRecord(value),
+    );
     expect(written).toEqual(newHolder);
   });
 

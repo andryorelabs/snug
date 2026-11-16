@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import {
@@ -40,7 +39,9 @@ describe("committed brand rasters", () => {
 
   for (const spec of rasterSpecs) {
     it(`${spec.path} meets its pixel size and byte budget`, () => {
-      expect(() => assertSpec(spec, readBrand(spec.path))).not.toThrow();
+      expect(() => {
+        assertSpec(spec, readBrand(spec.path));
+      }).not.toThrow();
     });
   }
 
@@ -53,15 +54,21 @@ describe("assertSpec", () => {
   const spec = { path: "x.png", width: 16, height: 16, maxBytes: 100 };
 
   it("accepts a matching PNG", () => {
-    expect(() => assertSpec(spec, fakePng(16, 16))).not.toThrow();
+    expect(() => {
+      assertSpec(spec, fakePng(16, 16));
+    }).not.toThrow();
   });
 
   it("rejects wrong dimensions", () => {
-    expect(() => assertSpec(spec, fakePng(32, 16))).toThrow("32x16");
+    expect(() => {
+      assertSpec(spec, fakePng(32, 16));
+    }).toThrow("32x16");
   });
 
   it("rejects an oversized file", () => {
-    expect(() => assertSpec({ ...spec, maxBytes: 10 }, fakePng(16, 16))).toThrow("over 10");
+    expect(() => {
+      assertSpec({ ...spec, maxBytes: 10 }, fakePng(16, 16));
+    }).toThrow("over 10");
   });
 
   it("rejects bytes that are not a PNG", () => {

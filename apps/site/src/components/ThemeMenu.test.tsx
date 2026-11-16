@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { requireValue } from "../../e2e/require";
 import { THEME_COLORS } from "../scripts/theme-color";
 import ThemeMenu from "./ThemeMenu";
 
@@ -19,11 +20,11 @@ const environment: {
   container?: HTMLElement;
   root?: Root;
   isDarkPreferred: boolean;
-  mediaListeners: Array<() => void>;
+  mediaListeners: (() => void)[];
 } = { isDarkPreferred: false, mediaListeners: [] };
 
 function currentContainer() {
-  return environment.container as HTMLElement;
+  return requireValue(environment.container);
 }
 
 function stubMatchMedia() {
@@ -38,23 +39,23 @@ function stubMatchMedia() {
   }));
 }
 
-async function mount() {
+function mount() {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
   environment.container = container;
   environment.root = root;
-  await act(async () => {
+  act(() => {
     root.render(createElement(ThemeMenu, { copy: COPY }));
   });
 }
 
 function trigger() {
-  return currentContainer().querySelector<HTMLButtonElement>("button")!;
+  return requireValue(currentContainer().querySelector<HTMLButtonElement>("button"));
 }
 
-async function openMenu() {
-  await act(async () => {
+function openMenu() {
+  act(() => {
     trigger().click();
   });
 }
@@ -63,10 +64,10 @@ function radios() {
   return [...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')];
 }
 
-async function choose(name: string) {
-  await openMenu();
+function choose(name: string) {
+  openMenu();
   const item = radios().find((radio) => radio.textContent === name);
-  await act(async () => {
+  act(() => {
     item?.click();
   });
 }
@@ -78,7 +79,7 @@ function metaColors() {
 }
 
 describe("ThemeMenu", () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     environment.isDarkPreferred = false;
     environment.mediaListeners = [];
@@ -87,11 +88,11 @@ describe("ThemeMenu", () => {
     document.head.innerHTML =
       '<meta name="theme-color" content="" media="(prefers-color-scheme: light)">' +
       '<meta name="theme-color" content="" media="(prefers-color-scheme: dark)">';
-    await mount();
+    mount();
   });
 
-  afterEach(async () => {
-    await choose("System");
+  afterEach(() => {
+    choose("System");
     act(() => environment.root?.unmount());
     environment.container?.remove();
     document.body.replaceChildren();
@@ -108,8 +109,8 @@ describe("ThemeMenu", () => {
     }
   });
 
-  it("lists the three choices as a radio group with System checked", async () => {
-    await openMenu();
+  it("lists the three choices as a radio group with System checked", () => {
+    openMenu();
     expect(radios().map((radio) => radio.textContent)).toEqual(["System", "Light", "Dark"]);
     expect(radios().map((radio) => radio.getAttribute("aria-checked"))).toEqual([
       "true",
@@ -118,8 +119,8 @@ describe("ThemeMenu", () => {
     ]);
   });
 
-  it("applies and stores the dark choice", async () => {
-    await choose("Dark");
+  it("applies and stores the dark choice", () => {
+    choose("Dark");
     const html = document.documentElement;
     expect(html.classList.contains("dark")).toBe(true);
     expect(html.dataset.theme).toBe("dark");
@@ -128,40 +129,58 @@ describe("ThemeMenu", () => {
     expect(metaColors()).toEqual([THEME_COLORS.dark, THEME_COLORS.dark]);
   });
 
-  it("applies the light choice and checks its radio", async () => {
-    await choose("Dark");
-    await choose("Light");
+  it("applies the light choice and checks its radio", () => {
+    choose("Dark");
+    choose("Light");
     const html = document.documentElement;
     expect(html.classList.contains("dark")).toBe(false);
     expect(html.dataset.theme).toBe("light");
-    await openMenu();
+    openMenu();
     const light = radios().find((radio) => radio.textContent === "Light");
     expect(light?.getAttribute("aria-checked")).toBe("true");
   });
 
-  it("follows the operating system while on System", async () => {
-    await choose("System");
+  it("follows the operating system while on System", () => {
+    choose("System");
     environment.isDarkPreferred = true;
-    await act(async () => {
+    act(() => {
       for (const listener of environment.mediaListeners) listener();
     });
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(metaColors()).toEqual([THEME_COLORS.light, THEME_COLORS.dark]);
   });
 
-  it("stops following the system once a fixed choice is made", async () => {
-    await choose("Light");
+  it("stops following the system once a fixed choice is made", () => {
+    choose("Light");
     expect(environment.mediaListeners).toHaveLength(0);
   });
 
-  it("uses a view transition when available and motion is allowed", async () => {
-    const startViewTransition = vi.fn((update: () => void) => update());
+  it("unmounts cleanly while on a fixed choice", () => {
+    choose("Light");
+    act(() => environment.root?.unmount());
+    expect(environment.mediaListeners).toHaveLength(0);
+    mount();
+  });
+
+  it("clears the switching class once two frames have passed", () => {
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    });
+    choose("Dark");
+    expect(document.documentElement.classList.contains("theme-switching")).toBe(false);
+  });
+
+  it("uses a view transition when available and motion is allowed", () => {
+    const startViewTransition = vi.fn((update: () => void) => {
+      update();
+    });
     Object.defineProperty(document, "startViewTransition", {
       configurable: true,
       value: startViewTransition,
     });
     try {
-      await choose("Dark");
+      choose("Dark");
       expect(startViewTransition).toHaveBeenCalledTimes(1);
       expect(document.documentElement.dataset.theme).toBe("dark");
     } finally {
@@ -169,12 +188,12 @@ describe("ThemeMenu", () => {
     }
   });
 
-  it("still switches when storage is unavailable", async () => {
+  it("still switches when storage is unavailable", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("blocked");
     });
     try {
-      await choose("Dark");
+      choose("Dark");
       expect(document.documentElement.dataset.theme).toBe("dark");
     } finally {
       vi.restoreAllMocks();

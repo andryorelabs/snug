@@ -1,5 +1,4 @@
 import path from "node:path";
-
 import type { Loader, LoaderContext } from "astro/loaders";
 
 import { loadLocalizedCatalog } from "./catalog";
@@ -12,30 +11,40 @@ const WATCHED_FILES = new Set(
   PUBLISHED_SOURCES.map((source) => path.join(REPOSITORY_ROOT, source.sourcePath)),
 );
 
+function isChangelogEntry(entryId: string): boolean {
+  return entryId === "changelog" || entryId.endsWith("/changelog");
+}
+
 async function fillStore(context: LoaderContext): Promise<void> {
   const entries = loadLocalizedCatalog();
   context.store.clear();
-  for (const entry of entries) {
-    const data = await context.parseData({
-      id: entry.id,
-      data: {
-        title: entry.title,
-        description: entry.description,
-        seoTitle: entry.seoTitle,
-        editUrl: entry.editUrl,
-        translationStatus: entry.status,
-        englishPath: entry.englishPath,
-      },
-    });
-    const rendered = await context.renderMarkdown(entry.body);
-    context.store.set({
-      id: entry.id,
-      data,
-      body: entry.body,
-      digest: context.generateDigest(`${entry.status}:${entry.body}`),
-      rendered: { ...rendered, html: markExternalLinks(rendered.html) },
-    });
-  }
+  const prepared = await Promise.all(
+    entries.map(async (entry) => {
+      const data = await context.parseData({
+        id: entry.id,
+        data: {
+          title: entry.title,
+          description: entry.description,
+          seoTitle: entry.seoTitle,
+          editUrl: entry.editUrl,
+          translationStatus: entry.status,
+          englishPath: entry.englishPath,
+          ...(isChangelogEntry(entry.id) && {
+            tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 2 },
+          }),
+        },
+      });
+      const rendered = await context.renderMarkdown(entry.body);
+      return {
+        id: entry.id,
+        data,
+        body: entry.body,
+        digest: context.generateDigest(`${entry.status}:${entry.body}`),
+        rendered: { ...rendered, html: markExternalLinks(rendered.html) },
+      };
+    }),
+  );
+  for (const item of prepared) context.store.set(item);
 }
 
 function isWatchedFile(file: string): boolean {

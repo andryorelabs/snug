@@ -1,6 +1,6 @@
 ---
 title: Novedades
-sourceHash: 1d5179f4a7f68463
+sourceHash: 29b86f4d2465d65b
 description: "Notas de versión de la extensión Snug para Chrome: qué cambió en cada
   versión, desde nuevas opciones de Auto-export hasta correcciones y mejoras."
 seoTitle: "Novedades de Snug: notas de versión y cambios"
@@ -9,6 +9,8 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 ## 2.3.1
 
 2026-11-03
+
+### Corregido
 
 - Ahora aparecen mensajes más claros cuando Snug necesita acceso a Descargas, en
   lugar de un código de error sin formato.
@@ -21,29 +23,41 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2026-11-03
 
-- El acceso a Descargas y a Notificaciones ahora es opcional, así que las
-  actualizaciones ya no muestran nuevas advertencias de permisos. Snug lo pide
-  solo cuando activas la exportación automática a Descargas o los avisos de
-  fallo.
+### Añadido
+
 - Se añadió una página de despedida que se abre al quitar Snug: pregunta el
   motivo con un clic y te ayuda según tu respuesta.
 - La página Novedades ahora empieza con una línea que explica qué es Snug.
 
+### Cambiado
+
+- El acceso a Descargas y a Notificaciones ahora es opcional, así que las
+  actualizaciones ya no muestran nuevas advertencias de permisos. Snug lo pide
+  solo cuando activas la exportación automática a Descargas o los avisos de
+  fallo.
+
 ## 2.2.0
 
 2026-10-10
+
+### Añadido
 
 - Auto-exportar ahora puede guardar en una Carpeta personalizada que elijas, en
   cualquier lugar de tu computadora.
 - Snug ahora te avisa con anticipación cuando se necesita acceso a la carpeta, y
   la página de Auto-exportar tiene un botón Permitir acceso para concederlo de
   nuevo.
+
+### Cambiado
+
 - Retención conserva solo las ejecuciones más recientes, contadas entre
   Descargas y la Carpeta personalizada.
 
 ## 2.1.0
 
 2026-10-08
+
+### Cambiado
 
 - Importar recibió una gran mejora: elige o suelta varios archivos a la vez,
   previsualízalos como un árbol y decide exactamente qué traer. El popup de la
@@ -53,9 +67,14 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2026-10-06
 
+### Añadido
+
 - El popup ahora muestra una sola vez, y se puede descartar, una invitación a
   dejar una reseña tras tu primera exportación correcta.
 - La política de privacidad ahora describe el estado local de esa invitación.
+
+### Cambiado
+
 - Pulimos el aspecto del popup: bordes de tarjeta más claros, un anillo de foco
   de teclado más visible en el modo claro y transiciones más suaves en botones y
   menús.
@@ -64,15 +83,22 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2026-10-06
 
+### Añadido
+
 - La barra lateral de la App ahora enlaza al sitio web de Snug y a la política
   de privacidad.
+- Se añadió una entrada en Novedades que anuncia el sitio web.
+
+### Cambiado
+
 - La página de inicio de la extensión en el manifiesto ahora apunta al sitio
   web.
-- Se añadió una entrada en Novedades que anuncia el sitio web.
 
 ## 2.0.1
 
 2026-10-04
+
+### Cambiado
 
 - Reescribimos las descripciones de la tienda en los 10 idiomas para que se lean
   como oraciones simples. Sin cambios funcionales respecto a 2.0.0, que nunca se
@@ -82,13 +108,10 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2026-10-02
 
-- La extensión ahora se llama **Snug**, con un nombre y un ícono nuevos. La
-  misma promesa de siempre, todo en local: nada cambia en tus datos ni en tus
-  ajustes.
+### Añadido
+
 - Se añadió una App nueva con una barra lateral para exportar, importar,
   auto-export, ajustes y novedades.
-- Rediseñamos el popup para que sea más compacto.
-- Aplicamos la nueva paleta de colores de Snug en toda la extensión.
 - Se añadieron 8 idiomas nuevos, hasta sumar 10: inglés, español, alemán,
   francés, italiano, portugués de Brasil, ruso, japonés, coreano y chino
   simplificado.
@@ -104,19 +127,34 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 - El árbol de marcadores ahora es rápido en bibliotecas enormes y se puede usar
   por completo con el teclado y con lectores de pantalla.
 
+### Cambiado
+
+- La extensión ahora se llama **Snug**, con un nombre y un ícono nuevos. La
+  misma promesa de siempre, todo en local: nada cambia en tus datos ni en tus
+  ajustes.
+- Rediseñamos el popup para que sea más compacto.
+- Aplicamos la nueva paleta de colores de Snug en toda la extensión.
+
 ## 1.7.0
 
 2026-10-01
 
+### Añadido
+
 - Se añadieron una tarjeta de estado y un botón Exportar ahora a los ajustes de
   Auto-export, además de una línea de estado en el popup que indica si la
   exportación automática está activada, desactivada o falló.
+
+### Corregido
+
 - Reforzamos la importación de marcadores para rechazar esquemas de URL no
   permitidos (p. ej. `javascript:`) en archivos CSV, HTML y JSON.
 
 ## 1.6.0
 
 2026-04-29
+
+### Añadido
 
 - Se añadió Auto-export: guarda tus marcadores automáticamente en intervalos
   personalizados (cada 12 horas, diariamente, cada 3 o 7 días) en tu carpeta de
@@ -126,6 +164,8 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2025-04-29
 
+### Añadido
+
 - Se añadió la Importación avanzada: restaura los marcadores a sus ubicaciones
   originales (Barra de marcadores y Otros marcadores), con opciones de combinar
   o reemplazar.
@@ -133,6 +173,8 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 ## 1.4.0
 
 2025-04-29
+
+### Añadido
 
 - Se añadieron plantillas de nombre de archivo personalizables para las
   exportaciones: usa marcadores de posición de fecha y hora como %yyyy, %mm, %dd
@@ -142,6 +184,8 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2025-02-16
 
+### Añadido
+
 - Se añadió el modo oscuro, que se adapta automáticamente a las preferencias de
   tema de tu sistema.
 
@@ -149,12 +193,16 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2025-02-14
 
+### Cambiado
+
 - Ahora se adapta automáticamente al idioma de tu navegador. Disponible en
   inglés y español.
 
 ## 1.1.0
 
 2025-02-13
+
+### Cambiado
 
 - Los marcadores importados ahora van a su propia carpeta para evitar mezclarlos
   con tus marcadores existentes.
@@ -164,15 +212,22 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 
 2024-08-05
 
+### Añadido
+
 - Se añadió la nueva Exportación avanzada para tener más control sobre tus
   marcadores.
 - Se introdujeron páginas de bienvenida y de actualización para mantenerte
   informado sobre las nuevas funciones.
+
+### Cambiado
+
 - Mejoramos el rendimiento general para una experiencia más fluida.
 
 ## 0.1.1
 
 2024-08-04
+
+### Corregido
 
 - Corregimos un error crítico que afectaba a usuarios con idiomas de navegador
   distintos del inglés.
@@ -185,6 +240,8 @@ seoTitle: "Novedades de Snug: notas de versión y cambios"
 ## 0.1.0
 
 2024-08-03
+
+### Añadido
 
 - Lanzamiento inicial de la extensión Bookmark Import/Export.
 - Función simple de importación para archivos HTML y JSON.

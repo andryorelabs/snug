@@ -1,14 +1,16 @@
 import { readFileSync } from "node:fs";
-
 import { describe, expect, test } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 interface TurboTask {
   inputs?: string[];
 }
 
-const turboConfig = JSON.parse(readFileSync(new URL("../turbo.json", import.meta.url), "utf8")) as {
-  tasks: Record<string, TurboTask>;
-};
+const turboConfig = parseJsonAs(
+  readFileSync(new URL("../turbo.json", import.meta.url), "utf8"),
+  (value): value is { tasks: Record<string, TurboTask> } =>
+    isRecord(value) && isRecord(value.tasks),
+);
 
 const ROOT_TEST_TASKS = ["//#test:root", "//#test:coverage:root"];
 

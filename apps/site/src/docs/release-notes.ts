@@ -8,7 +8,7 @@ const RELEASE_HEADING =
   /^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)\] - (\d{4}-\d{2}-\d{2})$/;
 const NUMERIC_IDENTIFIER = /^\d+$/;
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i;
-const SECOND_LEVEL_HEADING = /^## /;
+const GROUP_HEADING = /^### (?:Added|Changed|Fixed)\s*$/;
 const LINK_REFERENCE_DEFINITION = /^\[[^\]]+\]:\s+\S+$/;
 
 function splitVersion(version: string): {
@@ -75,7 +75,8 @@ interface OpenEntry {
  * Everything before the first release heading is ignored, and a bare
  * `## [Unreleased]` section is skipped, as are the compare-link reference
  * definitions (`[x.y.z]: https://…`) at the end of the file. Any other `## ` heading that is not
- * `## [x.y.z] - YYYY-MM-DD` throws an error naming the offending line.
+ * `## [x.y.z] - YYYY-MM-DD` throws an error naming the offending line, and so
+ * does any `### ` heading other than `### Added`, `### Changed` and `### Fixed`.
  * @param markdown - The raw `CHANGELOG.md` contents.
  * @returns The release entries, newest first.
  */
@@ -96,7 +97,12 @@ export function parseChangelog(markdown: string): ReleaseNote[] {
   const lines = markdown.split(/\r?\n/);
   for (const [index, line] of lines.entries()) {
     if (LINK_REFERENCE_DEFINITION.test(line)) continue;
-    if (!SECOND_LEVEL_HEADING.test(line)) {
+    if (!line.startsWith("## ")) {
+      if (line.startsWith("### ") && !GROUP_HEADING.test(line)) {
+        throw new Error(
+          `CHANGELOG.md line ${index + 1}: unknown group heading "${line}"; expected "### Added", "### Changed" or "### Fixed"`,
+        );
+      }
       current?.lines.push(line);
       continue;
     }

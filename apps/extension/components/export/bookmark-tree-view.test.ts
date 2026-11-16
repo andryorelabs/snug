@@ -12,7 +12,9 @@ import { BookmarkTreeView } from "./bookmark-tree-view";
 
 const mountedHarnesses: DomHarness[] = [];
 
-function noop() {}
+function noop() {
+  return;
+}
 
 const NODES: BookmarkNode[] = [
   {
@@ -69,7 +71,7 @@ function row(container: HTMLElement, title: string) {
 describe("BookmarkTreeView", () => {
   beforeEach(() => {
     fakeBrowser.reset();
-    fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
+    fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
     for (const property of ["offsetHeight", "offsetWidth", "clientHeight", "clientWidth"]) {
       Object.defineProperty(HTMLElement.prototype, property, {
         configurable: true,
@@ -99,7 +101,10 @@ describe("BookmarkTreeView", () => {
     expect(harness.container.querySelector("[data-checked]")).toBeNull();
     expect(row(harness.container, "Alpha")?.hasAttribute("aria-checked")).toBe(false);
 
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
     expect(reference.current?.getCheckedIds()).toEqual([]);
   });
 
@@ -108,7 +113,10 @@ describe("BookmarkTreeView", () => {
       isSelectable: true,
     });
 
-    await act(async () => reference.current?.selectAll());
+    await act(() => {
+      reference.current?.selectAll();
+      return Promise.resolve();
+    });
 
     expect(reference.current?.getCheckedIds().toSorted((a, b) => a.localeCompare(b))).toEqual([
       "a",
@@ -123,7 +131,10 @@ describe("BookmarkTreeView", () => {
   it("does not toggle a disabled row on click", async () => {
     const { harness, reference } = await mountView({ isSelectable: true });
 
-    await act(async () => row(harness.container, "Duplicate")?.click());
+    await act(() => {
+      row(harness.container, "Duplicate")?.click();
+      return Promise.resolve();
+    });
 
     expect(reference.current?.getCheckedIds()).toEqual([]);
   });

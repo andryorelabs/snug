@@ -146,7 +146,9 @@ if (import.meta.main) {
       spawnSyncStatus(["bunx", "turbo", "run", "check", "--affected"], {
         TURBO_SCM_BASE: base,
       }),
-    log: (message) => console.error(message),
+    log: (message) => {
+      console.error(message);
+    },
   });
   process.exitCode = exitCode;
 }

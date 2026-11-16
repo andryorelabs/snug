@@ -25,7 +25,10 @@ function withRootDetection(tree: ParsedBookmark[]): ParsedImport {
   return {
     tree,
     hasLocationData: tree.some(
-      (node) => node.isBookmarksBar || node.isOtherBookmarks || node.isMobileBookmarks,
+      (node) =>
+        node.isBookmarksBar === true ||
+        node.isOtherBookmarks === true ||
+        node.isMobileBookmarks === true,
     ),
   };
 }
@@ -69,26 +72,12 @@ export function parseLocationAwareImport(
   format: BookmarkFormat,
   liveRootTitles?: ResolvedImportRootTitles,
 ): ParsedImport | undefined {
-  switch (format) {
-    case "html": {
-      return parseHTMLWithLocation(text, liveRootTitles);
-    }
-    case "json": {
-      return parseJsonImport(text);
-    }
-    case "chrome": {
-      return withRootDetection(parseChromeBookmarks(text));
-    }
-    case "safari": {
-      return withRootDetection(parseSafari(text, liveRootTitles));
-    }
-    case "xbel": {
-      return parseXBEL(text, liveRootTitles);
-    }
-    default: {
-      return undefined;
-    }
-  }
+  if (format === "html") return parseHTMLWithLocation(text, liveRootTitles);
+  if (format === "json") return parseJsonImport(text);
+  if (format === "chrome") return withRootDetection(parseChromeBookmarks(text));
+  if (format === "safari") return withRootDetection(parseSafari(text, liveRootTitles));
+  if (format === "xbel") return parseXBEL(text, liveRootTitles);
+  return undefined;
 }
 
 /**
@@ -129,22 +118,18 @@ export function parseImportFile(
   liveRootTitles?: ResolvedImportRootTitles,
 ): ParsedImportFile {
   const format = detectFormat(text, mimeType, fileName);
-  switch (format) {
-    case "csv": {
-      const { tree, skippedInvalidUrl } = parseCSVTree(text);
-      return { format, tree, hasLocationData: false, skippedInvalidUrl };
-    }
-    case "unknown": {
-      throw new Error(i18n.t("unsupportedFileFormat"));
-    }
-    default: {
-      const parsed = parseLocationAwareImport(text, format, liveRootTitles);
-      return {
-        format,
-        tree: parsed?.tree ?? [],
-        hasLocationData: parsed?.hasLocationData ?? false,
-        skippedInvalidUrl: 0,
-      };
-    }
+  if (format === "csv") {
+    const { tree, skippedInvalidUrl } = parseCSVTree(text);
+    return { format, tree, hasLocationData: false, skippedInvalidUrl };
   }
+  if (format === "unknown") {
+    throw new Error(i18n.t("unsupportedFileFormat"));
+  }
+  const parsed = parseLocationAwareImport(text, format, liveRootTitles);
+  return {
+    format,
+    tree: parsed?.tree ?? [],
+    hasLocationData: parsed?.hasLocationData ?? false,
+    skippedInvalidUrl: 0,
+  };
 }

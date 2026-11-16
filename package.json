@@ -39,7 +39,7 @@
     "catalog": {
       "react": "^19.3.1",
       "react-dom": "^19.3.1",
-      "typescript": "^6.0.3",
+      "typescript": "npm:@typescript/typescript6@6.0.2",
       "typescript7": "npm:typescript@7.1.0-beta",
       "tailwindcss": "^4.2.4",
       "@tailwindcss/vite": "^4.2.4",
@@ -48,7 +48,7 @@
       "lucide-react": "^1.66.0",
       "cn": "^0.5.1",
       "vitest": "^5.0.5",
-      "@types/bun": "^1.4.4"
+      "@types/bun": "1.4.4"
     }
   },
   "scripts": {
@@ -75,10 +75,11 @@
     "lint:oxlint:site": "oxlint --type-aware --deny-warnings apps/site",
     "lint:oxlint:rest": "oxlint --type-aware --deny-warnings --ignore-pattern 'apps/extension/**' --ignore-pattern 'apps/site/**'",
     "lint:fix": "oxlint --type-aware --deny-warnings --fix && bunx eslint \"**/*.astro\" --fix --max-warnings=0 --cache --cache-strategy content",
-    "format:check": "oxfmt --check \"**/*.{ts,tsx,js,jsx,mjs,mdx,astro,json,json5,md,css,scss,yml,yaml}\"",
-    "format:write": "oxfmt \"**/*.{ts,tsx,js,jsx,mjs,mdx,astro,json,json5,md,css,scss,yml,yaml}\"",
-    "test": "turbo run test test:root",
-    "test:coverage": "turbo run test:coverage test:coverage:root",
+    "format:check": "oxfmt --check \"**/*.{ts,tsx,mts,cts,js,jsx,mjs,mdx,astro,json,jsonc,json5,md,css,scss,yml,yaml}\"",
+    "format:write": "oxfmt \"**/*.{ts,tsx,mts,cts,js,jsx,mjs,mdx,astro,json,jsonc,json5,md,css,scss,yml,yaml}\"",
+    "test": "bun run test:coverage",
+    "test:coverage": "turbo run test:coverage test:coverage:root && bun run coverage:floors",
+    "coverage:floors": "bun scripts/coverage-floors.ts",
     "test:watch": "bun run --cwd apps/extension test:watch",
     "test:e2e": "turbo run test:e2e",
     "store:screenshots": "bun run --cwd apps/extension store:screenshots",
@@ -102,7 +103,6 @@
     "@shadcn/lint": "^0.2.3",
     "@types/bun": "catalog:",
     "@vitest/coverage-v8": "^5.0.4",
-    "bun-types": "^1.4.4",
     "eslint": "^10.14.0",
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-jsdoc": "^65.4.2",
@@ -115,7 +115,7 @@
     "knip": "^6.44.1",
     "lint-staged": "^17.5.1",
     "oxfmt": "0.75.0",
-    "oxlint": "1.90.0",
+    "oxlint": "1.92.0",
     "oxlint-tsgolint": "7.0.2005",
     "playwright": "^1.64.1",
     "turbo": "^2.11.10",

@@ -1,7 +1,7 @@
 ---
-import { cn } from "@workspace/ui/lib/utils";
 import type { ImageMetadata } from "astro";
 import { getImage } from "astro:assets";
+import { cn } from "@workspace/ui/lib/utils";
 
 import { getLandingCopy, headlineSeparator, PROMO_VIDEO_IDS } from "../i18n/landing";
 import type { Locale } from "../i18n/locales";
@@ -20,14 +20,17 @@ const posters = import.meta.glob<{ default: ImageMetadata }>("../assets/video-po
 
 const { locale } = Astro.props;
 const { hero, video } = getLandingCopy(locale);
-const poster = posters[`../assets/video-posters/${locale}.png`]!.default;
+const posterModule = posters[`../assets/video-posters/${locale}.png`];
+if (!posterModule) throw new Error(`Missing hero poster for locale ${locale}`);
+const poster = posterModule.default;
 const POSTER_WIDTHS = [640, 960, 1280] as const;
-const POSTER_SIZES =
-  "(min-width: 1240px) 538px, (min-width: 768px) calc(50vw - 82px), calc(100vw - 34px)";
 const posterImages = await Promise.all(
   POSTER_WIDTHS.map((width) => getImage({ src: poster, width, format: "webp" })),
 );
-const posterImage = posterImages.at(-1)!;
+const posterImage = posterImages.at(-1);
+if (!posterImage) throw new Error("Missing hero poster image");
+const POSTER_SIZES =
+  "(min-width: 1240px) 538px, (min-width: 768px) calc(50vw - 82px), calc(100vw - 34px)";
 const posterSourceSet = posterImages
   .map((image, index) => `${image.src} ${POSTER_WIDTHS[index]}w`)
   .join(", ");

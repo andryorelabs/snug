@@ -2,14 +2,14 @@ import type { ReactNode } from "react";
 
 import { theme } from "../theme";
 
-export type ButtonProps = {
+export interface ButtonProps {
   variant?: "primary" | "outline" | "ghost";
   /**
    * 0..1 press squash, e.g. driven by a Cursor click frame.
    */
   press?: number;
   children: ReactNode;
-};
+}
 
 const STYLES = {
   primary: {

@@ -27,6 +27,29 @@ const exportOptions = {
   hideParentFolder: false,
 };
 
+/**
+ * Converts exported nodes to the importer's input shape, as a file round trip
+ * would after parsing the serialized export.
+ * @param nodes The exported tree.
+ * @returns The same tree as `ParsedBookmark` nodes.
+ */
+function toParsedBookmarks(nodes: ExtendedBookmarkTreeNode[]): ParsedBookmark[] {
+  return nodes.map((node) => {
+    const parsed: ParsedBookmark = {
+      id: node.id,
+      title: node.title,
+      dateAdded: node.dateAdded ?? 0,
+    };
+    if (node.parentId !== undefined) parsed.parentId = node.parentId;
+    if (node.url !== undefined) parsed.url = node.url;
+    if (node.dateGroupModified !== undefined) parsed.dateGroupModified = node.dateGroupModified;
+    if (node.folderType !== undefined) parsed.folderType = node.folderType;
+    parsed.syncing = node.syncing;
+    if (node.children) parsed.children = toParsedBookmarks(node.children);
+    return parsed;
+  });
+}
+
 function seedSourceTree(): void {
   seedFakeBookmarksTree(
     [
@@ -77,7 +100,7 @@ function collectUrls(node: ExtendedBookmarkTreeNode | undefined): string[] {
   const visit = (n: ExtendedBookmarkTreeNode) => {
     if (n.url) urls.push(n.url);
     const children = n.children ?? [];
-    for (const child of children) visit(child as ExtendedBookmarkTreeNode);
+    for (const child of children) visit(child);
   };
   visit(node);
   return urls.toSorted((a, b) => a.localeCompare(b));
@@ -93,14 +116,7 @@ describe("round trip: JSON", () => {
     const originalUrls = collectUrls(getFakeBookmarksRoot());
 
     const exported = await exportToJSON(exportOptions);
-    /**
-    A real export -> import cycle round-trips through JSON text (file ->
-    JSON.parse()); exportToJSON's return type isn't ParsedBookmark[] (that's
-    only the importer's *input* shape), but the runtime shape matches once
-    serialized, so this cast documents that boundary rather than papering
-    over an actual mismatch.
-     */
-    const reparsed = structuredClone(exported) as unknown as ParsedBookmark[];
+    const reparsed = toParsedBookmarks(exported);
 
     resetFakeBookmarks();
     await importFromJSON(reparsed[0]?.children ?? [], "restore-merge");
@@ -137,16 +153,14 @@ describe("round trip: JSON", () => {
       hideOtherBookmarks: false,
       hideParentFolder: true,
     });
-    const reparsed = structuredClone(exported) as unknown as ParsedBookmark[];
+    const reparsed = toParsedBookmarks(exported);
 
     resetFakeBookmarks({ withMobileRoot: true });
     await importFromJSON(reparsed[0]?.children ?? reparsed, "restore-merge");
 
     expect(collectUrls(getFakeBookmarksRoot())).toEqual(originalUrls);
     const mobile = getFakeBookmarksRoot().children?.find((n) => n.id === "3");
-    expect(collectUrls(mobile as ExtendedBookmarkTreeNode | undefined)).toEqual([
-      "https://mobile.example",
-    ]);
+    expect(collectUrls(mobile)).toEqual(["https://mobile.example"]);
   });
 
   it("export (hideOtherBookmarks) -> import (restore-merge) restores each bookmark under its original root", async () => {
@@ -191,14 +205,14 @@ describe("round trip: JSON", () => {
       ...exportOptions,
       hideOtherBookmarks: true,
     });
-    const reparsed = structuredClone(exported) as unknown as ParsedBookmark[];
+    const reparsed = toParsedBookmarks(exported);
 
     resetFakeBookmarks();
     await importFromJSON(reparsed[0]?.children ?? [], "restore-merge");
 
     const root = getFakeBookmarksRoot();
-    const bar = root.children?.find((n) => n.id === "1") as ExtendedBookmarkTreeNode | undefined;
-    const other = root.children?.find((n) => n.id === "2") as ExtendedBookmarkTreeNode | undefined;
+    const bar = root.children?.find((n) => n.id === "1");
+    const other = root.children?.find((n) => n.id === "2");
 
     expect(collectUrls(bar)).toEqual(["https://github.example/repo"]);
     expect(collectUrls(other)).toEqual(["https://reading.example/article"]);
@@ -224,7 +238,7 @@ describe("round trip: empty folders", () => {
   it("JSON export -> import -> export keeps an empty folder", async () => {
     seedEmptyFolderTree();
     const exported = await exportToJSON(exportOptions);
-    const reparsed = structuredClone(exported) as unknown as ParsedBookmark[];
+    const reparsed = toParsedBookmarks(exported);
 
     resetFakeBookmarks();
     await importFromJSON(reparsed[0]?.children ?? [], "restore-merge");
@@ -461,8 +475,6 @@ describe("round trip: XBEL", () => {
     expect(development?.children?.[1]?.children?.map((n) => n.url)).toEqual([
       "https://leaf.example",
     ]);
-    expect(collectUrls(other as ExtendedBookmarkTreeNode | undefined)).toEqual([
-      "https://reading.example",
-    ]);
+    expect(collectUrls(other)).toEqual(["https://reading.example"]);
   });
 });

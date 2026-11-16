@@ -1,6 +1,6 @@
 # Documentation index
 
-An index of every document in this repository. `scripts/docs-index.test.ts`
+An index of every document in this repository. `scripts/standard-invariants.test.ts`
 fails when a document under `docs/` is missing here. Terms follow
 [`GLOSSARY.md`](../GLOSSARY.md).
 
@@ -31,6 +31,10 @@ fails when a document under `docs/` is missing here. Terms follow
   e2e build step, lychee, emet worktrees, BrowserStack, and the Coolify deploy.
 - [`docs/architecture.md`](architecture.md) — a matklad-style code map of the
   codebase's shape: runtime contexts, data flows, and invariants.
+- [`ACCESSIBILITY.md`](../ACCESSIBILITY.md) — the accessibility goal, what
+  enforces it, known barriers and how to report one.
+- [`DESIGN.md`](../DESIGN.md) — the design intent and where the brand kit,
+  tokens and design systems live.
 - [`docs/security.md`](security.md) — the extension's assurance case: what
   security it provides, its threat model, the supply chain, CSP requirements and
   known limitations.
@@ -108,6 +112,8 @@ fails when a document under `docs/` is missing here. Terms follow
 
 - [`AGENTS.md`](../AGENTS.md) — instructions for coding agents: layout, scripts,
   rules, conventions, and escalation ladders.
+- [`docs/agents/codebase.md`](agents/codebase.md) — the codebase map for agents:
+  which path holds what.
 - [`docs/agents/domain.md`](agents/domain.md) — how domain-modeling-aware skills
   should use this repo's domain docs.
 - [`docs/agents/emet.md`](agents/emet.md) — repo-specific config for the

@@ -4,6 +4,6 @@
  * without one.
  */
 export declare const shadcnNoRestyleContracts: readonly {
-  readonly pattern: string
-  readonly allow: readonly string[]
-}[]
+  readonly pattern: string;
+  readonly allow: readonly string[];
+}[];

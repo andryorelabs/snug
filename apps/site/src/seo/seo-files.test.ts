@@ -282,6 +282,10 @@ describe("buildSitemapXml", () => {
 
 const FEATURES = ["Export what you choose", "Undo a replace"];
 
+function hasOffers<Node extends object>(node: Node): node is Node & { offers: { price: string } } {
+  return "offers" in node;
+}
+
 function graphNodes(locale: (typeof LOCALES)[number]) {
   const data = buildStructuredData(locale, "Description", FEATURES, {
     title: `Snug ${locale}`,
@@ -289,11 +293,11 @@ function graphNodes(locale: (typeof LOCALES)[number]) {
     videoDescription: `Walkthrough ${locale}`,
   });
   const find = (type: string) => data["@graph"].find((node) => node["@type"] === type);
+  const app = find("SoftwareApplication");
+  if (app === undefined || !hasOffers(app)) throw new Error("Missing SoftwareApplication offers");
   return {
     data,
-    app: find("SoftwareApplication") as Record<string, unknown> & {
-      offers: { price: string };
-    },
+    app,
     site: find("WebSite"),
     person: find("Person"),
     page: find("WebPage"),
@@ -350,10 +354,10 @@ describe("buildStructuredData", () => {
       "@type": "VideoObject",
       name: `Snug ${locale}`,
       description: `Walkthrough ${locale}`,
-      thumbnailUrl: expect.stringContaining(PROMO_VIDEO_IDS[locale]) as string,
-      uploadDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
       embedUrl: `https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_IDS[locale]}`,
     });
+    expect(video?.thumbnailUrl).toContain(PROMO_VIDEO_IDS[locale]);
+    expect(video?.uploadDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   it.each(LOCALES)("%s names the site in its own language", (locale) => {

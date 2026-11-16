@@ -13,7 +13,7 @@ import {
 import type { ExtendedBookmarkTreeNode } from "./types";
 
 vi.mock("./export-all-bookmarks", () => ({
-  triggerDownload: vi.fn(),
+  triggerDownload: vi.fn<(...arguments_: unknown[]) => void>(),
 }));
 
 const downloadMock = vi.mocked(triggerDownload);
@@ -61,11 +61,11 @@ beforeEach(() => {
 
 describe("runImport", () => {
   it("rejects content whose format cannot be detected", async () => {
-    await expect(runImport("not a bookmarks file", "text/plain", "folder")).rejects.toThrow();
+    await expect(runImport("not a bookmarks file", "text/plain", "folder")).rejects.toThrow(Error);
   });
 
   it("rejects JSON that does not parse", async () => {
-    await expect(runImport("{not json", "application/json", "folder")).rejects.toThrow();
+    await expect(runImport("{not json", "application/json", "folder")).rejects.toThrow(Error);
   });
 
   it("imports a JSON file whose root is a single object, matching its preview", async () => {
@@ -175,7 +175,7 @@ describe("runImport", () => {
       downloadMock.mockImplementationOnce(() => {
         throw new Error("blocked");
       });
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockReturnValue(undefined);
 
       await runImport(SINGLE_ROOT_JSON, "application/json", "restore-replace");
 

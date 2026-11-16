@@ -1,44 +1,42 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
 import { describe, expect, test } from "vitest";
 
 import { shadcnNoRestyleContracts } from "../lint-policy.mjs";
 import oxlintConfig from "../oxlint.config";
+import { isRecord } from "./json-guards";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-interface RestyleOptions {
-  readonly contracts: unknown;
-}
-
 function restyleContracts(entry: unknown): unknown {
-  if (!Array.isArray(entry)) throw new Error("no-restyle has no options");
-  return (entry[1] as RestyleOptions).contracts;
+  if (!Array.isArray(entry)) throw new TypeError("no-restyle has no options");
+  const options: unknown = entry[1];
+  return isRecord(options) ? options.contracts : undefined;
 }
 
 describe("shared lint policy", () => {
   test("oxlint.config.ts uses the shared no-restyle contracts object", () => {
-    const rules = oxlintConfig.overrides?.flatMap((override) =>
+    const rules = oxlintConfig.overrides.flatMap((override) =>
       Object.entries(override.rules ?? {}),
     );
-    const restyle = rules?.filter(([rule]) => rule === "shadcn/no-restyle");
-    const withOptions = restyle?.filter(([, entry]) => Array.isArray(entry));
-    expect(withOptions?.length).toBeGreaterThan(0);
-    const optionEntries = (withOptions ?? []).map(([, entry]) => entry);
+    const restyle = rules.filter(([rule]) => rule === "shadcn/no-restyle");
+    const withOptions = restyle.filter(([, entry]) => Array.isArray(entry));
+    expect(withOptions.length).toBeGreaterThan(0);
+    const optionEntries = withOptions.map(([, entry]) => entry);
     for (const entry of optionEntries) {
       expect(restyleContracts(entry)).toBe(shadcnNoRestyleContracts);
     }
   });
 
   test("eslint.config.mjs uses the shared no-restyle contracts object", async () => {
-    const loaded = (await import(pathToFileURL(path.join(ROOT, "eslint.config.mjs")).href)) as {
-      default: readonly { rules?: Record<string, unknown> }[];
-    };
-    const blocks = loaded.default;
+    const loaded: unknown = await import(pathToFileURL(path.join(ROOT, "eslint.config.mjs")).href);
+    const blocks = isRecord(loaded) ? loaded.default : undefined;
+    if (!Array.isArray(blocks)) throw new TypeError("eslint.config.mjs must export an array");
     const entries = blocks
-      .map((block) => block.rules?.["shadcn/no-restyle"])
+      .map((block: unknown) =>
+        isRecord(block) && isRecord(block.rules) ? block.rules["shadcn/no-restyle"] : undefined,
+      )
       .filter((entry) => entry !== undefined);
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) {
@@ -61,9 +59,12 @@ describe("config file flavors", () => {
   });
 
   test("commitlint extends the conventional preset", async () => {
-    const loaded = (await import(pathToFileURL(path.join(ROOT, "commitlint.config.ts")).href)) as {
-      default: { extends: readonly string[] };
-    };
-    expect(loaded.default.extends).toStrictEqual(["@commitlint/config-conventional"]);
+    const loaded: unknown = await import(
+      pathToFileURL(path.join(ROOT, "commitlint.config.ts")).href
+    );
+    const config = isRecord(loaded) ? loaded.default : undefined;
+    expect(isRecord(config) ? config.extends : undefined).toStrictEqual([
+      "@commitlint/config-conventional",
+    ]);
   });
 });

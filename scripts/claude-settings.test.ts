@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
-
 import { describe, expect, test } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 interface HookEntry {
   matcher?: string;
   hooks?: { type?: string; command?: string }[];
@@ -9,10 +9,15 @@ interface HookEntry {
 
 const REPO_ROOT = new URL("../", import.meta.url);
 
-const settings = JSON.parse(readFileSync(new URL(".claude/settings.json", REPO_ROOT), "utf8")) as {
+interface ClaudeSettings {
   permissions?: { deny?: string[] };
   hooks?: { PreToolUse?: HookEntry[] };
-};
+}
+
+const settings = parseJsonAs(
+  readFileSync(new URL(".claude/settings.json", REPO_ROOT), "utf8"),
+  (value): value is ClaudeSettings => isRecord(value),
+);
 
 const denied = settings.permissions?.deny ?? [];
 

@@ -173,6 +173,7 @@ async function downloadLycheeBinary(version: string, destinationPath: string): P
   } catch (error: unknown) {
     throw new Error(
       `lint-docs: failed to download lychee from ${url}: ${error instanceof Error ? error.message : String(error)}. ${manualInstallHint}`,
+      { cause: error },
     );
   }
   if (!response.ok) {

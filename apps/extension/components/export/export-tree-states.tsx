@@ -37,7 +37,7 @@ function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
  */
 export function ExportTreeSkeleton() {
   return (
-    <div className="flex flex-col p-2" role="status" aria-label={i18n.t("exportPage_loading")}>
+    <output className="flex flex-col p-2" aria-label={i18n.t("exportPage_loading")}>
       <SkeletonRow indentClassName="ml-0">
         <Skeleton className="h-3 w-40" />
       </SkeletonRow>
@@ -65,7 +65,7 @@ export function ExportTreeSkeleton() {
       <SkeletonRow indentClassName="ml-0">
         <Skeleton className="h-3 w-32" />
       </SkeletonRow>
-    </div>
+    </output>
   );
 }
 

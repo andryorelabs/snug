@@ -95,6 +95,7 @@ function TimePickerColumn<Value extends number | string>(
     <ScrollArea className="h-56 w-14">
       <div
         ref={listReference}
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox widget with no native equivalent
         role="listbox"
         aria-label={label}
         aria-orientation="vertical"
@@ -106,14 +107,19 @@ function TimePickerColumn<Value extends number | string>(
             <Button
               key={option.value}
               type="button"
+              // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox option with button behaviour
               role="option"
               size="sm"
               variant={isSelected ? "default" : "ghost"}
               aria-selected={isSelected}
               tabIndex={isSelected ? 0 : -1}
               className="justify-center"
-              onClick={() => onSelect(option.value)}
-              onKeyDown={(event) => handleKeyDown(event, index)}
+              onClick={() => {
+                onSelect(option.value);
+              }}
+              onKeyDown={(event) => {
+                handleKeyDown(event, index);
+              }}
             >
               <span className="tabular-nums">{option.label}</span>
             </Button>
@@ -227,7 +233,9 @@ export function TimePicker(properties: TimePickerProperties) {
               label={hourLabel}
               options={toNumberOptions(HOURS_12)}
               selected={twelveHour.hour}
-              onSelect={(next) => emit(from12Hour(next, twelveHour.period), minute)}
+              onSelect={(next) => {
+                emit(from12Hour(next, twelveHour.period), minute);
+              }}
               onCommit={commit}
             />
           ) : (
@@ -235,7 +243,9 @@ export function TimePicker(properties: TimePickerProperties) {
               label={hourLabel}
               options={toNumberOptions(HOURS_24)}
               selected={hour}
-              onSelect={(next) => emit(next, minute)}
+              onSelect={(next) => {
+                emit(next, minute);
+              }}
               onCommit={commit}
             />
           )}
@@ -244,7 +254,9 @@ export function TimePicker(properties: TimePickerProperties) {
             label={minuteLabel}
             options={toNumberOptions(MINUTES)}
             selected={minute}
-            onSelect={(next) => emit(hour, next)}
+            onSelect={(next) => {
+              emit(hour, next);
+            }}
             onCommit={commit}
           />
           {is12Hour ? (
@@ -257,7 +269,9 @@ export function TimePicker(properties: TimePickerProperties) {
                   label: dayPeriodLabels[period],
                 }))}
                 selected={twelveHour.period}
-                onSelect={(next) => emit(from12Hour(twelveHour.hour, next), minute)}
+                onSelect={(next) => {
+                  emit(from12Hour(twelveHour.hour, next), minute);
+                }}
                 onCommit={commit}
               />
             </>

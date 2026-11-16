@@ -1,11 +1,11 @@
 import { mkdirSync, statSync } from "node:fs";
 import path from "node:path";
-
 import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition } from "@remotion/renderer";
 
 import { LOCALES } from "../src/copy";
 import { THUMBNAIL_SIZE } from "../src/thumbnail/Thumbnail";
+import { runInSequence } from "./run-in-sequence";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.resolve(ROOT, "..", "..", "docs", "brand", "youtube", "thumbnails");
@@ -27,39 +27,40 @@ const main = async () => {
   });
 
   const failures: string[] = [];
-  for (const { id, outDir } of TARGETS) {
-    for (const locale of LOCALES) {
-      const inputProps = { locale };
-      const composition = await selectComposition({
-        serveUrl,
-        id,
-        inputProps,
-        browserExecutable,
-      });
-      if (
-        composition.width !== THUMBNAIL_SIZE.width ||
-        composition.height !== THUMBNAIL_SIZE.height
-      ) {
-        failures.push(`${id} ${locale}: composition is ${composition.width}x${composition.height}`);
-        continue;
-      }
-      const output = path.join(outDir, `${locale}.png`);
-      await renderStill({
-        composition,
-        serveUrl,
-        output,
-        inputProps,
-        browserExecutable,
-        imageFormat: "png",
-      });
-      const bytes = statSync(output).size;
-      if (bytes > MAX_BYTES) {
-        failures.push(`${id} ${locale}: ${bytes} bytes exceeds ${MAX_BYTES}`);
-      } else {
-        console.log(`${id} ${locale}: ok (${Math.round(bytes / 1024)} KB) -> ${output}`);
-      }
+  const jobs = TARGETS.flatMap(({ id, outDir }) =>
+    LOCALES.map((locale) => ({ id, outDir, locale })),
+  );
+  await runInSequence(jobs, async ({ id, outDir, locale }) => {
+    const inputProps = { locale };
+    const composition = await selectComposition({
+      serveUrl,
+      id,
+      inputProps,
+      browserExecutable,
+    });
+    if (
+      composition.width !== THUMBNAIL_SIZE.width ||
+      composition.height !== THUMBNAIL_SIZE.height
+    ) {
+      failures.push(`${id} ${locale}: composition is ${composition.width}x${composition.height}`);
+      return;
     }
-  }
+    const output = path.join(outDir, `${locale}.png`);
+    await renderStill({
+      composition,
+      serveUrl,
+      output,
+      inputProps,
+      browserExecutable,
+      imageFormat: "png",
+    });
+    const bytes = statSync(output).size;
+    if (bytes > MAX_BYTES) {
+      failures.push(`${id} ${locale}: ${bytes} bytes exceeds ${MAX_BYTES}`);
+    } else {
+      console.log(`${id} ${locale}: ok (${Math.round(bytes / 1024)} KB) -> ${output}`);
+    }
+  });
 
   if (failures.length > 0) {
     throw new Error(`Verification failed:\n${failures.join("\n")}`);

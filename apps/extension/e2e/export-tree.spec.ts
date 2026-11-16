@@ -70,10 +70,12 @@ test("the tree is a single tab stop and focus is visibly ringed", async ({
   const tree = treeOf(page);
 
   await page.getByRole("searchbox").focus();
-  for (let step = 0; step < 15; step += 1) {
-    if ((await tree.locator(":focus").count()) > 0) break;
+  const tabIntoTree = async (remainingSteps: number): Promise<void> => {
+    if (remainingSteps === 0 || (await tree.locator(":focus").count()) > 0) return;
     await page.keyboard.press("Tab");
-  }
+    await tabIntoTree(remainingSteps - 1);
+  };
+  await tabIntoTree(15);
   const focusedRow = tree.getByRole("treeitem").first();
   await expect(focusedRow).toBeFocused();
 
@@ -170,12 +172,11 @@ test("shows an empty state with a link to Import when there are no bookmarks", a
   await serviceWorker.evaluate(async () => {
     const [root] = await chrome.bookmarks.getTree();
     const folders = root?.children ?? [];
-    for (const folder of folders) {
-      const children = folder.children ?? [];
-      for (const child of children) {
-        await chrome.bookmarks.removeTree(child.id);
-      }
-    }
+    await Promise.all(
+      folders.flatMap((folder) =>
+        (folder.children ?? []).map((child) => chrome.bookmarks.removeTree(child.id)),
+      ),
+    );
   });
   const page = await openExtensionPage("app.html#/export");
 
@@ -194,11 +195,7 @@ test("shows an error state when loading fails and Try again reloads", async ({
   await expect(treeOf(page)).toBeVisible();
 
   await page.evaluate(() => {
-    const bookmarks = (
-      globalThis as unknown as {
-        chrome: { bookmarks: { getTree: () => Promise<unknown> } };
-      }
-    ).chrome.bookmarks;
+    const { bookmarks } = globalThis.chrome;
     const original = bookmarks.getTree;
     bookmarks.getTree = () => Promise.reject(new Error("getTree failed"));
     Object.assign(globalThis, {
@@ -216,9 +213,10 @@ test("shows an error state when loading fails and Try again reloads", async ({
 
   await expect(page.getByText(en.exportPage_errorTitle.message)).toBeVisible();
 
-  await page.evaluate(() =>
-    (globalThis as unknown as { restoreGetTree: () => void }).restoreGetTree(),
-  );
+  await page.evaluate(() => {
+    const restore: unknown = Reflect.get(globalThis, "restoreGetTree");
+    if (typeof restore === "function") Reflect.apply(restore, undefined, []);
+  });
   await page.getByRole("button", { name: en.exportPage_tryAgain.message }).click();
   await expect(treeOf(page)).toBeVisible();
   await expect(page.getByText(en.exportPage_errorTitle.message)).toBeHidden();
@@ -258,7 +256,7 @@ test("virtualizes a 5,000-bookmark library and keyboard navigation reaches unren
   await seedBookmarks(
     Array.from({ length: folderCount }, (_, folderIndex) => ({
       title: `Bulk Folder ${folderIndex + 1}`,
-      children: Array.from({ length: bookmarksPerFolder }, (_, index) => ({
+      children: Array.from({ length: bookmarksPerFolder }, (_item, index) => ({
         title: `Bulk ${folderIndex + 1}-${index + 1}`,
         url: `https://example.com/bulk/${folderIndex + 1}/${index + 1}`,
       })),

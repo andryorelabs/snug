@@ -1,8 +1,10 @@
-import AxeBuilder from "@axe-core/playwright";
+import { AxeBuilder } from "@axe-core/playwright";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { expect, test } from "./fixtures";
 import { hasFinePointer, linkTabKey, setViewportOrSkip } from "./layout-helpers";
+import { requireValue } from "./require";
+import { forEachSequentially } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
 const SCHEMES = ["light", "dark"] as const;
@@ -113,13 +115,21 @@ test.describe("hero journey diagram", () => {
     await page.goto("/");
     const row = await boxes();
     expect(row).toHaveLength(3);
-    expect(row[1]!.x).toBeGreaterThan(row[0]!.x + row[0]!.width - 1);
-    expect(row[2]!.x).toBeGreaterThan(row[1]!.x + row[1]!.width - 1);
+    expect(requireValue(row[1]).x).toBeGreaterThan(
+      requireValue(row[0]).x + requireValue(row[0]).width - 1,
+    );
+    expect(requireValue(row[2]).x).toBeGreaterThan(
+      requireValue(row[1]).x + requireValue(row[1]).width - 1,
+    );
 
     await setViewportOrSkip(page, { width: 375, height: 800 });
     const stack = await boxes();
-    expect(stack[1]!.y).toBeGreaterThan(stack[0]!.y + stack[0]!.height - 1);
-    expect(stack[2]!.y).toBeGreaterThan(stack[1]!.y + stack[1]!.height - 1);
+    expect(requireValue(stack[1]).y).toBeGreaterThan(
+      requireValue(stack[0]).y + requireValue(stack[0]).height - 1,
+    );
+    expect(requireValue(stack[2]).y).toBeGreaterThan(
+      requireValue(stack[1]).y + requireValue(stack[1]).height - 1,
+    );
   });
 
   test("the stage loops under no-preference", async ({ page }) => {
@@ -143,12 +153,15 @@ test.describe("hero journey diagram", () => {
   test("the stage is static and fully visible under reduce", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    for (const selector of [".hero-file", ".hero-tree-source", ".hero-tree-target"]) {
-      const target = page.locator(selector).first();
-      await expect(target).toHaveCSS("animation-name", "none");
-      await expect(target).toHaveCSS("opacity", "1");
-      await expect(target).toBeVisible();
-    }
+    await forEachSequentially(
+      [".hero-file", ".hero-tree-source", ".hero-tree-target"],
+      async (selector) => {
+        const target = page.locator(selector).first();
+        await expect(target).toHaveCSS("animation-name", "none");
+        await expect(target).toHaveCSS("opacity", "1");
+        await expect(target).toBeVisible();
+      },
+    );
   });
 
   for (const path of ["/de/", "/ru/"]) {

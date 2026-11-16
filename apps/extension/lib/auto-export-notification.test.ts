@@ -11,23 +11,24 @@ import {
   notifyAutoExportFailure,
 } from "./auto-export-notification";
 
+const appUrl: unknown = expect.stringMatching(/\/app\.html#\/auto-export$/);
+
 function mockNotificationsApi() {
-  const create = vi.fn(async (id: string, ...rest: unknown[]) => {
-    void rest;
-    return id;
-  });
-  const clearSpy = vi.fn(async () => {});
-  browser.notifications = {
+  const create = vi.fn<(id: string, ...rest: unknown[]) => Promise<string>>((id) =>
+    Promise.resolve(id),
+  );
+  const clearSpy = vi.fn<() => Promise<void>>(() => Promise.resolve());
+  Reflect.set(browser, "notifications", {
     create,
     clear: clearSpy,
-  } as unknown as typeof browser.notifications;
+  });
   return { create, clearSpy };
 }
 
 function mockNotificationAccess(isGranted: boolean) {
-  browser.permissions = {
-    contains: vi.fn(async () => isGranted),
-  } as unknown as typeof browser.permissions;
+  Reflect.set(browser, "permissions", {
+    contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(isGranted)),
+  });
 }
 
 beforeEach(() => {
@@ -75,7 +76,7 @@ describe("notifyAutoExportFailure", () => {
   it("skips silently when Notification access is missing", async () => {
     const { create } = mockNotificationsApi();
     mockNotificationAccess(false);
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
 
     await expect(notifyAutoExportFailure("disk full")).resolves.toBeUndefined();
 
@@ -90,7 +91,7 @@ describe("notifyAutoExportFailure", () => {
   it("swallows a notifications API error", async () => {
     const { create } = mockNotificationsApi();
     create.mockRejectedValueOnce(new Error("no icon"));
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
 
     await expect(notifyAutoExportFailure("x")).resolves.toBeUndefined();
     expect(consoleError).toHaveBeenCalled();
@@ -105,7 +106,7 @@ describe("handleNotificationClick", () => {
     await handleNotificationClick(FAILURE_NOTIFICATION_ID);
 
     expect(createTab).toHaveBeenCalledWith({
-      url: expect.stringMatching(/\/app\.html#\/auto-export$/) as string,
+      url: appUrl,
     });
     expect(clearSpy).toHaveBeenCalledWith(FAILURE_NOTIFICATION_ID);
   });

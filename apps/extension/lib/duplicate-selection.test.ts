@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
 import {
@@ -19,7 +19,9 @@ const groups = findDuplicateGroups([
 
 describe("duplicate selection", () => {
   it("keeps the oldest copy by default", () => {
-    expect(getKeptCopyId(groups[0]!, {})).toBe("b");
+    const [group] = groups;
+    assert(group);
+    expect(getKeptCopyId(group, {})).toBe("b");
     expect(getCopyIdsToDelete(groups, {})).toEqual(["a", "c", "e"]);
   });
 
@@ -28,7 +30,9 @@ describe("duplicate selection", () => {
   });
 
   it("falls back to the oldest when the chosen copy is gone", () => {
-    expect(getKeptCopyId(groups[1]!, { "https://y.com": "zzz" })).toBe("d");
+    const group = groups[1];
+    assert(group);
+    expect(getKeptCopyId(group, { "https://y.com": "zzz" })).toBe("d");
   });
 });
 
@@ -101,8 +105,9 @@ describe("managed keeper default", () => {
       { id: "a", title: "A", url: "https://x.com", dateAdded: 2 },
       { id: "b", title: "B", url: "https://x.com", dateAdded: 3 },
     ]);
-    expect(getKeptCopyId(group!, {})).toBe("a");
-    expect(getCopyIdsToDelete([group!], {})).toEqual(["b"]);
+    assert(group);
+    expect(getKeptCopyId(group, {})).toBe("a");
+    expect(getCopyIdsToDelete([group], {})).toEqual(["b"]);
   });
 
   it("keeps the oldest copy when every copy is managed", () => {
@@ -122,6 +127,7 @@ describe("managed keeper default", () => {
         unmodifiable: "managed",
       },
     ]);
-    expect(getKeptCopyId(group!, {})).toBe("m1");
+    assert(group);
+    expect(getKeptCopyId(group, {})).toBe("m1");
   });
 });

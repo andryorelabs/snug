@@ -8,8 +8,8 @@
 ## Approved copy
 
 The lines below are the source for the README, the `package.json` descriptions
-and the GitHub About text. `scripts/copy-drift.test.ts` fails when the README
-slogan or the root and extension `package.json` descriptions differ from them.
+and the GitHub About text. `scripts/standard-invariants.test.ts` fails when the README
+slogan, the extension manifest description (`extensionDescription` in `apps/extension/locales/en.json`) or the root and extension `package.json` descriptions differ from them.
 
 | Line                 | Text                                                                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |

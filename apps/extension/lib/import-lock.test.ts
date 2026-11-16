@@ -7,7 +7,7 @@ import { readLatestSafetySnapshot } from "./safety-snapshot";
 import { resetFakeBookmarks } from "./testing/fake-bookmarks";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 const CSV = "title,url\nA,https://a.example/\n";
@@ -29,10 +29,10 @@ describe("runImport cross-context lock", () => {
   });
 
   it("fails fast while another import holds the lock, leaving the first unaffected", async () => {
-    const { promise: held, resolve: release } = Promise.withResolvers<void>();
+    const { promise: held, resolve: release } = Promise.withResolvers<"released">();
     const first = navigator.locks.request(IMPORT_LOCK_NAME, { ifAvailable: true }, () => held);
     await expect(runImport(CSV, "text/csv", "folder")).rejects.toBeInstanceOf(ImportLockHeldError);
-    release();
+    release("released");
     await first;
     await expect(runImport(CSV, "text/csv", "folder")).resolves.toBeDefined();
   });

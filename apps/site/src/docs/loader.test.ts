@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { requireValue } from "../../e2e/require";
+import { isRecord } from "../testing/guards";
 import { catalogLoader } from "./loader";
 import { REPOSITORY_ROOT, TRANSLATIONS_DIRECTORY } from "./paths";
 
@@ -42,12 +44,12 @@ const entry = (id: string) => ({
 const createContext = (hasWatcher = false) => {
   const handlers = new Map<string, (file: string) => void>();
   const store = {
-    clear: vi.fn(),
+    clear: vi.fn<() => void>(),
     set: vi.fn<(stored: StoredEntry) => void>(),
   };
   const watcher = {
-    add: vi.fn(),
-    on: vi.fn((event: string, handler: (file: string) => void) => {
+    add: vi.fn<(paths: readonly string[]) => void>(),
+    on: vi.fn<(event: string, handler: (file: string) => void) => void>((event, handler) => {
       handlers.set(event, handler);
     }),
   };
@@ -55,25 +57,37 @@ const createContext = (hasWatcher = false) => {
     handlers,
     store,
     watcher,
-    logger: { error: vi.fn() },
+    logger: { error: vi.fn<(message: string) => void>() },
     context: {
       store,
-      parseData: vi.fn(({ data }: { data: unknown }) => Promise.resolve(data)),
-      renderMarkdown: vi.fn((body: string) =>
+      parseData: vi.fn<(entry: { data: unknown }) => Promise<unknown>>(({ data }) =>
+        Promise.resolve(data),
+      ),
+      renderMarkdown: vi.fn<
+        (body: string) => Promise<{ html: string; metadata: { headings: never[] } }>
+      >((body) =>
         Promise.resolve({
           html: `<p>${body}</p>`,
           metadata: { headings: [] },
         }),
       ),
-      generateDigest: vi.fn((value: string) => `digest:${value}`),
-      logger: { error: vi.fn() },
+      generateDigest: vi.fn<(value: string) => string>((value) => `digest:${value}`),
+      logger: { error: vi.fn<(message: string) => void>() },
       watcher: hasWatcher ? watcher : undefined,
     },
   };
 };
 
-const load = (context: unknown) =>
-  catalogLoader().load(context as Parameters<ReturnType<typeof catalogLoader>["load"]>[0]);
+type LoaderLoadContext = Parameters<ReturnType<typeof catalogLoader>["load"]>[0];
+
+function isLoaderLoadContext(value: unknown): value is LoaderLoadContext {
+  return isRecord(value) && isRecord(value.store);
+}
+
+const load = (context: unknown) => {
+  if (!isLoaderLoadContext(context)) throw new Error("The fake loader context is invalid");
+  return catalogLoader().load(context);
+};
 
 describe("catalogLoader", () => {
   it("is the catalog loader", () => {
@@ -100,6 +114,18 @@ describe("catalogLoader", () => {
     });
   });
 
+  it("limits the table of contents of the changelog pages to the version headings", async () => {
+    catalog.entries = [entry("changelog"), entry("es/changelog"), entry("guide")];
+    const { context, store } = createContext();
+
+    await load(context);
+
+    const tableOfContents = { minHeadingLevel: 2, maxHeadingLevel: 2 };
+    expect(store.set.mock.calls[0]?.[0].data).toMatchObject({ tableOfContents });
+    expect(store.set.mock.calls[1]?.[0].data).toMatchObject({ tableOfContents });
+    expect(store.set.mock.calls[2]?.[0].data).not.toHaveProperty("tableOfContents");
+  });
+
   it("marks external links in the rendered html", async () => {
     catalog.entries = [{ ...entry("guide"), body: "x" }];
     const { context, store } = createContext();
@@ -110,7 +136,7 @@ describe("catalogLoader", () => {
 
     await load(context);
 
-    const rendered = store.set.mock.calls[0]?.[0].rendered.html as string;
+    const rendered = requireValue(store.set.mock.calls[0]?.[0].rendered.html);
     expect(rendered).toContain('href="https://example.org/"');
     expect(rendered).not.toBe('<a href="https://example.org/">out</a>');
   });
@@ -143,7 +169,9 @@ describe("catalogLoader", () => {
     ).toEqual(["add", "change", "unlink"]);
 
     handlers.get("change")?.(`${REPOSITORY_ROOT}/docs/guide/faq.md`);
-    await vi.waitFor(() => expect(store.clear).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => {
+      expect(store.clear).toHaveBeenCalledTimes(2);
+    });
 
     handlers.get("add")?.(`${REPOSITORY_ROOT}/src/unrelated.ts`);
     await Promise.resolve();
@@ -158,6 +186,8 @@ describe("catalogLoader", () => {
 
     handlers.get("unlink")?.(`${REPOSITORY_ROOT}/CHANGELOG.md`);
 
-    await vi.waitFor(() => expect(context.logger.error).toHaveBeenCalledWith("bad frontmatter"));
+    await vi.waitFor(() => {
+      expect(context.logger.error).toHaveBeenCalledWith("bad frontmatter");
+    });
   });
 });

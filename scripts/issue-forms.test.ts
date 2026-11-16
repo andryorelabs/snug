@@ -1,6 +1,5 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
@@ -41,25 +40,23 @@ function findDuplicates(values: readonly unknown[]): unknown[] {
 function findIssueFormProblems(form: unknown): string[] {
   if (!isRecord(form)) return ["the form is not a mapping"];
   const problems: string[] = [];
-  if (!isNonEmptyString(form["name"])) problems.push("missing name");
-  if (!isNonEmptyString(form["description"])) {
+  if (!isNonEmptyString(form.name)) problems.push("missing name");
+  if (!isNonEmptyString(form.description)) {
     problems.push("missing description");
   }
-  const labels = asArray(form["labels"]);
+  const labels = asArray(form.labels);
   if (labels.length === 0) problems.push("applies no labels");
   for (const label of findDuplicates(labels)) {
     problems.push(`applies label "${String(label)}" twice`);
   }
-  const inputs = asArray(form["body"]).filter((element) => isRecord(element));
+  const inputs = asArray(form.body).filter((element) => isRecord(element));
   if (inputs.length === 0) problems.push("empty body");
-  const ids = inputs.map((element) => element["id"]).filter((id) => id !== undefined);
+  const ids = inputs.map((element) => element.id).filter((id) => id !== undefined);
   for (const id of findDuplicates(ids)) {
     problems.push(`repeats input id "${String(id)}"`);
   }
   const fieldLabels = inputs
-    .map((element) =>
-      isRecord(element["attributes"]) ? element["attributes"]["label"] : undefined,
-    )
+    .map((element) => (isRecord(element.attributes) ? element.attributes.label : undefined))
     .filter((label) => label !== undefined);
   for (const label of findDuplicates(fieldLabels)) {
     problems.push(`repeats field label "${String(label)}"`);
@@ -83,9 +80,9 @@ function readGithubFile(relativePath: string): string {
 }
 
 const config: unknown = parse(readGithubFile("ISSUE_TEMPLATE/config.yml"));
-const contactLinks = asArray(isRecord(config) ? config["contact_links"] : [])
+const contactLinks = asArray(isRecord(config) ? config.contact_links : [])
   .filter((link) => isRecord(link))
-  .map((link) => String(link["url"]));
+  .map((link) => String(link.url));
 
 describe("issue forms", () => {
   test("are the four numbered forms plus config.yml", () => {
@@ -127,9 +124,29 @@ describe("issue forms", () => {
   });
 });
 
+describe("labels applied by issue forms", () => {
+  const declaredLabels = asArray(parse(readGithubFile("labels.yml")))
+    .filter((label) => isRecord(label))
+    .map((label) => String(label.name));
+
+  test.each(ISSUE_FORM_FILES)("%s applies only labels declared in labels.yml", (file) => {
+    const form: unknown = parse(readGithubFile(`ISSUE_TEMPLATE/${file}`));
+    const applied = asArray(isRecord(form) ? form.labels : []).map(String);
+
+    expect(applied.filter((label) => !declaredLabels.includes(label))).toEqual([]);
+  });
+
+  test("labels.yml declares the three labels the standard adds and an Area label", () => {
+    expect(declaredLabels).toEqual(
+      expect.arrayContaining(["Status: Needs Decision", "Resolution: Invalid", "security"]),
+    );
+    expect(declaredLabels.some((label) => label.startsWith("Area: "))).toBe(true);
+  });
+});
+
 describe("issue template config.yml", () => {
   test("turns blank issues off", () => {
-    expect(isRecord(config) && config["blank_issues_enabled"]).toBe(false);
+    expect(isRecord(config) && config.blank_issues_enabled).toBe(false);
   });
 
   test("links the private security advisory form", () => {

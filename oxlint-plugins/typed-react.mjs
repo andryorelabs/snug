@@ -1,5 +1,4 @@
 import path from "node:path";
-
 import eslintReact from "@eslint-react/eslint-plugin";
 import ts from "typescript";
 
@@ -81,7 +80,11 @@ function referenceConfigPath(reference) {
  *   a file the shim cannot type must fail the lint rather than be skipped.
  */
 function resolveProgram(fileName) {
-  const configPath = ts.findConfigFile(path.dirname(fileName), ts.sys.fileExists, "tsconfig.json");
+  const configPath = ts.findConfigFile(
+    path.dirname(fileName),
+    (candidate) => ts.sys.fileExists(candidate),
+    "tsconfig.json",
+  );
   if (!configPath) {
     throw new Error(
       `typed-react: no tsconfig.json found above ${fileName}; the type-aware rule cannot run on it.`,

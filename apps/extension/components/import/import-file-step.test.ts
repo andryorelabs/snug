@@ -18,8 +18,8 @@ function bookmarkFile(name: string): File {
 }
 
 async function mountStep(rows: ImportFileRow[] = []) {
-  const onFiles = vi.fn();
-  const onRemove = vi.fn();
+  const onFiles = vi.fn<() => void>();
+  const onRemove = vi.fn<() => void>();
   const harness = createDomHarness();
   mountedHarnesses.push(harness);
   await harness.render(
@@ -36,14 +36,15 @@ async function mountStep(rows: ImportFileRow[] = []) {
 async function dropOn(target: Element, files: File[]) {
   const event = new Event("drop", { bubbles: true, cancelable: true });
   Object.defineProperty(event, "dataTransfer", { value: { files } });
-  await act(async () => {
+  await act(() => {
     target.dispatchEvent(event);
+    return Promise.resolve();
   });
 }
 
 beforeEach(() => {
   fakeBrowser.reset();
-  fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
+  fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
 });
 
 afterEach(() => {
@@ -83,8 +84,9 @@ describe("ImportFileStep", () => {
       button.getAttribute("aria-label")?.includes("import_removeFile"),
     );
     if (!rowCloseButton) throw new Error("remove button missing");
-    await act(async () => {
+    await act(() => {
       rowCloseButton.click();
+      return Promise.resolve();
     });
 
     expect(onRemove).toHaveBeenCalledExactlyOnceWith("x");

@@ -1,3 +1,5 @@
+import { forEachSequentially } from "@/lib/sequential";
+
 import type { DuplicateGroup } from "./duplicates";
 
 /**
@@ -68,13 +70,13 @@ export interface DeleteBookmarksResult {
 export async function deleteBookmarksById(ids: string[]): Promise<DeleteBookmarksResult> {
   let deleted = 0;
   let failed = 0;
-  for (const id of ids) {
+  await forEachSequentially(ids, async (id) => {
     try {
       await browser.bookmarks.remove(id);
       deleted += 1;
     } catch {
       failed += 1;
     }
-  }
+  });
   return { deleted, failed };
 }

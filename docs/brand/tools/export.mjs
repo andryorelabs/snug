@@ -1,7 +1,6 @@
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { chromium } from "playwright";
 
 import {
@@ -12,6 +11,25 @@ import {
   MARK_PNG_SIZES,
   rasterSpecs,
 } from "./export-spec.ts";
+
+/**
+ * Runs an async step for each item strictly one after another, because every
+ * render step shares one browser and writes files in a fixed order.
+ * @param items The items to visit, in order.
+ * @param step The async work for one item.
+ * @returns The step results, in order.
+ */
+async function mapSequentially(items, step) {
+  const iterator = items[Symbol.iterator]();
+  const results = [];
+  const runNext = async () => {
+    const next = iterator.next();
+    if (next.done) return results;
+    results.push(await step(next.value));
+    return runNext();
+  };
+  return runNext();
+}
 
 /**
  * Regenerates the derived raster assets of the Snug brand kit from the SVG
@@ -155,7 +173,9 @@ async function finishPage(page, outPath) {
 }
 
 async function renderCover(browser, outPath, { light }) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } });
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 640 },
+  });
   const ground = light
     ? `radial-gradient(60% 70% at 20% 30%, rgba(255,162,48,0.16), transparent 68%), radial-gradient(44% 54% at 100% 100%, rgba(255,162,48,0.1), transparent 70%), ${LIGHT_GROUND}`
     : auroraGlow;
@@ -194,7 +214,9 @@ function treeRow(indent, barWidth, checked) {
 }
 
 async function renderMarquee(browser, outPath) {
-  const page = await browser.newPage({ viewport: { width: 1400, height: 560 } });
+  const page = await browser.newPage({
+    viewport: { width: 1400, height: 560 },
+  });
   const chips = ["HTML", "JSON", "CSV"]
     .map(
       (label) =>
@@ -222,7 +244,9 @@ async function renderMarquee(browser, outPath) {
 }
 
 async function renderGithubSocialPreview(browser, outPath) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 640 } });
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 640 },
+  });
   const chips = ["HTML", "JSON", "CSV"]
     .map(
       (label) =>
@@ -280,16 +304,15 @@ async function renderYoutubeBanner(browser, outPath) {
       </div>
     </body>`);
   await page.waitForFunction('document.fonts.status === "loaded"');
-  const bounds = [];
-  for (const selector of ["#lockup", "#tagline"]) {
+  const bounds = await mapSequentially(["#lockup", "#tagline"], async (selector) => {
     const box = await page.locator(selector).boundingBox();
-    bounds.push({
+    return {
       left: box.x,
       top: box.y,
       right: box.x + box.width,
       bottom: box.y + box.height,
-    });
-  }
+    };
+  });
   const safeLeft = (width - YOUTUBE_SAFE_AREA.width) / 2;
   const safeTop = (height - YOUTUBE_SAFE_AREA.height) / 2;
   for (const box of bounds) {
@@ -432,14 +455,14 @@ async function renderLaunchAssets(browser) {
       `Expected ${PRODUCT_HUNT_GALLERY_COUNT} EN store screenshots, found ${shots.length}`,
     );
   }
-  for (const [index, shot] of shots.entries()) {
+  await mapSequentially(shots.entries(), async ([index, shot]) => {
     const { width, height } = PRODUCT_HUNT_GALLERY_SIZE;
     await renderProductHuntGallery(
       browser,
       path.join(screenshotsRoot, shot),
       path.join(launchRoot, `producthunt-gallery-${index + 1}-${width}x${height}.png`),
     );
-  }
+  });
   await renderXHeader(browser, path.join(launchRoot, "x-header-1500x500.png"));
 }
 
@@ -469,7 +492,7 @@ async function renderOgImages(browser) {
   const ogRoot = path.join(repositoryRoot, "apps/site/public/og");
   await rm(ogRoot, { recursive: true, force: true });
   const taglines = await readOgTaglines();
-  for (const { locale, tagline } of taglines) {
+  await mapSequentially(taglines, async ({ locale, tagline }) => {
     const outPath = path.join(ogRoot, `og-${locale}.png`);
     await renderBanner(browser, {
       ...OG_SIZE,
@@ -480,15 +503,15 @@ async function renderOgImages(browser) {
       language: locale.replace("_", "-"),
     });
     await assertPngSpec(outPath, { ...OG_SIZE, maxBytes: OG_MAX_BYTES });
-  }
+  });
 }
 
 const browser = await chromium.launch();
 
 try {
-  for (const size of MARK_PNG_SIZES) {
-    await renderIcon(browser, size, path.join(brandRoot, "logo/png", `mark-${size}.png`));
-  }
+  await mapSequentially(MARK_PNG_SIZES, (size) =>
+    renderIcon(browser, size, path.join(brandRoot, "logo/png", `mark-${size}.png`)),
+  );
   await renderIcon(browser, 512, path.join(repositoryRoot, "apps/extension/assets/icon.png"));
   const faviconPngs = await Promise.all(
     FAVICON_SIZES.map((size) => readFile(path.join(brandRoot, "logo/png", `mark-${size}.png`))),
@@ -533,9 +556,7 @@ try {
 
   await renderLaunchAssets(browser);
 
-  for (const spec of rasterSpecs) {
-    await assertSpecFile(spec, brandRoot);
-  }
+  await mapSequentially(rasterSpecs, (spec) => assertSpecFile(spec, brandRoot));
 } finally {
   await browser.close();
 }

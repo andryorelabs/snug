@@ -1,3 +1,6 @@
+import { isDirectoryHandle } from "@/lib/is-directory-handle";
+import { findSequentially, forEachSequentially } from "@/lib/sequential";
+
 const DATABASE_NAME = "snug-custom-folder-identities";
 const STORE_NAME = "folders";
 
@@ -7,10 +10,12 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       request.result.createObjectStore(STORE_NAME);
     };
-    request.onsuccess = () => resolve(request.result);
-    request.addEventListener("error", () =>
-      reject(request.error ?? new Error("IndexedDB request failed")),
-    );
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    request.addEventListener("error", () => {
+      reject(request.error ?? new Error("IndexedDB request failed"));
+    });
   });
 }
 
@@ -22,10 +27,12 @@ async function runRequest<T>(
   try {
     return await new Promise<T>((resolve, reject) => {
       const request = operation(database.transaction(STORE_NAME, mode).objectStore(STORE_NAME));
-      request.onsuccess = () => resolve(request.result);
-      request.addEventListener("error", () =>
-        reject(request.error ?? new Error("IndexedDB request failed")),
-      );
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      request.addEventListener("error", () => {
+        reject(request.error ?? new Error("IndexedDB request failed"));
+      });
     });
   } finally {
     database.close();
@@ -34,16 +41,15 @@ async function runRequest<T>(
 
 async function listIdentities(): Promise<{ id: string; handle: FileSystemDirectoryHandle }[]> {
   const [ids, handles] = await Promise.all([
-    runRequest<string[]>("readonly", (store) => store.getAllKeys() as IDBRequest<string[]>),
-    runRequest<FileSystemDirectoryHandle[]>(
-      "readonly",
-      (store) => store.getAll() as IDBRequest<FileSystemDirectoryHandle[]>,
-    ),
+    runRequest<IDBValidKey[]>("readonly", (store) => store.getAllKeys()),
+    runRequest<unknown[]>("readonly", (store) => store.getAll()),
   ]);
-  return ids.map((id, index) => ({
-    id,
-    handle: handles[index] as FileSystemDirectoryHandle,
-  }));
+  const identities: { id: string; handle: FileSystemDirectoryHandle }[] = [];
+  for (const [index, id] of ids.entries()) {
+    const handle = handles[index];
+    if (typeof id === "string" && isDirectoryHandle(handle)) identities.push({ id, handle });
+  }
+  return identities;
 }
 
 /**
@@ -56,9 +62,10 @@ async function listIdentities(): Promise<{ id: string; handle: FileSystemDirecto
  */
 export async function registerFolderIdentity(handle: FileSystemDirectoryHandle): Promise<string> {
   const knownIdentities = await listIdentities();
-  for (const known of knownIdentities) {
-    if (await known.handle.isSameEntry(handle)) return known.id;
-  }
+  const known = await findSequentially(knownIdentities, (identity) =>
+    identity.handle.isSameEntry(handle),
+  );
+  if (known) return known.id;
   const id = crypto.randomUUID();
   await runRequest("readwrite", (store) => store.put(handle, id));
   return id;
@@ -87,9 +94,9 @@ export async function isCurrentFolder(
  */
 export async function pruneFolderIdentities(keepIds: readonly string[]): Promise<void> {
   const identities = await listIdentities();
-  for (const { id } of identities) {
+  await forEachSequentially(identities, async ({ id }) => {
     if (!keepIds.includes(id)) {
       await runRequest("readwrite", (store) => store.delete(id));
     }
-  }
+  });
 }

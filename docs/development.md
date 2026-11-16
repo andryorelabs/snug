@@ -5,7 +5,7 @@ Snug is a bun-workspaces monorepo orchestrated by Turborepo (see
 repo root. Paths in this page are relative to the root unless they start with
 `apps/` or `packages/`.
 
-The repository follows the andryorelabs engineering standard v1
+The repository follows the andryorelabs engineering standard v2
 ([ADR 0035](adr/0035-adopt-andryorelabs-standard-v1.md)). The standards live in
 [aokit's `docs/standards`](https://github.com/andryorelabs/aokit/tree/main/docs/standards),
 and the brand and credit rules shared across the repositories live in
@@ -102,11 +102,14 @@ indexed in [how-to](how-to/README.md).
 
 Hooks are installed via Husky and live in `.husky/`:
 
-- **`pre-commit`** — runs `bunx lint-staged`, which applies Oxfmt + Oxlint to
+- **`pre-commit`** — runs `scripts/pre-commit.ts`, which refuses a commit that
+  stages a file whose name ends in `.env.keys`, then runs `bunx lint-staged`,
+  which applies Oxfmt + Oxlint to
   staged `*.{js,jsx,ts,tsx,mjs}` files, Oxfmt + Oxlint + ESLint to staged
   `*.astro` files, and Oxfmt alone to staged `*.{json,md,mdx,css,scss,yml,yaml}`
   files (see `lint-staged.config.mjs`).
-- **`commit-msg`** — runs `bunx commitlint --edit $1` against
+- **`commit-msg`** — runs `scripts/commit-msg.ts`, which calls
+  `bunx commitlint --edit $1` against
   `commitlint.config.ts`, which only extends `@commitlint/config-conventional`.
   It enforces the Conventional Commits `<type>: <subject>` shape and the type
   list below, but it does **not** enforce the gitmoji — a commit without an
@@ -462,27 +465,29 @@ facade, iframes and `<time>` elements are masked and animations are disabled.
 
 ## Coverage ramp
 
-The target for every coverage-measured workspace is 95% lines, 95% statements,
-90% branches and 95% functions. Thresholds only ever go up: each is set to the
-measured value rounded down, and a PR that adds tested code raises them in the
-same change.
+Floors live in one file, `coverage-floors.json`, which every `vitest.config.ts`
+reads through `coverageThresholds` in `scripts/coverage-floors.ts`. Each floor
+is the measured value rounded down, and floors only ever go up:
+`bun run coverage:floors` fails when a floor is lower than on `develop`, when an
+exception's own floor is lower than on `develop`, or when a floor trails the
+measured value by more than two points (`stale:`). It fails closed: if
+`origin/develop` or `develop` cannot be read, run `git fetch origin develop`
+first. A PR that adds tested code raises the floors in the same change.
 
 | Workspace        | Lines | Statements | Branches | Functions |
 | ---------------- | ----- | ---------- | -------- | --------- |
-| `apps/extension` | 93    | 93         | 86       | 93        |
-| `apps/site`      | 89    | 89         | 84       | 90        |
-| root tooling     | 65    | 65         | 63       | 83        |
-| target           | 95    | 95         | 90       | 95        |
+| `apps/extension` | 96    | 96         | 89       | 98        |
+| `apps/site`      | 96    | 94         | 88       | 96        |
+| `apps/video`     | 22    | 20         | 30       | 3         |
+| root tooling     | 91    | 91         | 83       | 90        |
+| `packages/ui`    | 0     | 0          | 0        | 0         |
 
-Next steps toward the target:
-
-1. `apps/extension`: add colocated tests for the `lib/` modules listed in
-   `scripts/coverage-manifest.test.ts`, starting with the importers and
-   `render-export.ts`, then close the branch gap.
-2. `apps/site`: cover the docs helpers (`markdown.ts`, `sidebar.ts`,
-   `route-middleware.ts`) and the `seo/` builders that have no colocated test.
-3. Root: test the entry paths of `scripts/lint-commits.ts` and
-   `scripts/lint-docs.ts`.
+Every source file must also reach 97% lines and 98% functions (`perFile`). A
+file below that is listed in `scripts/coverage-exceptions.ts` with a reason and
+its own floor, which can only rise. When `perFile` fails, add tests; list the
+file only when its uncovered lines cannot run under Vitest (a hook entry point,
+a process or network failure path). The distance to the standard's 99.7 target
+is recorded as debt in ADR 0035.
 
 `scripts/coverage-manifest.test.ts` fails when a module has neither a colocated
 test nor a written exemption, and when an exemption is stale (the module is

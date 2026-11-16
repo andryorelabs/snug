@@ -150,16 +150,17 @@ function SiteLinkButton(properties: SiteLinkButtonProperties) {
   return (
     <SidebarMenuButton
       tooltip={label}
-      // eslint-disable-next-line jsx-a11y-js/anchor-has-content -- SidebarMenuButton's render prop injects the children into this anchor
-      render={<a href={href} target="_blank" rel="noopener noreferrer" />}
-    >
-      <Icon />
-      <span className="min-w-0 truncate">{label}</span>
-      <ExternalLinkIcon
-        aria-hidden="true"
-        className="ml-auto size-3 text-muted-foreground group-data-[collapsible=icon]:hidden"
-      />
-    </SidebarMenuButton>
+      render={
+        <a href={href} target="_blank" rel="noopener noreferrer">
+          <Icon />
+          <span className="min-w-0 truncate">{label}</span>
+          <ExternalLinkIcon
+            aria-hidden="true"
+            className="ml-auto size-3 text-muted-foreground group-data-[collapsible=icon]:hidden"
+          />
+        </a>
+      }
+    />
   );
 }
 
@@ -174,13 +175,13 @@ export function AppShell() {
     select: (state) => state.location.pathname,
   });
   const autoExport = useAutoExportStatus();
-  const isWhatsNewUnseen = useIsWhatsNewUnseen(pathname);
+  const hasUnseenWhatsNew = useIsWhatsNewUnseen(pathname);
   const pageTitle = i18n.t(getTitleKey(pathname));
   const { headingReference, announcement } = usePageChangeFocus(pathname, pageTitle);
 
   const statusByRoute: Record<string, { status: NavStatus; label?: string }> = {
     [APP_ROUTES.autoExport]: autoExport,
-    [APP_ROUTES.whatsNew]: isWhatsNewUnseen
+    [APP_ROUTES.whatsNew]: hasUnseenWhatsNew
       ? { status: "primary", label: i18n.t("shell_whatsNewUnseen") }
       : { status: "none" },
   };
@@ -225,6 +226,7 @@ export function AppShell() {
                         />
                         {itemStatus && itemStatus.status !== "none" && (
                           <span
+                            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- role="img" labels an icon wrapper that holds no img element
                             role="img"
                             aria-label={itemStatus.label}
                             data-status={itemStatus.status}
@@ -279,9 +281,9 @@ export function AppShell() {
           >
             {pageTitle}
           </h1>
-          <div role="status" aria-live="polite" className="sr-only">
+          <output aria-live="polite" className="sr-only">
             {announcement}
-          </div>
+          </output>
         </header>
         <div data-app-scroll className="flex-1 overflow-auto p-4">
           <Outlet />

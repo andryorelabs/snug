@@ -12,8 +12,8 @@ const folderHandleMock = vi.hoisted((): { handle: unknown } => ({
   handle: null,
 }));
 
-vi.mock("@/lib/folder-handle", async () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+vi.mock("@/lib/folder-handle", () => ({
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
 }));
@@ -34,17 +34,16 @@ function config(overrides: Partial<AutoExportConfig> = {}): AutoExportConfig {
 }
 
 function mockBrowserApis() {
-  const create = vi.fn(async (id: string, ...rest: unknown[]) => {
-    void rest;
-    return id;
-  });
-  browser.notifications = {
+  const create = vi.fn<(id: string, ...rest: unknown[]) => Promise<string>>((id) =>
+    Promise.resolve(id),
+  );
+  Reflect.set(browser, "notifications", {
     create,
-    clear: vi.fn(),
-  } as unknown as typeof browser.notifications;
-  const setBadgeText = vi.fn(async () => {});
+    clear: vi.fn<(...arguments_: unknown[]) => void>(),
+  });
+  const setBadgeText = vi.fn<() => Promise<void>>(() => Promise.resolve());
   browser.action.setBadgeText = setBadgeText;
-  browser.action.setBadgeBackgroundColor = vi.fn(async () => {});
+  browser.action.setBadgeBackgroundColor = vi.fn<() => Promise<void>>(() => Promise.resolve());
   return { create, setBadgeText };
 }
 

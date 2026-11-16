@@ -4,7 +4,7 @@ import { SCENE_RANGES } from "../timing";
 
 export type SfxName = "click" | "whoosh" | "pop" | "tick" | "chime" | "thud";
 
-export type SfxCue = {
+export interface SfxCue {
   /**
    * Frame in the final cut.
    */
@@ -14,7 +14,7 @@ export type SfxCue = {
    * 0 to 1, kept low so the music stays in front.
    */
   volume: number;
-};
+}
 
 /**
  * Gains for SFX files peak-normalized to -3 dBFS (see README), so each value

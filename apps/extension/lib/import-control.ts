@@ -1,5 +1,7 @@
 import type { Browser } from "@wxt-dev/browser";
 
+import { forEachSequentially } from "@/lib/sequential";
+
 /**
  * A progress event emitted while an import writes bookmarks. `done` and
  * `total` count bookmarks (not folders); `skippedDuplicates` is how many were
@@ -149,13 +151,13 @@ export class ImportWriter {
    */
   async rollback(): Promise<void> {
     let firstError: unknown;
-    for (const id of this.topLevelIds.toReversed()) {
+    await forEachSequentially(this.topLevelIds.toReversed(), async (id) => {
       try {
         await browser.bookmarks.removeTree(id);
       } catch (error) {
         firstError ??= error;
       }
-    }
+    });
     this.topLevelIds.length = 0;
     this.createdIds.clear();
     if (firstError)

@@ -103,7 +103,7 @@ function reportImportError(error: unknown): void {
       : {
           type: "error",
           title: i18n.t("popup_importFailedTitle"),
-          description: (error as Error).message,
+          description: error instanceof Error ? error.message : String(error),
         },
   );
 }
@@ -279,7 +279,7 @@ export function ImportSection() {
         toast.add({
           type: "error",
           title: i18n.t("popup_importFailedTitle"),
-          description: (error as Error).message,
+          description: error instanceof Error ? error.message : String(error),
         });
       }
     } finally {
@@ -301,7 +301,8 @@ export function ImportSection() {
   };
 
   const handleDragLeave = (event: DragEvent) => {
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    const { relatedTarget } = event;
+    if (relatedTarget instanceof Node && event.currentTarget.contains(relatedTarget)) return;
     setIsDragging(false);
   };
 
@@ -344,7 +345,10 @@ export function ImportSection() {
           <Select
             items={getImportModeItems()}
             value={mode}
-            onValueChange={(value) => void setMode(value as ImportMode)}
+            onValueChange={(value) => {
+              const next = getImportModeItems().find((item) => item.value === value)?.value;
+              if (next) void setMode(next);
+            }}
           >
             <SelectTrigger id={modeSelectId} className="w-full">
               <SelectValue />

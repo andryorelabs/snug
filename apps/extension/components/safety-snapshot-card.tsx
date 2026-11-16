@@ -51,6 +51,10 @@ import {
 import type { SafetySnapshot } from "@/lib/safety-snapshot";
 import { useStorageItem } from "@/lib/use-storage-item";
 
+function noop() {
+  return;
+}
+
 /**
  * The Settings card for Safety snapshots: a Take a snapshot now button and
  * the stored list, newest first, each row with its date, bookmark count and
@@ -67,12 +71,14 @@ export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOn
   const titleReference = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!focusTitleOnMount) return;
+    if (!focusTitleOnMount) return noop;
     const timer = setTimeout(() => {
       titleReference.current?.scrollIntoView({ block: "start" });
       titleReference.current?.focus();
     }, 0);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [focusTitleOnMount]);
 
   const [snapshots] = useStorageItem(safetySnapshotStore);
@@ -106,7 +112,7 @@ export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOn
       setStatus(successStatus);
     } catch (error) {
       setStatus(failedStatus);
-      setErrorMessage((error as Error).message);
+      setErrorMessage(error instanceof Error ? error.message : String(error));
     } finally {
       busyGuard.current = false;
     }
@@ -197,7 +203,9 @@ export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOn
                         variant="outline"
                         size="sm"
                         disabled={isBusy}
-                        onClick={() => setRestoreTarget(snapshot)}
+                        onClick={() => {
+                          setRestoreTarget(snapshot);
+                        }}
                       >
                         <Undo2Icon data-icon="inline-start" />
                         {i18n.t("safetySnapshot_restore")}
@@ -220,6 +228,7 @@ export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOn
           )}
 
           {status === "restored" && (
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- role="status" on a component, no native output element applies
             <Alert role="status">
               <AlertDescription>{i18n.t("safetySnapshot_restored")}</AlertDescription>
             </Alert>

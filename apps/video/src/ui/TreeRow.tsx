@@ -2,7 +2,7 @@ import { theme } from "../theme";
 import { Checkbox } from "./Checkbox";
 import { Icon } from "./Icon";
 
-export type TreeRowProps = {
+export interface TreeRowProps {
   kind: "folder" | "bookmark";
   label: string;
   /**
@@ -21,7 +21,7 @@ export type TreeRowProps = {
    * 0..1 hover/focus highlight, e.g. while the cursor is on the row.
    */
   highlight?: number;
-};
+}
 
 const ROW_HEIGHT = 52;
 const INDENT = 36;

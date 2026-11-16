@@ -2,7 +2,6 @@ import { spawnSync } from "node:child_process";
 import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 const scriptPath = path.join(import.meta.dirname, "../../scripts/lighthouse-budget.sh");

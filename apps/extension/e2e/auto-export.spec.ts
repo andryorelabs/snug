@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
 import en from "../locales/en.json" with { type: "json" };
-import { expect, test } from "./fixtures";
+import { expect, runInOrder, test } from "./fixtures";
 
 const enabledConfig = {
   enabled: true,
@@ -56,8 +56,13 @@ test("every control persists on change and re-arms the alarm", async ({
   const readField = (field: string) =>
     serviceWorker.evaluate(async (key: string) => {
       const stored = await chrome.storage.local.get("autoExportConfig");
-      const config = stored.autoExportConfig as Record<string, unknown>;
-      return config[key];
+      const config = stored.autoExportConfig;
+      const entry =
+        typeof config === "object" && config !== null
+          ? Object.entries(config).find(([name]) => name === key)
+          : null;
+      const value: unknown = entry?.[1];
+      return value;
     }, field);
 
   await page.getByRole("switch", { name: en.enableAutoExport.message }).click();
@@ -78,9 +83,9 @@ test("every control persists on change and re-arms the alarm", async ({
   await page.getByRole("button", { name: "JSON" }).click();
   await expect.poll(() => readField("formats")).toEqual(["html", "json"]);
 
-  for (const name of ["Markdown", "OPML", "XBEL"]) {
+  await runInOrder(["Markdown", "OPML", "XBEL"], async (name) => {
     await page.getByRole("button", { name, exact: true }).click();
-  }
+  });
   await expect
     .poll(() => readField("formats"))
     .toEqual(["html", "json", "markdown", "opml", "xbel"]);
@@ -110,8 +115,13 @@ test("hourly disables the time, weekly reveals the day select, both save on chan
   const readField = (field: string) =>
     serviceWorker.evaluate(async (key: string) => {
       const stored = await chrome.storage.local.get("autoExportConfig");
-      const config = stored.autoExportConfig as Record<string, unknown>;
-      return config[key];
+      const config = stored.autoExportConfig;
+      const entry =
+        typeof config === "object" && config !== null
+          ? Object.entries(config).find(([name]) => name === key)
+          : null;
+      const value: unknown = entry?.[1];
+      return value;
     }, field);
 
   await expect(page.getByLabel(en.autoExportPage_dayOfWeek.message)).toHaveCount(0);
@@ -148,7 +158,12 @@ test("the last selected format cannot be turned off", async ({
 
   const formats = await serviceWorker.evaluate(async () => {
     const stored = await chrome.storage.local.get("autoExportConfig");
-    return (stored.autoExportConfig as { formats: string[] }).formats;
+    const config = stored.autoExportConfig;
+    const persistedFormats: unknown =
+      typeof config === "object" && config !== null && "formats" in config ? config.formats : [];
+    return Array.isArray(persistedFormats)
+      ? persistedFormats.filter((format) => typeof format === "string")
+      : [];
   });
   expect(formats).toEqual(["html"]);
 });
@@ -206,7 +221,12 @@ test("the retention field saves on change and rejects anything but an integer >=
   const readKeepLast = () =>
     serviceWorker.evaluate(async () => {
       const stored = await chrome.storage.local.get("autoExportConfig");
-      return (stored.autoExportConfig as { keepLast: number }).keepLast;
+      const config = stored.autoExportConfig;
+      const keepLast: unknown =
+        typeof config === "object" && config !== null && "keepLast" in config
+          ? config.keepLast
+          : null;
+      return typeof keepLast === "number" ? keepLast : null;
     });
 
   const keepLast = page.getByLabel(en.autoExportPage_keepLast.message);

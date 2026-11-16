@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
+import { forEachSequentially } from "@/lib/sequential";
 import {
   autoExportConfigStore,
   autoExportLastRunStore,
@@ -21,8 +22,8 @@ const folderHandleMock = vi.hoisted((): { handle: unknown } => ({
   handle: null,
 }));
 
-vi.mock("@/lib/folder-handle", async () => ({
-  loadFolderHandle: async () => folderHandleMock.handle,
+vi.mock("@/lib/folder-handle", () => ({
+  loadFolderHandle: () => Promise.resolve(folderHandleMock.handle),
   queryFolderAccess: async (handle: { queryPermission(): Promise<string> }) =>
     handle.queryPermission(),
 }));
@@ -45,10 +46,10 @@ function folderConfig(overrides: Partial<AutoExportConfig> = {}) {
 }
 
 function mockDownloadsAndBadge() {
-  const download = vi.fn(async () => 1);
+  const download = vi.fn<() => Promise<number>>(() => Promise.resolve(1));
   browser.downloads.download = download;
-  browser.action.setBadgeText = vi.fn(async () => {});
-  browser.action.setBadgeBackgroundColor = vi.fn(async () => {});
+  browser.action.setBadgeText = vi.fn<() => Promise<void>>(() => Promise.resolve());
+  browser.action.setBadgeBackgroundColor = vi.fn<() => Promise<void>>(() => Promise.resolve());
   return download;
 }
 
@@ -86,7 +87,7 @@ describe("runAutoExport with the Custom folder destination", () => {
     folderHandleMock.handle = root;
     await autoExportConfigStore.setValue(folderConfig());
     mockDownloadsAndBadge();
-    fakeBrowser.permissions.contains = vi.fn(async () => false);
+    fakeBrowser.permissions.contains = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
 
     await runAutoExport("manual");
 
@@ -142,11 +143,11 @@ describe("runAutoExport with the Custom folder destination", () => {
     await autoExportConfigStore.setValue(folderConfig());
     await autoExportNotifyOnFailureStore.setValue(true);
     const download = mockDownloadsAndBadge();
-    const create = vi.fn(async () => "id");
-    browser.notifications = {
+    const create = vi.fn<() => Promise<string>>(() => Promise.resolve("id"));
+    Reflect.set(browser, "notifications", {
       create,
-      clear: vi.fn(),
-    } as unknown as typeof browser.notifications;
+      clear: vi.fn<(...arguments_: unknown[]) => void>(),
+    });
 
     await expect(runAutoExport("scheduled")).rejects.toThrow('Folder access needed for "Backups"');
 
@@ -171,10 +172,10 @@ describe("runAutoExport retention with the Custom folder destination", () => {
 
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
-      for (let run = 0; run < 3; run++) {
+      await forEachSequentially([0, 1, 2], async (run) => {
         vi.setSystemTime(1000 + run);
         await runAutoExport("manual");
-      }
+      });
     } finally {
       vi.useRealTimers();
     }

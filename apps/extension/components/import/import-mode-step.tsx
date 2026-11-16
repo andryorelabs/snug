@@ -73,7 +73,10 @@ export function ImportModeStep({
         value={value}
         disabled={disabled}
         aria-label={i18n.t("importMode")}
-        onValueChange={(next) => onChange(next as ImportMode)}
+        onValueChange={(next) => {
+          const mode = getModeOptions().find((option) => option.value === next)?.value;
+          if (mode) onChange(mode);
+        }}
       >
         {getModeOptions().map((option) => {
           const isRestoreUnavailable = !hasLocationData && option.value !== "folder";

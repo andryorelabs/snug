@@ -1,6 +1,2 @@
-if git diff --cached --name-only | grep -qE '(^|/)\.env\.keys$'; then
-  echo "Refusing to commit .env.keys: it holds decryption keys. Unstage it with: git reset HEAD -- <path>" >&2
-  exit 1
-fi
-
+bun scripts/pre-commit.ts
 bunx lint-staged

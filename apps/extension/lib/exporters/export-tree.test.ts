@@ -158,7 +158,7 @@ describe("buildExportTree", () => {
 
   it("reports progress and honors cancellation", async () => {
     seedFakeBookmarksTree([bookmark("11", "1")]);
-    const onProgress = vi.fn();
+    const onProgress = vi.fn<(...arguments_: unknown[]) => void>();
     await buildExportTree({ ...options, onProgress });
     expect(onProgress).toHaveBeenLastCalledWith({ done: 1, total: 1 });
 

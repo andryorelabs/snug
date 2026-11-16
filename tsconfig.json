@@ -6,9 +6,11 @@
     "moduleResolution": "bundler",
     "target": "ESNext",
     "skipLibCheck": true,
-    "types": ["bun-types"]
+    "types": ["bun"]
   },
   "include": [
+    "*.ts",
+    "*.mts",
     "scripts",
     "eslint-rules",
     "oxlint-plugins",

@@ -15,16 +15,16 @@ const UNTYPED_STARLIGHT_MODULES = new Set([
   "virtual:starlight/pagefind-config",
 ]);
 
-export type DiagnosticBlock = {
+export interface DiagnosticBlock {
   headline: string;
   lines: string[];
-};
+}
 
-export type SiteTypecheckVerdict = {
+export interface SiteTypecheckVerdict {
   remaining: DiagnosticBlock[];
   ignored: DiagnosticBlock[];
   exitCode: number;
-};
+}
 
 /**
  * Splits `tsc` output into diagnostics, attaching indented continuation lines

@@ -1,9 +1,7 @@
 import { spawn } from "node:child_process";
 import { createServer, type Server } from "node:http";
-import type { AddressInfo } from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const DEPLOY_SCRIPT = path.join(
@@ -82,7 +80,11 @@ async function startCoolifyStub(statuses: readonly string[]): Promise<CoolifyStu
   await new Promise<void>((resolve) => {
     server.listen(0, "127.0.0.1", resolve);
   });
-  const { port } = server.address() as AddressInfo;
+  const address = server.address();
+  if (address === null || typeof address === "string") {
+    throw new Error("expected the test server to listen on a TCP port");
+  }
+  const { port } = address;
 
   return {
     apiBase: `http://127.0.0.1:${port}/api/v1`,
@@ -106,7 +108,7 @@ async function startCoolifyStub(statuses: readonly string[]): Promise<CoolifyStu
 function runDeployScript(environment: Record<string, string>): Promise<ScriptResult> {
   return new Promise((resolve, reject) => {
     const child = spawn("bash", [DEPLOY_SCRIPT], {
-      env: { PATH: process.env["PATH"] ?? "", ...environment },
+      env: { PATH: process.env.PATH ?? "", ...environment },
     });
     let output = "";
     child.stdout.on("data", (chunk: Buffer) => {

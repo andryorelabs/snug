@@ -8,7 +8,7 @@ import { runImport } from "./run-import";
 import { resetFakeBookmarks } from "./testing/fake-bookmarks";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 function countParsesOf(spy: { mock: { calls: unknown[][] } }, text: string) {

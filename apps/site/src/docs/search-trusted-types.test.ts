@@ -42,6 +42,8 @@ describe("installSearchTrustedTypesPolicy", () => {
   });
 
   it("does nothing without Trusted Types support", () => {
-    expect(() => installSearchTrustedTypesPolicy(undefined, ORIGIN)).not.toThrow();
+    expect(() => {
+      installSearchTrustedTypesPolicy(undefined, ORIGIN);
+    }).not.toThrow();
   });
 });

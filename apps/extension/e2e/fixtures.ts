@@ -2,7 +2,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 /// <reference types="chrome" />
 import { test as base, chromium } from "@playwright/test";
 import type { BrowserContext, Page, Worker } from "@playwright/test";
@@ -17,11 +16,11 @@ const EXTENSION_DIR = path.resolve(
  * nested the same way `chrome.bookmarks.create` accepts: a node with no
  * `url` becomes a folder, and its `children` are created underneath it.
  */
-export type SeedBookmark = {
+export interface SeedBookmark {
   title: string;
   url?: string;
   children?: SeedBookmark[];
-};
+}
 
 /**
  * The fixtures `e2e/fixtures.ts` adds on top of `@playwright/test`'s base
@@ -30,7 +29,7 @@ export type SeedBookmark = {
  * tickets add) so each one loads the same built extension the same way
  * instead of reimplementing `launchPersistentContext` setup.
  */
-type ExtensionFixtures = {
+interface ExtensionFixtures {
   browserLocale: string | undefined;
   context: BrowserContext;
   extensionId: string;
@@ -39,7 +38,7 @@ type ExtensionFixtures = {
   seedBookmarks: (nodes: SeedBookmark[]) => Promise<void>;
   readBookmarkTree: () => Promise<chrome.bookmarks.BookmarkTreeNode[]>;
   seedStorage: (values: Record<string, unknown>) => Promise<void>;
-};
+}
 
 /**
  * Playwright `test`, extended with fixtures that load this repo's built
@@ -99,20 +98,21 @@ export const test = base.extend<ExtensionFixtures>({
   seedBookmarks: async ({ serviceWorker }, use) => {
     await use(async (nodes) => {
       await serviceWorker.evaluate(async (seed: SeedBookmark[]) => {
-        const createRecursively = async (node: SeedBookmark, parentId?: string): Promise<void> => {
+        const createInOrder = async (
+          siblings: SeedBookmark[],
+          parentId?: string,
+        ): Promise<void> => {
+          const [node, ...rest] = siblings;
+          if (!node) return;
           const created = await chrome.bookmarks.create({
             ...(parentId !== undefined && { parentId }),
             title: node.title,
             ...(node.url !== undefined && { url: node.url }),
           });
-          const children = node.children ?? [];
-          for (const child of children) {
-            await createRecursively(child, created.id);
-          }
+          await createInOrder(node.children ?? [], created.id);
+          await createInOrder(rest, parentId);
         };
-        for (const node of seed) {
-          await createRecursively(node);
-        }
+        await createInOrder(seed);
       }, nodes);
     });
   },
@@ -139,5 +139,20 @@ export const test = base.extend<ExtensionFixtures>({
     });
   },
 });
+
+/**
+ * Runs an async step for each item one after the other, in order.
+ * @param items The items to visit.
+ * @param step The step to run for each item.
+ */
+export async function runInOrder<T>(
+  items: readonly T[],
+  step: (item: T) => Promise<void>,
+): Promise<void> {
+  const [first, ...rest] = items;
+  if (first === undefined) return;
+  await step(first);
+  await runInOrder(rest, step);
+}
 
 export { expect } from "@playwright/test";

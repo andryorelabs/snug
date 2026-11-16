@@ -9,7 +9,12 @@ import {
   interpolateComparison,
 } from "../i18n/comparisons";
 import { DEFAULT_LOCALE, hreflangAlternates, SITE_ORIGIN } from "../i18n/locales";
-import type { LlmsComparisonPage, LlmsFullSection, SitemapEntry } from "./crawlers";
+import {
+  type LlmsComparisonPage,
+  type LlmsFullSection,
+  type SitemapEntry,
+  sitemapEntry,
+} from "./crawlers";
 import { lastCommitDate } from "./last-modified";
 
 const PAGE_SLUGS: readonly (ComparisonSlug | undefined)[] = [undefined, ...COMPARISON_SLUGS];
@@ -27,11 +32,9 @@ export function comparisonSitemapEntries(): SitemapEntry[] {
       alternativesPath(DEFAULT_LOCALE, slug),
       COMPARISON_PAGE_LOCALES,
     );
-    return COMPARISON_PAGE_LOCALES.map((locale) => ({
-      loc: `${SITE_ORIGIN}${alternativesPath(locale, slug)}`,
-      ...(lastmod !== undefined && { lastmod }),
-      alternates,
-    }));
+    return COMPARISON_PAGE_LOCALES.map((locale) =>
+      sitemapEntry(`${SITE_ORIGIN}${alternativesPath(locale, slug)}`, lastmod, alternates),
+    );
   });
 }
 

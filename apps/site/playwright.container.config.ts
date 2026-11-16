@@ -11,6 +11,11 @@ export default defineConfig({
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [["html", { open: "never" }]] : "list",
+  reporter: process.env.CI
+    ? [
+        ["html", { open: "never" }],
+        ["json", { outputFile: "test-results/report.json" }],
+      ]
+    : "list",
   use: { baseURL: process.env.SITE_URL ?? "http://127.0.0.1:8080" },
 });

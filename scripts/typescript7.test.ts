@@ -1,12 +1,12 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 const repositoryRoot = path.resolve(import.meta.dirname, "..");
 const typescript7Bin = path.join(repositoryRoot, "node_modules/typescript7/bin/tsc");
-const typescript6Bin = path.join(repositoryRoot, "node_modules/typescript/bin/tsc");
+const typescript6Bin = path.join(repositoryRoot, "node_modules/typescript/bin/tsc6");
 
 const typecheckScripts = [
   ["package.json", "check:root"],
@@ -41,9 +41,11 @@ describe("TypeScript 7 typecheck alias", () => {
   it.each(typecheckScripts)(
     'calls the typescript7 bin explicitly in %s "%s"',
     (manifestPath, scriptName) => {
-      const manifest = JSON.parse(
+      const manifest = parseJsonAs(
         readFileSync(path.join(repositoryRoot, manifestPath), "utf8"),
-      ) as { scripts: Record<string, string> };
+        (value): value is { scripts: Record<string, string> } =>
+          isRecord(value) && isRecord(value.scripts),
+      );
       const script = manifest.scripts[scriptName] ?? "";
       expect(script).toContain("node_modules/typescript7/bin/tsc --noEmit");
       expect(script).not.toMatch(/(^|[\s&])tsc --noEmit/);

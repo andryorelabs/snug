@@ -1,7 +1,6 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -33,7 +32,9 @@ describe("findChromeZip", () => {
   beforeEach(() => {
     directory = mkdtempSync(path.join(tmpdir(), "zip-size-"));
   });
-  afterEach(() => rmSync(directory, { recursive: true, force: true }));
+  afterEach(() => {
+    rmSync(directory, { recursive: true, force: true });
+  });
 
   it("finds the chrome zip and ignores the edge one", () => {
     writeFileSync(path.join(directory, "snug-1-edge.zip"), "");

@@ -1,7 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { expect, test } from "@playwright/test";
 
 import { LANDING_FAQ_KEYS } from "../src/i18n/faq-keys";
@@ -19,6 +18,7 @@ import { REVIEWS } from "../src/i18n/proof";
 import { ogLocale, ogLocaleAlternates } from "../src/seo/open-graph";
 import { STORE_FACTS } from "../src/seo/store-facts";
 import { UMAMI_DOMAINS, UMAMI_SCRIPT_URL, UMAMI_WEBSITE_ID } from "../src/seo/umami";
+import { isRecord } from "../src/testing/guards";
 import { COMPARISON_LOCALES, COMPARISON_PAGES, comparisonPath } from "./comparison-paths";
 import {
   HOW_TO_INDEX_LOCALES,
@@ -27,6 +27,8 @@ import {
   howToIndexPath,
   howToLocales,
 } from "./how-to-paths";
+import { requireValue } from "./require";
+import { parseJson } from "./require";
 import { docsString, translatedTitle } from "./translated-guide";
 
 const siteRoot = fileURLToPath(new URL("..", import.meta.url));
@@ -64,7 +66,11 @@ type GraphNode = Record<string, unknown>;
 function jsonLdGraph(html: string): GraphNode[] {
   const match = /<script type="application\/ld\+json">(.*?)<\/script>/s.exec(html);
   if (!match) throw new Error("Missing JSON-LD");
-  const data = JSON.parse(match[1] ?? "") as { "@graph": GraphNode[] };
+  const data = parseJson(
+    match[1] ?? "",
+    (value): value is { "@graph": GraphNode[] } =>
+      isRecord(value) && Array.isArray(value["@graph"]),
+  );
   return data["@graph"];
 }
 
@@ -76,9 +82,11 @@ test.describe("built pages", () => {
         .replaceAll("&#39;", "'")
         .replaceAll("&quot;", '"')
         .replaceAll("&amp;", "&");
-      const content = JSON.parse(
+      const content = parseJson(
         readFileSync(path.join(siteRoot, "src/content", `${locale}.json`), "utf8"),
-      ) as { faq: { items: Record<string, { answer: string }> } };
+        (value): value is { faq: { items: Record<string, { answer: string }> } } =>
+          isRecord(value) && isRecord(value.faq) && isRecord(value.faq.items),
+      );
       for (const key of LANDING_FAQ_KEYS) {
         expect(html).toContain(content.faq.items[key]?.answer);
       }
@@ -87,9 +95,11 @@ test.describe("built pages", () => {
     test(`${locale} server-renders every collapsed FAQ panel as hidden until found`, () => {
       const html = readBuilt(pageFile(locale));
       const panels = html.match(/<div\b[^>]*\bdata-slot="accordion-content"[^>]*>/g);
-      const content = JSON.parse(
+      const content = parseJson(
         readFileSync(path.join(siteRoot, "src/content", `${locale}.json`), "utf8"),
-      ) as { faq: { items: Record<string, unknown> } };
+        (value): value is { faq: { items: Record<string, unknown> } } =>
+          isRecord(value) && isRecord(value.faq) && isRecord(value.faq.items),
+      );
       expect(Object.keys(content.faq.items)).toHaveLength(LANDING_FAQ_KEYS.length);
       expect(panels).toHaveLength(LANDING_FAQ_KEYS.length);
       const panelTags = panels ?? [];
@@ -254,7 +264,7 @@ test.describe("root files", () => {
       expect(file).toContain(`${SITE_ORIGIN}/install`);
       expect(file).not.toContain("chromewebstore.google.com");
     }
-    expect(llmsFull).toContain(REVIEWS[0]!.quote);
+    expect(llmsFull).toContain(requireValue(REVIEWS[0]).quote);
     expect(llmsFull).toMatch(/https:\/\/www\.youtube\.com\/watch\?v=[\w-]+/);
     expect(llmsFull.match(/^## Move your bookmarks to any browser\.$/gm)).toHaveLength(1);
     const lastmods = readBuilt("sitemap.xml")
@@ -602,11 +612,11 @@ test.describe("site stylesheet", () => {
   });
 
   test("keeps Cyrillic out of the Space Grotesk fallback face", () => {
-    const face = stylesheet.match(
-      /@font-face\{[^}]*font-family:"?Space Grotesk Fallback"?[^}]*\}/,
+    const face = /@font-face\{[^}]*font-family:"?Space Grotesk Fallback"?[^}]*\}/.exec(
+      stylesheet,
     )?.[0];
     expect(face).toBeDefined();
-    const range = face!.match(/unicode-range:([^;}]+)/)?.[1];
+    const range = /unicode-range:([^;}]+)/.exec(requireValue(face))?.[1];
     expect(range).toBeDefined();
     expect(range).not.toMatch(/U\+04/i);
   });

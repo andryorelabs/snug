@@ -5,6 +5,7 @@ import { countImportableBookmarks } from "@/lib/count-bookmarks";
 import { splitFolderPath, unescapeFormulaField } from "@/lib/csv-escaping";
 import { ImportWriter, withImportRollback } from "@/lib/import-control";
 import { isAllowedBookmarkUrl } from "@/lib/importers/url-validation";
+import { forEachSequentially } from "@/lib/sequential";
 import { applySkipDuplicates } from "@/lib/skip-duplicates";
 import type { ImportOptions, ImportResult, ParsedBookmark } from "@/lib/types";
 
@@ -77,9 +78,7 @@ export function parseCSVTree(csv: string): {
     throw new Error(fatalErrors.map((error) => error.message).join("; "));
   }
 
-  const malformedRows = new Set(
-    parsed.errors.flatMap((error) => (error.row === undefined ? [] : error.row)),
-  );
+  const malformedRows = new Set(parsed.errors.flatMap((error) => error.row ?? []));
   const rows = parsed.data.filter((_, index) => !malformedRows.has(index));
   const { tree, skippedInvalidUrl } = processCSVData(rows);
   return { tree, skippedInvalidUrl: skippedInvalidUrl + malformedRows.size };
@@ -105,15 +104,15 @@ function processCSVData(rows: Record<string, string>[]): {
   const folderMemo: Record<string, ParsedBookmark> = {};
 
   for (const row of rows) {
-    const title = unescapeFormulaField(row["title"]?.trim() ?? "");
-    const url = row["url"]?.trim();
+    const title = unescapeFormulaField(row.title?.trim() ?? "");
+    const url = row.url?.trim();
 
     if (!isAllowedBookmarkUrl(url)) {
       skippedInvalidUrl++;
       continue;
     }
 
-    const folderPath = unescapeFormulaField(row["folder"]?.trim() ?? "");
+    const folderPath = unescapeFormulaField(row.folder?.trim() ?? "");
     const segments = splitFolderPath(folderPath);
 
     let currentLevel = root;
@@ -157,7 +156,7 @@ export async function writeCsvTree(tree: ParsedBookmark[], writer: ImportWriter)
   const tree_chrome = await browser.bookmarks.getTree();
   const root = tree_chrome[0];
 
-  if (!root?.children?.[0] || !root.children?.[1]) {
+  if (!root?.children?.[0] || !root.children.at(1)) {
     throw new Error(i18n.t("importFromCSVImportError"));
   }
 
@@ -227,7 +226,7 @@ async function createBookmarksRecursive(
   writer: ImportWriter,
   existingFolders: FolderIdsByParent,
 ): Promise<void> {
-  for (const node of nodes) {
+  await forEachSequentially(nodes, async (node) => {
     if (node.url) {
       await writer.create({ parentId, title: node.title, url: node.url });
     } else if (node.children) {
@@ -243,5 +242,5 @@ async function createBookmarksRecursive(
 
       await createBookmarksRecursive(node.children, folderId, writer, existingFolders);
     }
-  }
+  });
 }

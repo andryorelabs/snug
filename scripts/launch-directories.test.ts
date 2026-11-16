@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
 import { describe, expect, test } from "vitest";
 
 import {
@@ -56,7 +55,7 @@ describe("docs/launch/directories.csv", () => {
 
   test("lists about 25 directories plus the reserved launch rows", () => {
     const rows = parseTracker(tracker);
-    const directoryRows = rows.filter((row) => row["Batch"] !== "");
+    const directoryRows = rows.filter((row) => row.Batch !== "");
     expect(directoryRows.length).toBeGreaterThanOrEqual(20);
     expect(directoryRows.length).toBeLessThanOrEqual(30);
   });

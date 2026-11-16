@@ -1,13 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, test } from "vitest";
 
 import {
   collectLiveSettings,
   diffSettings,
   formatDifference,
-  parseSettingsTable,
+  parseSettings,
   readExpectedSettings,
   runCheck,
   type ApiResponse,
@@ -155,31 +154,103 @@ describe("diffSettings", () => {
   test("names a ruleset missing live and a live ruleset without a file", () => {
     const live = buildLive({ ruleset: { name: "legacy" } });
 
-    expect(diffSettings(live, expected).map(({ path }) => path)).toEqual([
+    expect(diffSettings(live, expected).map((difference) => difference.path)).toEqual([
       "rulesets/main.json",
       "rulesets/legacy (live only)",
     ]);
   });
 });
 
-describe("parseSettingsTable", () => {
-  test("reads each backticked setting row with its JSON value", () => {
-    const markdown = [
-      "| Setting | Expected | Meaning |",
-      "| ------- | -------- | ------- |",
-      "| `allow_squash_merge` | `true` | Squash merges allowed |",
-      '| `squash_merge_commit_title` | `"PR_TITLE"` | Title from the PR |',
-      "| Not a setting | `true` | Ignored |",
-    ].join("\n");
+describe("parseSettings", () => {
+  test("reads the settings and the minimum counts", () => {
+    const text = JSON.stringify({
+      settings: { allow_squash_merge: true, squash_merge_commit_title: "PR_TITLE" },
+      minimumCounts: { topics: 5 },
+    });
 
-    expect(parseSettingsTable(markdown)).toEqual({
-      allow_squash_merge: true,
-      squash_merge_commit_title: "PR_TITLE",
+    expect(parseSettings(text)).toEqual({
+      settings: { allow_squash_merge: true, squash_merge_commit_title: "PR_TITLE" },
+      minimumCounts: { topics: 5 },
     });
   });
 
-  test("refuses a document without setting rows", () => {
-    expect(() => parseSettingsTable("# Rulesets")).toThrow("no expected settings found");
+  test("refuses a document without settings", () => {
+    expect(() => parseSettings("{}")).toThrow("no expected settings found");
+  });
+});
+
+describe("each metadata and security setting", () => {
+  const committed = readExpectedSettings();
+  const matching = {
+    description: committed.settings.description,
+    homepage: committed.settings.homepage,
+    topics: ["a", "b", "c", "d", "e"],
+    default_branch: "main",
+    workflow_permissions: { default_workflow_permissions: "read" },
+    fork_pr_contributor_approval: { approval_policy: "all_external_contributors" },
+    code_scanning_default_setup: { state: "not-configured" },
+    private_vulnerability_reporting: { enabled: true },
+    vulnerability_alerts: { enabled: true },
+    security_and_analysis: { dependabot_security_updates: { status: "enabled" } },
+  };
+  const subset: ExpectedSettings = {
+    settings: Object.fromEntries(
+      Object.entries(committed.settings).filter(
+        ([key]) =>
+          Object.keys(matching).includes(key.split(".", 1)[0] ?? "") &&
+          (!key.startsWith("security_and_analysis") || key.includes("dependabot")),
+      ),
+    ),
+    minimumCounts: committed.minimumCounts ?? {},
+    rulesets: {},
+  };
+
+  function differences(overrides: Record<string, unknown>): string[] {
+    return diffSettings({ repository: { ...matching, ...overrides }, rulesets: [] }, subset).map(
+      ({ path: differencePath }) => differencePath,
+    );
+  }
+
+  test("a repository matching all of them has no difference", () => {
+    expect(differences({})).toEqual([]);
+  });
+
+  test.each([
+    ["description", { description: "Something else" }],
+    ["homepage", { homepage: "https://example.com/" }],
+    ["default_branch", { default_branch: "develop" }],
+    [
+      "workflow_permissions.default_workflow_permissions",
+      { workflow_permissions: { default_workflow_permissions: "write" } },
+    ],
+    [
+      "fork_pr_contributor_approval.approval_policy",
+      { fork_pr_contributor_approval: { approval_policy: "first_time_contributors" } },
+    ],
+    ["code_scanning_default_setup.state", { code_scanning_default_setup: { state: "configured" } }],
+    ["private_vulnerability_reporting.enabled", { private_vulnerability_reporting: {} }],
+    ["vulnerability_alerts.enabled", { vulnerability_alerts: { enabled: false } }],
+    [
+      "security_and_analysis.dependabot_security_updates.status",
+      { security_and_analysis: { dependabot_security_updates: { status: "disabled" } } },
+    ],
+  ])("%s is reported when it differs", (key, override) => {
+    expect(differences(override)).toEqual([`settings ${key}`]);
+  });
+
+  test("fewer than five topics are reported", () => {
+    expect(differences({ topics: ["a", "b", "c", "d"] })).toEqual(["settings topics (count)"]);
+  });
+
+  test("the committed description is the brand copy one-line description", () => {
+    const copy = readFileSync(path.join(import.meta.dirname, "../../docs/brand/copy.md"), "utf8");
+    const row = copy.split("\n").find((line) => line.startsWith("| One-line description"));
+
+    expect(row?.split("|", 3)[2]?.trim()).toBe(committed.settings.description);
+  });
+
+  test("the committed minimum is five topics", () => {
+    expect(committed.minimumCounts).toEqual({ topics: 5 });
   });
 });
 
@@ -208,6 +279,10 @@ describe("recorded live output against the committed files", () => {
       "security_and_analysis.dependabot_security_updates.status": "enabled",
       "vulnerability_alerts.enabled": true,
       "private_vulnerability_reporting.enabled": true,
+      default_branch: "main",
+      "workflow_permissions.default_workflow_permissions": "read",
+      "fork_pr_contributor_approval.approval_policy": "all_external_contributors",
+      "code_scanning_default_setup.state": "not-configured",
     });
   });
 
@@ -222,6 +297,7 @@ describe("recorded live output against the committed files", () => {
   test("the settings that differed when recorded are each named", () => {
     expect(diffSettings(live, committed).map(({ path: differencePath }) => differencePath)).toEqual(
       [
+        "settings description",
         "settings allow_merge_commit",
         "settings squash_merge_commit_message",
         "settings merge_commit_title",
@@ -230,6 +306,9 @@ describe("recorded live output against the committed files", () => {
         "settings security_and_analysis.secret_scanning_push_protection.status",
         "settings security_and_analysis.dependabot_security_updates.status",
         "settings vulnerability_alerts.enabled",
+        "settings workflow_permissions.default_workflow_permissions",
+        "settings fork_pr_contributor_approval.approval_policy",
+        "settings code_scanning_default_setup.state",
       ],
     );
   });
@@ -270,7 +349,9 @@ describe("runCheck", () => {
     });
 
     expect(exitCode).toBe(0);
-    expect(lines).toEqual(["andryorelabs/snug matches .github/rulesets and the settings table."]);
+    expect(lines).toEqual([
+      "andryorelabs/snug matches .github/repo-settings.json and .github/rulesets.",
+    ]);
   });
 
   test("fails when the repository itself cannot be read", () => {

@@ -24,7 +24,7 @@ export async function linkTabKey(page: Page): Promise<"Alt+Tab" | "Tab"> {
     const { platform, userAgent } = globalThis.navigator;
     return (
       platform.startsWith("Mac") &&
-      /Safari/.test(userAgent) &&
+      userAgent.includes("Safari") &&
       !/Chrome|Chromium|CriOS|Edg|Firefox|FxiOS/.test(userAgent)
     );
   });
@@ -133,7 +133,7 @@ export async function expectNoElementOverflow(page: Page): Promise<void> {
     const found: string[] = [];
     for (const element of globalThis.document.querySelectorAll(selector)) {
       if (element.clientWidth <= 1 || element.scrollWidth <= element.clientWidth) continue;
-      const text = (element.textContent ?? "").trim().slice(0, 40);
+      const text = element.textContent.trim().slice(0, 40);
       found.push(
         `<${element.tagName.toLowerCase()}> "${text}" ${element.scrollWidth}>${element.clientWidth}`,
       );

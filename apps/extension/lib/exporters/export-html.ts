@@ -2,6 +2,7 @@ import { countBookmarks } from "@/lib/count-bookmarks";
 import { createExportTicker, type ExportControl, type ExportTicker } from "@/lib/export-control";
 import { getFaviconBase64 } from "@/lib/favicon";
 import { isBookmarksBar, isOtherBookmarks, ROOT_FOLDER_IDS } from "@/lib/root-folders";
+import { forEachSequentially } from "@/lib/sequential";
 import { millisecondsToSeconds } from "@/lib/timestamps";
 import type { ExtendedBookmarkTreeNode } from "@/lib/types";
 
@@ -55,7 +56,7 @@ export async function exportToHTML(options: ExportHTMLOptions): Promise<string> 
   ];
 
   const ticker = createExportTicker(options, countBookmarks(nodesToExport));
-  await generateHtmlContent(lines, nodesToExport as ExtendedBookmarkTreeNode[], 1, {
+  await generateHtmlContent(lines, nodesToExport, 1, {
     ticker,
     includeIconData,
     includeDateAdded,
@@ -90,9 +91,9 @@ async function generateHtmlContent(
 ): Promise<void> {
   const indent = " ".repeat(4).repeat(level);
 
-  for (const node of nodes) {
+  await forEachSequentially(nodes, async (node) => {
     if (node.url) {
-      await appendBookmarkLine(lines, node, indent, options);
+      await appendBookmarkLine(lines, node, node.url, indent, options);
     } else if (node.children) {
       const isOtherBookmarksHidden = isOtherBookmarks(node) && options.hideOtherBookmarks;
       const isParentFolderHidden =
@@ -102,23 +103,19 @@ async function generateHtmlContent(
         !isOtherBookmarks(node);
 
       if (isOtherBookmarksHidden || isParentFolderHidden) {
-        await generateHtmlContent(
-          lines,
-          node.children as ExtendedBookmarkTreeNode[],
-          level,
-          options,
-        );
+        await generateHtmlContent(lines, node.children, level, options);
       } else {
         await appendFolderLines(lines, node, level, indent, options);
       }
     }
-  }
+  });
 }
 
 /**
  * Appends a single `<DT><A ...>` line for `node` onto `lines`.
  * @param lines The accumulator lines are pushed onto.
  * @param node The bookmark node to append.
+ * @param url The address `node.url` holds, passed separately so it is known to be set.
  * @param indent The leading whitespace for this line.
  * @param options Which optional attributes to include.
  * @returns Resolves once the line has been appended.
@@ -126,6 +123,7 @@ async function generateHtmlContent(
 async function appendBookmarkLine(
   lines: string[],
   node: ExtendedBookmarkTreeNode,
+  url: string,
   indent: string,
   options: Pick<
     ExportHTMLOptions,
@@ -133,7 +131,7 @@ async function appendBookmarkLine(
   > & { ticker: ExportTicker },
 ): Promise<void> {
   options.ticker.tick();
-  let attributes = `HREF="${escapeUrl(node.url!)}"`;
+  let attributes = `HREF="${escapeUrl(url)}"`;
 
   if (options.includeDateAdded && node.dateAdded) {
     attributes += ` ADD_DATE="${millisecondsToSeconds(node.dateAdded)}"`;
@@ -144,7 +142,7 @@ async function appendBookmarkLine(
   }
 
   if (options.includeIconData) {
-    const iconData = await getFaviconBase64(node.url!);
+    const iconData = await getFaviconBase64(url);
     if (iconData) {
       attributes += ` ICON="${iconData}"`;
     }
@@ -189,12 +187,7 @@ async function appendFolderLines(
   lines.push(`${indent}<DT><H3${attributes}>${title}</H3>`, `${indent}<DL><p>`);
 
   if (node.children) {
-    await generateHtmlContent(
-      lines,
-      node.children as ExtendedBookmarkTreeNode[],
-      level + 1,
-      options,
-    );
+    await generateHtmlContent(lines, node.children, level + 1, options);
   }
 
   lines.push(`${indent}</DL><p>`);

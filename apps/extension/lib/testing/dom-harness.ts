@@ -28,14 +28,17 @@ export function createDomHarness(): DomHarness {
   return {
     container,
     async render(element) {
-      await act(async () => {
+      await act(() => {
         root.render(element);
+        return Promise.resolve();
       });
     },
     unmount() {
       if (!isMounted) return;
       isMounted = false;
-      act(() => root.unmount());
+      act(() => {
+        root.unmount();
+      });
       container.remove();
     },
   };

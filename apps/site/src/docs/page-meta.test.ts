@@ -37,8 +37,9 @@ describe("per-page description and SEO title", () => {
         }
       });
 
-      if (locale !== DEFAULT_LOCALE) {
-        it("translates the copy instead of reusing the English text", () => {
+      it.skipIf(locale === DEFAULT_LOCALE)(
+        "translates the copy instead of reusing the English text",
+        () => {
           const english = pages.filter((page) => page.locale === DEFAULT_LOCALE);
           const translated = localePages.filter((page) => page.status !== "missing");
           for (const page of translated) {
@@ -46,8 +47,8 @@ describe("per-page description and SEO title", () => {
             expect(page.description).not.toBe(source?.description);
             expect(page.seoTitle).not.toBe(source?.seoTitle);
           }
-        });
-      }
+        },
+      );
     });
   }
 

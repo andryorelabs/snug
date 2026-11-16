@@ -48,41 +48,46 @@ function listingTitle(markdown: string): string | undefined {
   return /^## Title\s+(.+)$/m.exec(markdown)?.[1];
 }
 
-type TestManifest = Record<string, unknown> & {
-  permissions: string[];
-  optional_permissions?: string[];
-};
-type ManifestFactory = (environment: { browser: string }) => TestManifest;
+const manifestSource = wxtConfig.manifest;
+if (typeof manifestSource !== "function") {
+  throw new TypeError("wxt.config manifest must be a factory function");
+}
 
-const buildManifest = wxtConfig.manifest as ManifestFactory;
-const manifest = buildManifest({ browser: "chrome" });
+const buildManifest = (browser: string) =>
+  manifestSource({
+    browser,
+    command: "build",
+    manifestVersion: 3,
+    mode: "production",
+  });
+
+const manifest = await buildManifest("chrome");
 
 describe("manifest", () => {
   it("uses the full description on the default build", () => {
     expect(manifest.description).toBe("__MSG_extensionDescription__");
   });
 
-  it("uses the browser-neutral description on the Edge build", () => {
-    expect(buildManifest({ browser: "edge" }).description).toBe("__MSG_extensionDescriptionEdge__");
+  it("uses the browser-neutral description on the Edge build", async () => {
+    const edgeManifest = await buildManifest("edge");
+    expect(edgeManifest.description).toBe("__MSG_extensionDescriptionEdge__");
   });
 
   it("has no tabs permission", () => {
     expect(manifest.permissions).not.toContain("tabs");
   });
 
-  it("keeps Downloads and Notification access optional", () => {
+  it("keeps Downloads and Notification access optional", async () => {
     expect(manifest.permissions).not.toContain("downloads");
     expect(manifest.permissions).not.toContain("notifications");
     expect(manifest.optional_permissions).toEqual(["downloads", "notifications"]);
-    expect(buildManifest({ browser: "edge" }).optional_permissions).toEqual([
-      "downloads",
-      "notifications",
-    ]);
+    const edgeManifest = await buildManifest("edge");
+    expect(edgeManifest.optional_permissions).toEqual(["downloads", "notifications"]);
   });
 
-  it("requires both permissions on the e2e build", () => {
+  it("requires both permissions on the e2e build", async () => {
     vi.stubEnv("SNUG_E2E_REQUIRED_PERMISSIONS", "1");
-    const e2eManifest = buildManifest({ browser: "chrome" });
+    const e2eManifest = await buildManifest("chrome");
     vi.unstubAllEnvs();
 
     expect(e2eManifest.permissions).toEqual(expect.arrayContaining(["downloads", "notifications"]));

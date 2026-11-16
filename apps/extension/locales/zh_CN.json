@@ -4,11 +4,11 @@
     "description": "Name of the extension."
   },
   "extensionDescription": {
-    "message": "以常见格式导出书签，从 Chrome 或 Safari 导入，并定时备份。全程在本机完成。",
+    "message": "导出、导入并备份书签——全程在你的设备上完成。",
     "description": "Description of the extension"
   },
   "extensionDescriptionEdge": {
-    "message": "以常见格式导出、导入并定时备份书签。所有数据都保留在本地。",
+    "message": "导出、导入并备份书签——全程在你的设备上完成。",
     "description": "Description of the extension on the Microsoft Edge Add-ons listing. Names no browser."
   },
   "welcomeSubtitle": {

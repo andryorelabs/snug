@@ -12,9 +12,9 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
-
 import ts from "typescript";
 
+import { isRecord, parseJsonAs, parseJsonRecord, type JsonRecord } from "./json-guards";
 import {
   type AcceptedEntry,
   checkExpectedFixtures,
@@ -123,6 +123,12 @@ Options
 
 type Mode = "fixtures" | "corpus" | "all";
 
+const MODES: ReadonlySet<string> = new Set(["fixtures", "corpus", "all"]);
+
+function isMode(value: string): value is Mode {
+  return MODES.has(value);
+}
+
 interface Options {
   mode: Mode;
   workDirectory: string;
@@ -145,7 +151,8 @@ function parseOptions(argv: string[]): Options | undefined {
     },
   });
   if (values.help) return undefined;
-  if (!["fixtures", "corpus", "all"].includes(values.mode)) {
+  const { mode } = values;
+  if (!isMode(mode)) {
     throw new Error(`--mode must be fixtures, corpus or all, not ${values.mode}`);
   }
   const workDirectory = path.resolve(values["work-dir"]);
@@ -153,7 +160,7 @@ function parseOptions(argv: string[]): Options | undefined {
     throw new Error(`--work-dir must be outside the repo: ${workDirectory}`);
   }
   return {
-    mode: values.mode as Mode,
+    mode,
     workDirectory,
     report: values.report === undefined ? undefined : path.resolve(values.report),
     isWritingExpected: values["write-expected"],
@@ -398,17 +405,18 @@ function modernizeTsconfig(file: string): void {
       `Cannot parse ${file}: ${ts.flattenDiagnosticMessageText(parsed.error.messageText, "\n")}`,
     );
   }
-  const config = parsed.config as { compilerOptions?: Record<string, unknown> };
+  const config: unknown = parsed.config;
+  const configRecord = isRecord(config) ? config : {};
   const compilerOptions = Object.fromEntries(
-    Object.entries(config.compilerOptions ?? {}).filter(
-      ([option]) => !REMOVED_COMPILER_OPTIONS.has(option),
-    ),
+    Object.entries(
+      isRecord(configRecord.compilerOptions) ? configRecord.compilerOptions : {},
+    ).filter(([option]) => !REMOVED_COMPILER_OPTIONS.has(option)),
   );
   writeFileSync(
     file,
     JSON.stringify(
       {
-        ...config,
+        ...configRecord,
         compilerOptions: { ...compilerOptions, ...MODERN_COMPILER_OPTIONS },
       },
       undefined,
@@ -417,10 +425,34 @@ function modernizeTsconfig(file: string): void {
   );
 }
 
-interface LoadedPlugin {
-  default?: { rules?: unknown; plugin?: { rules?: unknown } };
-  plugin?: { rules?: unknown };
-  rules?: unknown;
+function memberOf(value: unknown, key: string): unknown {
+  return isRecord(value) ? value[key] : undefined;
+}
+
+function pluginRules(loaded: unknown): JsonRecord {
+  const rules =
+    memberOf(memberOf(loaded, "plugin"), "rules") ??
+    memberOf(memberOf(memberOf(loaded, "default"), "plugin"), "rules") ??
+    memberOf(memberOf(loaded, "default"), "rules") ??
+    memberOf(loaded, "rules");
+  return isRecord(rules) ? rules : {};
+}
+
+function requiresTypeChecking(rule: unknown): boolean {
+  return memberOf(memberOf(memberOf(rule, "meta"), "docs"), "requiresTypeChecking") === true;
+}
+
+function isStringListRecord(value: unknown): value is Record<string, string[]> {
+  return (
+    isRecord(value) &&
+    Object.values(value).every(
+      (list) => Array.isArray(list) && list.every((item) => typeof item === "string"),
+    )
+  );
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return isRecord(value) && Object.values(value).every((item) => typeof item === "string");
 }
 
 async function typeAwareRuleIds(baselineDirectory: string): Promise<Set<string>> {
@@ -430,22 +462,16 @@ async function typeAwareRuleIds(baselineDirectory: string): Promise<Set<string>>
   ];
   const ids = await Promise.all(
     plugins.map(async ([prefix, name]) => {
-      type RuleModules = Record<string, { meta?: { docs?: { requiresTypeChecking?: boolean } } }>;
-      const loaded = (await import(Bun.resolveSync(name, baselineDirectory))) as LoadedPlugin;
-      const rules = (loaded.plugin?.rules ??
-        loaded.default?.plugin?.rules ??
-        loaded.default?.rules ??
-        loaded.rules ??
-        {}) as RuleModules;
-      return Object.entries(rules)
-        .filter(([, rule]) => rule.meta?.docs?.requiresTypeChecking === true)
+      const loaded: unknown = await import(Bun.resolveSync(name, baselineDirectory));
+      return Object.entries(pluginRules(loaded))
+        .filter(([, rule]) => requiresTypeChecking(rule))
         .map(([rule]) => `${prefix}${rule}`);
     }),
   );
   return new Set(ids.flat());
 }
 
-const SEVERITY_OFF = new Set([0, "off"]);
+const SEVERITY_OFF = new Set<unknown>([0, "off"]);
 
 function enforcedRules(baselineDirectory: string, files: readonly string[]): Set<string> {
   const enforced = new Set<string>();
@@ -469,12 +495,12 @@ function enforcedRules(baselineDirectory: string, files: readonly string[]): Set
       { LINT_PARITY_REPO_ROOT: REPO_ROOT, LINT_PARITY_BASE_PATH: REPO_ROOT },
     );
     if (status !== 0) throw new Error(`eslint --print-config ${file}:\n${stderr}`);
-    const config = JSON.parse(stdout) as { rules?: Record<string, unknown> };
-    const settings = Object.entries(config.rules ?? {});
+    const config = parseJsonRecord(stdout);
+    const settings = Object.entries(isRecord(config.rules) ? config.rules : {});
     for (const [rule, setting] of settings) {
       const severity: unknown = Array.isArray(setting) ? setting[0] : setting;
       const normalized = normalizeEslintRule(rule, "");
-      if (normalized !== undefined && !SEVERITY_OFF.has(severity as never)) {
+      if (normalized !== undefined && !SEVERITY_OFF.has(severity)) {
         enforced.add(normalized);
       }
     }
@@ -514,13 +540,10 @@ function collectFixtures(
       writeFileSync(EXPECTED_FILE, `${JSON.stringify(expected, undefined, 2)}\n`);
       runChecked(path.join(REPO_ROOT, "node_modules", ".bin", "oxfmt"), [EXPECTED_FILE], REPO_ROOT);
     }
-    const expected = JSON.parse(readFileSync(EXPECTED_FILE, "utf8")) as Record<string, string[]>;
+    const expected = parseJsonAs(readFileSync(EXPECTED_FILE, "utf8"), isStringListRecord);
     const exercised = new Set(baseline.map((item) => item.rule));
     const enforced = enforcedRules(baselineDirectory, files);
-    const untriggerable = JSON.parse(readFileSync(UNTRIGGERABLE_FILE, "utf8")) as Record<
-      string,
-      string
-    >;
+    const untriggerable = parseJsonAs(readFileSync(UNTRIGGERABLE_FILE, "utf8"), isStringRecord);
     const uncoveredRules = [...enforced]
       .filter((rule) => !exercised.has(rule))
       .toSorted(compareText)

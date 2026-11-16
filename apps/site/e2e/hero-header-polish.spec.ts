@@ -1,9 +1,10 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { expect, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
+import { isRecord } from "../src/testing/guards";
+import { parseJson } from "./require";
 
 const DESKTOP_WIDTH = 1440;
 const PHONE_WIDTH = 375;
@@ -44,13 +45,14 @@ test("Japanese headings break by phrase", async ({ page }) => {
 for (const locale of LOCALES) {
   test(`the ${locale} h1 is the single localized headline`, async ({ page }) => {
     await page.goto(localePath(locale));
-    const content = JSON.parse(
+    const content = parseJson(
       readFileSync(path.join(import.meta.dirname, "../src/content", `${locale}.json`), "utf8"),
-    ) as {
-      landing: {
-        hero: { eyebrow: string; headline: string; headlineAccent: string };
-      };
-    };
+      (
+        value,
+      ): value is {
+        landing: { hero: { eyebrow: string; headline: string; headlineAccent: string } };
+      } => isRecord(value) && isRecord(value.landing) && isRecord(value.landing.hero),
+    );
     const separator = locale === "ja" || locale === "zh_CN" ? "" : " ";
     const { headline, headlineAccent } = content.landing.hero;
     await expect(page.locator("h1")).toHaveCount(1);

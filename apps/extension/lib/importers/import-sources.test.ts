@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { detectFormat } from "@/lib/detect-format";
@@ -23,9 +22,13 @@ const safariFile = fixture("bookmarks-safari.html");
 
 function urlsUnder(rootId: string): string[] {
   const urls: string[] = [];
-  const visit = (node: { url?: string; children?: unknown[] }): void => {
+  interface UrlNode {
+    url?: string;
+    children?: UrlNode[];
+  }
+  const visit = (node: UrlNode): void => {
     if (node.url) urls.push(node.url);
-    const children = (node.children ?? []) as (typeof node)[];
+    const children = node.children ?? [];
     for (const child of children) visit(child);
   };
   const root = getFakeBookmarksRoot().children?.find((n) => n.id === rootId);
@@ -104,7 +107,7 @@ describe("parsers", () => {
   });
 
   it("rejects malformed XBEL", () => {
-    expect(() => parseXBEL("<xbel><folder></xbel>")).toThrow();
+    expect(() => parseXBEL("<xbel><folder></xbel>")).toThrow(Error);
   });
 
   it("maps Safari Favorites to the bar and Reading List to its own folder", () => {

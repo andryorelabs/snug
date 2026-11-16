@@ -2,7 +2,12 @@ import { loadCatalog } from "../docs/catalog";
 import { markdownTwinPath } from "../docs/markdown-twin";
 import { PUBLISHED_SOURCES, publishedRoute } from "../docs/published";
 import { DEFAULT_LOCALE, hreflangAlternates, LOCALES, SITE_ORIGIN } from "../i18n/locales";
-import type { LlmsDocumentationPage, LlmsFullSection, SitemapEntry } from "./crawlers";
+import {
+  type LlmsDocumentationPage,
+  type LlmsFullSection,
+  type SitemapEntry,
+  sitemapEntry,
+} from "./crawlers";
 import { lastCommitDate } from "./last-modified";
 
 /**
@@ -16,11 +21,9 @@ export function documentationSitemapEntries(): SitemapEntry[] {
   return PUBLISHED_SOURCES.flatMap((source) => {
     const alternates = hreflangAlternates(publishedRoute(source, DEFAULT_LOCALE));
     const lastmod = lastCommitDate([`../../${source.sourcePath}`]);
-    return LOCALES.map((locale) => ({
-      loc: `${SITE_ORIGIN}${publishedRoute(source, locale)}`,
-      ...(lastmod !== undefined && { lastmod }),
-      alternates,
-    }));
+    return LOCALES.map((locale) =>
+      sitemapEntry(`${SITE_ORIGIN}${publishedRoute(source, locale)}`, lastmod, alternates),
+    );
   });
 }
 

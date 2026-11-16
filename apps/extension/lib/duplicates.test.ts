@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it } from "vitest";
 
 import { findDuplicateGroups, normalizeUrl } from "@/lib/duplicates";
 import { getFakeBookmarksRoot, resetFakeBookmarks } from "@/lib/testing/fake-bookmarks";
@@ -173,6 +173,8 @@ describe("findDuplicateGroups scale", () => {
     const groups = findDuplicateGroups(nodes);
     expect(performance.now() - start).toBeLessThan(1000);
     expect(groups).toHaveLength(1);
-    expect(groups[0]!.copies).toHaveLength(50_000);
+    const [group] = groups;
+    assert(group);
+    expect(group.copies).toHaveLength(50_000);
   });
 });

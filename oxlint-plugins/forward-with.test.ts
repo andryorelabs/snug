@@ -11,13 +11,15 @@ it("forwards reads to the frozen target and binds its methods", () => {
     }
   }
   const target = Object.freeze(new Target());
-  const proxy = forwardWith(target, {}) as typeof target;
-  expect(proxy.name).toBe("target");
-  expect(proxy.describe()).toBe("target");
+  const proxy = forwardWith(target, {});
+  expect(Reflect.get(proxy, "name")).toBe("target");
+  const describeMethod: unknown = Reflect.get(proxy, "describe");
+  if (typeof describeMethod !== "function") throw new TypeError("describe was not forwarded");
+  expect(Reflect.apply(describeMethod, undefined, [])).toBe("target");
 });
 
 it("returns an override instead of the frozen target value", () => {
   const target = Object.freeze({ value: "original" });
-  const proxy = forwardWith(target, { value: "replaced" }) as typeof target;
-  expect(proxy.value).toBe("replaced");
+  const proxy = forwardWith(target, { value: "replaced" });
+  expect(Reflect.get(proxy, "value")).toBe("replaced");
 });

@@ -42,19 +42,19 @@ describe("buildStructuredData", () => {
   });
 
   it("expresses the locale on the page and video nodes", () => {
-    expect(nodes["WebPage"]).toMatchObject({
+    expect(nodes.WebPage).toMatchObject({
       url: `${SITE_ORIGIN}/es/`,
       name: "Titulo",
       inLanguage: "es",
     });
-    expect(nodes["VideoObject"]).toMatchObject({
+    expect(nodes.VideoObject).toMatchObject({
       embedUrl: "https://www.youtube-nocookie.com/embed/abc123",
       thumbnailUrl: "https://i.ytimg.com/vi/abc123/maxresdefault.jpg",
     });
   });
 
   it("links installs to the counted redirect and carries no ratings or reviews", () => {
-    expect(nodes["SoftwareApplication"]).toMatchObject({
+    expect(nodes.SoftwareApplication).toMatchObject({
       installUrl: `${SITE_ORIGIN}/install`,
       featureList: ["One", "Two"],
       name: STORE_FACTS.name,
@@ -74,11 +74,11 @@ describe("buildComparisonStructuredData", () => {
   it("describes a web page about the software with a numbered breadcrumb", () => {
     const nodes = nodesOf(buildComparisonStructuredData("en", page));
 
-    expect(nodes["WebPage"]).toMatchObject({
+    expect(nodes.WebPage).toMatchObject({
       url: `${SITE_ORIGIN}/alternatives/x/`,
       about: { "@id": `${SITE_ORIGIN}/#software` },
     });
-    expect(nodes["BreadcrumbList"]?.["itemListElement"]).toEqual([
+    expect(nodes.BreadcrumbList?.itemListElement).toEqual([
       {
         "@type": "ListItem",
         position: 1,
@@ -95,15 +95,15 @@ describe("buildComparisonStructuredData", () => {
   });
 
   it("drops about when asked and adds dateModified only when known", () => {
-    const plain = nodesOf(buildComparisonStructuredData("en", { ...page, omitAbout: true }))[
-      "WebPage"
-    ];
+    const plain = nodesOf(
+      buildComparisonStructuredData("en", { ...page, omitAbout: true }),
+    ).WebPage;
     const dated = nodesOf(
       buildComparisonStructuredData("en", {
         ...page,
         dateModified: "2026-02-03",
       }),
-    )["WebPage"];
+    ).WebPage;
 
     expect(plain).not.toHaveProperty("about");
     expect(plain).not.toHaveProperty("dateModified");
@@ -126,11 +126,11 @@ describe("buildHowToIndexStructuredData", () => {
       }),
     );
 
-    expect(nodes["CollectionPage"]).toMatchObject({
+    expect(nodes.CollectionPage).toMatchObject({
       mainEntity: { "@id": `${SITE_ORIGIN}/how-to/#list` },
     });
-    expect(nodes["ItemList"]).toMatchObject({ numberOfItems: 2 });
-    expect(nodes["ItemList"]?.["itemListElement"]).toEqual([
+    expect(nodes.ItemList).toMatchObject({ numberOfItems: 2 });
+    expect(nodes.ItemList?.itemListElement).toEqual([
       {
         "@type": "ListItem",
         position: 1,
@@ -156,12 +156,12 @@ describe("buildHowToStructuredData", () => {
   };
 
   it("is about the software only when the page has a Snug section", () => {
-    const withSnug = nodesOf(buildHowToStructuredData("en", { ...page, hasSnugSection: true }))[
-      "WebPage"
-    ];
-    const without = nodesOf(buildHowToStructuredData("en", { ...page, hasSnugSection: false }))[
-      "WebPage"
-    ];
+    const withSnug = nodesOf(
+      buildHowToStructuredData("en", { ...page, hasSnugSection: true }),
+    ).WebPage;
+    const without = nodesOf(
+      buildHowToStructuredData("en", { ...page, hasSnugSection: false }),
+    ).WebPage;
 
     expect(withSnug).toHaveProperty("about");
     expect(without).not.toHaveProperty("about");

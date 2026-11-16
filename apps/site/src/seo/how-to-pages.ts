@@ -7,11 +7,16 @@ import {
   howToIndexPath,
   howToPageLocales,
   howToPath,
-  howToValues,
+  howToPlaceholderValues,
   interpolateHowTo,
 } from "../i18n/how-to";
 import { DEFAULT_LOCALE, hreflangAlternates, SITE_ORIGIN } from "../i18n/locales";
-import type { LlmsFullSection, LlmsHowToPage, SitemapEntry } from "./crawlers";
+import {
+  type LlmsFullSection,
+  type LlmsHowToPage,
+  type SitemapEntry,
+  sitemapEntry,
+} from "./crawlers";
 import { lastCommitDate } from "./last-modified";
 
 /**
@@ -32,19 +37,15 @@ export const HOW_TO_SOURCES: readonly string[] = [
 export function howToSitemapEntries(): SitemapEntry[] {
   const lastmod = lastCommitDate(HOW_TO_SOURCES);
   const indexAlternates = hreflangAlternates(howToIndexPath(DEFAULT_LOCALE), HOW_TO_INDEX_LOCALES);
-  const indexEntries = HOW_TO_INDEX_LOCALES.map((locale) => ({
-    loc: `${SITE_ORIGIN}${howToIndexPath(locale)}`,
-    ...(lastmod !== undefined && { lastmod }),
-    alternates: indexAlternates,
-  }));
+  const indexEntries = HOW_TO_INDEX_LOCALES.map((locale) =>
+    sitemapEntry(`${SITE_ORIGIN}${howToIndexPath(locale)}`, lastmod, indexAlternates),
+  );
   const pageEntries = HOW_TO_SLUGS.flatMap((slug) => {
     const locales = howToPageLocales(slug);
     const alternates = hreflangAlternates(howToPath(DEFAULT_LOCALE, slug), locales);
-    return locales.map((locale) => ({
-      loc: `${SITE_ORIGIN}${howToPath(locale, slug)}`,
-      ...(lastmod !== undefined && { lastmod }),
-      alternates,
-    }));
+    return locales.map((locale) =>
+      sitemapEntry(`${SITE_ORIGIN}${howToPath(locale, slug)}`, lastmod, alternates),
+    );
   });
   return [...indexEntries, ...pageEntries];
 }
@@ -66,7 +67,7 @@ function bulleted(items: readonly string[]): string {
 export function howToLlmsFullSections(): LlmsFullSection[] {
   return HOW_TO_SLUGS.map((slug) => {
     const copy = getHowToContent(DEFAULT_LOCALE, slug);
-    const values = howToValues(DEFAULT_LOCALE, slug) as unknown as Record<string, string>;
+    const values = howToPlaceholderValues(DEFAULT_LOCALE, slug);
     const fill = (template: string) => interpolateHowTo(template, DEFAULT_LOCALE, values);
     const snug = "withSnug" in copy ? copy.withSnug : undefined;
     const blocks = [

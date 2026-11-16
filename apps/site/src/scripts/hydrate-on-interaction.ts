@@ -1,3 +1,7 @@
+function isClickable(target: EventTarget): target is EventTarget & { click: () => void } {
+  return "click" in target && typeof target.click === "function";
+}
+
 /**
  * Events that start hydration of an island: the pointer entering it, focus
  * moving into it, or a touch landing on it.
@@ -37,8 +41,8 @@ export function hydrateOnInteraction(
       await new Promise((resolve) => setTimeout(resolve, HYDRATION_SETTLE_MS));
     }
     for (const target of earlyClickTargets) {
-      const replayable = target as { isConnected?: boolean; click?: () => void };
-      if (replayable.isConnected !== false) replayable.click?.();
+      if ("isConnected" in target && target.isConnected === false) continue;
+      if (isClickable(target)) target.click();
     }
   };
 

@@ -19,14 +19,15 @@ import { AutoExportRoute } from "./auto-export";
 
 vi.mock("@/lib/folder-handle", async (importOriginal) => ({
   ...(await importOriginal<typeof FolderHandleModule>()),
-  clearFolderHandle: vi.fn(async () => {
+  clearFolderHandle: vi.fn<() => Promise<void>>(() => {
     events.push("clearFolderHandle");
+    return Promise.resolve();
   }),
 }));
 
 vi.mock("@/lib/folder-access-recovery", async (importOriginal) => ({
   ...(await importOriginal<typeof FolderAccessRecoveryModule>()),
-  readFolderAccess: vi.fn(async () => "granted" as const),
+  readFolderAccess: vi.fn<() => Promise<"granted">>(() => Promise.resolve("granted")),
 }));
 
 const events: string[] = [];
@@ -34,12 +35,18 @@ const harnesses: DomHarness[] = [];
 
 type PermissionName = "downloads" | "notifications";
 
+function mockSendMessage(response: { ok: boolean; error?: string }) {
+  Object.assign(fakeBrowser.runtime, {
+    sendMessage: vi.fn<() => Promise<typeof response>>(() => Promise.resolve(response)),
+  });
+}
+
 function installPermissions(options: { held: PermissionName[]; isRequestGranted: boolean }) {
   Object.assign(browser.permissions, {
     contains: vi.fn((query: { permissions?: string[] }) => {
       events.push("contains");
       return Promise.resolve(
-        (query.permissions ?? []).every((name) => options.held.includes(name as PermissionName)),
+        (query.permissions ?? []).every((name) => options.held.some((held) => held === name)),
       );
     }),
     request: vi.fn(() => {
@@ -61,28 +68,29 @@ async function mountRoute(
   const harness = createDomHarness();
   harnesses.push(harness);
   await harness.render(<AutoExportRoute />);
-  await act(async () => {});
+  await act(() => Promise.resolve());
   events.length = 0;
   const originalGetValue = autoExportConfigStore.getValue.bind(autoExportConfigStore);
-  vi.spyOn(autoExportConfigStore, "getValue").mockImplementation(async () => {
+  vi.spyOn(autoExportConfigStore, "getValue").mockImplementation(() => {
     events.push("config.getValue");
-    return await originalGetValue();
+    return originalGetValue();
   });
   return harness;
 }
 
 async function click(element: Element | null) {
-  if (!element) throw new Error("element missing");
-  await act(async () => {
-    (element as HTMLElement).click();
+  if (!(element instanceof HTMLElement)) throw new TypeError("element missing");
+  await act(() => {
+    element.click();
+    return Promise.resolve();
   });
-  await act(async () => {});
+  await act(() => Promise.resolve());
 }
 
 function findByText(text: string): Element | null {
   return (
     [...document.body.querySelectorAll('button, [role="radio"]')].find(
-      (element) => element.textContent?.trim() === text,
+      (element) => element.textContent.trim() === text,
     ) ?? null
   );
 }
@@ -95,10 +103,8 @@ beforeEach(() => {
   fakeBrowser.reset();
   resetFakeI18n();
   events.length = 0;
-  vi.stubGlobal("showDirectoryPicker", vi.fn());
-  vi.spyOn(fakeBrowser.runtime, "sendMessage").mockResolvedValue({
-    ok: true,
-  } as never);
+  vi.stubGlobal("showDirectoryPicker", vi.fn<() => void>());
+  mockSendMessage({ ok: true });
 });
 
 afterEach(() => {
@@ -189,18 +195,23 @@ describe("AutoExportRoute permission requests", () => {
   it("requests access synchronously on Export now while the access check is still loading", async () => {
     installPermissions({ held: [], isRequestGranted: true });
     Object.assign(browser.permissions, {
-      contains: vi.fn(() => new Promise<boolean>(() => {})),
+      contains: vi.fn(
+        () =>
+          new Promise<boolean>(() => {
+            return;
+          }),
+      ),
     });
     await mountRoute({ enabled: false, destination: "downloads" });
 
     const button = findByText(en.exportNow.message);
-    if (!button) throw new Error("button missing");
-    (button as HTMLElement).click();
+    if (!(button instanceof HTMLElement)) throw new TypeError("button missing");
+    button.click();
 
     expect(browser.permissions.request).toHaveBeenCalledExactlyOnceWith({
       permissions: ["downloads"],
     });
-    await act(async () => {});
+    await act(() => Promise.resolve());
     expect(browser.runtime.sendMessage).toHaveBeenCalledOnce();
   });
 
@@ -238,10 +249,7 @@ describe("AutoExportRoute typed failure", () => {
       errorCode: "downloads-access-needed",
       trigger: "scheduled",
     });
-    vi.spyOn(fakeBrowser.runtime, "sendMessage").mockResolvedValue({
-      ok: false,
-      error: "downloads-access-needed",
-    } as never);
+    mockSendMessage({ ok: false, error: "downloads-access-needed" });
     await mountRoute({ enabled: false, destination: "downloads" });
 
     expect(document.body.textContent).toContain(en.autoExportError_downloadsAccessNeeded.message);
@@ -324,19 +332,20 @@ describe("AutoExportRoute Notification access alert", () => {
       held: ["downloads", "notifications"],
       isRequestGranted: true,
     });
-    const addListener = vi.fn();
+    const addListener = vi.fn<(listener: (changed: { permissions: string[] }) => void) => void>();
     Object.assign(browser.permissions, {
-      onAdded: { addListener: vi.fn(), removeListener: vi.fn() },
-      onRemoved: { addListener, removeListener: vi.fn() },
+      onAdded: { addListener: vi.fn<() => void>(), removeListener: vi.fn<() => void>() },
+      onRemoved: { addListener, removeListener: vi.fn<() => void>() },
     });
     await mountRoute({ enabled: true, destination: "downloads" }, true);
     expect(notifySwitchState()).toBe(true);
 
-    await act(async () => {
-      const [onRemoved] = addListener.mock.calls[0] as [
-        (changed: { permissions: string[] }) => void,
-      ];
+    await act(() => {
+      const registration = addListener.mock.calls[0];
+      if (!registration) throw new Error("onRemoved listener was not registered");
+      const [onRemoved] = registration;
       onRemoved({ permissions: ["notifications"] });
+      return Promise.resolve();
     });
 
     expect(notifySwitchState()).toBe(false);

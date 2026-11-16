@@ -28,9 +28,7 @@ function listPickedFolderFiles(page: Page): Promise<string[]> {
     const directory = await root.getDirectoryHandle(folderName, {
       create: true,
     });
-    const names = await Array.fromAsync(
-      (directory as unknown as { keys(): AsyncIterable<string> }).keys(),
-    );
+    const names = await Array.fromAsync(directory.keys());
     return names;
   }, PICKED_FOLDER_NAME);
   /* eslint-enable unicorn-js/isolated-functions -- scoped to the callback above only */

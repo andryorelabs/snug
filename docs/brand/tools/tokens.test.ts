@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
 import { contrastRatio, readDeclarations } from "./contrast";
@@ -47,10 +46,7 @@ describe("tokens.css", () => {
     for (const [foreground, background] of TEXT_PAIRS) {
       it(`${selector} ${foreground} on ${background} meets WCAG AA`, () => {
         const ratio = contrastRatio(tokens[foreground] ?? "", tokens[background] ?? "");
-        expect(
-          ratio,
-          `${selector} ${foreground} on ${background} is ${ratio.toFixed(2)}:1, needs ${WCAG_AA_TEXT}:1`,
-        ).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
+        expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_TEXT);
       });
     }
   }

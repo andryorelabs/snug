@@ -60,8 +60,12 @@ if (import.meta.main) {
     process.argv.slice(2),
     () => readFileSync(path.resolve(import.meta.dirname, "../../CHANGELOG.md"), "utf8"),
     {
-      notes: (text) => console.log(text),
-      error: (message) => console.error(message),
+      notes: (text) => {
+        console.log(text);
+      },
+      error: (message) => {
+        console.error(message);
+      },
     },
   );
 }

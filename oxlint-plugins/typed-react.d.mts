@@ -1,4 +1,4 @@
-import type { RuleTester } from 'oxlint/plugins-dev'
+import type { RuleTester } from "oxlint/plugins-dev";
 
 /**
  * Type declaration for `./typed-react.mjs`, needed because this module is
@@ -6,10 +6,7 @@ import type { RuleTester } from 'oxlint/plugins-dev'
  * across a `.ts` -> `.mjs` import without one.
  */
 declare const typedReactPlugin: {
-  rules: Record<
-    'no-leaked-conditional-rendering',
-    Parameters<RuleTester['run']>[1]
-  >
-}
+  rules: Record<"no-leaked-conditional-rendering", Parameters<RuleTester["run"]>[1]>;
+};
 
-export default typedReactPlugin
+export default typedReactPlugin;

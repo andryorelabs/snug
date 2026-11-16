@@ -67,8 +67,8 @@ export function OperationProgressCard({ kind, state, onCancel }: OperationProgre
     <Card size="sm">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
-        <CardDescription role="status" aria-live="polite">
-          {description}
+        <CardDescription>
+          <output aria-live="polite">{description}</output>
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -18,7 +18,7 @@ interface ProbeReport {
   loadedFlags: boolean[];
 }
 
-async function mountProbe(initialValue?: Theme) {
+function mountProbe(initialValue?: Theme) {
   fakeBrowser.reset();
   const report: ProbeReport = {
     observedThemes: [],
@@ -40,12 +40,12 @@ async function mountProbe(initialValue?: Theme) {
     return createElement("span", { "data-testid": "value" }, theme);
   }
 
-  return {
+  return Promise.resolve({
     report,
     harness,
     start: () => harness.render(createElement(ThemeProbe)),
     shownValue: () => harness.container.querySelector('[data-testid="value"]')?.textContent,
-  };
+  });
 }
 
 describe("useStorageItem", () => {
@@ -143,17 +143,20 @@ describe("useStorageItem", () => {
   it("shows a written value before the storage write settles", async () => {
     const probe = await mountProbe();
     await probe.start();
-    const { promise: slowWrite, resolve: releaseWrite } = Promise.withResolvers<void>();
-    vi.spyOn(themeStore, "setValue").mockReturnValueOnce(slowWrite);
+    const { promise: writeGate, resolve: releaseWrite } = Promise.withResolvers<"released">();
+    vi.spyOn(themeStore, "setValue").mockImplementationOnce(async () => {
+      await writeGate;
+    });
 
     let pending: Promise<void> | undefined;
-    await act(async () => {
+    await act(() => {
       pending = probe.report.setters.at(-1)?.("dark");
+      return Promise.resolve();
     });
 
     expect(probe.shownValue()).toBe("dark");
     await act(async () => {
-      releaseWrite();
+      releaseWrite("released");
       await pending;
     });
   });

@@ -75,16 +75,15 @@ function missingPlaceholderTokens(entry: MessageEntry): string[] {
  * @returns Human-readable problems: empty messages and unused placeholders.
  */
 function findContentProblems(messages: LocaleMessages): string[] {
-  return Object.entries(messages).flatMap(([key, entry]) =>
-    isPluralEntry(entry)
-      ? findPluralProblems(key, entry)
-      : [
-          ...(entry.message.trim() === "" ? [`${key}: empty message`] : []),
-          ...missingPlaceholderTokens(entry).map(
-            (name) => `${key}: placeholder $${name}$ missing from message`,
-          ),
-        ],
-  );
+  return Object.entries(messages).flatMap(([key, entry]) => {
+    if (isPluralEntry(entry)) return findPluralProblems(key, entry);
+    const problems: string[] = [];
+    if (entry.message.trim() === "") problems.push(`${key}: empty message`);
+    for (const name of missingPlaceholderTokens(entry)) {
+      problems.push(`${key}: placeholder $${name}$ missing from message`);
+    }
+    return problems;
+  });
 }
 
 /**
@@ -202,10 +201,8 @@ describe("locale parity", () => {
     it(`keeps extensionDescription within ${MAX_DESCRIPTION_LENGTH} characters`, () => {
       const description = messages.extensionDescription;
       const length = description && !isPluralEntry(description) ? description.message.length : 0;
-      expect(length, `${code} extensionDescription length`).toBeGreaterThan(0);
-      expect(length, `${code} extensionDescription length`).toBeLessThanOrEqual(
-        MAX_DESCRIPTION_LENGTH,
-      );
+      expect(length).toBeGreaterThan(0);
+      expect(length).toBeLessThanOrEqual(MAX_DESCRIPTION_LENGTH);
     });
   });
 });

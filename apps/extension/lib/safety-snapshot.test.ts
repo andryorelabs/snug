@@ -18,6 +18,7 @@ import {
   takeSafetySnapshot,
 } from "./safety-snapshot";
 import type { SafetySnapshot } from "./safety-snapshot";
+import { forEachSequentially } from "./sequential";
 import {
   getFakeBookmarksRoot,
   resetFakeBookmarks,
@@ -26,7 +27,7 @@ import {
 import type { ExtendedBookmarkTreeNode } from "./types";
 
 vi.mock("./export-all-bookmarks", () => ({
-  triggerDownload: vi.fn(),
+  triggerDownload: vi.fn<(...arguments_: unknown[]) => void>(),
 }));
 
 const downloadMock = vi.mocked(triggerDownload);
@@ -69,7 +70,7 @@ function seedSample(): void {
   );
 }
 
-beforeEach(async () => {
+beforeEach(() => {
   fakeBrowser.reset();
   resetFakeBookmarks();
   downloadMock.mockClear();
@@ -91,7 +92,7 @@ describe("takeSafetySnapshot", () => {
   });
 
   it("never touches browser.downloads, so it needs no Downloads access", async () => {
-    const download = vi.fn();
+    const download = vi.fn<(...arguments_: unknown[]) => void>();
     Object.assign(browser, { downloads: { download } });
     seedSample();
 
@@ -122,7 +123,7 @@ describe("takeSafetySnapshot", () => {
 
   it("still stores the snapshot and resolves when the file save fails", async () => {
     seedSample();
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockReturnValue(undefined);
     downloadMock.mockImplementationOnce(() => {
       throw new Error("disk full");
     });
@@ -246,7 +247,7 @@ describe("restoreSafetySnapshot", () => {
     downloadMock.mockImplementationOnce(() => {
       throw new Error("blocked");
     });
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockReturnValue(undefined);
 
     await restoreSafetySnapshot(snapshot);
 
@@ -298,7 +299,7 @@ describe("Mobile root and non-web URLs", () => {
   it("calls onClearingExisting before the existing content is deleted", async () => {
     seedSample();
     const { roots } = await captureSafetySnapshot();
-    const onClearingExisting = vi.fn();
+    const onClearingExisting = vi.fn<(...arguments_: unknown[]) => void>();
 
     await hasRewrittenRootsFully(roots, onClearingExisting);
 
@@ -320,9 +321,9 @@ describe("Mobile root and non-web URLs", () => {
     const snapshot = await captureSafetySnapshot();
     const mobileNode = (getFakeBookmarksRoot().children ?? []).find((node) => node.id === "3");
     const mobileChildren = mobileNode?.children ?? [];
-    for (const child of mobileChildren) {
+    await forEachSequentially(mobileChildren, async (child) => {
       await browser.bookmarks.removeTree(child.id);
-    }
+    });
     await browser.bookmarks.create({
       parentId: "3",
       title: "Later",
@@ -375,7 +376,7 @@ describe("Mobile root and non-web URLs", () => {
       return realCreate(details);
     };
 
-    await expect(restoreSafetySnapshot(snapshot)).rejects.toThrow();
+    await expect(restoreSafetySnapshot(snapshot)).rejects.toThrow(Error);
 
     expect(rootOutline("1")).toEqual([{ title: "Good", url: "https://good.example/" }]);
   });
@@ -446,6 +447,6 @@ describe("restoreSafetySnapshot rollback and lock", () => {
 
     await restoreSafetySnapshot(snapshot);
 
-    await expect(withImportLock(async () => "free")).resolves.toBe("free");
+    await expect(withImportLock(() => Promise.resolve("free"))).resolves.toBe("free");
   });
 });
