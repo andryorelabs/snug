@@ -1,8 +1,8 @@
 # Domain docs
 
-How domain-modeling-aware skills (`grill-with-docs`, `domain-modeling`,
-`to-spec`, `to-tickets`, `improve-codebase-architecture`) should consume this
-repo's domain documentation, and how it relates to any existing `docs/` tree.
+How the skills that read domain documentation (the `/emet:run` pipeline and the
+repo's own `add-adr` skill) should consume this repo's domain documentation, and
+how it relates to the existing `docs/` tree.
 
 ## Two different kinds of ground
 
@@ -10,11 +10,12 @@ An existing `docs/` tree (if this repo has one) is **published** ground:
 finished reference material, written and maintained by hand. Don't restructure
 it or fold `GLOSSARY.md` into it.
 
-`GLOSSARY.md` and `docs/adr/` are the **live** ground that `domain-modeling`
+`GLOSSARY.md` and `docs/adr/` are the **live** ground that the domain-modeling work
 maintains as `/emet:run` runs features through this repo: its ubiquitous
 language and the architectural decisions made along the way. Both grow only when
-a term or a decision actually crystallizes during a `grill-with-docs` session,
-never speculatively.
+a term or a decision actually crystallizes during a feature interview, never
+speculatively. The `add-adr` skill (`.claude/skills/add-adr`) is the path for a
+new ADR.
 
 ## Before exploring, read these
 
@@ -43,7 +44,7 @@ explicitly avoids.
 
 If the concept you need isn't in the glossary yet, that's a signal: either
 you're inventing language the project doesn't use (reconsider), or there's a
-real gap worth noting for `domain-modeling` to close.
+real gap worth noting for the domain-modeling work to close.
 
 ## Flag ADR conflicts
 
