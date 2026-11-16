@@ -10,10 +10,13 @@ export async function settlePage(page: Page): Promise<void> {
     const { document: doc, window: win } = globalThis;
     await doc.fonts.ready;
     const step = win.innerHeight;
-    for (let y = 0; y < doc.body.scrollHeight; y += step) {
+    const scrollFrom = async (y: number): Promise<void> => {
+      if (y >= doc.body.scrollHeight) return;
       win.scrollTo(0, y);
       await new Promise((resolve) => globalThis.setTimeout(resolve, 50));
-    }
+      await scrollFrom(y + step);
+    };
+    await scrollFrom(0);
     win.scrollTo(0, 0);
     for (const image of doc.images) image.loading = "eager";
   });

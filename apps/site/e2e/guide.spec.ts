@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { HOW_TO_PAGES } from "../src/content/how-to-pages";
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { howToLocales } from "./how-to-paths";
+import { forEachSequentially } from "./sequential";
 import { translatedTitle } from "./translated-guide";
 
 for (const locale of LOCALES) {
@@ -179,7 +180,7 @@ for (const locale of LOCALES) {
       }
       const links = block.locator("a");
       await expect(links).toHaveCount(slugs.length);
-      for (const [index, slug] of slugs.entries()) {
+      await forEachSequentially(slugs.entries(), async ([index, slug]) => {
         const target = howToLocales(slug).includes(locale)
           ? localePath(locale, `/how-to/${slug}/`)
           : `/how-to/${slug}/`;
@@ -188,7 +189,7 @@ for (const locale of LOCALES) {
         expect(box?.height).toBeGreaterThanOrEqual(44);
         const response = await request.get(target);
         expect(response.status()).toBe(200);
-      }
+      });
     });
   }
 }

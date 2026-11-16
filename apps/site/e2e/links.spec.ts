@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
+import { forEachSequentially } from "./sequential";
 
 const SERVER_HANDLED_PATHS = new Set(["/install", "/reviews"]);
 
@@ -26,9 +27,9 @@ for (const path of PATHS) {
     }
     expect(targets.size).toBeGreaterThan(0);
 
-    for (const target of targets) {
+    await forEachSequentially(targets, async (target) => {
       const response = await request.get(target, { maxRedirects: 0 });
       expect(response.status(), target).toBe(200);
-    }
+    });
   });
 }

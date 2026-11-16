@@ -1,6 +1,7 @@
 import { GOODBYE_REASON_IDS, goodbyePath } from "../src/i18n/goodbye";
 import { languageTag, LOCALES } from "../src/i18n/locales";
 import { expect, test } from "./fixtures";
+import { forEachSequentially } from "./sequential";
 
 const QUERY = "?lang=es&v=2.2.0&ae=1";
 
@@ -24,13 +25,13 @@ for (const locale of LOCALES) {
       await expect(buttons).toHaveCount(7);
       const region = page.locator("[data-goodbye-reply-region]");
       await expect(region).toHaveAttribute("aria-live", "polite");
-      for (const reason of GOODBYE_REASON_IDS) {
+      await forEachSequentially(GOODBYE_REASON_IDS, async (reason) => {
         const button = page.locator(`button[data-umami-event-reason="${reason}"]`);
         await expect(button).toBeVisible();
         await button.click();
         await expect(button).toHaveAttribute("aria-pressed", "true");
         await expect(region.locator(`[data-reply="${reason}"]`)).toBeVisible();
-      }
+      });
     });
 
     test("reinstall goes through the tagged install redirect", async ({ page }) => {
@@ -99,9 +100,9 @@ test("an unknown lang stays on the English page", async ({ page }) => {
 });
 
 test("the Goodbye page stays out of the llms files", async ({ request }) => {
-  for (const file of ["/llms.txt", "/llms-full.txt"]) {
+  await forEachSequentially(["/llms.txt", "/llms-full.txt"], async (file) => {
     const response = await request.get(file);
     const body = await response.text();
     expect(body).not.toContain("/goodbye/");
-  }
+  });
 });

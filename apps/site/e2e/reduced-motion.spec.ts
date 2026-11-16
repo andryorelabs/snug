@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { hydratedFaq } from "./faq-helpers";
+import { forEachSequentially } from "./sequential";
 import { blockUmami } from "./umami-helpers";
 
 test.use({ reducedMotion: "reduce" });
@@ -96,11 +97,14 @@ test("stats show their final numbers as plain text", async ({ page }) => {
 
 test("how it works journey is static and fully visible", async ({ page }) => {
   await page.goto("/");
-  for (const selector of [".hero-arrow-in", ".hero-arrow-out", ".hero-file"]) {
-    const target = page.locator(`[data-section="how"] ${selector}`);
-    await expect(target).toHaveCSS("animation-name", "none");
-    await expect(target).toHaveCSS("opacity", "1");
-  }
+  await forEachSequentially(
+    [".hero-arrow-in", ".hero-arrow-out", ".hero-file"],
+    async (selector) => {
+      const target = page.locator(`[data-section="how"] ${selector}`);
+      await expect(target).toHaveCSS("animation-name", "none");
+      await expect(target).toHaveCSS("opacity", "1");
+    },
+  );
   const logos = page.locator('[data-section="how"] .hero-logos > *');
   await expect(logos.first()).toHaveCSS("opacity", "1");
 });

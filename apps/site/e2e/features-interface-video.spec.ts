@@ -2,6 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
 import { localePath, LOCALES } from "../src/i18n/locales";
+import { forEachSequentially, indexRange } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
 const PATHS = LOCALES.map((locale) => localePath(locale));
@@ -47,7 +48,7 @@ for (const path of PATHS) {
     await expect(figures).toHaveCount(4);
     const images = page.locator(SHOT_IMAGES);
     await expect(images).toHaveCount(8);
-    for (let index = 0; index < 8; index++) {
+    await forEachSequentially(indexRange(8), async (index) => {
       const image = images.nth(index);
       await expect(image).toHaveAttribute("loading", "lazy");
       await expect(image).toHaveAttribute("width", "1400");
@@ -59,7 +60,7 @@ for (const path of PATHS) {
         .locator("figcaption")
         .textContent();
       expect(alt).not.toBe(caption);
-    }
+    });
 
     await expect(page.locator("[data-video-poster]")).toHaveCount(1);
     await expect(page.locator("iframe")).toHaveCount(0);
@@ -195,20 +196,20 @@ for (const colorScheme of SCHEMES) {
     await expect(visible).toHaveCount(4);
     await expect(hidden).toHaveCount(4);
 
-    for (let index = 0; index < 4; index++) {
+    await forEachSequentially(indexRange(4), async (index) => {
       await visible.nth(index).scrollIntoViewIfNeeded();
       await expect
         .poll(() => visible.nth(index).evaluate((element: HTMLImageElement) => element.currentSrc))
         .not.toBe("");
-    }
+    });
     await page.waitForLoadState("networkidle");
 
     await expect(hidden.first()).toBeHidden();
-    for (let index = 0; index < 4; index++) {
+    await forEachSequentially(indexRange(4), async (index) => {
       expect(
         await hidden.nth(index).evaluate((element: HTMLImageElement) => element.currentSrc),
       ).toBe("");
-    }
+    });
 
     const hiddenUrls = await hidden.evaluateAll((elements) =>
       elements.flatMap((element) =>
@@ -262,7 +263,7 @@ test("showcase shows the first screenshot under reduced motion", async ({ page }
   await expect(section.locator('[data-shot="export"]')).toBeVisible();
   await expect(section.locator('[data-shot="import"]')).toBeHidden();
   const steps = await section.locator("[data-step]").all();
-  for (const step of steps) await expect(step).toBeVisible();
+  await forEachSequentially(steps, (step) => expect(step).toBeVisible());
 });
 
 const SHOWCASE_STEPS = ["export", "import", "autoExport", "popup"] as const;
@@ -297,7 +298,7 @@ test("showcase pins its panel and switches one screenshot per step on scroll", a
         })
         .map((shot) => (shot as HTMLElement).dataset.shot),
     );
-  for (const [index, step] of SHOWCASE_STEPS.entries()) {
+  await forEachSequentially(SHOWCASE_STEPS.entries(), async ([index, step]) => {
     const pinTop = await scrollToShowcaseStep(page, index);
     await expect.poll(visibleShots).toEqual([step]);
     const box = await panel.boundingBox();
@@ -307,7 +308,7 @@ test("showcase pins its panel and switches one screenshot per step on scroll", a
     expect(heading!.y).toBeGreaterThanOrEqual(0);
     expect(shot!.y).toBeGreaterThanOrEqual(0);
     expect(shot!.y + shot!.height).toBeLessThanOrEqual(800);
-  }
+  });
 
   await expect(section.locator('[data-step="popup"] h3')).toHaveCSS("opacity", "1");
   await expect(section.locator('[data-step="autoExport"] h3')).toHaveCSS("opacity", "0.6");
@@ -331,10 +332,10 @@ test("showcase on mobile pins the stage and shows only the active step", async (
         })
         .map((item) => (item as HTMLElement).dataset.step),
     );
-  for (const [index, step] of SHOWCASE_STEPS.entries()) {
+  await forEachSequentially(SHOWCASE_STEPS.entries(), async ([index, step]) => {
     await scrollToShowcaseStep(page, index);
     await expect.poll(visibleSteps).toEqual([step]);
-  }
+  });
 });
 
 test("showcase has no horizontal overflow at 320px", async ({ page }) => {

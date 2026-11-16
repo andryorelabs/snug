@@ -6,6 +6,7 @@ import {
   MIN_TOUCH_TARGET,
   setViewportOrSkip,
 } from "./layout-helpers";
+import { forEachSequentially, indexRange } from "./sequential";
 
 const PATHS = LOCALES.map((locale) => localePath(locale));
 const SWEEP_WIDTHS = [320, 768];
@@ -78,14 +79,14 @@ test.describe("touch targets", () => {
       const targets = page.locator(selector);
       const count = await targets.count();
       expect(count).toBeGreaterThan(0);
-      for (let index = 0; index < count; index++) {
+      await forEachSequentially(indexRange(count), async (index) => {
         const target = targets.nth(index);
         await target.scrollIntoViewIfNeeded();
         const box = await target.boundingBox();
         expect(box, `${label} #${index} has a box`).not.toBeNull();
         expect(box!.height, `${label} #${index} height`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
         expect(box!.width, `${label} #${index} width`).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-      }
+      });
     });
   }
 });

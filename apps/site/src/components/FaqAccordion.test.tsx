@@ -23,21 +23,21 @@ function triggers() {
   ];
 }
 
-async function click(element: HTMLElement) {
-  await act(async () => {
+function click(element: HTMLElement) {
+  act(() => {
     element.click();
   });
 }
 
 describe("FaqAccordion", () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
     const container = document.createElement("div");
     document.body.append(container);
     const root = createRoot(container);
     mounted.container = container;
     mounted.root = root;
-    await act(async () => {
+    act(() => {
       root.render(createElement(FaqAccordion, { entries: ENTRIES }));
     });
   });
@@ -70,18 +70,18 @@ describe("FaqAccordion", () => {
     }
   });
 
-  it("expands on click and collapses on a second click", async () => {
+  it("expands on click and collapses on a second click", () => {
     const [first] = triggers();
-    await click(first as HTMLButtonElement);
+    click(first as HTMLButtonElement);
     expect(first?.getAttribute("aria-expanded")).toBe("true");
-    await click(first as HTMLButtonElement);
+    click(first as HTMLButtonElement);
     expect(first?.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("opens a single entry at a time", async () => {
+  it("opens a single entry at a time", () => {
     const [first, second] = triggers();
-    await click(first as HTMLButtonElement);
-    await click(second as HTMLButtonElement);
+    click(first as HTMLButtonElement);
+    click(second as HTMLButtonElement);
     expect(first?.getAttribute("aria-expanded")).toBe("false");
     expect(second?.getAttribute("aria-expanded")).toBe("true");
   });

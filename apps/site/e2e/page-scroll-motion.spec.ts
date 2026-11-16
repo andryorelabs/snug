@@ -15,13 +15,17 @@ async function scrollThroughPage(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const step = globalThis.innerHeight * 0.6;
     const end = () => globalThis.document.documentElement.scrollHeight - globalThis.innerHeight;
-    for (let top = 0; top < end(); top += step) {
+    const nextFrame = () => new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
+    const scrollFrom = async (top: number): Promise<void> => {
+      if (top >= end()) return;
       globalThis.scrollTo(0, top);
-      await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
-    }
+      await nextFrame();
+      await scrollFrom(top + step);
+    };
+    await scrollFrom(0);
     globalThis.scrollTo(0, end());
-    await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
-    await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
+    await nextFrame();
+    await nextFrame();
   });
 }
 
@@ -121,10 +125,13 @@ async function sampleStatValues(
     };
     const values: number[] = [];
     const startedAt = globalThis.performance.now();
-    while (globalThis.performance.now() - startedAt < windowMs) {
+    const sample = async (): Promise<void> => {
+      if (globalThis.performance.now() - startedAt >= windowMs) return;
       values.push(read().value);
       await new Promise((resolve) => globalThis.requestAnimationFrame(resolve));
-    }
+      await sample();
+    };
+    await sample();
     values.push(read().value);
     return { values, target: read().target };
   }, durationMs);

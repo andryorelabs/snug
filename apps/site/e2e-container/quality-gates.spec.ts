@@ -7,6 +7,7 @@ import { expect, test } from "@playwright/test";
 import { COMPARISON_PATHS } from "../e2e/comparison-paths";
 import { hydratedFaq } from "../e2e/faq-helpers";
 import { HOW_TO_INDEX_PATHS, HOW_TO_PATHS } from "../e2e/how-to-paths";
+import { forEachSequentially } from "../e2e/sequential";
 import { blockUmami, UMAMI_ORIGINS } from "../e2e/umami-helpers";
 import { languageTag, localePath, LOCALES } from "../src/i18n/locales";
 import { UMAMI_COLLECT_ORIGIN, UMAMI_SCRIPT_ORIGIN } from "../src/seo/umami";
@@ -60,11 +61,11 @@ test("/reviews redirects to the store reviews with the UTM tags", async ({ reque
 });
 
 test("no raw store URL remains in the page, JSON-LD or llms.txt", async ({ request }) => {
-  for (const path of ["/", "/llms.txt"]) {
+  await forEachSequentially(["/", "/llms.txt"], async (path) => {
     const response = await request.get(path);
     const body = await response.text();
     expect(body).not.toContain("chromewebstore.google.com");
-  }
+  });
 });
 
 const ALIASES = LOCALES.flatMap((locale) => {
@@ -106,10 +107,10 @@ test("/og/* is cross-origin readable and every other path is not", async ({ requ
   expect(image.status()).toBe(200);
   expect(image.headers()["cross-origin-resource-policy"]).toBe("cross-origin");
 
-  for (const path of ["/", "/llms.txt", "/privacy/", "/nope/"]) {
+  await forEachSequentially(["/", "/llms.txt", "/privacy/", "/nope/"], async (path) => {
     const response = await request.get(path);
     expect(response.headers()["cross-origin-resource-policy"]).toBe("same-origin");
-  }
+  });
 });
 
 for (const path of LOCALE_PATHS) {
@@ -153,7 +154,7 @@ for (const path of [
 }
 
 test("the served CSP allows exactly the Umami script and connect origins", async ({ request }) => {
-  for (const path of ["/", "/privacy/", "/nope/", "/de/nope/"]) {
+  await forEachSequentially(["/", "/privacy/", "/nope/", "/de/nope/"], async (path) => {
     const response = await request.get(path);
     const policy = response.headers()["content-security-policy"] ?? "";
     const origins = policy
@@ -175,11 +176,11 @@ test("the served CSP allows exactly the Umami script and connect origins", async
     expect(directives.find((directive) => directive.startsWith("connect-src "))).toBe(
       `connect-src 'self' ${UMAMI_COLLECT_ORIGIN}`,
     );
-  }
+  });
 });
 
 test("the served CSP allows scripts by hash only", async ({ request }) => {
-  for (const path of ["/", "/privacy/", "/nope/", "/de/nope/"]) {
+  await forEachSequentially(["/", "/privacy/", "/nope/", "/de/nope/"], async (path) => {
     const response = await request.get(path);
     const policy = response.headers()["content-security-policy"] ?? "";
     const scriptSource = policy
@@ -188,7 +189,7 @@ test("the served CSP allows scripts by hash only", async ({ request }) => {
       .find((directive) => directive.startsWith("script-src "));
     expect(scriptSource, path).toMatch(/'sha256-[^']+'/);
     expect(scriptSource, path).not.toContain("'unsafe-inline'");
-  }
+  });
 });
 
 const EXECUTABLE_INLINE_SCRIPT =
@@ -298,11 +299,11 @@ test("og images, favicons and the manifest are cached for a day", async ({ reque
     "/apple-touch-icon.png",
     "/manifest.webmanifest",
   ];
-  for (const path of paths) {
+  await forEachSequentially(paths, async (path) => {
     const response = await request.get(path);
     expect(response.status(), path).toBe(200);
     expect(response.headers()["cache-control"], path).toBe("public, max-age=86400");
-  }
+  });
 });
 
 test("activating the video raises no CSP or Trusted Types violation", async ({ page }) => {
@@ -369,11 +370,11 @@ test("the locale 404 routes are internal", async ({ request }) => {
 });
 
 test("every 404 sends Cache-Control: no-cache", async ({ request }) => {
-  for (const path of ["/nope/", "/ja/nope/"]) {
+  await forEachSequentially(["/nope/", "/ja/nope/"], async (path) => {
     const response = await request.get(path);
     expect(response.status()).toBe(404);
     expect(response.headers()["cache-control"]).toBe("no-cache");
-  }
+  });
 });
 
 test("HSTS includes subdomains and is not preload", async ({ request }) => {
@@ -396,12 +397,12 @@ test("the served sitemap stamps every url with a valid lastmod", async ({ reques
 });
 
 test("the container gzips text and leaves binaries alone", async ({ request }) => {
-  for (const path of ["/", "/llms.txt", "/sitemap.xml"]) {
+  await forEachSequentially(["/", "/llms.txt", "/sitemap.xml"], async (path) => {
     const response = await request.get(path, {
       headers: { "accept-encoding": "gzip" },
     });
     expect(response.headers()["content-encoding"]).toBe("gzip");
-  }
+  });
   const page = await request.get("/");
   const html = await page.text();
   const font = html.match(/\/_astro\/[^"']+\.woff2/)?.[0];

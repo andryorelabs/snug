@@ -3,6 +3,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { localePath, LOCALES } from "../src/i18n/locales";
 import { expect, test } from "./fixtures";
 import { hasFinePointer, linkTabKey, setViewportOrSkip } from "./layout-helpers";
+import { forEachSequentially } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
 const SCHEMES = ["light", "dark"] as const;
@@ -143,12 +144,15 @@ test.describe("hero journey diagram", () => {
   test("the stage is static and fully visible under reduce", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    for (const selector of [".hero-file", ".hero-tree-source", ".hero-tree-target"]) {
-      const target = page.locator(selector).first();
-      await expect(target).toHaveCSS("animation-name", "none");
-      await expect(target).toHaveCSS("opacity", "1");
-      await expect(target).toBeVisible();
-    }
+    await forEachSequentially(
+      [".hero-file", ".hero-tree-source", ".hero-tree-target"],
+      async (selector) => {
+        const target = page.locator(selector).first();
+        await expect(target).toHaveCSS("animation-name", "none");
+        await expect(target).toHaveCSS("opacity", "1");
+        await expect(target).toBeVisible();
+      },
+    );
   });
 
   for (const path of ["/de/", "/ru/"]) {

@@ -13,6 +13,7 @@ import {
   openLanguageMenu,
   setViewportOrSkip,
 } from "./layout-helpers";
+import { forEachSequentially } from "./sequential";
 import { blockUmami, isUmamiOrigin } from "./umami-helpers";
 
 const PATHS = LOCALES.map((locale) => localePath(locale));
@@ -33,9 +34,9 @@ for (const path of PATHS) {
     await expect(liveRow).toHaveCount(1);
     await expect(liveRow.locator("blockquote")).toHaveCount(4);
     await expect(proof.locator('[data-proof-row][aria-hidden="true"]')).toHaveCount(1);
-    for (const caption of REVIEW_AUTHORS) {
+    await forEachSequentially(REVIEW_AUTHORS, async (caption) => {
       await expect(liveRow.locator("figcaption", { hasText: caption })).toHaveCount(1);
-    }
+    });
     await expect(proof.locator('[data-proof="rename-note"]')).toHaveText(/\S/);
 
     await expect(
@@ -247,9 +248,9 @@ test("language menu items are at least 44px tall", async ({ page }) => {
   const links = page.locator(`${MENU} a`);
   await expect(links).toHaveCount(LOCALES.length);
   const items = await links.all();
-  for (const link of items) {
+  await forEachSequentially(items, async (link) => {
     expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-  }
+  });
 });
 
 for (const width of [320, 375, 768, 1240, 1280, 1300, 1400]) {

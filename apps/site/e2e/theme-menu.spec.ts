@@ -3,6 +3,7 @@ import { type Page } from "@playwright/test";
 
 import { expect, test } from "./fixtures";
 import { hydrateHeaderIsland, MIN_TOUCH_TARGET, setViewportOrSkip } from "./layout-helpers";
+import { forEachSequentially, indexRange } from "./sequential";
 
 const WIDTHS = [320, 375, 768, 1280];
 
@@ -85,11 +86,11 @@ for (const width of WIDTHS) {
     await openMenu(page);
     const items = page.getByRole("menuitemradio");
     await expect(items).toHaveCount(3);
-    for (let index = 0; index < 3; index++) {
+    await forEachSequentially(indexRange(3), async (index) => {
       await expect
         .poll(async () => (await items.nth(index).boundingBox())!.height)
         .toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-    }
+    });
     const panel = await page.getByRole("menu").boundingBox();
     expect(panel!.x).toBeGreaterThanOrEqual(0);
     expect(panel!.x + panel!.width).toBeLessThanOrEqual(width);
