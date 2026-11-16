@@ -6,7 +6,10 @@ import type { RuleTester } from "oxlint/plugins-dev";
  * `.mjs` import without one.
  */
 declare const localPlugin: {
-  rules: Record<"no-non-doc-comments", Parameters<RuleTester["run"]>[1]>;
+  rules: Record<
+    "no-non-doc-comments" | "no-unawaited-async-matcher" | "require-description",
+    Parameters<RuleTester["run"]>[1]
+  >;
 };
 
 export default localPlugin;
