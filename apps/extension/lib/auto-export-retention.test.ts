@@ -66,9 +66,9 @@ function mockDownloadsCleanup(missingFileIds: number[] = [], foreignIds: number[
       byExtensionId: foreignIds.includes(id) ? "some-other-extension" : browser.runtime.id,
     },
   ]);
-  browser.downloads.search = search as unknown as typeof browser.downloads.search;
+  Reflect.set(browser.downloads, "search", search);
   browser.downloads.removeFile = removeFile;
-  browser.downloads.erase = erase as unknown as typeof browser.downloads.erase;
+  Reflect.set(browser.downloads, "erase", erase);
   return { removeFile, erase, search };
 }
 
@@ -177,14 +177,14 @@ describe("applyRetention", () => {
     await recordRun(1, [1, 2]);
     await recordRun(2, [3]);
     await recordRun(3, [4]);
-    browser.permissions.contains = vi.fn(async () => false);
+    browser.permissions.contains = vi.fn<() => Promise<boolean>>(() => Promise.resolve(false));
 
     await expect(applyRetention(1)).resolves.toBeUndefined();
 
     expect(removeFile).not.toHaveBeenCalled();
     expect(await autoExportRunsStore.getValue()).toEqual(runsOf([1, 2], [3], [4]));
 
-    browser.permissions.contains = vi.fn(async () => true);
+    browser.permissions.contains = vi.fn<() => Promise<boolean>>(() => Promise.resolve(true));
     await applyRetention(1);
 
     expect(removeFile.mock.calls.map(([id]) => id)).toEqual([1, 2, 3]);

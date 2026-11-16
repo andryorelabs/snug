@@ -13,7 +13,7 @@ import {
 import type { ExtendedBookmarkTreeNode } from "./types";
 
 vi.mock("./export-all-bookmarks", () => ({
-  triggerDownload: vi.fn(),
+  triggerDownload: vi.fn<(...arguments_: unknown[]) => void>(),
 }));
 
 const downloadMock = vi.mocked(triggerDownload);
@@ -175,7 +175,7 @@ describe("runImport", () => {
       downloadMock.mockImplementationOnce(() => {
         throw new Error("blocked");
       });
-      vi.spyOn(console, "error").mockImplementation(() => {});
+      vi.spyOn(console, "error").mockReturnValue(undefined);
 
       await runImport(SINGLE_ROOT_JSON, "application/json", "restore-replace");
 

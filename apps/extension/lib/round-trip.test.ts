@@ -144,7 +144,7 @@ describe("round trip: JSON", () => {
 
     expect(collectUrls(getFakeBookmarksRoot())).toEqual(originalUrls);
     const mobile = getFakeBookmarksRoot().children?.find((n) => n.id === "3");
-    expect(collectUrls(mobile | undefined)).toEqual(["https://mobile.example"]);
+    expect(collectUrls(mobile)).toEqual(["https://mobile.example"]);
   });
 
   it("export (hideOtherBookmarks) -> import (restore-merge) restores each bookmark under its original root", async () => {

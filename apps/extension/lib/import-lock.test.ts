@@ -7,7 +7,7 @@ import { readLatestSafetySnapshot } from "./safety-snapshot";
 import { resetFakeBookmarks } from "./testing/fake-bookmarks";
 
 vi.mock("./offscreen-download", () => ({
-  downloadViaOffscreenDocument: vi.fn(async () => 1),
+  downloadViaOffscreenDocument: vi.fn<() => Promise<number>>(() => Promise.resolve(1)),
 }));
 
 const CSV = "title,url\nA,https://a.example/\n";
