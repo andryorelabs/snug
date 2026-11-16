@@ -8,10 +8,10 @@ first.
 - [`main.json`](main.json): the ruleset on the default branch, which only
   accepts promotions from `develop`.
 - [`tags.json`](tags.json): the ruleset on `v*` tags.
-- The table below: every other repository setting this project depends on.
+- [`../repo-settings.json`](../repo-settings.json): every other repository setting this project depends on.
 
 `scripts/repo-settings/check.ts` reads the live repository through `gh api` (GET
-requests only) and compares it with these files. It prints one line per
+requests only) and compares it with these files and with `repo-settings.json`. It prints one line per
 difference and exits non-zero when there is any:
 
 ```sh
@@ -82,41 +82,36 @@ gh api --method POST repos/andryorelabs/snug/rulesets --input .github/rulesets/t
 
 ## Expected settings
 
-The check reads this table: the first cell is the path of the value in the live
-output, the second is its expected JSON value. Keep both in backticks.
+[`../repo-settings.json`](../repo-settings.json) is read by the check. Each key
+of `settings` is the dotted path of a value in the live output and its value is
+the expected JSON value. `minimumCounts` gives the minimum length of a live
+list: at least five `topics`. The `description` equals the one-line description
+in [`docs/brand/copy.md`](../../docs/brand/copy.md); a test keeps them equal.
 
-| Setting                                                        | Expected     | Meaning                                 |
-| -------------------------------------------------------------- | ------------ | --------------------------------------- |
-| `allow_squash_merge`                                           | `true`       | Squash merging is allowed               |
-| `allow_merge_commit`                                           | `true`       | Merge commits are on, for promotions    |
-| `allow_rebase_merge`                                           | `false`      | Rebase merging is off                   |
-| `squash_merge_commit_title`                                    | `"PR_TITLE"` | The squash commit title is the PR title |
-| `squash_merge_commit_message`                                  | `"PR_BODY"`  | The squash commit body is the PR body   |
-| `merge_commit_title`                                           | `"PR_TITLE"` | The merge commit title is the PR title  |
-| `merge_commit_message`                                         | `"PR_BODY"`  | The merge commit body is the PR body    |
-| `delete_branch_on_merge`                                       | `true`       | Head branches are deleted on merge      |
-| `allow_auto_merge`                                             | `true`       | Auto-merge is available                 |
-| `allow_update_branch`                                          | `true`       | PRs offer "Update branch"               |
-| `has_wiki`                                                     | `false`      | The wiki is off                         |
-| `has_projects`                                                 | `false`      | Projects are off                        |
-| `has_discussions`                                              | `false`      | Discussions are off                     |
-| `security_and_analysis.secret_scanning.status`                 | `"enabled"`  | Secret scanning is on                   |
-| `security_and_analysis.secret_scanning_push_protection.status` | `"enabled"`  | Push protection is on                   |
-| `security_and_analysis.dependabot_security_updates.status`     | `"enabled"`  | Dependabot security updates are on      |
-| `vulnerability_alerts.enabled`                                 | `true`       | Dependabot alerts are on                |
-| `private_vulnerability_reporting.enabled`                      | `true`       | Private vulnerability reporting is on   |
+These values are not fields of the repository object. The check fills them from
+their own endpoints, listed under "Read back" below:
 
-`vulnerability_alerts.enabled` and `private_vulnerability_reporting.enabled` are
-not fields of the repository object. The check fills them from their own
-endpoints, listed under "Read back" below.
+- `vulnerability_alerts.enabled`
+- `private_vulnerability_reporting.enabled`
+- `workflow_permissions` (the default `GITHUB_TOKEN` permissions)
+- `fork_pr_contributor_approval` (who needs approval to run a fork pull request)
+- `code_scanning_default_setup` (`not-configured`, because CodeQL runs from
+  `.github/workflows/codeql.yml`)
+
+The social preview image has no read endpoint, so the check cannot verify it.
+Set it by hand under Settings, General, Social preview, with the image from
+`docs/brand/og`.
 
 ### Read back
 
 ```sh
 gh api repos/andryorelabs/snug \
-  --jq '{allow_squash_merge, allow_merge_commit, allow_rebase_merge, squash_merge_commit_title, squash_merge_commit_message, merge_commit_title, merge_commit_message, delete_branch_on_merge, allow_auto_merge, allow_update_branch, has_wiki, has_projects, has_discussions, security_and_analysis}'
+  --jq '{description, homepage, topics, default_branch, allow_squash_merge, allow_merge_commit, allow_rebase_merge, squash_merge_commit_title, squash_merge_commit_message, merge_commit_title, merge_commit_message, delete_branch_on_merge, allow_auto_merge, allow_update_branch, has_wiki, has_projects, has_discussions, security_and_analysis}'
 
 gh api repos/andryorelabs/snug/private-vulnerability-reporting
+gh api repos/andryorelabs/snug/actions/permissions/workflow
+gh api repos/andryorelabs/snug/actions/permissions/fork-pr-contributor-approval
+gh api repos/andryorelabs/snug/code-scanning/default-setup
 
 # Answers 204 when Dependabot alerts are on, 404 when they are off.
 gh api repos/andryorelabs/snug/vulnerability-alerts --silent
@@ -155,6 +150,16 @@ Dependabot alerts, then Dependabot security updates (alerts must be on first):
 ```sh
 gh api --method PUT repos/andryorelabs/snug/vulnerability-alerts
 gh api --method PUT repos/andryorelabs/snug/automated-security-fixes
+```
+
+Read-only default `GITHUB_TOKEN` and approval for every external fork pull
+request:
+
+```sh
+gh api --method PUT repos/andryorelabs/snug/actions/permissions/workflow \
+  -f default_workflow_permissions=read
+gh api --method PUT repos/andryorelabs/snug/actions/permissions/fork-pr-contributor-approval \
+  -f approval_policy=all_external_contributors
 ```
 
 Private vulnerability reporting:

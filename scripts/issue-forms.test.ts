@@ -126,6 +126,26 @@ describe("issue forms", () => {
   });
 });
 
+describe("labels applied by issue forms", () => {
+  const declaredLabels = asArray(parse(readGithubFile("labels.yml")))
+    .filter((label) => isRecord(label))
+    .map((label) => String(label["name"]));
+
+  test.each(ISSUE_FORM_FILES)("%s applies only labels declared in labels.yml", (file) => {
+    const form: unknown = parse(readGithubFile(`ISSUE_TEMPLATE/${file}`));
+    const applied = asArray(isRecord(form) ? form["labels"] : []).map(String);
+
+    expect(applied.filter((label) => !declaredLabels.includes(label))).toEqual([]);
+  });
+
+  test("labels.yml declares the three labels the standard adds and an Area label", () => {
+    expect(declaredLabels).toEqual(
+      expect.arrayContaining(["Status: Needs Decision", "Resolution: Invalid", "security"]),
+    );
+    expect(declaredLabels.some((label) => label.startsWith("Area: "))).toBe(true);
+  });
+});
+
 describe("issue template config.yml", () => {
   test("turns blank issues off", () => {
     expect(isRecord(config) && config["blank_issues_enabled"]).toBe(false);
