@@ -1,13 +1,20 @@
 # Architecture decision records
 
 The rules for writing, editing and replacing ADRs are in
-[`AGENTS.md`](../../AGENTS.md#architecture-decision-records).
+[`AGENTS.md`](../../AGENTS.md#adrs).
 `adr-invariants.test.ts` enforces them and that this index lists every ADR.
 
-To add one, take the next number, write the file, and add a row below.
+To add one, copy [`0000-template.md`](0000-template.md), take the next number,
+write the file, and add a row below.
+
+Numbers 0032 to 0034 are intentionally unused: they were reserved for decisions
+of the standard v1 adoption that were folded into
+[0035](0035-adopt-andryorelabs-standard-v1.md), so the sequence jumps from 0031
+to 0035. A gap in the numbering is never a missing file.
 
 | Number | Title                                                                                                                                           | Status     | Superseded or amended by |
 | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------ |
+| 0000   | [Template](0000-template.md)                                                                                                                    | Proposed   | -                        |
 | 0001   | [Public repo security posture](0001-public-repo-security-posture.md)                                                                            | Accepted   | 0004 (partly)            |
 | 0002   | [TSDoc-only code comments](0002-tsdoc-only-code-comments.md)                                                                                    | Accepted   | 0028 (partly)            |
 | 0003   | [E2E against the built extension](0003-e2e-against-built-extension.md)                                                                          | Accepted   | -                        |

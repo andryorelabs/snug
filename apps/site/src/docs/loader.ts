@@ -12,6 +12,10 @@ const WATCHED_FILES = new Set(
   PUBLISHED_SOURCES.map((source) => path.join(REPOSITORY_ROOT, source.sourcePath)),
 );
 
+function isChangelogEntry(entryId: string): boolean {
+  return entryId === "changelog" || entryId.endsWith("/changelog");
+}
+
 async function fillStore(context: LoaderContext): Promise<void> {
   const entries = loadLocalizedCatalog();
   context.store.clear();
@@ -25,6 +29,9 @@ async function fillStore(context: LoaderContext): Promise<void> {
         editUrl: entry.editUrl,
         translationStatus: entry.status,
         englishPath: entry.englishPath,
+        ...(isChangelogEntry(entry.id) && {
+          tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 2 },
+        }),
       },
     });
     const rendered = await context.renderMarkdown(entry.body);

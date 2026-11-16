@@ -20,7 +20,7 @@ Stack rules live next to the code they govern, and apply on top of this file:
   (`@snug/site`), reusing `@workspace/ui`.
 - [`apps/video/AGENTS.md`](apps/video/AGENTS.md) — the Remotion promo video.
 
-The code map is [`docs/architecture.md`](docs/architecture.md). Skills stay in
+The code map is [`docs/architecture.md`](docs/architecture.md), with a short agent map in [`docs/agents/codebase.md`](docs/agents/codebase.md). Skills stay in
 the root `.claude/skills`.
 
 ## Running scripts
@@ -63,14 +63,14 @@ Each rule is a recorded decision; read its ADR before changing it.
 - CI runs on GitHub-hosted runners, with an optional routed runner for light
   jobs
   ([ADR 0031](docs/adr/0031-github-hosted-ci-with-sharded-e2e-and-optional-blacksmith-runner.md)).
-- The repository conforms to the andryorelabs standard v1, with its N-A list
+- The repository conforms to the andryorelabs standard v2, with its N-A list
   recorded in [ADR 0035](docs/adr/0035-adopt-andryorelabs-standard-v1.md).
 - Snug keeps its own palette, type and voice; only the maker credit is shared
   ([ADR 0036](docs/adr/0036-brand-kit-and-maker-credit.md)).
 - AI crawlers follow the robots policy
   ([ADR 0038](docs/adr/0038-ai-crawler-robots-policy.md)).
 
-## Architecture decision records
+## ADRs
 
 A new ADR must add its row to [`docs/adr/README.md`](docs/adr/README.md);
 `docs/adr/adr-invariants.test.ts` fails when an ADR is missing from the index.
@@ -109,7 +109,7 @@ file-wide or project-wide:
    (`eslint-disable-next-line` in `.astro`) on the exact offending line. Never a
    file-level or project-level disable.
 
-## Quirks and gotchas
+## Quirks
 
 - Extension rules (WXT, MV3, `fakeBrowser`, i18n key parity across locales) live
   in [`apps/extension/AGENTS.md`](apps/extension/AGENTS.md).

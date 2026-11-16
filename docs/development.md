@@ -5,7 +5,7 @@ Snug is a bun-workspaces monorepo orchestrated by Turborepo (see
 repo root. Paths in this page are relative to the root unless they start with
 `apps/` or `packages/`.
 
-The repository follows the andryorelabs engineering standard v1
+The repository follows the andryorelabs engineering standard v2
 ([ADR 0035](adr/0035-adopt-andryorelabs-standard-v1.md)). The standards live in
 [aokit's `docs/standards`](https://github.com/andryorelabs/aokit/tree/main/docs/standards),
 and the brand and credit rules shared across the repositories live in

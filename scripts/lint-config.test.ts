@@ -14,7 +14,7 @@ interface RestyleOptions {
 }
 
 function restyleContracts(entry: unknown): unknown {
-  if (!Array.isArray(entry)) throw new Error("no-restyle has no options");
+  if (!Array.isArray(entry)) throw new TypeError("no-restyle has no options");
   return (entry[1] as RestyleOptions).contracts;
 }
 

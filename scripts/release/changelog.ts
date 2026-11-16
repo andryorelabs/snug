@@ -1,5 +1,6 @@
 const SECTION_HEADING = /^## \[/;
 const SUBSECTION_HEADING = /^### /;
+const GROUP_HEADING = /^### (?:Added|Changed|Fixed)\s*$/;
 const LINK_DEFINITION = /^\[[^\]]+\]:\s/;
 const UNRELEASED_HEADING = /^## \[Unreleased\]\s*$/i;
 const UNRELEASED_LINK = /^\[Unreleased\]: (\S+)\/compare\/v(\S+)\.\.\.HEAD\s*$/i;
@@ -120,6 +121,20 @@ export function cutRelease(changelog: string, version: string, isoDate: string):
   if (items.length === 0) {
     throw new ChangelogError(
       'The "## [Unreleased]" section of CHANGELOG.md has no entries to release',
+    );
+  }
+  const firstLine = body.find((line) => hasContent(line)) ?? "";
+  if (!SUBSECTION_HEADING.test(firstLine)) {
+    throw new ChangelogError(
+      'Entries under "## [Unreleased]" must sit under a "### Added", "### Changed" or "### Fixed" heading',
+    );
+  }
+  const unknownGroup = body.find(
+    (line) => SUBSECTION_HEADING.test(line) && !GROUP_HEADING.test(line),
+  );
+  if (unknownGroup !== undefined) {
+    throw new ChangelogError(
+      `"${unknownGroup.trim()}" is not a changelog group; use "### Added", "### Changed" or "### Fixed"`,
     );
   }
   const afterUnreleased = lines.slice(unreleased.headingIndex + 1 + unreleased.body.length);
