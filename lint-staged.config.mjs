@@ -1,5 +1,5 @@
 const config = {
-  "*.{js,jsx,ts,tsx,mjs}": [
+  "*.{js,jsx,ts,tsx,mjs,mts,cts}": [
     "bunx --bun oxfmt --no-error-on-unmatched-pattern",
     "bunx oxlint --type-aware --deny-warnings --fix",
   ],
@@ -8,7 +8,9 @@ const config = {
     "bunx oxlint --type-aware --deny-warnings --fix",
     "bunx eslint --fix --max-warnings=0 --no-warn-ignored",
   ],
-  "*.{json,json5,md,mdx,css,scss,yml,yaml}": ["bunx --bun oxfmt --no-error-on-unmatched-pattern"],
+  "*.{json,jsonc,json5,md,mdx,css,scss,yml,yaml}": [
+    "bunx --bun oxfmt --no-error-on-unmatched-pattern",
+  ],
 };
 
 export default config;

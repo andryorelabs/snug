@@ -1,5 +1,4 @@
 import { readFile } from "node:fs/promises";
-
 import type { Page } from "@playwright/test";
 
 import en from "../locales/en.json" with { type: "json" };

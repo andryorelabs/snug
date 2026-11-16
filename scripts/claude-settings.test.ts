@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from "node:fs";
-
 import { describe, expect, test } from "vitest";
 
 interface HookEntry {

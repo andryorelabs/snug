@@ -12,7 +12,6 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
-
 import ts from "typescript";
 
 import {

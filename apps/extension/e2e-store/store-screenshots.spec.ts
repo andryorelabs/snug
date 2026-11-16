@@ -1,6 +1,5 @@
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-
 import { chromium } from "@playwright/test";
 import type { Page } from "@playwright/test";
 

@@ -1,4 +1,4 @@
-import type { RuleTester } from 'oxlint/plugins-dev'
+import type { RuleTester } from "oxlint/plugins-dev";
 
 /**
  * Type declaration for `./index.mjs`, needed because this module is imported
@@ -6,7 +6,7 @@ import type { RuleTester } from 'oxlint/plugins-dev'
  * `.mjs` import without one.
  */
 declare const localPlugin: {
-  rules: Record<'no-non-doc-comments', Parameters<RuleTester['run']>[1]>
-}
+  rules: Record<"no-non-doc-comments", Parameters<RuleTester["run"]>[1]>;
+};
 
-export default localPlugin
+export default localPlugin;

@@ -9,6 +9,8 @@
     "types": ["bun"]
   },
   "include": [
+    "*.ts",
+    "*.mts",
     "scripts",
     "eslint-rules",
     "oxlint-plugins",

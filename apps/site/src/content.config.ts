@@ -1,6 +1,6 @@
-import { docsSchema, i18nSchema } from "@astrojs/starlight/schema";
 import { z } from "astro/zod";
 import { defineCollection } from "astro:content";
+import { docsSchema, i18nSchema } from "@astrojs/starlight/schema";
 
 import { chromeTranslationsLoader } from "./docs/chrome-translations";
 import { catalogLoader } from "./docs/loader";

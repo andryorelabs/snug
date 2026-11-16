@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-
 import type { AstroIntegration } from "astro";
 
 /**

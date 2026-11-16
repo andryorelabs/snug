@@ -1,5 +1,4 @@
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
-
 import type { Reporter, TestCase, TestResult, TestStep } from "@playwright/test/reporter";
 
 interface TestTiming {

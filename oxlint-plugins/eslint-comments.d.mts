@@ -1,4 +1,4 @@
-import type { RuleTester } from 'oxlint/plugins-dev'
+import type { RuleTester } from "oxlint/plugins-dev";
 
 /**
  * Type declaration for `./eslint-comments.mjs`, needed because this module is
@@ -7,14 +7,14 @@ import type { RuleTester } from 'oxlint/plugins-dev'
  */
 declare const eslintCommentsPlugin: {
   rules: Record<
-    | 'disable-enable-pair'
-    | 'no-aggregating-enable'
-    | 'no-duplicate-disable'
-    | 'no-unlimited-disable'
-    | 'no-unused-enable'
-    | 'require-description',
-    Parameters<RuleTester['run']>[1]
-  >
-}
+    | "disable-enable-pair"
+    | "no-aggregating-enable"
+    | "no-duplicate-disable"
+    | "no-unlimited-disable"
+    | "no-unused-enable"
+    | "require-description",
+    Parameters<RuleTester["run"]>[1]
+  >;
+};
 
-export default eslintCommentsPlugin
+export default eslintCommentsPlugin;

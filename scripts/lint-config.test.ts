@@ -1,7 +1,6 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
 import { describe, expect, test } from "vitest";
 
 import { shadcnNoRestyleContracts } from "../lint-policy.mjs";
