@@ -37,6 +37,12 @@ export const COVERAGE_EXCEPTIONS: Readonly<
       lines: 86,
       functions: 80,
     },
+    "scripts/commit-msg.ts": {
+      reason:
+        "Hook entry point whose main block only runs under Bun when git invokes the hook; the policy function is fully tested.",
+      lines: 62,
+      functions: 33,
+    },
     "scripts/flaky-summary.ts": {
       reason:
         "Tooling script whose remaining uncovered lines are process, filesystem or network failure paths that only run in CI or against real repositories.",
@@ -72,6 +78,12 @@ export const COVERAGE_EXCEPTIONS: Readonly<
         "Tooling script whose remaining uncovered lines are process, filesystem or network failure paths that only run in CI or against real repositories.",
       lines: 76,
       functions: 85,
+    },
+    "scripts/pre-commit.ts": {
+      reason:
+        "Hook entry point whose main block only runs under Bun when git invokes the hook; the policy function is fully tested.",
+      lines: 53,
+      functions: 50,
     },
     "scripts/pre-push.ts": {
       reason:

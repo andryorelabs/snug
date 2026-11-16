@@ -280,7 +280,7 @@ function isNotFoundError(error: unknown): boolean {
  * @param endpoint The API path to read.
  * @returns The parsed body, or a not-found answer on HTTP 404.
  */
-function requestWithGitHubCli(endpoint: string): ApiResponse {
+export function requestWithGitHubCli(endpoint: string): ApiResponse {
   try {
     const output = execFileSync("gh", ["api", endpoint], {
       encoding: "utf8",

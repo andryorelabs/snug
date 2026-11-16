@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process"; // oxlint-disable-line unicorn-js/name-replacements -- the filename env-docs.test.ts is the contract other tickets and docs reference
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
