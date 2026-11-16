@@ -66,6 +66,8 @@ export async function exportToCSV(options: ExportCSVOptions): Promise<string> {
 
   ticker.finish();
 
+  if (rows.length === 0) return "";
+
   const fields: string[] = ["title", "url", "folder"];
   if (includeDateAdded) fields.push("dateAdded");
   if (includeDateLastUsed) fields.push("dateLastUsed");
