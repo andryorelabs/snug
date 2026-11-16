@@ -1,12 +1,12 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
-export type RasterSpec = {
+export interface RasterSpec {
   path: string;
   width: number;
   height: number;
   maxBytes: number;
-};
+}
 
 export const MARK_PNG_SIZES = [16, 32, 48, 64, 128, 256, 512] as const;
 export const FAVICON_SIZES = [16, 32, 48] as const;
@@ -31,7 +31,8 @@ export const rasterSpecs: readonly RasterSpec[] = [
   })),
   ...["cover", "cover-light", "social-preview"].map((name) => ({
     path: `og/${name}.png`,
-    ...COVER_SIZE,
+    width: COVER_SIZE.width,
+    height: COVER_SIZE.height,
     maxBytes: COVER_MAX_BYTES,
   })),
 ];

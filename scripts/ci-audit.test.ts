@@ -5,7 +5,9 @@ import {
   fromApiJob,
   formatTable,
   median,
+  parseApiJobLine,
   parseArguments,
+  parseRunIds,
   summarizeJob,
   type AuditJob,
 } from "./ci-audit";
@@ -142,5 +144,26 @@ describe("fromApiJob", () => {
       setupSeconds: 20,
       runSeconds: 100,
     });
+  });
+});
+
+describe("parseRunIds", () => {
+  it("lists the run ids in order", () => {
+    expect(parseRunIds('[{"databaseId":3},{"databaseId":1}]')).toEqual([3, 1]);
+  });
+
+  it("rejects entries without a numeric id", () => {
+    expect(() => parseRunIds('[{"databaseId":"3"}]')).toThrow("expected shape");
+    expect(() => parseRunIds("{}")).toThrow("expected shape");
+  });
+});
+
+describe("parseApiJobLine", () => {
+  it("returns the job object", () => {
+    expect(parseApiJobLine('{"name":"Quality"}')).toEqual({ name: "Quality" });
+  });
+
+  it("rejects a line that is not a named job", () => {
+    expect(() => parseApiJobLine("[]")).toThrow("expected shape");
   });
 });

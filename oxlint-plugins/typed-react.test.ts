@@ -119,23 +119,26 @@ function contextFor(filename: string) {
     physicalFilename: filename,
     options: [],
     sourceCode: {},
-    report: vi.fn(),
+    report: vi.fn<() => void>(),
   };
+}
+
+function createRuleFor(filename: string): unknown {
+  if (rule.create === undefined) throw new Error("the rule has no create function");
+  return Reflect.apply(rule.create, rule, [contextFor(filename)]);
 }
 
 describe("typed-react program resolution", () => {
   it("fails loudly when no tsconfig covers the file", () => {
     const filename = writeFixture("plain/uncovered/orphan.tsx", "export {}\n");
-    expect(() => rule.create?.(contextFor(filename) as never)).toThrow(
-      /not part of the TypeScript program/,
-    );
+    expect(() => createRuleFor(filename)).toThrow(/not part of the TypeScript program/);
   });
 
   it("fails loudly when there is no tsconfig above the file", () => {
     const bareRoot = fs.mkdtempSync(path.join(os.tmpdir(), "typed-react-bare-"));
     const filename = path.join(bareRoot, "bare.tsx");
     fs.writeFileSync(filename, "export {}\n");
-    expect(() => rule.create?.(contextFor(filename) as never)).toThrow(/no tsconfig\.json found/);
+    expect(() => createRuleFor(filename)).toThrow(/no tsconfig\.json found/);
     fs.rmSync(bareRoot, { recursive: true, force: true });
   });
 });

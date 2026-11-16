@@ -32,22 +32,26 @@ function oklchToLinearRgb(lightness: number, chroma: number, hue: number): Rgb {
   ];
 }
 
+function clampChannel(channel: number): number {
+  return Math.min(1, Math.max(0, channel));
+}
+
 function toLinearRgb(value: string): Rgb {
   const oklch = OKLCH_PATTERN.exec(value);
   if (oklch) {
     const [, lightness, chroma, hue] = oklch;
-    return oklchToLinearRgb(Number(lightness), Number(chroma), Number(hue)).map((channel) =>
-      Math.min(1, Math.max(0, channel)),
-    ) as Rgb;
+    const [red, green, blue] = oklchToLinearRgb(Number(lightness), Number(chroma), Number(hue));
+    return [clampChannel(red), clampChannel(green), clampChannel(blue)];
   }
   const hex = /^#([\da-f]{6})$/i.exec(value)?.[1];
   if (hex === undefined) {
     throw new Error(`Unsupported color: ${value}`);
   }
-  return [0, 2, 4].map((start) => {
+  const hexChannel = (start: number): number => {
     const srgb = Number.parseInt(hex.slice(start, start + 2), 16) / 255;
     return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4;
-  }) as Rgb;
+  };
+  return [hexChannel(0), hexChannel(2), hexChannel(4)];
 }
 
 function luminance([red, green, blue]: Rgb): number {

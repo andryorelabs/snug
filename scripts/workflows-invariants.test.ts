@@ -2047,3 +2047,13 @@ describe("upload-artifact pins", () => {
     ]);
   });
 });
+
+describe("parseWorkflow", () => {
+  test("returns the parsed mapping", () => {
+    expect(parseWorkflow("on: push\n").on).toBe("push");
+  });
+
+  test("rejects a document that is not a mapping", () => {
+    expect(() => parseWorkflow("- a\n- b\n")).toThrow("YAML mapping");
+  });
+});

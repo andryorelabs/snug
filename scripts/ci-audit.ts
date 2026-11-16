@@ -216,11 +216,30 @@ function isApiJob(value: unknown): value is ApiJob {
   return isRecord(value) && typeof value.name === "string";
 }
 
+/**
+ * Reads the `gh run list --json databaseId` output.
+ * @param text - The raw JSON array.
+ * @returns The run ids, in listing order.
+ * @throws {TypeError} When the text is not an array of runs with numeric ids.
+ */
+export function parseRunIds(text: string): number[] {
+  return parseJsonAs(text, isRunList).map(({ databaseId }) => databaseId);
+}
+
+/**
+ * Reads one job line printed by `gh api ... --jq .jobs[]`.
+ * @param line - One JSON object.
+ * @returns The job as the REST API returned it.
+ * @throws {TypeError} When the line is not a job object.
+ */
+export function parseApiJobLine(line: string): ApiJob {
+  return parseJsonAs(line, isApiJob);
+}
+
 function main(): void {
   const { runs, workflow } = parseArguments(process.argv.slice(2));
-  const listed = parseJsonAs(
+  const listed = parseRunIds(
     runGh(["run", "list", "--workflow", workflow, "--limit", String(runs), "--json", "databaseId"]),
-    isRunList,
   );
   const jobs = listed.flatMap(({ databaseId }) =>
     runGh([
@@ -232,7 +251,7 @@ function main(): void {
     ])
       .split("\n")
       .filter((line) => line.trim() !== "")
-      .map((line) => fromApiJob(parseJsonAs(line, isApiJob))),
+      .map((line) => fromApiJob(parseApiJobLine(line))),
   );
   console.log(`${workflow}: ${listed.length} runs`);
   console.log(formatTable(aggregateJobs(jobs)));
