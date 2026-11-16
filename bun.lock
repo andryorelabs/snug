@@ -123,7 +123,7 @@
         "@snug/extension": "workspace:*",
         "@types/bun": "catalog:",
         "@types/react": "catalog:",
-        "@types/web": "0.0.361",
+        "@types/web": "0.0.362",
         "@vitest/coverage-v8": "^5.0.4",
         "typescript": "catalog:",
         "vitest": "catalog:",
@@ -1284,7 +1284,7 @@
 
     "@types/validate-npm-package-name": ["@types/validate-npm-package-name@4.0.2", "", {}, "sha512-lrpDziQipxCEeK5kWxvljWYhUvOiB2A9izZd9B2AFarYAkqZshb4lPbRs7zKEic6eGtH8V/2qJW+dPp9OtF6bw=="],
 
-    "@types/web": ["@types/web@0.0.361", "", {}, "sha512-xFf36IlbsLnUTAiUI9ghceqXdz1sc8EphOLdafxqIpcBK/j35kzEaS3KWLUDMEaS7viuwRVJyukBQDo4FlJ/VQ=="],
+    "@types/web": ["@types/web@0.0.362", "", {}, "sha512-86QBzRRq7/84a3g/F/CwWVsO2zhBcCEGwlt1rUWB6eN11tKftKEI4hK5cgiWnRUnBrgcLwoiI5K7fSzu9jjxBw=="],
 
     "@typescript-eslint/eslint-plugin": ["@typescript-eslint/eslint-plugin@8.72.1", "", { "dependencies": { "@eslint-community/regexpp": "^4.12.2", "@typescript-eslint/scope-manager": "8.72.1", "@typescript-eslint/type-utils": "8.72.1", "@typescript-eslint/utils": "8.72.1", "@typescript-eslint/visitor-keys": "8.72.1", "ignore": "^7.0.5", "natural-compare": "^1.4.0", "ts-api-utils": "^2.5.0" }, "peerDependencies": { "@typescript-eslint/parser": "^8.72.1", "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-5CokTWXpmbylfFabsbvHC0CAw3XLaGnoa+nFJX5FR592h/LoZsENUE6p/rg5xvkKrFEXz6pYmgI29AgXc2N3BQ=="],
 
