@@ -241,7 +241,7 @@ function main(): void {
   const listed = parseRunIds(
     runGh(["run", "list", "--workflow", workflow, "--limit", String(runs), "--json", "databaseId"]),
   );
-  const jobs = listed.flatMap(({ databaseId }) =>
+  const jobs = listed.flatMap((databaseId) =>
     runGh([
       "api",
       ["repos", "{owner}", "{repo}", "actions", "runs", databaseId, "jobs"].join("/"),
