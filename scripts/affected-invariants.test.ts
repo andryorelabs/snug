@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { isRecord, parseJsonAs } from "./json-guards";
 const repositoryRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const QUERY = 'query { affectedTasks(base: "HEAD") { items { fullName } } }';
@@ -21,9 +22,11 @@ function affectedTasksFor(probeRelativePath: string): string[] {
       cwd: repositoryRoot,
       encoding: "utf8",
     });
-    const parsed = JSON.parse(output) as {
-      data: { affectedTasks: { items: { fullName: string }[] } };
-    };
+    const parsed = parseJsonAs(
+      output,
+      (value): value is { data: { affectedTasks: { items: { fullName: string }[] } } } =>
+        isRecord(value) && isRecord(value.data),
+    );
     return parsed.data.affectedTasks.items.map((item) => item.fullName);
   } finally {
     rmSync(probePath, { force: true });

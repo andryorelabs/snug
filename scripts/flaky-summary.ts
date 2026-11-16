@@ -1,5 +1,7 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 
+import { isRecord, parseJsonAs } from "./json-guards.ts";
+
 const USAGE = "Usage: bun scripts/flaky-summary.ts <label>=<report.json>...";
 
 interface ReportResult {
@@ -26,6 +28,10 @@ interface ReportSuite {
  */
 export interface PlaywrightReport {
   readonly suites?: readonly ReportSuite[];
+}
+
+function isPlaywrightReport(value: unknown): value is PlaywrightReport {
+  return isRecord(value);
 }
 
 function collectSpecs(suite: ReportSuite): ReportSpec[] {
@@ -77,7 +83,7 @@ function summarizeReport(label: string, reportPath: string): string {
   if (!existsSync(reportPath)) {
     return `### Flaky tests: ${label}\n\nNo report: the suite did not run.\n`;
   }
-  const report = JSON.parse(readFileSync(reportPath, "utf8")) as PlaywrightReport;
+  const report = parseJsonAs(readFileSync(reportPath, "utf8"), isPlaywrightReport);
   return renderSummary(label, findFlakyTests(report));
 }
 
@@ -108,7 +114,9 @@ export function runFlakySummary(
 
 if (import.meta.main) {
   process.exitCode = runFlakySummary(process.argv.slice(2), {
-    summaryPath: process.env["GITHUB_STEP_SUMMARY"],
-    log: (text) => console.log(text),
+    summaryPath: process.env.GITHUB_STEP_SUMMARY,
+    log: (text) => {
+      console.log(text);
+    },
   });
 }

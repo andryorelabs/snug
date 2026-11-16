@@ -6,14 +6,31 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
+import { isRecord, parseJsonAs, parseJsonRecord } from "./json-guards";
 import {
   listWorkflowFiles,
+  parseWorkflow,
   readWorkflow,
   readWorkflowText,
   type Workflow,
   type WorkflowJob,
   type WorkflowStep,
 } from "./workflow-files";
+
+function memberOf(value: unknown, key: string): unknown {
+  return isRecord(value) ? value[key] : undefined;
+}
+
+function parseYamlAs<TDocument>(
+  text: string,
+  isDocument: (value: unknown) => value is TDocument,
+): TDocument {
+  const document: unknown = parse(text);
+  if (!isDocument(document)) {
+    throw new TypeError("YAML document does not have the expected shape");
+  }
+  return document;
+}
 
 const FULL_SHA_PATTERN = /^[\da-f]{40}$/;
 const VERSION_COMMENT_PATTERN = /#\s*v\d+\.\d+\.\d+\s*$/;
@@ -179,7 +196,9 @@ function findRunnerViolations(
   source: string,
   routedJobs: readonly string[] = ROUTED_JOBS,
 ): string[] {
-  const { jobs } = parse(source) as { jobs?: Record<string, RunnerJob> };
+  const { jobs } = parseYamlAs(source, (value): value is { jobs?: Record<string, RunnerJob> } =>
+    isRecord(value),
+  );
   const violations: string[] = [];
   const jobEntries = Object.entries(jobs ?? {});
   for (const [jobName, job] of jobEntries) {
@@ -219,10 +238,7 @@ function triggerNames(workflow: Workflow): string[] {
 
 function hasConcurrencyGroup(workflow: Workflow): boolean {
   const concurrency = workflow.concurrency;
-  const group =
-    typeof concurrency === "string"
-      ? concurrency
-      : (concurrency as { group?: unknown } | null | undefined)?.group;
+  const group = typeof concurrency === "string" ? concurrency : memberOf(concurrency, "group");
   return typeof group === "string" && group.trim() !== "";
 }
 
@@ -322,9 +338,7 @@ function unwrapExpression(value: string): string {
  * `github.ref != '<ref>'` terms.
  */
 function doesCancelInProgress(workflow: Workflow, gitReference: string): boolean {
-  const setting = (workflow.concurrency as { "cancel-in-progress"?: unknown } | undefined)?.[
-    "cancel-in-progress"
-  ];
+  const setting = memberOf(workflow.concurrency, "cancel-in-progress");
   if (typeof setting === "boolean") return setting;
   return unwrapExpression(String(setting))
     .split("&&")
@@ -417,8 +431,8 @@ function isCacheStep(step: WorkflowStep): boolean {
 }
 
 function cachedPaths(step: WorkflowStep): string[] {
-  const path = step.with?.path;
-  const lines = typeof path === "string" ? path.split("\n") : [];
+  const cachePath = step.with?.path;
+  const lines = typeof cachePath === "string" ? cachePath.split("\n") : [];
   return lines.map((line) => line.trim()).filter((line) => line !== "");
 }
 
@@ -475,7 +489,7 @@ function findViolations(workflow: Workflow, source: string): string[] {
     if (
       step.uses?.startsWith("actions/checkout@") &&
       step.with?.["fetch-depth"] === 0 &&
-      step.with["filter"] !== "blob:none"
+      step.with.filter !== "blob:none"
     ) {
       violations.push("full-history actions/checkout without filter: blob:none");
     }
@@ -797,10 +811,10 @@ const REPOSITORY_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)
  * @returns The script names; empty when the manifest has none.
  */
 function readPackageScripts(directory: string): ReadonlySet<string> {
-  const manifest = JSON.parse(
+  const manifest = parseJsonRecord(
     readFileSync(path.join(REPOSITORY_ROOT, directory, "package.json"), "utf8"),
-  ) as { scripts?: Record<string, unknown> };
-  return new Set(Object.keys(manifest.scripts ?? {}));
+  );
+  return new Set(Object.keys(isRecord(manifest.scripts) ? manifest.scripts : {}));
 }
 
 /**
@@ -856,7 +870,7 @@ interface RunCommand {
 function listRunCommands(workflow: Workflow): RunCommand[] {
   return collectSteps(workflow).flatMap((step) => {
     const stepName = step.name ?? step.uses ?? "run";
-    const workingDirectory = (step as { "working-directory"?: unknown })["working-directory"];
+    const workingDirectory = memberOf(step, "working-directory");
     let directory = typeof workingDirectory === "string" ? workingDirectory : ".";
     return listStepCommands(step.run ?? "").map((command) => {
       const entry = { step: stepName, command, directory };
@@ -911,7 +925,7 @@ describe("steps call scripts (F10)", () => {
   });
 
   test("the rule rejects a raw tool, an unknown script and a script outside its workspace", () => {
-    const broken = parse(`
+    const broken = parseWorkflow(`
 jobs:
   lint:
     steps:
@@ -925,7 +939,7 @@ jobs:
         run: |
           bun run test:visual
           bun run release
-`) as Workflow;
+`);
 
     expect(findStepScriptProblems(broken, [])).toEqual([
       'step "Lint" runs `bunx oxlint .` directly',
@@ -970,7 +984,7 @@ jobs:
       - run: echo \${{ github.head_ref }}
       - run: bunx turbo run check --affected
 `;
-  const violations = findViolations(parse(broken) as Workflow, broken);
+  const violations = findViolations(parseWorkflow(broken), broken);
 
   test.each([
     "uses the pull_request_target trigger",
@@ -1127,9 +1141,9 @@ describe("ci.yml", () => {
     });
 
     test("the rules reject a cancelling main, a lint on promotion and a strict aggregate", () => {
-      const cancelling = parse(
+      const cancelling = parseWorkflow(
         "concurrency:\n  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}\n",
-      ) as Workflow;
+      );
       expect(doesCancelInProgress(cancelling, "refs/heads/develop")).toBe(true);
       expect(doesSkipPromotionPullRequests("github.event_name == 'pull_request'")).toBe(false);
       expect(
@@ -1142,22 +1156,22 @@ describe("ci.yml", () => {
           `github.event_name == 'pull_request' && ${PROMOTION_EXCLUSION}`,
         ),
       ).toBe(true);
-      const strict = parse(`
+      const strict = parseWorkflow(`
 jobs:
   ci-passed:
     if: always()
     steps:
       - env:
           FAILED: \${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'skipped') }}
-`) as Workflow;
+`);
       expect(doesTolerateSkippedNeeds(strict.jobs?.["ci-passed"])).toBe(false);
-      const gated = parse(`
+      const gated = parseWorkflow(`
 jobs:
   ci-passed:
     steps:
       - env:
           FAILED: \${{ contains(needs.*.result, 'failure') }}
-`) as Workflow;
+`);
       expect(doesTolerateSkippedNeeds(gated.jobs?.["ci-passed"])).toBe(false);
     });
   });
@@ -1170,11 +1184,12 @@ jobs:
   });
 
   test("runs both linters through the quality job", () => {
-    const quality = workflow.jobs?.["quality"];
+    const quality = workflow.jobs?.quality;
     expect(quality?.steps?.some((step) => step.run?.includes("check:root"))).toBe(true);
-    const rootScripts = JSON.parse(
+    const rootScripts = parseJsonAs(
       readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-    ) as { scripts: Record<string, string> };
+      (value): value is { scripts: Record<string, string> } => isRecord(value),
+    );
     for (const script of ["lint", "lint:fix"]) {
       const command = rootScripts.scripts[script] ?? "";
       expect(command).toContain("oxlint");
@@ -1197,17 +1212,19 @@ jobs:
       expect(rootScripts.scripts[shard]).toMatch(/^oxlint --type-aware --deny-warnings(?: |$)/);
       expect((rootScripts.scripts["lint:oxlint"] ?? "").split(/\s+/)).toContain(shard);
     }
-    expect(rootScripts.scripts["lint"]).toContain("bun run lint:oxlint");
+    expect(rootScripts.scripts.lint).toContain("bun run lint:oxlint");
     expect(rootScripts.scripts["check:root"]).toContain("bun run lint");
   });
 
   test("lint-staged runs eslint only on staged astro files", async () => {
     const lintStagedUrl = new URL("../lint-staged.config.mjs", import.meta.url);
-    const { default: lintStaged } = (await import(lintStagedUrl.href)) as {
-      default: Record<string, string[]>;
-    };
+    const lintStagedModule: unknown = await import(lintStagedUrl.href);
+    const lintStaged = memberOf(lintStagedModule, "default");
+    if (!isRecord(lintStaged)) throw new TypeError("lint-staged config must export an object");
     for (const [glob, commands] of Object.entries(lintStaged)) {
-      const isEslintCommand = commands.some((command) => /\beslint\b/.test(command));
+      const isEslintCommand =
+        Array.isArray(commands) &&
+        commands.some((command) => typeof command === "string" && /\beslint\b/.test(command));
       expect(isEslintCommand).toBe(glob === "*.astro");
     }
   });
@@ -1218,7 +1235,7 @@ jobs:
       if (!job.steps?.some((step) => step.run?.includes("turbo run"))) continue;
       const checkout = job.steps.find((step) => step.uses?.startsWith("actions/checkout@"));
       expect(checkout?.with?.["fetch-depth"]).toBe(0);
-      expect(checkout?.with?.["filter"]).toBe("blob:none");
+      expect(checkout?.with?.filter).toBe("blob:none");
     }
   });
 
@@ -1271,9 +1288,10 @@ jobs:
   );
 
   describe("build-site builds the site once per run", () => {
-    const { jobs } = parse(readWorkflowText("ci.yml")) as {
-      jobs?: Record<string, ShardedJob & SiteBuildJob>;
-    };
+    const { jobs } = parseYamlAs(
+      readWorkflowText("ci.yml"),
+      (value): value is { jobs?: Record<string, ShardedJob & SiteBuildJob> } => isRecord(value),
+    );
     const buildSite = jobs?.["build-site"];
     const buildSiteSteps = buildSite?.steps ?? [];
     const buildStep = buildSiteSteps.find((step) => step.run?.includes("turbo run build"));
@@ -1322,16 +1340,14 @@ jobs:
       expect(e2eRun?.run).toMatch(
         /bunx turbo run test:e2e:prebuilt "\$\{affected_flags\[@\]\}" -- --shard="\$\{SHARD\}\/4"/,
       );
-      const siteScripts = (
-        JSON.parse(readFileSync(new URL("../apps/site/package.json", import.meta.url), "utf8")) as {
-          scripts: Record<string, string>;
-        }
+      const siteScripts = parseJsonAs(
+        readFileSync(new URL("../apps/site/package.json", import.meta.url), "utf8"),
+        (value): value is { scripts: Record<string, string> } => isRecord(value),
       ).scripts;
       expect(siteScripts["test:e2e:prebuilt"]).toBe("playwright test");
-      const turboTasks = (
-        JSON.parse(readFileSync(new URL("../turbo.json", import.meta.url), "utf8")) as {
-          tasks: Record<string, unknown>;
-        }
+      const turboTasks = parseJsonAs(
+        readFileSync(new URL("../turbo.json", import.meta.url), "utf8"),
+        (value): value is { tasks: Record<string, unknown> } => isRecord(value),
       ).tasks;
       expect(turboTasks["test:e2e:prebuilt"]).toEqual(turboTasks["test:e2e"]);
     });
@@ -1362,9 +1378,10 @@ jobs:
   });
 
   describe("sharded e2e", () => {
-    const { jobs } = parse(readWorkflowText("ci.yml")) as {
-      jobs?: Record<string, ShardedJob>;
-    };
+    const { jobs } = parseYamlAs(
+      readWorkflowText("ci.yml"),
+      (value): value is { jobs?: Record<string, ShardedJob> } => isRecord(value),
+    );
     const e2e = jobs?.e2e;
     const e2eRun = e2e?.steps?.find((step) => step.run?.includes("turbo run test:e2e"));
 
@@ -1469,9 +1486,10 @@ describe("site-quality.yml", () => {
     'export PATH="${GITHUB_WORKSPACE}/.github/scripts/prebuilt-site-image:${PATH}"';
 
   const workflow = readWorkflow("site-quality.yml");
-  const { jobs } = parse(readWorkflowText("site-quality.yml")) as {
-    jobs?: Record<string, ShardedJob & SiteBuildJob>;
-  };
+  const { jobs } = parseYamlAs(
+    readWorkflowText("site-quality.yml"),
+    (value): value is { jobs?: Record<string, ShardedJob & SiteBuildJob> } => isRecord(value),
+  );
 
   function stepsOf(jobName: string): readonly WorkflowStep[] {
     return jobs?.[jobName]?.steps ?? [];
@@ -1635,7 +1653,7 @@ describe("site-quality.yml", () => {
         const result = spawnSync("bash", [path.join(shimDirectory, "docker"), ...shimArguments], {
           encoding: "utf8",
           env: {
-            PATH: [shimDirectory, fakeBin, process.env["PATH"] ?? ""].join(":"),
+            PATH: [shimDirectory, fakeBin, process.env.PATH ?? ""].join(":"),
             CALLS: log,
             ...environment,
           },
@@ -1717,7 +1735,7 @@ jobs:
           languages: javascript-typescript
       - uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
 `;
-    expect(findCodeqlViolations(parse(broken) as Workflow)).toEqual([
+    expect(findCodeqlViolations(parseWorkflow(broken))).toEqual([
       "the language matrix does not scan javascript-typescript",
       "the language matrix does not scan actions",
       "init does not take its language from the matrix",
@@ -1726,9 +1744,7 @@ jobs:
   });
 
   test("the rule rejects a workflow that never initializes CodeQL", () => {
-    expect(findCodeqlViolations(parse("jobs: {}") as Workflow)).toEqual([
-      "no job initializes CodeQL",
-    ]);
+    expect(findCodeqlViolations(parseWorkflow("jobs: {}"))).toEqual(["no job initializes CodeQL"]);
   });
 
   test("runs on a push to main and to develop (ADR 0040)", () => {
@@ -1796,9 +1812,10 @@ describe("main-only workflows never trigger or run on develop (ADR 0040)", () =>
   );
 
   test("release.yml runs on version tags only", () => {
-    const trigger = readWorkflow("release.yml").on as {
-      push?: Record<string, unknown>;
-    };
+    const trigger = parseYamlAs(
+      readWorkflowText("release.yml"),
+      (value): value is { on: { push?: Record<string, unknown> } } => isRecord(value),
+    ).on;
     expect(Object.keys(trigger)).toEqual(["push"]);
     expect(trigger.push).toEqual({ tags: ["v*"] });
   });
@@ -1811,9 +1828,9 @@ describe("main-only workflows never trigger or run on develop (ADR 0040)", () =>
   );
 
   test("the rule reads the push branches a workflow lists", () => {
-    const widened = parse("on:\n  push:\n    branches: [main, develop]\n") as Workflow;
+    const widened = parseWorkflow("on:\n  push:\n    branches: [main, develop]\n");
     expect(pushBranches(widened)).not.toEqual(["main"]);
-    expect(pushBranches(parse("on: push\n") as Workflow)).toEqual([]);
+    expect(pushBranches(parseWorkflow("on: push\n"))).toEqual([]);
   });
 });
 
@@ -1839,7 +1856,7 @@ jobs:
     if: \${{ github.ref == 'refs/heads/main' && github.actor != 'renovate[bot]' }}
     steps: []
 `;
-    expect(findJobsNotGuardedToMain(parse(broken) as Workflow)).toEqual([
+    expect(findJobsNotGuardedToMain(parseWorkflow(broken))).toEqual([
       "unguarded",
       "dispatch-escape",
       "other-ref",
@@ -1855,7 +1872,7 @@ describe("labels.yml", () => {
   });
 
   test("the rule rejects a workflow without workflow_dispatch", () => {
-    const broken = parse("on:\n  push:\n  pull_request:\n") as Workflow;
+    const broken = parseWorkflow("on:\n  push:\n  pull_request:\n");
     expect(missingTriggers(broken, ["workflow_dispatch"])).toEqual(["workflow_dispatch"]);
   });
 
@@ -1944,7 +1961,7 @@ describe("browserstack.yml nightly failure reporting", () => {
 
   test("only the two reporting jobs may write issues", () => {
     const writers = Object.entries(workflow.jobs ?? {})
-      .filter(([, job]) => (job.permissions as { issues?: string } | undefined)?.issues === "write")
+      .filter(([, job]) => memberOf(job.permissions, "issues") === "write")
       .map(([name]) => name);
     expect(writers).toEqual(["report-failure", "resolve-failure"]);
   });
@@ -1963,7 +1980,7 @@ describe("browserstack.yml nightly failure reporting", () => {
 
   test("the ci.yml caller grants the issues permission the reporting jobs request", () => {
     const caller = readWorkflow("ci.yml").jobs?.browserstack;
-    expect((caller?.permissions as { issues?: string } | undefined)?.issues).toBe("write");
+    expect(memberOf(caller?.permissions, "issues")).toBe("write");
   });
 
   test("the failure report opts out of the implicit success() gate", () => {

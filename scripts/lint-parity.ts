@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { isRecord, parseJsonAs } from "./json-guards.ts";
+
 /**
  * Pseudo rule id for "unused disable directive" reports: ESLint emits them
  * without a rule id, Oxlint with an empty code, and both are enforced.
@@ -199,8 +201,8 @@ export function parseAccepted(text: string): AcceptedEntry[] {
   if (!Array.isArray(document)) {
     throw new TypeError("accepted.json must be a JSON array");
   }
-  return (document as unknown[]).map((raw, index) => {
-    const entry = raw as Partial<AcceptedEntry> | null;
+  return document.map((raw: unknown, index) => {
+    const entry: Partial<Record<keyof AcceptedEntry, unknown>> | null = isRecord(raw) ? raw : null;
     const label = `accepted.json entry ${String(index)}`;
     if (typeof entry?.file !== "string" || typeof entry.rule !== "string") {
       throw new TypeError(`${label} needs string "file" and "rule"`);
@@ -211,12 +213,9 @@ export function parseAccepted(text: string): AcceptedEntry[] {
     if (entry.line !== undefined && typeof entry.line !== "number") {
       throw new TypeError(`${label} "line" must be a number`);
     }
-    return {
-      file: entry.file,
-      ...(entry.line !== undefined && { line: entry.line }),
-      rule: entry.rule,
-      reason: entry.reason,
-    };
+    const accepted: AcceptedEntry = { file: entry.file, rule: entry.rule, reason: entry.reason };
+    if (entry.line !== undefined) accepted.line = entry.line;
+    return accepted;
   });
 }
 
@@ -411,6 +410,14 @@ interface EslintResult {
   }[];
 }
 
+function isEslintResults(value: unknown): value is EslintResult[] {
+  return Array.isArray(value) && value.every((result) => isRecord(result));
+}
+
+function isOxlintOutput(value: unknown): value is OxlintOutput {
+  return isRecord(value) && Array.isArray(value.diagnostics);
+}
+
 /**
  * Reads `eslint --format json` output. Fatal messages (parse errors) throw so
  * a file ESLint could not analyse never silently drops out of the comparison.
@@ -420,7 +427,7 @@ interface EslintResult {
  * @returns The findings, one per reported rule.
  */
 export function parseEslintJson(text: string, root: string, prefix: string): Finding[] {
-  const results = JSON.parse(text) as EslintResult[];
+  const results = parseJsonAs(text, isEslintResults);
   const fatal = results.flatMap((result) =>
     result.messages
       .filter((message) => message.fatal === true)
@@ -461,7 +468,7 @@ interface OxlintOutput {
  * @returns The findings, one per diagnostic.
  */
 export function parseOxlintJson(text: string, root: string, prefix: string): Finding[] {
-  const output = JSON.parse(text) as OxlintOutput;
+  const output = parseJsonAs(text, isOxlintOutput);
   return output.diagnostics.map((diagnostic) => {
     const relative = path.isAbsolute(diagnostic.filename)
       ? path.relative(root, diagnostic.filename)
@@ -624,7 +631,7 @@ export function renderReport(input: ReportInput): string {
   const typeAwareRows = input.sections.flatMap((result) =>
     summarizeByRule(result)
       .filter((row) => input.typeAwareRules.has(row.rule))
-      .map((row) => ({ ...row, rule: `${result.name}: ${row.rule}` })),
+      .map((row) => Object.assign({}, row, { rule: `${result.name}: ${row.rule}` })),
   );
   const problemLines =
     input.problems.length > 0
@@ -725,7 +732,7 @@ export function checkOxlintShards(scripts: Readonly<Record<string, string>>): st
   }
   const shards = names.map((name) => parseOxlintShard(name, scripts[name] ?? ""));
   const problems = shards.flatMap((shard) => shard.problems);
-  const roots = shards.flatMap((shard) => (shard.root === undefined ? [] : shard.root));
+  const roots = shards.flatMap((shard) => shard.root ?? []);
   const catchAllCount = shards.length - roots.length;
   if (catchAllCount !== 1) {
     problems.push(

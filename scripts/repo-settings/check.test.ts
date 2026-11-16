@@ -154,7 +154,7 @@ describe("diffSettings", () => {
   test("names a ruleset missing live and a live ruleset without a file", () => {
     const live = buildLive({ ruleset: { name: "legacy" } });
 
-    expect(diffSettings(live, expected).map(({ path }) => path)).toEqual([
+    expect(diffSettings(live, expected).map((difference) => difference.path)).toEqual([
       "rulesets/main.json",
       "rulesets/legacy (live only)",
     ]);
@@ -182,8 +182,8 @@ describe("parseSettings", () => {
 describe("each metadata and security setting", () => {
   const committed = readExpectedSettings();
   const matching = {
-    description: committed.settings["description"],
-    homepage: committed.settings["homepage"],
+    description: committed.settings.description,
+    homepage: committed.settings.homepage,
     topics: ["a", "b", "c", "d", "e"],
     default_branch: "main",
     workflow_permissions: { default_workflow_permissions: "read" },
@@ -246,7 +246,7 @@ describe("each metadata and security setting", () => {
     const copy = readFileSync(path.join(import.meta.dirname, "../../docs/brand/copy.md"), "utf8");
     const row = copy.split("\n").find((line) => line.startsWith("| One-line description"));
 
-    expect(row?.split("|", 3)[2]?.trim()).toBe(committed.settings["description"]);
+    expect(row?.split("|", 3)[2]?.trim()).toBe(committed.settings.description);
   });
 
   test("the committed minimum is five topics", () => {

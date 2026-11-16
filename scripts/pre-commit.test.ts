@@ -13,7 +13,7 @@ function dependencies(
 ): PreCommitDependencies {
   return {
     listStagedPaths: () => stagedPaths,
-    log: vi.fn(),
+    log: vi.fn<(message: string) => void>(),
     ...overrides,
   };
 }
@@ -36,7 +36,7 @@ describe("findKeyFiles", () => {
 
 describe("runPreCommit", () => {
   it("refuses the commit when a .env.keys file is staged", () => {
-    const log = vi.fn();
+    const log = vi.fn<(message: string) => void>();
 
     const exitCode = runPreCommit(dependencies(["README.md", "apps/site/.env.keys"], { log }));
 

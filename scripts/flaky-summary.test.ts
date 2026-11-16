@@ -90,7 +90,7 @@ describe("runFlakySummary", () => {
 
     const code = runFlakySummary([`Extension E2E=${reportPath}`], {
       summaryPath,
-      log: () => {},
+      log: () => void 0,
     });
 
     expect(code).toBe(0);
@@ -104,7 +104,7 @@ describe("runFlakySummary", () => {
 
     const code = runFlakySummary([`Site E2E=${path.join(directory, "missing.json")}`], {
       summaryPath,
-      log: () => {},
+      log: () => void 0,
     });
 
     expect(code).toBe(0);

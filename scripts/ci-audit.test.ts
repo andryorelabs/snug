@@ -87,9 +87,9 @@ describe("parseArguments", () => {
   });
 
   it("rejects bad input", () => {
-    expect(() => parseArguments(["--runs", "0"])).toThrow();
-    expect(() => parseArguments(["--runs"])).toThrow();
-    expect(() => parseArguments(["--nope"])).toThrow();
+    expect(() => parseArguments(["--runs", "0"])).toThrow("--runs must be a positive integer");
+    expect(() => parseArguments(["--runs"])).toThrow("Missing value for --runs");
+    expect(() => parseArguments(["--nope"])).toThrow("Unknown argument: --nope");
   });
 });
 

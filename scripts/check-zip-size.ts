@@ -10,10 +10,10 @@ import path from "node:path";
  */
 export const ZIP_SIZE_BUDGET_BYTES = 706_009;
 
-export type ZipSizeVerdict = {
+export interface ZipSizeVerdict {
   isWithinBudget: boolean;
   summaryLine: string;
-};
+}
 
 /**
  * Compares a zip size against a budget and renders the job-summary line.
@@ -63,7 +63,7 @@ export function runZipSizeCheck(
   environment: Readonly<Record<string, string | undefined>>,
 ): number {
   const outputDirectory = argv[0] ?? "apps/extension/.output";
-  const summaryPath = environment["GITHUB_STEP_SUMMARY"];
+  const summaryPath = environment.GITHUB_STEP_SUMMARY;
   const report = (line: string) => {
     console.log(line);
     if (summaryPath) appendFileSync(summaryPath, `${line}\n`);
