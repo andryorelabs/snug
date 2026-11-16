@@ -1,6 +1,7 @@
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import { plugin as shadcn } from "@shadcn/lint";
 import astro from "eslint-plugin-astro";
+// oxlint-disable-next-line import/no-named-as-default -- CommonJS plugin default import, which is how the package ships
 import jsdoc from "eslint-plugin-jsdoc";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
@@ -25,6 +26,7 @@ import { shadcnNoRestyleContracts } from "./lint-policy.mjs";
  * declaration's name).
  */
 const jsdocRules = {
+  // oxlint-disable-next-line import/no-named-as-default-member -- CommonJS plugin default import, which is how the package ships
   ...jsdoc.configs["flat/recommended-typescript-error"].rules,
   "jsdoc/require-jsdoc": "off",
   "jsdoc/informative-docs": "error",
@@ -59,6 +61,7 @@ const commentPolicyRules = {
 };
 
 const eslintConfig = defineConfig([
+  // oxlint-disable-next-line import/no-named-as-default-member -- CommonJS plugin default import, which is how the package ships
   astro.configs["flat/base"],
   {
     files: ["**/*.astro"],
@@ -137,6 +140,7 @@ const eslintConfig = defineConfig([
      */
     files: ["**/*.astro"],
     plugins: {
+      // oxlint-disable-next-line import/no-named-as-default-member -- CommonJS plugin default import, which is how the package ships
       jsdoc: jsdoc.configs["flat/recommended-typescript-error"].plugins.jsdoc,
       local: localPlugin,
       "@eslint-community/eslint-comments": eslintComments,

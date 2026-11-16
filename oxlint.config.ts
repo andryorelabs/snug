@@ -1069,9 +1069,12 @@ const baselineRules: DummyRuleMap = {
 };
 
 /**
- * `no-unsafe-*` rules switched off for `.mjs` files: they are plain
- * JavaScript with no type annotations, so every value is `any` and the rules
- * can only report the language, not a defect.
+ * Type-aware rules switched off for `.mjs` files: they are plain JavaScript
+ * with no type annotations, so every value is `any` and `no-unsafe-*` can only
+ * report the language. `no-unnecessary-condition` and
+ * `no-confusing-void-expression` also stay off because, without annotations,
+ * the checker infers `undefined` for variables assigned inside closures and
+ * `void` for helpers whose results the plugins read (`typed-react.mjs`).
  */
 const untypedModuleRules: DummyRuleMap = {
   "typescript/no-unsafe-argument": "off",
@@ -1147,8 +1150,8 @@ export default defineConfig({
     ...reactHooksRules,
   },
   overrides: [
-    ...overrides,
     { files: ["**/*"], rules: baselineRules },
+    ...overrides,
     { files: ["**/*"], rules: { "react/react-in-jsx-scope": "off" } },
     { files: ["**/*.mjs"], rules: untypedModuleRules },
     {
@@ -1171,44 +1174,6 @@ export default defineConfig({
         "react/no-array-index-key": "off",
         "react/no-object-type-as-default-prop": "off",
       },
-    },
-    {
-      /**
-       * Custom listbox, status and image widgets whose ARIA role has no
-       * native element with the same behaviour.
-       */
-      files: [
-        "apps/extension/components/safety-snapshot-card.tsx",
-        "apps/extension/entrypoints/app/app-shell.tsx",
-        "apps/extension/components/time-picker.tsx",
-      ],
-      rules: { "jsx-a11y/prefer-tag-over-role": "off" },
-    },
-    {
-      /**
-       * Default imports of CommonJS plugin packages in the ESLint config are
-       * reported as named-export aliases, which is how those packages ship.
-       */
-      files: ["eslint.config.mjs"],
-      rules: {
-        "import/no-named-as-default": "off",
-        "import/no-named-as-default-member": "off",
-      },
-    },
-    {
-      /**
-       * The YouTube embed needs `allow-scripts` and `allow-same-origin`
-       * together, which the sandbox rule rejects.
-       */
-      files: ["apps/site/src/components/VideoFacade.tsx"],
-      rules: { "react/iframe-missing-sandbox": "off" },
-    },
-    {
-      /**
-       * Ambient declaration whose index signature extends a library type.
-       */
-      files: ["apps/extension/css-custom-properties.d.ts"],
-      rules: { "typescript/consistent-indexed-object-style": "off" },
     },
     {
       files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],

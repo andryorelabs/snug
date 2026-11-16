@@ -55,6 +55,45 @@ function applicableRules(rules: DummyRuleMap): DummyRuleMap {
   );
 }
 
+type OxlintOverrideConfig = NonNullable<OxlintConfig["overrides"]>[number];
+
+/**
+ * Tells whether an override applies to every file.
+ * @param override An entry of the config's `overrides`.
+ * @returns Whether its only glob is `**\/*`.
+ */
+function isCatchAll(override: OxlintOverrideConfig): boolean {
+  return override.files.length === 1 && override.files[0] === "**/*";
+}
+
+/**
+ * Finds baseline rules that a catch-all override sets to something other than
+ * the baseline setting. File-scoped overrides are tuned per path and stay out
+ * of scope: only a repo-wide relaxation breaks the shared baseline.
+ * @param candidate The Oxlint config under test.
+ * @param rules The baseline rules the config must keep.
+ * @returns Each rule and the differing setting a catch-all override gives it.
+ */
+function findRelaxingCatchAlls(
+  candidate: OxlintConfig,
+  rules: DummyRuleMap,
+): { name: string; setting: unknown }[] {
+  const found: { name: string; setting: unknown }[] = [];
+  const overrides = candidate.overrides ?? [];
+  for (const override of overrides) {
+    if (!isCatchAll(override)) {
+      continue;
+    }
+    const overrideRules = Object.entries(override.rules ?? {});
+    for (const [name, setting] of overrideRules) {
+      if (Object.hasOwn(rules, name) && JSON.stringify(setting) !== JSON.stringify(rules[name])) {
+        found.push({ name, setting });
+      }
+    }
+  }
+  return found;
+}
+
 const baselineRules = applicableRules(baseline.rules);
 const baselineTestOverride = baseline.overrides.find((override) =>
   override.plugins.includes("jest"),
@@ -76,16 +115,32 @@ describe("shared Oxlint baseline (E10)", () => {
     }
   });
 
-  it("keeps the baseline rules in the final catch-all override", () => {
-    const catchAll = config.overrides?.find(
-      (override) => override.files.length === 1 && override.files[0] === "**/*",
-    );
+  it("keeps the baseline rules in the first catch-all override", () => {
+    const catchAll = config.overrides?.find((override) => isCatchAll(override));
     for (const [name, setting] of Object.entries(baselineRules)) {
       expect({ name, setting: catchAll?.rules?.[name] }).toEqual({
         name,
         setting,
       });
     }
+  });
+
+  it("lets no later catch-all override relax a baseline rule", () => {
+    expect(findRelaxingCatchAlls(config, baselineRules)).toEqual([]);
+  });
+
+  it("detects a baseline rule relaxed by a later catch-all override", () => {
+    const [firstRule] = Object.keys(baselineRules);
+    const mutated: OxlintConfig = {
+      ...config,
+      overrides: [
+        ...(config.overrides ?? []),
+        { files: ["**/*"], rules: { [firstRule ?? ""]: "off" } },
+      ],
+    };
+    expect(findRelaxingCatchAlls(mutated, baselineRules)).toEqual([
+      { name: firstRule, setting: "off" },
+    ]);
   });
 
   it("sets the baseline test rules at the baseline setting on test files", () => {

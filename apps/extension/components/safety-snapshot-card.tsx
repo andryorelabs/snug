@@ -228,6 +228,7 @@ export function SafetySnapshotCard({ focusTitleOnMount = false }: { focusTitleOn
           )}
 
           {status === "restored" && (
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- role="status" on a component, no native output element applies
             <Alert role="status">
               <AlertDescription>{i18n.t("safetySnapshot_restored")}</AlertDescription>
             </Alert>

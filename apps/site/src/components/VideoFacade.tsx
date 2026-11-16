@@ -61,6 +61,7 @@ export default function VideoFacade({
 
   if (active) {
     return (
+      // oxlint-disable-next-line react/iframe-missing-sandbox -- the YouTube embed needs allow-scripts with allow-same-origin
       <iframe
         ref={frameReference}
         data-video-player

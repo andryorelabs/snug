@@ -4,5 +4,5 @@
 0566e4a97fc7da6f89dce7c1b623b4aaec265043
 # AO-3043: repo-wide reformat with Oxfmt defaults — skip in `git blame`
 68d1aaa540ea91a3e815df550d596559a59fe0b5
-# AO-3204: repo-wide reformat with the aligned Oxfmt config (#338, squash commit) — skip in `git blame`
+# AO-3204: repo-wide reformat with the aligned Oxfmt config (#338, squash commit; it also stages the Oxlint baseline and edits tsconfig.json, and its format-only commit never reached develop) — skip in `git blame`
 979e49b35180272bd650484d412f50dfdf0a9725

@@ -95,6 +95,7 @@ function TimePickerColumn<Value extends number | string>(
     <ScrollArea className="h-56 w-14">
       <div
         ref={listReference}
+        // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox widget with no native equivalent
         role="listbox"
         aria-label={label}
         aria-orientation="vertical"
@@ -106,6 +107,7 @@ function TimePickerColumn<Value extends number | string>(
             <Button
               key={option.value}
               type="button"
+              // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- custom listbox option with button behaviour
               role="option"
               size="sm"
               variant={isSelected ? "default" : "ghost"}
