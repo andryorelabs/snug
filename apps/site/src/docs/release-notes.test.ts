@@ -119,6 +119,17 @@ describe("parseChangelog", () => {
     );
   });
 
+  it("keeps the Added, Changed and Fixed groups in the entry body", () => {
+    const body = "### Added\n\n- a\n\n### Fixed\n\n- b";
+    const [entry] = parseChangelog(`## [1.0.0] - 2024-01-01\n\n${body}\n`);
+    expect(entry?.body).toBe(body);
+  });
+
+  it("throws naming the line for a heading that is not a known group", () => {
+    const source = "## [1.0.0] - 2024-01-01\n\n### Misc\n\n- a\n";
+    expect(() => parseChangelog(source)).toThrow(/line 3: unknown group heading "### Misc"/);
+  });
+
   it("throws for an impossible date", () => {
     expect(() => parseChangelog("## [1.0.0] - 2024-13-45\n")).toThrow(
       /line 1: invalid release date/,
@@ -139,7 +150,7 @@ describe("renderReleaseNotesMarkdown", () => {
     const rendered = renderReleaseNotesMarkdown(entries);
 
     expect(rendered.match(/^## /gm)).toHaveLength(entries.length);
-    expect(rendered).toContain("## 2.1.0\n\n2026-10-08\n\n- Import got");
+    expect(rendered).toContain("## 2.1.0\n\n2026-10-08\n\n### Changed\n\n- Import got");
     for (const entry of entries) expect(rendered).toContain(entry.body);
   });
 });
