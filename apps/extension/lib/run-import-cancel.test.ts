@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { Browser } from "@wxt-dev/browser";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 
 import { ImportCanceledError, type ImportProgress } from "./import-control";
@@ -19,10 +19,10 @@ vi.mock("./offscreen-download", () => ({
 
 const downloadMock = vi.mocked(downloadViaOffscreenDocument);
 
-function fileBookmarks(count: number): ParsedBookmark[] {
+function fileBookmarks(count: number, urlSuffix = ""): ParsedBookmark[] {
   return Array.from({ length: count }, (_, index) => ({
     title: `New ${index}`,
-    url: `https://new.example/${index}`,
+    url: `https://new.example/${index}${urlSuffix}`,
     dateAdded: 0,
   }));
 }
@@ -45,10 +45,7 @@ function jsonFile(count: number): string {
       id: "2",
       title: "Other bookmarks",
       dateAdded: 0,
-      children: fileBookmarks(Math.floor(count / 2)).map((node) => ({
-        ...node,
-        url: `${node.url}-other`,
-      })),
+      children: fileBookmarks(Math.floor(count / 2), "-other"),
     },
   ]);
 }
@@ -313,7 +310,8 @@ describe("runImport cancel", () => {
 
     expect(result.skippedInvalidUrl).toBe(1);
     const bar = (getFakeBookmarksRoot().children ?? [])[0];
-    expect(shapeOf(bar!).children).toEqual([{ title: "Ok", url: "https://ok.example/" }]);
+    assert(bar);
+    expect(shapeOf(bar).children).toEqual([{ title: "Ok", url: "https://ok.example/" }]);
   });
 
   it("leaves everything untouched when canceled before writing starts", async () => {

@@ -18,19 +18,19 @@ beforeEach(() => {
 });
 
 function parse(xml: string): Document {
-  const document_ = new DOMParser().parseFromString(xml, "application/xml");
-  expect(document_.querySelector("parsererror")).toBeNull();
-  return document_;
+  const xmlDocument = new DOMParser().parseFromString(xml, "application/xml");
+  expect(xmlDocument.querySelector("parsererror")).toBeNull();
+  return xmlDocument;
 }
 
 describe("exportToXBEL", () => {
   it("produces a well-formed XBEL 1.0 document for an empty tree", async () => {
     const xml = await exportToXBEL({ selectedBookmarks: null, ...baseOptions });
-    const document_ = parse(xml);
+    const xmlDocument = parse(xml);
 
     expect(xml).toContain("<!DOCTYPE xbel");
-    expect(document_.documentElement.nodeName).toBe("xbel");
-    expect(document_.documentElement.getAttribute("version")).toBe("1.0");
+    expect(xmlDocument.documentElement.nodeName).toBe("xbel");
+    expect(xmlDocument.documentElement.getAttribute("version")).toBe("1.0");
   });
 
   it("nests folders, titles and bookmarks and escapes special characters", async () => {
@@ -62,9 +62,9 @@ describe("exportToXBEL", () => {
       [],
     );
 
-    const document_ = parse(await exportToXBEL({ selectedBookmarks: null, ...baseOptions }));
+    const xmlDocument = parse(await exportToXBEL({ selectedBookmarks: null, ...baseOptions }));
 
-    const folders = [...document_.documentElement.querySelectorAll(":scope > folder > folder")];
+    const folders = [...xmlDocument.documentElement.querySelectorAll(":scope > folder > folder")];
     const tools = folders.find(
       (folder) => folder.querySelector(":scope > title")?.textContent === 'Tools & "Stuff"',
     );
@@ -139,7 +139,7 @@ describe("exportToXBEL", () => {
   });
 
   it("exports only the selection and flattens hidden folders", async () => {
-    const document_ = parse(
+    const xmlDocument = parse(
       await exportToXBEL({
         selectedBookmarks: [
           {
@@ -163,7 +163,7 @@ describe("exportToXBEL", () => {
       }),
     );
 
-    expect(document_.querySelector("folder")).toBeNull();
-    expect(document_.documentElement.querySelectorAll(":scope > bookmark")).toHaveLength(1);
+    expect(xmlDocument.querySelector("folder")).toBeNull();
+    expect(xmlDocument.documentElement.querySelectorAll(":scope > bookmark")).toHaveLength(1);
   });
 });

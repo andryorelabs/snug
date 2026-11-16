@@ -127,8 +127,7 @@ describe("exportToJSON", () => {
     });
 
     const bar = root?.children?.find((n) => n.id === "1");
-    const bookmark = bar?.children?.[0] as ExtendedBookmarkTreeNode;
-    expect(bookmark.dateAdded).toBe(1_700_000_000);
+    expect(bar?.children?.[0]?.dateAdded).toBe(1_700_000_000);
   });
 
   it("exports only the selected bookmarks when provided explicitly", async () => {

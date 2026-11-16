@@ -18,21 +18,21 @@ beforeEach(() => {
 });
 
 function parse(xml: string): Document {
-  const document_ = new DOMParser().parseFromString(xml, "application/xml");
-  expect(document_.querySelector("parsererror")).toBeNull();
-  return document_;
+  const xmlDocument = new DOMParser().parseFromString(xml, "application/xml");
+  expect(xmlDocument.querySelector("parsererror")).toBeNull();
+  return xmlDocument;
 }
 
 describe("exportToOPML", () => {
   it("produces a valid OPML 2.0 skeleton for an empty tree", async () => {
-    const document_ = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
+    const xmlDocument = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
 
-    expect(document_.documentElement.nodeName).toBe("opml");
-    expect(document_.documentElement.getAttribute("version")).toBe("2.0");
-    expect(document_.documentElement.querySelector(":scope > head > title")?.textContent).toBe(
+    expect(xmlDocument.documentElement.nodeName).toBe("opml");
+    expect(xmlDocument.documentElement.getAttribute("version")).toBe("2.0");
+    expect(xmlDocument.documentElement.querySelector(":scope > head > title")?.textContent).toBe(
       "Bookmarks",
     );
-    expect(document_.querySelector("body")).not.toBeNull();
+    expect(xmlDocument.querySelector("body")).not.toBeNull();
   });
 
   it("nests folders and writes link outlines with escaped values", async () => {
@@ -64,9 +64,9 @@ describe("exportToOPML", () => {
       [],
     );
 
-    const document_ = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
+    const xmlDocument = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
 
-    const folder = document_.querySelector(
+    const folder = xmlDocument.querySelector(
       String.raw`body > outline > outline[text="Tools & \"Stuff\""]`,
     );
     expect(folder).not.toBeNull();
@@ -79,7 +79,7 @@ describe("exportToOPML", () => {
   });
 
   it("exports only the selection", async () => {
-    const document_ = parse(
+    const xmlDocument = parse(
       await exportToOPML({
         selectedBookmarks: [
           {
@@ -94,7 +94,7 @@ describe("exportToOPML", () => {
       }),
     );
 
-    const outlines = document_.querySelectorAll("outline");
+    const outlines = xmlDocument.querySelectorAll("outline");
     expect(outlines).toHaveLength(1);
     expect(outlines[0]?.getAttribute("type")).toBe("link");
   });
@@ -113,8 +113,8 @@ describe("exportToOPML", () => {
       [],
     );
 
-    const document_ = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
+    const xmlDocument = parse(await exportToOPML({ selectedBookmarks: null, ...baseOptions }));
 
-    expect(document_.querySelector('outline[type="link"]')?.getAttribute("text")).toBe("ab");
+    expect(xmlDocument.querySelector('outline[type="link"]')?.getAttribute("text")).toBe("ab");
   });
 });

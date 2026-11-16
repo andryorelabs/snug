@@ -200,18 +200,32 @@ describe("preprocessBookmarks orphans with an explicit Other node", () => {
 
 describe("importFromJSON non-string titles", () => {
   it("coerces numeric and null titles instead of failing", async () => {
-    const input = [
+    const numericTitle: ParsedBookmark = {
+      title: "",
+      url: "https://n.example",
+      dateAdded: 0,
+    };
+    const nullTitle: ParsedBookmark = {
+      title: "",
+      url: "https://z.example",
+      dateAdded: 0,
+    };
+    const numericFolder: ParsedBookmark = {
+      title: "",
+      dateAdded: 0,
+      children: [],
+    };
+    Object.assign(numericTitle, { title: 2024 });
+    Object.assign(nullTitle, { title: null });
+    Object.assign(numericFolder, { title: 7 });
+    const input: ParsedBookmark[] = [
       {
         id: "2",
         title: "Other bookmarks",
         dateAdded: 0,
-        children: [
-          { title: 2024, url: "https://n.example", dateAdded: 0 },
-          { title: null, url: "https://z.example", dateAdded: 0 },
-          { title: 7, dateAdded: 0, children: [] },
-        ],
+        children: [numericTitle, nullTitle, numericFolder],
       },
-    ] as unknown as ParsedBookmark[];
+    ];
 
     await expect(importFromJSON(input, "restore-merge")).resolves.toBeDefined();
 

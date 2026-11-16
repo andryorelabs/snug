@@ -176,6 +176,6 @@ describe("importFromCSV", () => {
   });
 
   it("throws when the CSV cannot be parsed", async () => {
-    await expect(importFromCSV('title,url,folder\n"A,https://a.example,')).rejects.toThrow();
+    await expect(importFromCSV('title,url,folder\n"A,https://a.example,')).rejects.toThrow(Error);
   });
 });

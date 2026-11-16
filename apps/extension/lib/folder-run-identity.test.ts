@@ -10,7 +10,7 @@ import { FakeDirectoryHandle } from "./testing/fake-directory-handle";
 const randomUUID = vi.fn<() => string>();
 
 interface FakeRequest<T> {
-  result: T;
+  result: T | undefined;
   error: DOMException | null;
   onsuccess?: () => void;
   onupgradeneeded?: () => void;
@@ -20,7 +20,7 @@ interface FakeRequest<T> {
 const settle = <T>(compute: () => T): FakeRequest<T> => {
   const listeners: Record<string, () => void> = {};
   const request: FakeRequest<T> = {
-    result: undefined as T,
+    result: undefined,
     error: null,
     addEventListener: (type, listener) => {
       listeners[type] = listener;
@@ -81,7 +81,7 @@ function installFakeIndexedDatabase(options: { failOpen?: boolean } = {}) {
       queueMicrotask(() => {
         if (options.failOpen) {
           request.error = new DOMException("blocked", "AbortError");
-          listeners["error"]?.();
+          listeners.error?.();
           return;
         }
         if (!isCreated) {

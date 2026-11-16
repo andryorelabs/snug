@@ -56,13 +56,15 @@ function mockOffscreenApi(): void {
  * registry.
  */
 function mockRuntimeSendMessage(): void {
-  const mock = vi.fn(async (message: { type: string; content?: string; url?: string }) => {
+  const mock = vi.fn<
+    (message: { type: string; content?: string; url?: string }) => Promise<{ url: string } | null>
+  >((message) => {
     if (message.type === CREATE_BLOB_URL_MESSAGE_TYPE) {
-      return {
+      return Promise.resolve({
         url: `blob:${Buffer.from(message.content ?? "", "utf8").toString("base64")}`,
-      };
+      });
     }
-    return;
+    return Promise.resolve(null);
   });
   Reflect.set(browser.runtime, "sendMessage", mock);
 }
@@ -91,22 +93,26 @@ function mockDownload(
 
   const listeners: OnChangedListener[] = [];
 
-  const mock = vi.fn(
+  const mock = vi.fn<(details: Browser.downloads.DownloadOptions) => Promise<number>>(
     implementation ??
-      (async () => {
+      (() => {
         const id = nextId++;
         issuedIds.push(id);
-        return id;
+        return Promise.resolve(id);
       }),
   );
   browser.downloads.download = mock;
-  browser.downloads.onChanged.addListener = vi.fn((listener: unknown) => {
-    listeners.push(listener as OnChangedListener);
-  });
-  browser.downloads.onChanged.removeListener = vi.fn((listener: unknown) => {
-    const index = listeners.indexOf(listener as OnChangedListener);
-    if (index !== -1) listeners.splice(index, 1);
-  });
+  browser.downloads.onChanged.addListener = vi.fn<(listener: OnChangedListener) => void>(
+    (listener) => {
+      listeners.push(listener);
+    },
+  );
+  browser.downloads.onChanged.removeListener = vi.fn<(listener: OnChangedListener) => void>(
+    (listener) => {
+      const index = listeners.indexOf(listener);
+      if (index !== -1) listeners.splice(index, 1);
+    },
+  );
 
   function fire(id: number, state: "complete" | "interrupted" = "complete") {
     for (const listener of listeners) {
@@ -142,7 +148,9 @@ async function runAutoExportAndSettle(
   trigger: "scheduled" | "catch-up" | "manual" = "scheduled",
 ): Promise<void> {
   const runPromise = runAutoExport(trigger);
-  await vi.waitFor(() => expect(downloadSpy).toHaveBeenCalledTimes(expectedDownloadCount));
+  await vi.waitFor(() => {
+    expect(downloadSpy).toHaveBeenCalledTimes(expectedDownloadCount);
+  });
   completeAll();
   await runPromise;
 }
@@ -701,9 +709,7 @@ describe("runAutoExport", () => {
 
   it("does not mark the Review prompt eligible after a failed run", async () => {
     await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
-    mockDownload(async () => {
-      throw new Error("disk full");
-    });
+    mockDownload(() => Promise.reject(new Error("disk full")));
     mockActionBadge();
 
     await expect(runAutoExport("scheduled")).rejects.toThrow("disk full");
@@ -715,9 +721,7 @@ describe("runAutoExport", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2024, 5, 1, 8, 0, 0, 0));
     await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
-    mockDownload(async () => {
-      throw new Error("disk full");
-    });
+    mockDownload(() => Promise.reject(new Error("disk full")));
     const { setBadgeText, setBadgeBackgroundColor } = mockActionBadge();
 
     await expect(runAutoExport("scheduled")).rejects.toThrow("disk full");
@@ -736,9 +740,7 @@ describe("runAutoExport", () => {
 
   it("sets the failure badge for a catch-up run", async () => {
     await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
-    mockDownload(async () => {
-      throw new Error("disk full");
-    });
+    mockDownload(() => Promise.reject(new Error("disk full")));
     const { setBadgeText } = mockActionBadge();
 
     await expect(runAutoExport("catch-up")).rejects.toThrow("disk full");
@@ -750,9 +752,7 @@ describe("runAutoExport", () => {
     "creates exactly one Failure notification for a failed %s run",
     async (trigger) => {
       await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
-      mockDownload(async () => {
-        throw new Error("disk full");
-      });
+      mockDownload(() => Promise.reject(new Error("disk full")));
       mockActionBadge();
       const create = mockNotifications();
 
@@ -799,9 +799,7 @@ describe("runAutoExport", () => {
 
   it("does not set the failure badge for a failed manual run", async () => {
     await autoExportConfigStore.setValue(baseConfig({ formats: ["html"] }));
-    mockDownload(async () => {
-      throw new Error("disk full");
-    });
+    mockDownload(() => Promise.reject(new Error("disk full")));
     const { setBadgeText } = mockActionBadge();
 
     await expect(runAutoExport("manual")).rejects.toThrow("disk full");
@@ -867,9 +865,7 @@ describe("runAutoExport", () => {
     await autoExportConfigStore.setValue(
       baseConfig({ formats: ["html"], interval: "1d", preferredTime: "10:00" }),
     );
-    mockDownload(async () => {
-      throw new Error("disk full");
-    });
+    mockDownload(() => Promise.reject(new Error("disk full")));
     mockActionBadge();
 
     await expect(runAutoExport("scheduled")).rejects.toThrow("disk full");
@@ -888,7 +884,9 @@ describe("runAutoExport", () => {
     mockActionBadge();
 
     const runPromise = runAutoExport("scheduled");
-    await vi.waitFor(() => expect(downloadSpy).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => {
+      expect(downloadSpy).toHaveBeenCalledTimes(1);
+    });
     await autoExportConfigStore.setValue(baseConfig({ enabled: false, formats: ["html"] }));
     await syncAlarm("config-change");
     completeAll();
@@ -908,7 +906,9 @@ describe("runAutoExport", () => {
     mockActionBadge();
 
     const runPromise = runAutoExport("scheduled");
-    await vi.waitFor(() => expect(downloadSpy).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => {
+      expect(downloadSpy).toHaveBeenCalledTimes(1);
+    });
     await autoExportConfigStore.setValue(baseConfig({ formats: ["html"], interval: "1h" }));
     completeAll();
     await runPromise;
@@ -957,17 +957,19 @@ describe("runAutoExport", () => {
 
     const runPromise = runAutoExport("scheduled");
 
-    await vi.waitFor(() => expect(downloadSpy).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => {
+      expect(downloadSpy).toHaveBeenCalledTimes(2);
+    });
     expect(await autoExportLastRunStore.getValue()).toBeNull();
 
     fire(1, "complete");
-    await vi.waitFor(() =>
+    await vi.waitFor(() => {
       expect(browser.runtime.sendMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           url: blobUrl,
         }),
-      ),
-    );
+      );
+    });
     expect(await autoExportLastRunStore.getValue()).toBeNull();
 
     fire(2, "complete");
@@ -983,10 +985,10 @@ describe("runAutoExport", () => {
 
 function mockCleanup() {
   const removeFile = vi.fn<(id: number) => Promise<void>>(() => Promise.resolve());
-  const erase = vi.fn<(query: { id: number }) => Promise<number[]>>(async () => []);
-  const search = vi.fn(async ({ id }: { id: number }) => [
-    { id, byExtensionId: browser.runtime.id },
-  ]);
+  const erase = vi.fn<(query: { id: number }) => Promise<number[]>>(() => Promise.resolve([]));
+  const search = vi.fn<(query: { id: number }) => Promise<{ id: number; byExtensionId: string }[]>>(
+    ({ id }) => Promise.resolve([{ id, byExtensionId: browser.runtime.id }]),
+  );
   Reflect.set(browser.downloads, "search", search);
   browser.downloads.removeFile = removeFile;
   Reflect.set(browser.downloads, "erase", erase);
@@ -1075,10 +1077,12 @@ describe("runAutoExport retention", () => {
 
     const runPromise = runAutoExport("scheduled");
     const settled = Promise.allSettled([runPromise]);
-    await vi.waitFor(() => expect(mock).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => {
+      expect(mock).toHaveBeenCalledTimes(1);
+    });
     fire(1, "interrupted");
     const [result] = await settled;
-    expect(result?.status).toBe("rejected");
+    expect(result.status).toBe("rejected");
 
     expect(removeFile).not.toHaveBeenCalled();
   });
@@ -1116,7 +1120,9 @@ describe("runAutoExport retention", () => {
 
       const runPromise = runAutoExport("scheduled");
       const settled = Promise.allSettled([runPromise]);
-      await vi.waitFor(() => expect(mock).toHaveBeenCalledTimes(1));
+      await vi.waitFor(() => {
+        expect(mock).toHaveBeenCalledTimes(1);
+      });
       await vi.advanceTimersByTimeAsync(DOWNLOAD_SETTLE_TIMEOUT_MS);
       await settled;
 
@@ -1217,7 +1223,9 @@ describe("runAutoExport scheduling resilience", () => {
     mockActionBadge();
 
     void runAutoExport("scheduled").catch(vi.fn<() => void>());
-    await vi.waitFor(() => expect(downloadSpy).toHaveBeenCalled());
+    await vi.waitFor(() => {
+      expect(downloadSpy).toHaveBeenCalled();
+    });
 
     const alarm = await browser.alarms.get(ALARM_NAME);
     expect(alarm).toBeDefined();

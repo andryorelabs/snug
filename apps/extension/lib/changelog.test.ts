@@ -63,7 +63,7 @@ describe("getChangelog", () => {
   it("leaves linkKey/linkUrl unset for items without a link", () => {
     const entries = getChangelog();
 
-    const entry = entries.find((entry) => entry.version === "1.4.0");
+    const entry = entries.find((candidate) => candidate.version === "1.4.0");
     expect(entry?.items[0]?.linkKey).toBeUndefined();
     expect(entry?.items[0]?.linkUrl).toBeUndefined();
   });

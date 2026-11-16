@@ -14,10 +14,9 @@ import {
 const appUrl: unknown = expect.stringMatching(/\/app\.html#\/auto-export$/);
 
 function mockNotificationsApi() {
-  const create = vi.fn(async (id: string, ...rest: unknown[]) => {
-    void rest;
-    return id;
-  });
+  const create = vi.fn<(id: string, ...rest: unknown[]) => Promise<string>>((id) =>
+    Promise.resolve(id),
+  );
   const clearSpy = vi.fn<() => Promise<void>>(() => Promise.resolve());
   Reflect.set(browser, "notifications", {
     create,
@@ -28,7 +27,7 @@ function mockNotificationsApi() {
 
 function mockNotificationAccess(isGranted: boolean) {
   Reflect.set(browser, "permissions", {
-    contains: vi.fn(async () => isGranted),
+    contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(isGranted)),
   });
 }
 

@@ -22,7 +22,7 @@ function stubFaviconResponses(responseByPageUrl: (pageUrl: string) => Blob | Err
   vi.stubGlobal(
     "fetch",
     vi.fn((input: string) => {
-      const pageUrl = new URL(input).searchParams.get("pageUrl") as string;
+      const pageUrl = new URL(input).searchParams.get("pageUrl") ?? "";
       const outcome = responseByPageUrl(pageUrl);
       return outcome instanceof Error
         ? Promise.reject(outcome)

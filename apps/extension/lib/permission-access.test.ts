@@ -11,14 +11,12 @@ function mockPermissionsApi(options: { isGranted?: boolean; approve?: boolean })
   type PermissionsListener = (changed: { permissions?: string[] }) => void;
   const added: PermissionsListener[] = [];
   const removed: PermissionsListener[] = [];
-  const isGrantedLookup = vi.fn(async (query: unknown) => {
-    void query;
-    return options.isGranted ?? false;
-  });
-  const isRequestApproved = vi.fn(async (query: unknown) => {
-    void query;
-    return options.approve ?? false;
-  });
+  const isGrantedLookup = vi.fn<(query: unknown) => Promise<boolean>>(() =>
+    Promise.resolve(options.isGranted ?? false),
+  );
+  const isRequestApproved = vi.fn<(query: unknown) => Promise<boolean>>(() =>
+    Promise.resolve(options.approve ?? false),
+  );
   Reflect.set(browser, "permissions", {
     contains: isGrantedLookup,
     request: isRequestApproved,

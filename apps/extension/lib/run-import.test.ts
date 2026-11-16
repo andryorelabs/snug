@@ -61,11 +61,11 @@ beforeEach(() => {
 
 describe("runImport", () => {
   it("rejects content whose format cannot be detected", async () => {
-    await expect(runImport("not a bookmarks file", "text/plain", "folder")).rejects.toThrow();
+    await expect(runImport("not a bookmarks file", "text/plain", "folder")).rejects.toThrow(Error);
   });
 
   it("rejects JSON that does not parse", async () => {
-    await expect(runImport("{not json", "application/json", "folder")).rejects.toThrow();
+    await expect(runImport("{not json", "application/json", "folder")).rejects.toThrow(Error);
   });
 
   it("imports a JSON file whose root is a single object, matching its preview", async () => {

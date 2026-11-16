@@ -65,7 +65,11 @@ describe("theme cache", () => {
       throw new DOMException("blocked", "SecurityError");
     });
     expect(readCachedTheme()).toBeUndefined();
-    expect(() => writeCachedTheme("dark")).not.toThrow();
-    expect(() => applyCachedTheme()).not.toThrow();
+    expect(() => {
+      writeCachedTheme("dark");
+    }).not.toThrow();
+    expect(() => {
+      applyCachedTheme();
+    }).not.toThrow();
   });
 });

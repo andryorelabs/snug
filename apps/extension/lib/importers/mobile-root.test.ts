@@ -5,7 +5,7 @@ import type { ParsedBookmark } from "@/lib/types";
 import { shouldClearMobileRoot } from "./mobile-root";
 
 const mobileNode = (children?: ParsedBookmark[]): ParsedBookmark =>
-  ({ title: "Mobile", children }) as ParsedBookmark;
+  children ? { title: "Mobile", dateAdded: 0, children } : { title: "Mobile", dateAdded: 0 };
 
 describe("shouldClearMobileRoot", () => {
   it("is false for a Mobile node with no children", () => {
