@@ -136,7 +136,9 @@ export function ImportFileStep({ rows, onFiles, onRemove, disabled }: ImportFile
                   size="icon-sm"
                   disabled={disabled}
                   aria-label={i18n.t("import_removeFile", [row.name])}
-                  onClick={() => onRemove(row.id)}
+                  onClick={() => {
+                    onRemove(row.id);
+                  }}
                 >
                   <XIcon />
                 </Button>

@@ -15,17 +15,17 @@ vi.mock("@/lib/auto-export", async () => {
   const actual = await vi.importActual<typeof AutoExport>("@/lib/auto-export");
   return {
     ...actual,
-    syncAlarm: vi.fn(),
-    runAutoExport: vi.fn(),
+    syncAlarm: vi.fn<() => void>(),
+    runAutoExport: vi.fn<() => void>(),
   };
 });
 
 vi.mock("@/lib/uninstall-url", () => ({
-  registerUninstallUrl: vi.fn(async () => {}),
+  registerUninstallUrl: vi.fn<() => Promise<void>>(() => Promise.resolve()),
 }));
 
 vi.mock("@/lib/folder-access-startup", () => ({
-  checkFolderAccessAtStartup: vi.fn(async () => {}),
+  checkFolderAccessAtStartup: vi.fn<() => Promise<void>>(() => Promise.resolve()),
 }));
 
 const { syncAlarm, runAutoExport } = await import("@/lib/auto-export");
@@ -52,8 +52,10 @@ function mockRuntimeOnMessage(): {
   ) => boolean | undefined;
 
   let listener: OnMessageListener | undefined;
-  browser.runtime.onMessage.addListener = vi.fn((l: unknown) => {
-    listener = l as OnMessageListener;
+  Object.assign(browser.runtime.onMessage, {
+    addListener: vi.fn<(registered: OnMessageListener) => void>((registered) => {
+      listener = registered;
+    }),
   });
 
   return {
@@ -80,11 +82,11 @@ function triggerOnInstalled(
   reason: "install" | "update" | "chrome_update" | "shared_module_update",
   previousVersion?: string,
 ): Promise<unknown> {
-  return fakeBrowser.runtime.onInstalled.trigger({
-    reason,
-    previousVersion,
-    temporary: false,
-  } as unknown as Parameters<typeof fakeBrowser.runtime.onInstalled.trigger>[0]);
+  const { onInstalled } = fakeBrowser.runtime;
+  const settled: unknown = Reflect.apply(onInstalled.trigger.bind(onInstalled), undefined, [
+    { reason, previousVersion },
+  ]);
+  return Promise.resolve(settled);
 }
 
 function baseConfig(overrides: Partial<AutoExportConfig> = {}): AutoExportConfig {
@@ -124,14 +126,16 @@ beforeEach(() => {
   resetFakeI18n();
   vi.clearAllMocks();
   onMessageReference.current = mockRuntimeOnMessage();
-  background.main?.();
+  background.main();
 });
 
 describe("onInstalled", () => {
   it("opens the App on the welcome route and syncs the alarm on install", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "1.7.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("install");
 
@@ -145,9 +149,11 @@ describe("onInstalled", () => {
   });
 
   it("marks the installed version as seen on install so no unseen dot shows", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "1.7.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("install");
 
@@ -157,9 +163,11 @@ describe("onInstalled", () => {
   });
 
   it("leaves the last seen version untouched on update so the dot shows", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "1.8.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
     await lastSeenVersionStore.setValue("1.7.0");
 
     await triggerOnInstalled("update", "1.7.0");
@@ -171,9 +179,11 @@ describe("onInstalled", () => {
   });
 
   it("opens whats-new and syncs the alarm on a major update (1.7.0 to 2.0.0)", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.0.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("update", "1.7.0");
 
@@ -187,9 +197,11 @@ describe("onInstalled", () => {
   });
 
   it("opens whats-new on a minor update (2.0.x to 2.1.0)", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.1.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("update", "2.0.3");
 
@@ -203,9 +215,11 @@ describe("onInstalled", () => {
   });
 
   it("opens no whats-new but syncs the alarm on a patch update (2.0.0 to 2.0.1)", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.0.1",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("update", "2.0.0");
 
@@ -217,9 +231,11 @@ describe("onInstalled", () => {
   });
 
   it("opens no whats-new when previousVersion is missing", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.0.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
 
     await triggerOnInstalled("update");
 
@@ -255,7 +271,9 @@ describe("onInstalled", () => {
   });
 
   it("logs a syncAlarm error instead of throwing", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      return;
+    });
     const error = new Error("sync failed");
     vi.mocked(syncAlarm).mockRejectedValueOnce(error);
 
@@ -285,7 +303,9 @@ describe("onStartup", () => {
   });
 
   it("catches and logs a syncAlarm error instead of throwing", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      return;
+    });
     const error = new Error("sync failed");
     vi.mocked(syncAlarm).mockRejectedValueOnce(error);
 
@@ -374,7 +394,9 @@ describe("autoExportConfigStore.watch", () => {
   });
 
   it("catches and logs a syncAlarm error instead of throwing", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      return;
+    });
     const error = new Error("sync failed");
     await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
     vi.clearAllMocks();
@@ -446,7 +468,9 @@ describe("alarms.onAlarm", () => {
   });
 
   it("catches and logs a runAutoExport error instead of throwing", async () => {
-    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      return;
+    });
     const error = new Error("run failed");
     vi.mocked(runAutoExport).mockRejectedValueOnce(error);
 
@@ -521,7 +545,7 @@ describe("self-healing alarm", () => {
     await autoExportConfigStore.setValue(baseConfig());
     await fakeBrowser.alarms.clearAll();
 
-    background.main?.();
+    background.main();
 
     await vi.waitFor(() => {
       expect(syncAlarm).toHaveBeenCalledWith("startup");
@@ -533,7 +557,7 @@ describe("self-healing alarm", () => {
     await browser.alarms.create(ALARM_NAME, { when: Date.now() + 60_000 });
     vi.mocked(syncAlarm).mockClear();
 
-    background.main?.();
+    background.main();
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(syncAlarm).not.toHaveBeenCalled();
@@ -543,7 +567,7 @@ describe("self-healing alarm", () => {
     await autoExportConfigStore.setValue(baseConfig({ enabled: false }));
     vi.mocked(syncAlarm).mockClear();
 
-    background.main?.();
+    background.main();
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(syncAlarm).not.toHaveBeenCalled();
@@ -552,33 +576,35 @@ describe("self-healing alarm", () => {
 
 function mockPermissions(options: { hasNotificationAccess: boolean }) {
   const addedListeners: ((changed: { permissions?: string[] }) => void)[] = [];
-  browser.permissions = {
-    contains: vi.fn(async () => options.hasNotificationAccess),
-    onAdded: {
-      addListener: (listener: (typeof addedListeners)[number]) => {
-        addedListeners.push(listener);
+  Object.assign(browser, {
+    permissions: {
+      contains: vi.fn<() => Promise<boolean>>(() => Promise.resolve(options.hasNotificationAccess)),
+      onAdded: {
+        addListener: (listener: (typeof addedListeners)[number]) => {
+          addedListeners.push(listener);
+        },
+        removeListener: vi.fn<() => void>(),
       },
-      removeListener: vi.fn(),
+      onRemoved: { addListener: vi.fn<() => void>(), removeListener: vi.fn<() => void>() },
     },
-    onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
-  } as unknown as typeof browser.permissions;
+  });
   return addedListeners;
 }
 
 function mockNotifications() {
-  const addListener = vi.fn();
-  browser.notifications = {
-    onClicked: { addListener },
-  } as unknown as typeof browser.notifications;
+  const addListener = vi.fn<() => void>();
+  Object.assign(browser, { notifications: { onClicked: { addListener } } });
   return addListener;
 }
 
 describe("Failure notification click listener", () => {
   it("starts cleanly without Notification access and attaches after the grant", async () => {
-    browser.notifications = undefined as unknown as typeof browser.notifications;
+    Object.assign(browser, { notifications: undefined });
     const addedListeners = mockPermissions({ hasNotificationAccess: false });
 
-    expect(() => background.main?.()).not.toThrow();
+    expect(() => {
+      background.main();
+    }).not.toThrow();
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     const addListener = mockNotifications();
@@ -593,7 +619,7 @@ describe("Failure notification click listener", () => {
     const addListener = mockNotifications();
     mockPermissions({ hasNotificationAccess: true });
 
-    background.main?.();
+    background.main();
 
     expect(addListener).toHaveBeenCalledTimes(1);
   });

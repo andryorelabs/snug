@@ -8,7 +8,6 @@ import {
 } from "@workspace/ui/components/collapsible";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { useRef, useState } from "react";
-import type { CSSProperties } from "react";
 
 import { formatCount } from "@/lib/format-count";
 import type { ImportPlan } from "@/lib/import-plan";
@@ -30,39 +29,30 @@ function RemovedList({ removed }: { removed: RemovedBookmarks }) {
   });
 
   return (
-    <div
-      ref={scrollReference}
-      role="list"
-      aria-label={i18n.t("import_deleteListLabel")}
-      className="max-h-80 overflow-auto border-t pt-1"
-    >
-      <div
+    <div ref={scrollReference} className="max-h-80 overflow-auto border-t pt-1">
+      <ul
+        aria-label={i18n.t("import_deleteListLabel")}
         className="relative h-(--list-height) w-full"
-        style={
-          {
-            "--list-height": `${virtualizer.getTotalSize()}px`,
-          } as CSSProperties
-        }
+        style={{ "--list-height": `${virtualizer.getTotalSize()}px` }}
       >
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const bookmark = removed[virtualRow.index];
           if (!bookmark) return null;
           return (
-            <div
+            <li
               key={virtualRow.index}
-              role="listitem"
               className="absolute inset-x-0 top-0 flex h-11 translate-y-(--row-offset) flex-col justify-center rounded-md px-2.5"
-              style={{ "--row-offset": `${virtualRow.start}px` } as CSSProperties}
+              style={{ "--row-offset": `${virtualRow.start}px` }}
             >
               <span className="truncate text-sm font-medium">{bookmark.title || bookmark.url}</span>
               <span className="flex min-w-0 gap-2 text-xs text-muted-foreground">
                 <span className="min-w-0 flex-1 truncate">{bookmark.url}</span>
                 <span className="shrink-0">{bookmark.folderPath.join(FOLDER_PATH_SEPARATOR)}</span>
               </span>
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
     </div>
   );
 }

@@ -16,14 +16,22 @@ function openAppRoute(route: string): void {
 export function PopupFooter() {
   return (
     <footer className="flex items-center justify-between gap-2">
-      <Button variant="outline" size="sm" onClick={() => openAppRoute(APP_ROUTES.export)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          openAppRoute(APP_ROUTES.export);
+        }}
+      >
         {i18n.t("popup_openApp")}
       </Button>
       <Button
         variant="ghost"
         size="icon"
         aria-label={i18n.t("popup_settings")}
-        onClick={() => openAppRoute(APP_ROUTES.settings)}
+        onClick={() => {
+          openAppRoute(APP_ROUTES.settings);
+        }}
       >
         <SettingsIcon />
       </Button>

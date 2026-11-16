@@ -23,7 +23,7 @@ function SkeletonRow({ indentClassName, children }: SkeletonRowProperties) {
  */
 export function ImportPreviewSkeleton() {
   return (
-    <div className="flex flex-col gap-3" role="status" aria-label={i18n.t("import_reading")}>
+    <output className="flex flex-col gap-3" aria-label={i18n.t("import_reading")}>
       <div className="flex flex-col gap-1.5 rounded-lg bg-muted p-3">
         <Skeleton className="h-3.5 w-3/4" />
         <Skeleton className="h-3 w-2/5" />
@@ -48,6 +48,6 @@ export function ImportPreviewSkeleton() {
           <Skeleton className="h-3 w-36" />
         </SkeletonRow>
       </div>
-    </div>
+    </output>
   );
 }

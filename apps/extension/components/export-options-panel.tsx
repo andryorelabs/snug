@@ -116,7 +116,9 @@ export function ExportOptionsPanel() {
           <Input
             id="export-options-filename"
             value={draftTemplate}
-            onChange={(event) => handleTemplateChange(event.target.value)}
+            onChange={(event) => {
+              handleTemplateChange(event.target.value);
+            }}
             onBlur={persistDraft}
           />
           <p data-testid="export-options-preview" className="text-xs text-muted-foreground">

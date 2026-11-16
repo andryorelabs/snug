@@ -1,5 +1,5 @@
 import en from "../locales/en.json" with { type: "json" };
-import { expect, test } from "./fixtures";
+import { expect, runInOrder, test } from "./fixtures";
 
 const ROUTES = [
   { hash: "export", title: en.shell_navExport.message },
@@ -118,7 +118,7 @@ test("moves focus to the page heading and announces it on navigation", async ({
   const nav = page.getByRole("navigation", {
     name: en.shell_navLabel.message,
   });
-  const liveRegion = page.locator('[role="status"][aria-live="polite"]');
+  const liveRegion = page.locator('output[aria-live="polite"]');
   await expect(liveRegion).toHaveText("");
 
   const titles = [
@@ -129,11 +129,11 @@ test("moves focus to the page heading and announces it on navigation", async ({
     en.shell_navWhatsNew.message,
     en.shell_navExport.message,
   ];
-  for (const title of titles) {
+  await runInOrder(titles, async (title) => {
     await nav.getByRole("link", { name: title, exact: true }).click();
     await expect(page.getByRole("heading", { level: 1, name: title })).toBeFocused();
     await expect(liveRegion).toHaveText(title);
-  }
+  });
 });
 
 test("does not move focus on search changes inside the same route", async ({
@@ -161,10 +161,12 @@ test("sidebar footer links open the landing site in a new tab", async ({ openExt
   await expect(website).toHaveAttribute("href", "https://snug.andryore.dev/");
   await expect(privacy).toHaveAttribute("href", "https://snug.andryore.dev/privacy/");
   await expect(guide).toHaveAttribute("href", "https://snug.andryore.dev/guide/");
-  for (const link of [website, privacy, guide]) {
-    await expect(link).toHaveAttribute("target", "_blank");
-    await expect(link).toHaveAttribute("rel", "noopener noreferrer");
-  }
+  await Promise.all(
+    [website, privacy, guide].map(async (link) => {
+      await expect(link).toHaveAttribute("target", "_blank");
+      await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+    }),
+  );
 });
 
 test("the What's new page links to the full release notes in a new tab", async ({

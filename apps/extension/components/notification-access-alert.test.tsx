@@ -21,7 +21,7 @@ afterEach(() => {
 
 describe("NotificationAccessAlert", () => {
   it("shows the copy and calls onAllow from the Allow button", async () => {
-    const onAllow = vi.fn();
+    const onAllow = vi.fn<() => void>();
     const harness = createDomHarness();
     harnesses.push(harness);
     await harness.render(<NotificationAccessAlert onAllow={onAllow} />);

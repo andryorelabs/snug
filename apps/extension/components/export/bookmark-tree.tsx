@@ -197,13 +197,13 @@ function pruneTree(
     for (const node of nodes) {
       if (node.url) {
         if (checkedIds.has(node.id)) {
-          result.push(node as ExtendedBookmarkTreeNode);
+          result.push({ ...node });
         }
       } else if (node.children) {
         const prunedChildren = prune(node.children);
         if (prunedChildren.length > 0) {
           result.push({
-            ...(node as ExtendedBookmarkTreeNode),
+            ...node,
             children: prunedChildren,
           });
         }

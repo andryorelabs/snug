@@ -9,27 +9,35 @@ import type { DomHarness } from "@/lib/testing/dom-harness";
 const mountedHarnesses: DomHarness[] = [];
 
 class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() {
+    return;
+  }
+  unobserve() {
+    return;
+  }
+  disconnect() {
+    return;
+  }
 }
 
 describe("AppRouter", () => {
   beforeEach(() => {
     fakeBrowser.reset();
-    fakeBrowser.i18n.getMessage = vi.fn((key: string) => key);
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.i18n.getMessage = vi.fn<(key: string) => string>((key) => key);
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.0.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
     vi.stubGlobal("ResizeObserver", ResizeObserverStub);
     vi.doMock("./routes/export", () => ({ ExportRoute: () => null }));
     vi.doMock("./routes/import", () => ({ ImportRoute: () => null }));
-    Element.prototype.scrollTo = vi.fn();
-    Element.prototype.scrollIntoView = vi.fn();
+    Element.prototype.scrollTo = vi.fn<() => void>();
+    Element.prototype.scrollIntoView = vi.fn<() => void>();
     vi.stubGlobal("matchMedia", () => ({
       matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn<() => void>(),
+      removeEventListener: vi.fn<() => void>(),
     }));
   });
 
@@ -76,8 +84,9 @@ describe("AppRouter", () => {
       expect(harness.container.querySelector(':scope nav a[href$="/import"]')).not.toBe(null);
     });
 
-    await act(async () => {
+    await act(() => {
       harness.container.querySelector<HTMLAnchorElement>(':scope nav a[href$="/import"]')?.click();
+      return Promise.resolve();
     });
 
     await vi.waitFor(() => {
@@ -88,23 +97,25 @@ describe("AppRouter", () => {
   it("closes the mobile sheet after picking a page", async () => {
     vi.stubGlobal("matchMedia", () => ({
       matches: true,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
+      addEventListener: vi.fn<() => void>(),
+      removeEventListener: vi.fn<() => void>(),
     }));
     globalThis.location.hash = "#/export";
     const { AppRouter } = await import("./router");
     const harness = createDomHarness();
     mountedHarnesses.push(harness);
     await harness.render(createElement(AppRouter));
-    await act(async () => {
+    await act(() => {
       document.querySelector<HTMLButtonElement>('[data-sidebar="trigger"]')?.click();
+      return Promise.resolve();
     });
     await vi.waitFor(() => {
       expect(document.querySelector('[data-mobile="true"]')).not.toBe(null);
     });
 
-    await act(async () => {
+    await act(() => {
       document.querySelector<HTMLAnchorElement>('[data-mobile="true"] a[href$="/import"]')?.click();
+      return Promise.resolve();
     });
 
     await vi.waitFor(() => {

@@ -4,7 +4,6 @@ import {
   createRoute,
   createRouter,
   Navigate,
-  redirect,
   RouterProvider,
 } from "@tanstack/react-router";
 
@@ -36,9 +35,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  beforeLoad: () => {
-    throw redirect({ to: APP_ROUTES.export, replace: true });
-  },
+  component: RedirectToExport,
 });
 
 const routeTree = rootRoute.addChildren([

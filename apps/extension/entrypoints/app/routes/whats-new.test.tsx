@@ -25,9 +25,11 @@ afterEach(() => {
 
 describe("WhatsNewRoute", () => {
   it("renders the whatsNew_intro line", async () => {
-    fakeBrowser.runtime.getManifest = vi.fn().mockReturnValue({
+    fakeBrowser.runtime.getManifest = vi.fn<typeof fakeBrowser.runtime.getManifest>(() => ({
+      manifest_version: 3,
+      name: "Snug",
       version: "2.3.0",
-    }) as typeof fakeBrowser.runtime.getManifest;
+    }));
     vi.spyOn(fakeBrowser.i18n, "getUILanguage").mockReturnValue("en");
     const harness = createDomHarness();
     harnesses.push(harness);

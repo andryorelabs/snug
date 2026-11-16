@@ -4,7 +4,19 @@ import { themeStore } from "@/lib/storage";
 import { applyResolvedTheme, readCachedTheme, writeCachedTheme } from "@/lib/theme-cache";
 import { useStorageItem } from "@/lib/use-storage-item";
 
-function noop() {}
+function noop() {
+  return;
+}
+
+/**
+ * Reacts to OS-level color scheme changes while the preference is
+ * `"system"`, so the applied theme stays live instead of only being
+ * resolved once when the effect first runs.
+ * @param event The OS color-scheme change event.
+ */
+function handleChange(event: MediaQueryListEvent) {
+  applyResolvedTheme(event.matches ? "dark" : "light");
+}
 
 interface ThemeProviderProperties {
   children: React.ReactNode;
@@ -32,18 +44,10 @@ export function ThemeProvider({ children }: ThemeProviderProperties) {
 
       applyResolvedTheme(mql.matches ? "dark" : "light");
 
-      /**
-       * Reacts to OS-level color scheme changes while the preference is
-       * `"system"`, so the applied theme stays live instead of only being
-       * resolved once when the effect first runs.
-       * @param event The OS color-scheme change event.
-       */
-      const handleChange = (event: MediaQueryListEvent) => {
-        applyResolvedTheme(event.matches ? "dark" : "light");
-      };
-
       mql.addEventListener("change", handleChange);
-      return () => mql.removeEventListener("change", handleChange);
+      return () => {
+        mql.removeEventListener("change", handleChange);
+      };
     }
     applyResolvedTheme(theme);
     return noop;

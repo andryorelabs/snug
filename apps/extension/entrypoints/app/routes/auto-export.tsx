@@ -68,7 +68,7 @@ import {
   resolveFolder,
   resolveFormats,
 } from "@/lib/auto-export-form";
-import { EXPORT_FORMAT_INFO, EXPORT_FORMATS, type ExportFormat } from "@/lib/export-formats";
+import { EXPORT_FORMAT_INFO, EXPORT_FORMATS } from "@/lib/export-formats";
 import {
   allowFolderAccess,
   readFolderAccess,
@@ -103,15 +103,15 @@ import type {
 } from "@/lib/types";
 import { useStorageItem } from "@/lib/use-storage-item";
 
-const INTERVAL_OPTIONS: { value: AutoExportInterval; label: string }[] = [
+const INTERVAL_OPTIONS = [
   { value: "1h", label: "autoExportPage_interval1h" },
   { value: "12h", label: "autoExportPage_interval12h" },
   { value: "1d", label: "autoExportPage_interval1d" },
   { value: "3d", label: "autoExportPage_interval3d" },
   { value: "7d", label: "autoExportPage_interval7d" },
-];
+] as const satisfies readonly { value: AutoExportInterval; label: string }[];
 
-const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
+const DAY_OPTIONS = [
   { value: 1, label: "autoExportPage_day1" },
   { value: 2, label: "autoExportPage_day2" },
   { value: 3, label: "autoExportPage_day3" },
@@ -119,7 +119,11 @@ const DAY_OPTIONS: { value: DayOfWeek; label: string }[] = [
   { value: 5, label: "autoExportPage_day5" },
   { value: 6, label: "autoExportPage_day6" },
   { value: 0, label: "autoExportPage_day0" },
-];
+] as const satisfies readonly { value: DayOfWeek; label: string }[];
+
+function noop() {
+  return;
+}
 
 /**
  * Mirrors the normalized last run as React state, re-reading it whenever
@@ -297,7 +301,7 @@ function StatusCard({ config, folder, destination, isFolderMissing }: StatusCard
               <AlertDescription>
                 {getAutoExportErrorMessage(
                   lastRun.errorCode,
-                  lastRun.error || i18n.t("exportNowFailed"),
+                  lastRun.error?.length ? lastRun.error : i18n.t("exportNowFailed"),
                 )}
               </AlertDescription>
             </Alert>
@@ -359,7 +363,7 @@ export function AutoExportRoute() {
   });
 
   useEffect(() => {
-    if (!hasChosenFolder) return;
+    if (folderName === null) return noop;
     let isMounted = true;
     const refresh = async () => {
       try {
@@ -376,7 +380,7 @@ export function AutoExportRoute() {
       isMounted = false;
       window.removeEventListener("focus", onFocus);
     };
-  }, [hasChosenFolder, folderName]);
+  }, [folderName]);
 
   useEffect(() => {
     let isMounted = true;
@@ -405,7 +409,7 @@ export function AutoExportRoute() {
   const isDownloadsAccessMissing = destination === "downloads" && downloadsAccess === false;
   const isNotificationAccessMissing = notificationAccess === false;
   const isNotifySwitchOn = notifyOnFailure && !isNotificationAccessMissing;
-  const keepLast = config.keepLast ?? 10;
+  const keepLast = config.keepLast;
   const keepLastText = keepLastDraft ?? String(keepLast);
   const isKeepLastInvalid = parseKeepLast(keepLastText) === null;
   const isOff = !config.enabled;
@@ -413,7 +417,7 @@ export function AutoExportRoute() {
   const isWeekly = config.interval === "7d";
   const dayItems = DAY_OPTIONS.map(({ value, label }) => ({
     value: String(value),
-    label: i18n.t(label as "autoExportPage_day0"),
+    label: i18n.t(label),
   }));
 
   const save = async (patch: Partial<AutoExportConfig>) => {
@@ -590,13 +594,15 @@ export function AutoExportRoute() {
                 value={[config.interval]}
                 disabled={isOff}
                 onValueChange={(value) => {
-                  const [interval] = value as AutoExportInterval[];
+                  const interval = INTERVAL_OPTIONS.find(
+                    (option) => option.value === value[0],
+                  )?.value;
                   if (interval) void save({ interval });
                 }}
               >
                 {INTERVAL_OPTIONS.map(({ value, label }) => (
                   <ToggleGroupItem key={value} value={value}>
-                    {i18n.t(label as "autoExportPage_interval1d")}
+                    {i18n.t(label)}
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -611,7 +617,12 @@ export function AutoExportRoute() {
                   items={dayItems}
                   value={String(config.dayOfWeek)}
                   disabled={isOff}
-                  onValueChange={(value) => void save({ dayOfWeek: Number(value) as DayOfWeek })}
+                  onValueChange={(value) => {
+                    const dayOfWeek = DAY_OPTIONS.find(
+                      (option) => String(option.value) === value,
+                    )?.value;
+                    if (dayOfWeek !== undefined) void save({ dayOfWeek });
+                  }}
                 >
                   <SelectTrigger id="auto-export-day" className="w-full">
                     <SelectValue />
@@ -654,8 +665,8 @@ export function AutoExportRoute() {
                   value={[destination]}
                   disabled={isOff}
                   onValueChange={(value) => {
-                    const [next] = value as ExportDestination[];
-                    if (next) void changeDestination(next);
+                    const [next] = value;
+                    if (next === "downloads" || next === "folder") void changeDestination(next);
                   }}
                 >
                   <ToggleGroupItem value="downloads">
@@ -735,7 +746,9 @@ export function AutoExportRoute() {
                     id="auto-export-folder"
                     value={folder}
                     disabled={isOff}
-                    onChange={(event) => setFolderDraft(event.target.value)}
+                    onChange={(event) => {
+                      setFolderDraft(event.target.value);
+                    }}
                     onBlur={() => void commitFolder()}
                     onKeyDown={(event) => {
                       if (event.key === "Enter") event.currentTarget.blur();
@@ -767,7 +780,12 @@ export function AutoExportRoute() {
                 disabled={isOff}
                 onValueChange={(value) =>
                   void save({
-                    formats: resolveFormats(value as ExportFormat[], config.formats),
+                    formats: resolveFormats(
+                      value.flatMap(
+                        (item) => EXPORT_FORMATS.find((format) => format === item) ?? [],
+                      ),
+                      config.formats,
+                    ),
                   })
                 }
               >
@@ -794,7 +812,9 @@ export function AutoExportRoute() {
                   value={keepLastText}
                   disabled={isOff}
                   aria-invalid={isKeepLastInvalid}
-                  onChange={(event) => setKeepLastDraft(event.target.value)}
+                  onChange={(event) => {
+                    setKeepLastDraft(event.target.value);
+                  }}
                   onBlur={() => {
                     if (isKeepLastInvalid) setKeepLastDraft(null);
                     else void commitKeepLast();

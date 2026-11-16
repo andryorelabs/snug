@@ -57,7 +57,9 @@ export function ExportToolbar({
           ref={searchInputReference}
           type="search"
           value={searchTerm}
-          onChange={(event) => onSearchChange(event.target.value)}
+          onChange={(event) => {
+            onSearchChange(event.target.value);
+          }}
           placeholder={i18n.t("searchBookmarks")}
           aria-label={i18n.t("searchBookmarks")}
           aria-keyshortcuts="/"

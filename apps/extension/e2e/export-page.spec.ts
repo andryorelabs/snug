@@ -41,6 +41,22 @@ async function selectRow(page: Page, name: string) {
   await page.keyboard.press("Space");
 }
 
+function isExportedNode(value: unknown): value is ExportedNode {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "title" in value &&
+    typeof value.title === "string"
+  );
+}
+
+function parseExportedRoot(content: string): ExportedNode | undefined {
+  const parsed: unknown = JSON.parse(content);
+  if (!Array.isArray(parsed)) throw new TypeError("Exported JSON is not an array");
+  const root: unknown = parsed[0];
+  return isExportedNode(root) ? root : undefined;
+}
+
 function leafTitles(nodes: ExportedNode[]): string[] {
   const titles: string[] = [];
   for (const node of nodes) {
@@ -73,7 +89,7 @@ test("exports a mixed selection as JSON and confirms with a toast", async ({
   const download = await downloadPromise;
 
   const content = await readFile(await download.path(), "utf8");
-  const [root] = JSON.parse(content) as ExportedNode[];
+  const root = parseExportedRoot(content);
   expect(leafTitles(root?.children ?? [])).toEqual(
     ["Photo Album", "Recipe Page", "Standalone Link"].toSorted((a, b) => a.localeCompare(b)),
   );
@@ -159,7 +175,7 @@ test("exports a selection made from the search-filtered tree", async ({
   const download = await downloadPromise;
 
   const content = await readFile(await download.path(), "utf8");
-  const [root] = JSON.parse(content) as ExportedNode[];
+  const root = parseExportedRoot(content);
   expect(leafTitles(root?.children ?? [])).toEqual(["Old Report"]);
 });
 
