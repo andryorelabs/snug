@@ -226,6 +226,7 @@ export function AppShell() {
                         />
                         {itemStatus && itemStatus.status !== "none" && (
                           <span
+                            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- role="img" labels an icon wrapper that holds no img element
                             role="img"
                             aria-label={itemStatus.label}
                             data-status={itemStatus.status}

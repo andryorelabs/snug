@@ -27,15 +27,39 @@ interface WxtAutoImports {
 }
 
 /**
+ * Narrows the generated WXT module to the shape this config reads.
+ * @param candidate The default export of the generated module.
+ * @returns Whether it exposes `languageOptions.globals`.
+ */
+function isWxtAutoImports(candidate: unknown): candidate is WxtAutoImports {
+  if (typeof candidate !== "object" || candidate === null || !("languageOptions" in candidate)) {
+    return false;
+  }
+  const { languageOptions } = candidate;
+  return (
+    typeof languageOptions === "object" && languageOptions !== null && "globals" in languageOptions
+  );
+}
+
+/**
+ * Turns the generated WXT module into Oxlint globals.
+ * @param autoImports The default export of `.wxt/eslint-auto-imports.mjs`.
+ * @returns Every WXT auto-imported name as a writable global.
+ */
+function readWxtGlobals(autoImports: unknown): OxlintGlobals {
+  if (!isWxtAutoImports(autoImports)) {
+    throw new Error("The generated WXT auto-imports module has no languageOptions.globals");
+  }
+  return Object.fromEntries(
+    Object.keys(autoImports.languageOptions.globals).map((name) => [name, "writable"]),
+  );
+}
+
+/**
  * Names of the globals WXT auto-imports, read from the generated
  * `.wxt/eslint-auto-imports.mjs` so they stay in sync with `wxt prepare`.
  */
-const wxtGlobals: OxlintGlobals = Object.fromEntries(
-  Object.keys((wxtAutoImports as WxtAutoImports).languageOptions.globals).map((name) => [
-    name,
-    "writable",
-  ]),
-);
+const wxtGlobals: OxlintGlobals = readWxtGlobals(wxtAutoImports);
 
 /**
  * `eslint-plugin-jsx-a11y` recommended rules, natively ported.
@@ -929,9 +953,162 @@ const overrides: OxlintOverride[] = [
   },
 ];
 
+/**
+ * The shared Oxlint baseline (aokit rule E10), spelled out so that
+ * `scripts/oxlint-baseline.test.ts` can fail when a rule drifts from the
+ * vendored `scripts/oxlint-baseline.json`. `local/no-bun-test-only` is not
+ * taken: tests run on Vitest, not `bun:test` (ADR 0035).
+ */
+const baselineRules: DummyRuleMap = {
+  "import/no-unassigned-import": [
+    "error",
+    { allow: ["**/*.css", "@fontsource/**", "@fontsource-variable/**"] },
+  ],
+  "typescript/await-thenable": "error",
+  "typescript/ban-ts-comment": "error",
+  "eslint/no-array-constructor": "error",
+  "typescript/no-array-delete": "error",
+  "typescript/no-base-to-string": "error",
+  "typescript/no-confusing-void-expression": "error",
+  "typescript/no-deprecated": "error",
+  "typescript/no-duplicate-enum-values": "error",
+  "typescript/no-duplicate-type-constituents": "error",
+  "typescript/no-dynamic-delete": "error",
+  "typescript/no-empty-object-type": "error",
+  "typescript/no-explicit-any": "error",
+  "typescript/no-extra-non-null-assertion": "error",
+  "typescript/no-extraneous-class": "error",
+  "typescript/no-floating-promises": "error",
+  "typescript/no-for-in-array": "error",
+  "typescript/no-implied-eval": "error",
+  "typescript/no-invalid-void-type": "error",
+  "typescript/no-meaningless-void-operator": "error",
+  "typescript/no-misused-new": "error",
+  "typescript/no-misused-promises": "error",
+  "typescript/no-misused-spread": "error",
+  "typescript/no-mixed-enums": "error",
+  "typescript/no-namespace": "error",
+  "typescript/no-non-null-asserted-nullish-coalescing": "error",
+  "typescript/no-non-null-asserted-optional-chain": "error",
+  "typescript/no-non-null-assertion": "error",
+  "typescript/no-redundant-type-constituents": "error",
+  "typescript/no-require-imports": "error",
+  "typescript/no-this-alias": "error",
+  "typescript/no-unnecessary-boolean-literal-compare": "error",
+  "typescript/no-unnecessary-condition": "error",
+  "typescript/no-unnecessary-template-expression": "error",
+  "typescript/no-unnecessary-type-arguments": "error",
+  "typescript/no-unnecessary-type-assertion": "error",
+  "typescript/no-unnecessary-type-conversion": "error",
+  "typescript/no-useless-default-assignment": "error",
+  "typescript/no-unsafe-enum-assignment": "error",
+  "typescript/no-generated-empty-object-type": "error",
+  "typescript/no-unnecessary-type-constraint": "error",
+  "typescript/no-unnecessary-type-parameters": "error",
+  "typescript/no-unsafe-argument": "error",
+  "typescript/no-unsafe-assignment": "error",
+  "typescript/no-unsafe-call": "error",
+  "typescript/no-unsafe-declaration-merging": "error",
+  "typescript/no-unsafe-enum-comparison": "error",
+  "typescript/no-unsafe-function-type": "error",
+  "typescript/no-unsafe-member-access": "error",
+  "typescript/no-unsafe-return": "error",
+  "typescript/no-unsafe-unary-minus": "error",
+  "eslint/no-unused-expressions": "error",
+  "eslint/no-unused-vars": "error",
+  "eslint/no-useless-constructor": "error",
+  "typescript/no-wrapper-object-types": "error",
+  "typescript/only-throw-error": "error",
+  "typescript/prefer-as-const": "error",
+  "typescript/prefer-literal-enum-member": "error",
+  "typescript/prefer-namespace-keyword": "error",
+  "typescript/prefer-promise-reject-errors": "error",
+  "typescript/prefer-reduce-type-parameter": "error",
+  "typescript/prefer-return-this-type": "error",
+  "typescript/related-getter-setter-pairs": "error",
+  "typescript/require-await": "error",
+  "typescript/restrict-plus-operands": "error",
+  "typescript/restrict-template-expressions": "error",
+  "typescript/return-await": ["error", "in-try-catch"],
+  "typescript/triple-slash-reference": "error",
+  "typescript/unbound-method": "error",
+  "typescript/unified-signatures": "error",
+  "typescript/use-unknown-in-catch-callback-variable": "error",
+  "typescript/adjacent-overload-signatures": "error",
+  "typescript/array-type": "error",
+  "typescript/ban-tslint-comment": "error",
+  "typescript/class-literal-property-style": "error",
+  "typescript/consistent-generic-constructors": "error",
+  "typescript/consistent-indexed-object-style": "error",
+  "typescript/consistent-type-assertions": "error",
+  "typescript/consistent-type-definitions": "error",
+  "typescript/dot-notation": "error",
+  "typescript/no-confusing-non-null-assertion": "error",
+  "eslint/no-empty-function": "error",
+  "typescript/no-inferrable-types": "error",
+  "typescript/non-nullable-type-assertion-style": "error",
+  "typescript/prefer-find": "error",
+  "typescript/prefer-for-of": "error",
+  "typescript/prefer-function-type": "error",
+  "typescript/prefer-includes": "error",
+  "typescript/prefer-nullish-coalescing": "error",
+  "typescript/prefer-optional-chain": "error",
+  "typescript/prefer-regexp-exec": "error",
+  "typescript/prefer-string-starts-ends-with": "error",
+  "typescript/switch-exhaustiveness-check": "error",
+  "typescript/consistent-type-imports": "error",
+  "jsdoc/check-tag-names": "error",
+  "jsdoc/empty-tags": "error",
+  "jsdoc/implements-on-classes": "error",
+  "jsdoc/no-defaults": "error",
+  "jsdoc/require-param-name": "error",
+  "jsdoc/require-property-name": "error",
+  "jsdoc/require-returns-description": "error",
+  "unicorn/no-abusive-eslint-disable": "error",
+  "local/require-description": "error",
+};
+
+/**
+ * Type-aware rules switched off for `.mjs` files: they are plain JavaScript
+ * with no type annotations, so every value is `any` and `no-unsafe-*` can only
+ * report the language. `no-unnecessary-condition` and
+ * `no-confusing-void-expression` also stay off because, without annotations,
+ * the checker infers `undefined` for variables assigned inside closures and
+ * `void` for helpers whose results the plugins read (`typed-react.mjs`).
+ */
+const untypedModuleRules: DummyRuleMap = {
+  "typescript/no-unsafe-argument": "off",
+  "typescript/no-unsafe-assignment": "off",
+  "typescript/no-unsafe-call": "off",
+  "typescript/no-unsafe-member-access": "off",
+  "typescript/no-unsafe-return": "off",
+  "typescript-eslint-js/no-unsafe-assignment": "off",
+  "typescript/no-unnecessary-condition": "off",
+  "typescript/no-confusing-void-expression": "off",
+};
+
+/**
+ * The baseline rules that apply to test files only.
+ */
+const baselineTestRules: DummyRuleMap = {
+  "jest/no-focused-tests": "error",
+  "jest/no-identical-title": "error",
+  "local/no-unawaited-async-matcher": "error",
+};
+
 export default defineConfig({
-  plugins: ["react", "jsx-a11y", "unicorn"],
-  categories: { correctness: "off" },
+  plugins: [
+    "react",
+    "jsx-a11y",
+    "unicorn",
+    "typescript",
+    "oxc",
+    "import",
+    "jsdoc",
+    "promise",
+    "node",
+  ],
+  categories: { correctness: "error", suspicious: "error", perf: "error" },
   options: {
     typeAware: true,
     reportUnusedDisableDirectives: "error",
@@ -946,6 +1123,7 @@ export default defineConfig({
     },
   },
   jsPlugins: [
+    { name: "local", specifier: "./oxlint-plugins/index.mjs" },
     { name: "unicorn-js", specifier: "./oxlint-plugins/typed-unicorn.mjs" },
     { name: "jsx-a11y-js", specifier: "eslint-plugin-jsx-a11y" },
     { name: "react-js", specifier: "eslint-plugin-react" },
@@ -959,14 +1137,48 @@ export default defineConfig({
     "**/coverage/**",
     ".claude/skills/**",
     ".claude/worktrees/**",
-    "scripts/oxlint-baseline-plugin.ts",
+    "**/node_modules/**",
+    "dist/**",
   ],
   rules: {
+    ...baselineRules,
+    "react/react-in-jsx-scope": "off",
     ...jsxA11yRules,
     ...unicornNativeRules,
     ...unicornOriginalRules,
     ...jsxA11yOriginalRules,
     ...reactHooksRules,
   },
-  overrides,
+  overrides: [
+    { files: ["**/*"], rules: baselineRules },
+    ...overrides,
+    { files: ["**/*"], rules: { "react/react-in-jsx-scope": "off" } },
+    { files: ["**/*.mjs"], rules: untypedModuleRules },
+    {
+      /**
+       * `packages/ui/**` is the generated shadcn/ui registry layer, re-synced
+       * rather than edited by hand, so the baseline rules its output does not
+       * follow stay off there.
+       */
+      files: ["packages/ui/**"],
+      rules: {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "typescript/array-type": "off",
+        "typescript/consistent-type-definitions": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "typescript/no-unnecessary-condition": "off",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/prefer-nullish-coalescing": "off",
+        "typescript/switch-exhaustiveness-check": "off",
+        "react/jsx-no-constructed-context-values": "off",
+        "react/no-array-index-key": "off",
+        "react/no-object-type-as-default-prop": "off",
+      },
+    },
+    {
+      files: ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx", "**/test/**/*.ts"],
+      plugins: ["jest"],
+      rules: baselineTestRules,
+    },
+  ],
 });

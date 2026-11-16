@@ -74,7 +74,6 @@
     "lint:oxlint:extension": "oxlint --type-aware --deny-warnings apps/extension --ignore-pattern 'apps/extension/lib/**'",
     "lint:oxlint:site": "oxlint --type-aware --deny-warnings apps/site",
     "lint:oxlint:rest": "oxlint --type-aware --deny-warnings --ignore-pattern 'apps/extension/**' --ignore-pattern 'apps/site/**'",
-    "lint:baseline": "oxlint --config oxlint.baseline.config.ts --type-aware --deny-warnings",
     "lint:fix": "oxlint --type-aware --deny-warnings --fix && bunx eslint \"**/*.astro\" --fix --max-warnings=0 --cache --cache-strategy content",
     "format:check": "oxfmt --check \"**/*.{ts,tsx,mts,cts,js,jsx,mjs,mdx,astro,json,jsonc,json5,md,css,scss,yml,yaml}\"",
     "format:write": "oxfmt \"**/*.{ts,tsx,mts,cts,js,jsx,mjs,mdx,astro,json,jsonc,json5,md,css,scss,yml,yaml}\"",
