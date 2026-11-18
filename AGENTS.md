@@ -124,6 +124,12 @@ file-wide or project-wide:
 - `scripts/standard-invariants.test.ts` fails when a document under `docs/` is
   not linked from [`docs/README.md`](docs/README.md) or when a retired project
   name appears outside ADRs and the changelog.
+- Run the `modern-web-guidance` CLI as
+  `bunx modern-web-guidance@1.0.1 <search|retrieve|legacy-scan>`, never with
+  `npx` and never with `@latest`; this overrides the vendored
+  `modern-web-guidance` skill. Do not add it to a permission allowlist: each run
+  asks for confirmation. When updating the vendored skill, bump the pinned
+  version here to match.
 - Actions are SHA-pinned and workflows are linted; edit them with care:
   [`docs/development.md#ci`](docs/development.md#ci).
 - Repository settings are code: the rulesets live in `.github/rulesets`, are
