@@ -72,5 +72,34 @@
       "timeoutSeconds": 360,
       "paths": ["apps/site/**", "packages/ui/**", "docs/**"]
     }
+  },
+  "verify": {
+    "browser": {
+      "startCommand": "bun run --cwd apps/site dev",
+      "url": "http://localhost:4321",
+      "paths": ["apps/site/**"]
+    }
+  },
+  "landing": {
+    "specMergeMethod": "squash"
+  },
+  "validate": {
+    "coupledSurfaces": [
+      {
+        "source": "docs/{guide,how-to}/**/*.md",
+        "dependents": "apps/site/src/content/translations/**"
+      }
+    ]
+  },
+  "specs": {
+    "enabled": true
+  },
+  "review": {
+    "highRiskPaths": [
+      "apps/extension/wxt.config.ts",
+      "dockerfile",
+      "privacy_policy",
+      ".github/rulesets/"
+    ]
   }
 }
