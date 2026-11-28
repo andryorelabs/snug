@@ -20,7 +20,7 @@ ARG LAST_MODIFIED_DATES=""
 RUN bun run --cwd apps/site build
 RUN bun run --cwd apps/site src/scripts/render-security-headers.ts dist docker/security-headers.conf dist-security-headers.conf
 
-FROM nginx:1.31-alpine@sha256:785835ea65db4bba6f021acc0f3be91b0fef76a53fe41f8588c6698d2aed0606
+FROM nginx:1.31-alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae
 RUN rm -f /etc/nginx/conf.d/default.conf
 COPY apps/site/docker/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /repo/apps/site/dist-security-headers.conf /etc/nginx/snippets/security-headers.conf
